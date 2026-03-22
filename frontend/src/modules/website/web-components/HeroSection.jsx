@@ -2,20 +2,22 @@ import React from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ChevronRight, ArrowRight, Zap } from 'lucide-react';
 
+import heroImage from '../../../assets/images/hero image.png';
+
 const HeroSection = () => {
   const { scrollY } = useScroll();
   const y1 = useTransform(scrollY, [0, 1000], [0, 200]);
   const opacity = useTransform(scrollY, [0, 500], [1, 0]);
 
   return (
-    <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden bg-flexigo-bg pt-20">
+    <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden bg-white pt-20">
       {/* Dynamic Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-flexigo-accent/10 blur-[120px] animate-pulse" style={{ animationDuration: '8s' }} />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-flexigo-teal/10 blur-[100px] animate-pulse" style={{ animationDuration: '10s', animationDelay: '2s' }} />
+        {/* Subtle neutral background effects */}
+        <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-slate-50 blur-[120px]" />
         
         {/* Subtle grid pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_70%,transparent_100%)]"></div>
       </div>
 
       <div className="container mx-auto px-6 relative z-10 flex flex-col lg:flex-row items-center gap-12 lg:gap-8">
@@ -73,48 +75,22 @@ const HeroSection = () => {
           </motion.div>
         </motion.div>
 
-        {/* Visual Content - Placeholder for EV Scooter */}
+        {/* Visual Content - Real EV Scooter Image */}
         <motion.div 
-          initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
-          animate={{ opacity: 1, scale: 1, rotate: 0 }}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1, delay: 0.2, type: 'spring' }}
           className="flex-1 w-full relative"
         >
-          <div className="relative w-full aspect-square max-w-[600px] mx-auto">
-            {/* Soft backdrop glow for vehicle */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-flexigo-teal/20 to-flexigo-accent/20 rounded-full blur-[80px]" />
+          <div className="relative w-full aspect-square max-w-[600px] mx-auto flex items-center justify-center">
+            {/* Clean white/neutral highlights instead of greenish glow */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-slate-100/50 to-white/50 rounded-full blur-[80px]" />
             
-            {/* The actual vehicle placeholder (user can replace this image) */}
-            <div className="relative w-full h-full p-8 flex items-center justify-center">
-               {/* 
-                 A modern glassmorphism stand-in for the scooter image, 
-                 showcasing the "Premium EV startup vibe"
-               */}
-               <div className="w-[80%] h-[80%] rounded-[2rem] bg-white/40 backdrop-blur-2xl border border-white/60 shadow-2xl flex flex-col items-center justify-center p-8 relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-gradient-to-b from-white/60 to-transparent pointer-events-none" />
-                  
-                  {/* Mock UI Overlay floating around */}
-                  <motion.div 
-                    animate={{ y: [-10, 10, -10] }}
-                    transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                    className="absolute top-10 right-[-20px] bg-white rounded-xl shadow-xl p-4 flex items-center gap-3 border border-slate-100"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                      <Zap className="text-green-600 w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="text-xs text-slate-500 font-medium">Battery Level</div>
-                      <div className="text-sm font-bold text-slate-800">98% Range</div>
-                    </div>
-                  </motion.div>
-
-                  <div className="text-center z-10">
-                    <div className="text-6xl mb-4">🛵</div>
-                    <div className="text-2xl font-bold text-slate-800 font-heading">Flexigo V1</div>
-                    <div className="text-sm text-slate-500 mt-2">Replace with 3D/PNG EV Scooter</div>
-                  </div>
-               </div>
-            </div>
+            <img 
+              src={heroImage} 
+              alt="Flexigo EV Scooter" 
+              className="relative z-10 w-full h-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.1)] transition-transform duration-700 hover:scale-105"
+            />
           </div>
         </motion.div>
       </div>
