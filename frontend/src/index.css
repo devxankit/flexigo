@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 @theme {
-  --color-flexigo-primary: #0A192F;
-  --color-flexigo-teal: #0F766E;
-  --color-flexigo-accent: #00FF88;
-  --color-flexigo-bg: #F8FAFC;
-  --color-flexigo-dark: #020617;
+  --color-flexigo-primary: #14532D;
+  --color-flexigo-teal: #22C55E;
+  --color-flexigo-accent: #86EFAC;
+  --color-flexigo-bg: #F0FDF4;
+  --color-flexigo-dark: #052E16;
   
   --font-heading: "Outfit", sans-serif;
   --font-body: "Inter", sans-serif;

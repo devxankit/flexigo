@@ -7,7 +7,7 @@ const plans = [
   {
     id: 'daily',
     name: 'Daily Flex',
-    price: '₹399',
+    price: 'TBA',
     duration: '/day',
     description: 'Perfect for part-time riders testing the waters.',
     features: [
@@ -23,7 +23,7 @@ const plans = [
   {
     id: 'weekly',
     name: 'Weekly Pro',
-    price: '₹2,499',
+    price: 'TBA',
     duration: '/week',
     description: 'The sweet spot for regular gig workers.',
     features: [
@@ -39,7 +39,7 @@ const plans = [
   {
     id: 'monthly',
     name: 'Monthly Power',
-    price: '₹8,999',
+    price: 'TBA',
     duration: '/month',
     description: 'Maximum value for full-time delivery professionals.',
     features: [
@@ -68,7 +68,7 @@ const PricingSection = () => {
             className="text-4xl md:text-5xl font-bold font-heading text-flexigo-primary leading-tight mb-6"
           >
             Transparent Plans. <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-flexigo-teal to-blue-500">Zero Hidden Fees.</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-flexigo-teal to-flexigo-accent">Zero Hidden Fees.</span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}

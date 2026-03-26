@@ -33,7 +33,7 @@ const VehicleShowcaseSection = () => {
             className="text-4xl md:text-6xl font-black font-heading leading-[1.1] tracking-tighter"
           >
             Engineering Meets <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-flexigo-teal to-blue-400">Pure Performance.</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-flexigo-teal to-flexigo-accent">Pure Performance.</span>
           </motion.h2>
         </div>
 
@@ -148,14 +148,14 @@ const VehicleShowcaseSection = () => {
                 transition={{ delay: 0.4 }}
                 className="grid grid-cols-2 gap-4"
               >
-                <div className="bg-black/40 border border-white/5 rounded-3xl p-6 backdrop-blur-3xl hover:border-blue-400/20 transition-colors duration-500">
+                <div className="bg-black/40 border border-white/5 rounded-3xl p-6 backdrop-blur-3xl hover:border-flexigo-teal/20 transition-colors duration-500">
                    <p className="text-[10px] font-black tracking-widest text-slate-500 uppercase mb-2">Max Velocity</p>
                    <div className="flex items-baseline gap-1">
                      <span className="text-3xl font-black font-heading text-white">45</span>
                      <span className="text-xs font-bold text-slate-400 uppercase">km/h</span>
                    </div>
                 </div>
-                <div className="bg-black/40 border border-white/5 rounded-3xl p-6 backdrop-blur-3xl hover:border-purple-400/20 transition-colors duration-500">
+                <div className="bg-black/40 border border-white/5 rounded-3xl p-6 backdrop-blur-3xl hover:border-flexigo-accent/20 transition-colors duration-500">
                    <p className="text-[10px] font-black tracking-widest text-slate-500 uppercase mb-2">Refuel Time</p>
                    <div className="flex items-baseline gap-1">
                      <span className="text-3xl font-black font-heading text-white">60</span>

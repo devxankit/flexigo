@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Zap } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '../../../lib/utils';
+import logo from '../../../assets/logo.png';
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -35,12 +36,16 @@ const Navbar = () => {
       <div className="container mx-auto px-6 md:px-12 flex justify-between items-center">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-lg bg-flexigo-primary flex items-center justify-center relative overflow-hidden">
-            <div className="absolute inset-0 bg-flexigo-accent opacity-0 group-hover:opacity-20 transition-opacity" />
-            <Zap className="text-flexigo-accent w-5 h-5" />
-          </div>
-          <span className="text-2xl font-heading font-bold tracking-tight text-flexigo-primary">
-            Flexigo
+          <img 
+            src={logo} 
+            alt="FlexiGo Logo" 
+            className="w-10 h-10 object-contain transition-transform duration-300 group-hover:scale-110" 
+          />
+          <span className={cn(
+            "text-2xl font-heading font-bold tracking-tight transition-colors",
+            scrolled ? "text-flexigo-primary" : "text-black"
+          )}>
+            FlexiGo
           </span>
         </Link>
 
@@ -50,7 +55,12 @@ const Navbar = () => {
             <a
               key={link.name}
               href={link.href}
-              className="text-sm font-medium text-slate-600 hover:text-flexigo-teal transition-colors"
+              className={cn(
+                "text-sm font-medium transition-colors",
+                scrolled 
+                  ? "text-flexigo-teal hover:text-flexigo-primary" 
+                  : "text-black hover:text-flexigo-teal"
+              )}
             >
               {link.name}
             </a>
@@ -59,7 +69,14 @@ const Navbar = () => {
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-4">
-          <button className="text-sm font-medium text-slate-700 hover:text-flexigo-primary transition-colors">
+          <button 
+            className={cn(
+              "text-sm font-medium transition-colors",
+              scrolled 
+                ? "text-flexigo-teal hover:text-flexigo-primary" 
+                : "text-black hover:text-flexigo-teal"
+            )}
+          >
             Log In
           </button>
           <button className="bg-flexigo-primary hover:bg-flexigo-teal text-white px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 hover:shadow-lg hover:shadow-flexigo-teal/20 active:scale-95">

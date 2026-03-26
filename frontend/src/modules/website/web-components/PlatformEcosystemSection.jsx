@@ -86,8 +86,8 @@ const PlatformEcosystemSection = () => {
       insight: 'Total control.',
       author: 'Anjali M.',
       stats: ['FMS Pro', 'live IoT'],
-      bgClass: 'bg-blue-600',
-      textClass: 'text-blue-600'
+      bgClass: 'bg-emerald-600',
+      textClass: 'text-emerald-600'
     },
     {
       id: 'admin',
@@ -98,8 +98,8 @@ const PlatformEcosystemSection = () => {
       insight: 'Anticipate. Automate.',
       author: 'Sys Term',
       stats: ['Scaling', 'Telemetry'],
-      bgClass: 'bg-purple-600',
-      textClass: 'text-purple-600'
+      bgClass: 'bg-green-600',
+      textClass: 'text-green-600'
     }
   ];
 

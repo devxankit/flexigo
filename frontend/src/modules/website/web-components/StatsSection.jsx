@@ -3,9 +3,9 @@ import { useCountUp } from 'react-countup';
 import { motion } from 'framer-motion';
 
 const stats = [
-  { id: 1, name: 'Vehicles Deployed', value: 15400, suffix: '+' },
-  { id: 2, name: 'Active Riders', value: 24000, suffix: '+' },
-  { id: 3, name: 'Cities Covered', value: 45, suffix: '' },
+  { id: 1, name: 'Vehicles Deployed', value: 200, suffix: '+' },
+  { id: 2, name: 'Active Riders', value: 200, suffix: '+' },
+  { id: 3, name: 'Cities', value: 2, suffix: '' },
 ];
 
 const StatCounter = ({ end, suffix }) => {

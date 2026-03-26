@@ -43,7 +43,7 @@ const HeroSection = () => {
             className="text-5xl md:text-6xl lg:text-7xl font-bold font-heading text-flexigo-primary leading-[1.1] mb-6 tracking-tight"
           >
             Powering the Future of{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-flexigo-teal to-[#10B981]">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-flexigo-teal to-flexigo-accent">
               Delivery Mobility
             </span>
           </motion.h1>

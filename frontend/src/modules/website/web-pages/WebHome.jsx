@@ -7,6 +7,7 @@ import HeroSection from '../web-components/HeroSection';
 import StatsSection from '../web-components/StatsSection';
 import HowItWorksSection from '../web-components/HowItWorksSection';
 import FeaturesSection from '../web-components/FeaturesSection';
+import SavingsCalculatorSection from '../web-components/SavingsCalculatorSection';
 import PlatformEcosystemSection from '../web-components/PlatformEcosystemSection';
 import VehicleShowcaseSection from '../web-components/VehicleShowcaseSection';
 import PricingSection from '../web-components/PricingSection';
@@ -26,6 +27,7 @@ const WebHome = () => {
           <StatsSection />
           <HowItWorksSection />
           <FeaturesSection />
+          <SavingsCalculatorSection />
           <PlatformEcosystemSection />
           <VehicleShowcaseSection />
           <PricingSection />
