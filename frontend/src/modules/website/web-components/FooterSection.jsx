@@ -88,7 +88,7 @@ const FooterSection = () => {
               <li className="flex items-center gap-3">
                  <Mail className="w-5 h-5 text-flexigo-teal shrink-0" />
                  <span className="text-slate-600 text-sm font-medium">
-                   hello@flexigo.in
+                   support@flexigoemobility.com
                  </span>
               </li>
             </ul>
