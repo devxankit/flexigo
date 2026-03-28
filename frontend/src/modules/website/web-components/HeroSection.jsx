@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ChevronRight, ArrowRight, Zap } from 'lucide-react';
 
-import heroImage from '../../../assets/images/hero image.png';
+import heroImage from '../../../assets/images/flexigo_v1-removebg-preview.png';
 
 const HeroSection = () => {
   const { scrollY } = useScroll();

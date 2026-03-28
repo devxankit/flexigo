@@ -1,7 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, animate } from 'framer-motion';
 import { ChevronDown, Info } from 'lucide-react';
 import { cn } from '../../../lib/utils';
+
+const SmoothCounter = ({ value }) => {
+  const [displayValue, setDisplayValue] = useState(value);
+  const count = useMotionValue(value);
+
+  useEffect(() => {
+    const controls = animate(count, value, {
+      duration: 0.4,
+      ease: "easeOut",
+      onUpdate: (latest) => setDisplayValue(Math.round(latest))
+    });
+    return controls.stop;
+  }, [value, count]);
+
+  return <span>{displayValue.toLocaleString()}</span>;
+};
 
 const SavingsCalculatorSection = () => {
   const [dailyEarnings, setDailyEarnings] = useState(1000);
@@ -107,7 +123,7 @@ const SavingsCalculatorSection = () => {
             <div className="mb-12">
               <div className="flex justify-between items-center mb-6">
                 <span className="text-xl font-medium text-slate-700">
-                  Daily Earnings : <span className="text-flexigo-teal font-bold">₹{dailyEarnings}</span>
+                  Daily Earnings : <span className="text-flexigo-teal font-bold">₹<SmoothCounter value={dailyEarnings} /></span>
                 </span>
               </div>
               <div className="relative h-2 w-full bg-slate-100 rounded-full">
@@ -136,19 +152,19 @@ const SavingsCalculatorSection = () => {
             </div>
 
             {/* Result Area */}
-            <motion.div 
-              key={savings}
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="space-y-2"
-            >
-              <h4 className="text-lg font-bold text-slate-800">
+            <div className="space-y-2">
+              <motion.h4 
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="text-lg font-bold text-slate-800"
+              >
                 You Will Save Extra Savings With Flexigo Electric
-              </h4>
+              </motion.h4>
               <div className="text-4xl md:text-5xl font-black text-flexigo-teal font-heading">
-                ₹{savings.toLocaleString()} <span className="text-xl font-bold">Per {period.label === 'Monthly' ? 'Month' : 'Week'}</span>
+                ₹<SmoothCounter value={savings} /> <span className="text-xl font-bold">Per {period.label === 'Monthly' ? 'Month' : 'Week'}</span>
               </div>
-            </motion.div>
+            </div>
           </div>
 
           {/* Right Side: Visual Graph */}
