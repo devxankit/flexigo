@@ -12,6 +12,10 @@
 }
 
 @layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
   html.lenis, html.lenis body {
     height: auto;
   }
@@ -33,14 +37,18 @@
   }
   
   body {
-    @apply bg-flexigo-bg text-flexigo-dark font-body antialiased;
+    @apply bg-flexigo-bg text-flexigo-dark font-body antialiased overflow-x-hidden;
   }
   
   .dark body {
-    @apply bg-flexigo-dark text-flexigo-bg;
+    @apply bg-flexigo-dark text-flexigo-bg overflow-x-hidden;
   }
   
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading tracking-tight;
   }
-}
+  
+  button, a {
+    outline: none !important;
+  }
+}

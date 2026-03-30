@@ -1,6 +1,7 @@
 import React from 'react';
 import { Twitter, Instagram, Linkedin, Zap, Mail, Phone, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
+import logo from '../../../assets/logo.png';
 
 const FooterSection = () => {
   return (
@@ -10,12 +11,14 @@ const FooterSection = () => {
           
           {/* Brand Col */}
           <div className="lg:col-span-2">
-            <a href="/" className="flex items-center gap-1 group mb-6 inline-flex">
-              <div className="w-16 h-16 md:w-16 md:h-16 rounded-2xl bg-flexigo-primary flex items-center justify-center relative overflow-hidden transition-transform duration-300 group-hover:scale-105">
-                <div className="absolute inset-0 bg-flexigo-accent opacity-0 group-hover:opacity-20 transition-opacity" />
-                <Zap className="text-flexigo-accent w-10 h-10 md:w-10 md:h-10" />
-              </div>
-              <span className="text-2xl font-heading font-bold tracking-tight text-flexigo-primary">
+            <a href="/" className="flex items-center group mb-6 relative w-max inline-flex">
+              <img 
+                src={logo} 
+                alt="FlexiGo Logo" 
+                className="w-20 h-20 absolute top-1/2 -translate-y-1/2 -left-3 object-contain transition-transform duration-300 group-hover:scale-105 z-10" 
+              />
+              <div className="w-14 h-10" />
+              <span className="text-2xl font-heading font-bold tracking-tight text-flexigo-primary mt-1 whitespace-nowrap relative z-20">
                 FlexiGo
               </span>
             </a>

@@ -1,12 +1,13 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import WebHome from './modules/website/web-pages/WebHome';
+import RiderRoutes from './modules/rider/routes/RiderRoutes';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<WebHome />} />
-        {/* Further routing can be added here for Admin, Rider App Web-views etc. */}
+        <Route path="/rider/*" element={<RiderRoutes />} />
       </Routes>
     </BrowserRouter>
   );
