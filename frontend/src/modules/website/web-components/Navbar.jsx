@@ -29,20 +29,21 @@ const Navbar = () => {
       className={cn(
         'fixed top-0 w-full z-50 transition-all duration-300 pointer-events-auto',
         scrolled
-          ? 'bg-flexigo-bg/80 backdrop-blur-md shadow-sm py-4'
-          : 'bg-transparent py-6'
+          ? 'bg-flexigo-bg/80 backdrop-blur-md shadow-sm py-2'
+          : 'bg-transparent py-3'
       )}
     >
-      <div className="container mx-auto px-6 md:px-12 flex justify-between items-center">
+      <div className="w-full px-2 md:px-4 flex justify-between items-center">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 group">
+        <Link to="/" className="flex items-center group relative">
           <img 
             src={logo} 
             alt="FlexiGo Logo" 
-            className="w-10 h-10 object-contain transition-transform duration-300 group-hover:scale-110" 
+            className="w-24 h-24 md:w-32 md:h-32 absolute top-1/2 -translate-y-1/2 left-0 object-contain transition-transform duration-300 group-hover:scale-105 z-10" 
           />
+          <div className="w-20 md:w-26 h-10 md:h-12" />
           <span className={cn(
-            "text-2xl font-heading font-bold tracking-tight transition-colors",
+            "text-2xl font-heading font-bold tracking-tight transition-colors mt-0.5 whitespace-nowrap",
             scrolled ? "text-flexigo-primary" : "text-black"
           )}>
             FlexiGo
