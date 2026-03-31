@@ -10,8 +10,7 @@ import { useThemeStore } from '../store/themeStore';
 
 const steps = [
   { id: 1, title: 'Identity', description: 'Upload your Aadhaar' },
-  { id: 2, title: 'Verification', description: 'Face recognition' },
-  { id: 3, title: 'License', description: 'Driving permit' },
+  { id: 2, title: 'License', description: 'Driving permit' },
 ];
 
 export default function OnboardingKYC() {
@@ -43,7 +42,7 @@ export default function OnboardingKYC() {
         <h1 className={`text-2xl font-heading font-black transition-colors duration-500 ${
           isDark ? 'text-white' : 'text-slate-900'
         }`}>KYC Verification</h1>
-        <div className="text-flexigo-teal font-black text-[10px] uppercase tracking-widest">Step {currentStep}/3</div>
+        <div className="text-flexigo-teal font-black text-[10px] uppercase tracking-widest">Step {currentStep}/2</div>
       </div>
 
       {/* Progress Bar */}
@@ -115,42 +114,6 @@ export default function OnboardingKYC() {
           {currentStep === 2 && (
             <motion.div
               key="step2"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-6"
-            >
-              <h2 className={`text-xl font-heading font-black transition-colors duration-500 ${
-                isDark ? 'text-white' : 'text-slate-900'
-              }`}>Face Verification</h2>
-              <p className={`text-sm leading-relaxed transition-colors duration-500 ${
-                isDark ? 'text-gray-400' : 'text-slate-500'
-              }`}>
-                Take a selfie to verify that it matches your ID documents.
-              </p>
-              
-              <div className={`relative aspect-square max-w-[280px] mx-auto rounded-full border-4 flex items-center justify-center overflow-hidden transition-all duration-500 ${
-                isDark ? 'border-flexigo-teal/20 bg-white/5' : 'border-flexigo-teal/30 bg-slate-100 shadow-lg'
-              }`}>
-                <div className="absolute inset-0 border-2 border-flexigo-teal rounded-full animate-pulse" />
-                <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="1" className={`w-24 h-24 transition-opacity duration-500 ${
-                  isDark ? 'opacity-20' : 'opacity-40'
-                }`}>
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-                  <line x1="9" y1="9" x2="9.01" y2="9" />
-                  <line x1="15" y1="9" x2="15.01" y2="9" />
-                </svg>
-                <div className="absolute bottom-6 bg-flexigo-teal text-black text-[10px] font-black px-4 py-1.5 rounded-full shadow-lg tracking-widest">
-                  SCANNING
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {currentStep === 3 && (
-            <motion.div
-              key="step3"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
