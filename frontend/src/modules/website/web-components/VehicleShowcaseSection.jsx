@@ -4,9 +4,6 @@ import { Battery, ShieldCheck, Zap } from 'lucide-react';
 import heroImage from '../../../assets/images/flexigo_v1.png';
 
 const VehicleShowcaseSection = () => {
-  const { scrollYProgress } = useScroll();
-  const scale = useTransform(scrollYProgress, [0.3, 0.6], [0.8, 1]);
-  const opacity = useTransform(scrollYProgress, [0.3, 0.5], [0, 1]);
 
   return (
     <section className="py-24 lg:py-32 bg-flexigo-dark text-white relative overflow-hidden">
@@ -26,20 +23,23 @@ const VehicleShowcaseSection = () => {
             <Zap className="w-5 h-5" /> The Machines
           </motion.div>
           <motion.h2
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-4xl md:text-6xl font-black font-heading leading-[1.1] tracking-tighter"
+            className="text-4xl md:text-6xl font-black font-heading leading-[1.1] tracking-tighter text-[#334155]"
           >
             Engineering Meets <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-flexigo-teal to-flexigo-accent">Pure Performance.</span>
+            Pure Performance.
           </motion.h2>
         </div>
 
         <motion.div 
-          style={{ scale, opacity }}
-          className="relative max-w-6xl mx-auto rounded-[3rem] bg-white/[0.02] border border-white/5 p-8 lg:p-16 backdrop-blur-2xl overflow-hidden shadow-2xl"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="relative max-w-6xl mx-auto rounded-[3rem] bg-white/[0.02] border border-white/5 p-8 lg:p-16 backdrop-blur-2xl overflow-hidden shadow-2xl [transform:translateZ(0)]"
         >
           {/* Glass glare effect */}
           <div className="absolute top-0 left-[-100%] w-[50%] h-[200%] bg-gradient-to-r from-transparent via-white/5 to-transparent rotate-[30deg] pointer-events-none" />

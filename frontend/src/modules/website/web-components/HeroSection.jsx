@@ -1,18 +1,14 @@
 import React from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { ChevronRight, ArrowRight, Zap } from 'lucide-react';
 
 import heroImage from '../../../assets/images/flexigo_v1-removebg-preview.png';
 
 const HeroSection = () => {
-  const { scrollY } = useScroll();
-  const y1 = useTransform(scrollY, [0, 1000], [0, 200]);
-  const opacity = useTransform(scrollY, [0, 500], [1, 0]);
-
   return (
-    <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden bg-white pt-20">
+    <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden bg-white pt-20 [will-change:transform] [transform:translateZ(0)]">
       {/* Dynamic Background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-50">
         {/* Subtle neutral background effects */}
         <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-slate-50 blur-[120px]" />
         
@@ -23,35 +19,31 @@ const HeroSection = () => {
       <div className="container mx-auto px-6 relative z-10 flex flex-col lg:flex-row items-center gap-12 lg:gap-8">
         {/* Text Content */}
         <motion.div 
-          style={{ y: y1, opacity }}
           className="flex-1 text-center lg:text-left pt-12 lg:pt-0"
         >
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.5 }}
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm mb-8"
           >
-            <span className="w-2 h-2 rounded-full bg-flexigo-accent animate-pulse"></span>
+            <span className="w-2 h-2 rounded-full bg-flexigo-accent"></span>
             <span className="text-sm font-medium text-slate-600">Smart EV Subscriptions Now Live</span>
           </motion.div>
 
           <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-5xl md:text-6xl lg:text-7xl font-bold font-heading text-flexigo-primary leading-[1.1] mb-6 tracking-tight"
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-5xl md:text-6xl lg:text-7xl font-bold font-heading text-[#334155] leading-[1.1] mb-6 tracking-tight"
           >
-            Powering the Future of{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-flexigo-teal to-flexigo-accent">
-              Delivery Mobility
-            </span>
+            Powering the Future of Delivery Mobility
           </motion.h1>
 
           <motion.p 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
             className="text-lg md:text-xl text-slate-600 mb-10 max-w-2xl mx-auto lg:mx-0 font-body leading-relaxed"
           >
             Subscribe, ride, and earn with Flexigo's high-performance electric vehicles. 
@@ -59,16 +51,16 @@ const HeroSection = () => {
           </motion.p>
 
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4"
           >
-            <button className="w-full sm:w-auto px-8 py-4 bg-flexigo-primary hover:bg-flexigo-teal text-white rounded-full font-medium text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:shadow-flexigo-teal/20 flex items-center justify-center gap-2 group">
+            <button className="w-full sm:w-auto px-8 py-4 bg-flexigo-primary hover:bg-flexigo-teal text-white rounded-full font-medium text-lg transition-all duration-300 flex items-center justify-center gap-2 group">
               Get Started
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
-            <button className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-slate-50 text-flexigo-primary border border-slate-200 rounded-full font-medium text-lg transition-all duration-300 hover:shadow-md flex items-center justify-center gap-2 group">
+            <button className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-slate-50 text-flexigo-primary border border-slate-200 rounded-full font-medium text-lg transition-all flex items-center justify-center gap-2 group">
               Explore Plans
               <ChevronRight className="w-5 h-5" />
             </button>
@@ -77,15 +69,14 @@ const HeroSection = () => {
 
         {/* Visual Content - Real EV Scooter Image */}
         <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="flex-1 w-full relative group/scooter"
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="flex-1 w-full relative"
         >
           <div className="relative w-full aspect-square max-w-[600px] mx-auto flex items-center justify-center">
             {/* Clean white/neutral highlights instead of greenish glow */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-slate-100/50 to-white/50 rounded-full blur-[80px]" />
+            <div className="absolute inset-0 bg-slate-100/30 rounded-full blur-[80px]" />
             
             <img 
               src={heroImage} 
@@ -93,7 +84,7 @@ const HeroSection = () => {
               fetchpriority="high"
               loading="eager"
               decoding="async"
-              className="w-full h-auto max-w-[500px] object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.8)] transition-transform duration-1000 group-hover/scooter:scale-[1.05]" 
+              className="relative z-10 w-full h-auto object-contain drop-shadow-[0_15px_30px_rgba(0,0,0,0.1)]"
             />
           </div>
         </motion.div>

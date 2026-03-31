@@ -18,34 +18,25 @@ import FooterSection from '../web-components/FooterSection';
 
 const WebHome = () => {
   return (
-    <ReactLenis root options={{ 
-      lerp: 0.1, 
-      smoothWheel: true, 
-      syncTouch: true,
-      wheelMultiplier: 1.1,
-      touchMultiplier: 1.5,
-      duration: 1.2
-    }}>
-      <div className="bg-white min-h-screen font-body text-slate-800 antialiased selection:bg-flexigo-teal selection:text-white overflow-x-hidden">
-        <Navbar />
-        
-        <main>
-          <HeroSection />
-          <StatsSection />
-          <HowItWorksSection />
-          <FeaturesSection />
-          <SavingsCalculatorSection />
-          <PlatformEcosystemSection />
-          <VehicleShowcaseSection />
-          <PricingSection />
-          <MapSection />
-          <TestimonialsSection />
-          <CtaSection />
-        </main>
+    <div className="bg-white min-h-screen font-body text-slate-800 antialiased selection:bg-flexigo-teal selection:text-white overflow-x-hidden">
+      <Navbar />
+      
+      <main>
+        <HeroSection />
+        <StatsSection />
+        <HowItWorksSection />
+        <FeaturesSection />
+        <SavingsCalculatorSection />
+        <PlatformEcosystemSection />
+        <VehicleShowcaseSection />
+        <PricingSection />
+        <MapSection />
+        <TestimonialsSection />
+        <CtaSection />
+      </main>
 
-        <FooterSection />
-      </div>
-    </ReactLenis>
+      <FooterSection />
+    </div>
   );
 };
 
