@@ -28,7 +28,7 @@ export default function RiderRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={<SplashScreen />} />
+      <Route path="/" element={<AuthPhone />} />
       <Route path="/auth/phone" element={<AuthPhone />} />
       <Route path="/auth/otp" element={<AuthOTP />} />
       
