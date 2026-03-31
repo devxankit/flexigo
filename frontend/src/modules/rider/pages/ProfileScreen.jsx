@@ -16,25 +16,30 @@ export default function ProfileScreen() {
     navigate('/rider/auth/phone');
   };
 
+  const handleViewDocument = (label) => {
+    // In a real app, this would open a modal with the document image
+    alert(`Viewing verified ${label} document...`);
+  };
+
   const sections = [
     { 
-      title: 'Subscription', 
+      title: 'Current Subscription', 
       items: [
         { label: 'My Plan', value: 'Weekly Premium', color: '#39FF14' },
-        { label: 'Ride History', value: '18 Rides' }
+        { label: 'Usage History', value: '18 Days' }
       ]
     },
     { 
-      title: 'Documents', 
+      title: 'Verified Documents', 
       items: [
-        { label: 'KYC Status', value: kycStatus.toUpperCase(), color: '#39FF14' },
-        { label: 'Driving License', value: 'Verified' }
+        { label: 'KYC Status', value: kycStatus.toUpperCase(), color: '#39FF14', canView: true },
+        { label: 'Driving License', value: 'Verified', color: '#39FF14', canView: true }
       ]
     }
   ];
 
   return (
-    <PageWrapper className="flex flex-col p-6 pb-24">
+    <PageWrapper className="flex flex-col p-6 pt-24 pb-24">
        <div className="mb-10 flex flex-col items-center">
           <div className="relative mb-6">
              <div className={`absolute inset-0 bg-flexigo-teal/20 rounded-full blur-2xl transition-opacity duration-500 ${isDark ? 'opacity-100' : 'opacity-40'}`} />
@@ -63,38 +68,55 @@ export default function ProfileScreen() {
                <h3 className={`text-[10px] font-black uppercase tracking-[0.3em] px-2 transition-colors duration-500 ${
                  isDark ? 'text-gray-500' : 'text-slate-400'
                }`}>{section.title}</h3>
-               <GlassCard className={`divide-y transition-colors duration-500 overflow-hidden ${
+               <GlassCard className={`divide-y transition-colors duration-500 overflow-hidden border shadow-xl ${
                  isDark ? 'divide-white/05' : 'divide-slate-100'
                }`}>
                   {section.items.map((item, i) => (
-                    <div key={i} className="flex justify-between items-center p-4">
-                       <span className={`text-sm font-black transition-colors duration-500 ${
-                         isDark ? 'text-gray-400' : 'text-slate-400'
-                       }`}>{item.label}</span>
-                       <span 
-                         className={`font-black text-sm transition-colors duration-500 ${
-                           isDark ? 'text-white' : 'text-slate-900'
-                         }`} 
-                         style={item.color ? { color: item.color } : {}}
-                       >
-                         {item.value}
-                       </span>
+                    <div key={i} className="flex justify-between items-center p-5">
+                       <div className="flex flex-col gap-0.5">
+                          <span className={`text-[10px] uppercase font-black tracking-widest transition-colors duration-500 ${
+                            isDark ? 'text-gray-500' : 'text-slate-400'
+                          }`}>{item.label}</span>
+                          <span 
+                            className={`font-black text-sm transition-colors duration-500 ${
+                              isDark ? 'text-white' : 'text-slate-900'
+                            }`} 
+                            style={item.color ? { color: item.color } : {}}
+                          >
+                            {item.value}
+                          </span>
+                       </div>
+                       
+                       {item.canView && (
+                         <button 
+                           onClick={() => handleViewDocument(item.label)}
+                           className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border transition-all ${
+                             isDark 
+                               ? 'bg-white/5 border-white/10 text-flexigo-teal hover:bg-white/10' 
+                               : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200 shadow-sm'
+                           }`}
+                         >
+                           View
+                         </button>
+                       )}
                     </div>
                   ))}
                </GlassCard>
             </div>
           ))}
 
-          <button 
-            className={`w-full p-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-300 transform active:scale-[0.98] border ${
-              isDark 
-                ? 'bg-red-500/10 border-red-500/20 text-red-500 hover:bg-red-500/20' 
-                : 'bg-red-50 border border-red-100 text-red-600 hover:bg-red-100 shadow-sm'
-            }`}
-            onClick={handleLogout}
-          >
-            Logout Securely
-          </button>
+          <div className="mt-6">
+            <button 
+              className={`w-full p-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all duration-300 transform active:scale-[0.98] border ${
+                isDark 
+                  ? 'bg-red-500/10 border-red-500/20 text-red-500' 
+                  : 'bg-red-50 border border-red-100 text-red-600 shadow-sm'
+              }`}
+              onClick={handleLogout}
+            >
+              Logout Securely
+            </button>
+          </div>
        </div>
     </PageWrapper>
   );

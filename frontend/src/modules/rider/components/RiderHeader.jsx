@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import logo from '../../../assets/logo.png';
+import { useRideStore } from '../store/rideStore';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
 
@@ -8,6 +9,7 @@ export function RiderHeader() {
   const { pathname } = useLocation();
   const { user } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
+  const { setDiagnosticsOpen } = useRideStore();
 
   // Don't show header on splash or auth screens (they have their own branding)
   const isAuth = pathname.includes('/rider/auth') || pathname === '/rider' || pathname === '/rider/';
@@ -15,17 +17,17 @@ export function RiderHeader() {
 
   return (
     <header 
-      className={`absolute top-0 left-0 right-0 z-[60] px-6 py-5 flex items-center justify-between transition-colors duration-500 border-b ${
+      className={`absolute top-0 left-0 right-0 z-[60] px-6 py-3 flex items-center justify-between transition-colors duration-500 border-b ${
         theme === 'dark' 
           ? 'bg-[#0A0A0F]/90 border-white/05 backdrop-blur-xl shadow-2xl' 
           : 'bg-white/90 border-slate-200 backdrop-blur-xl shadow-sm'
       }`}
     >
-      <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/rider/home')}>
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${
-          theme === 'dark' ? 'bg-flexigo-teal/10 border-flexigo-teal/20' : 'bg-flexigo-teal/5 border-flexigo-teal/10'
+      <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/rider/home')}>
+        <div className={`w-11 h-11 rounded-xl flex items-center justify-center border transition-all ${
+          theme === 'dark' ? 'bg-flexigo-teal/10 border-flexigo-teal/20' : 'bg-flexigo-teal/5 border-flexigo-teal/10 shadow-sm'
         }`}>
-          <img src={logo} alt="Flexigo" className="w-6 h-6 object-contain p-1.5" />
+          <img src={logo} alt="Flexigo" className="w-full h-full object-contain p-0.5 scale-[1.7] transition-transform" />
         </div>
         <div className="flex flex-col">
           <span className={`font-heading font-black text-sm tracking-tight leading-none uppercase transition-colors ${
@@ -38,6 +40,18 @@ export function RiderHeader() {
       </div>
 
       <div className="flex items-center gap-2">
+        {/* Profile Navigator */}
+        <button 
+          onClick={() => navigate('/rider/profile')}
+          className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all active:scale-90 ${
+            theme === 'dark' 
+              ? 'bg-white/5 border-white/10 text-flexigo-teal/80 hover:bg-white/10' 
+              : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200 shadow-sm'
+          }`}
+        >
+           <span className="text-[11px] font-black">{user?.name?.charAt(0) || 'R'}</span>
+        </button>
+
         {/* Theme Toggle Button */}
         <button 
           onClick={toggleTheme}
@@ -58,22 +72,23 @@ export function RiderHeader() {
           )}
         </button>
 
-        <button className={`w-10 h-10 rounded-xl border flex items-center justify-center relative transition-colors ${
-          theme === 'dark' ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200'
-        }`}>
-          <svg viewBox="0 0 24 24" fill="none" stroke={theme === 'dark' ? 'white' : '#1e293b'} strokeWidth="2" className="w-5 h-5 opacity-60">
-            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 01-3.46 0" />
-          </svg>
-          <div className="absolute top-2 right-2 w-2 h-2 bg-flexigo-teal rounded-full border-2 border-white/10" />
-        </button>
-
-        <div 
-          onClick={() => navigate('/rider/profile')}
-          className="w-10 h-10 rounded-full bg-flexigo-teal/20 border border-flexigo-teal/30 flex items-center justify-center overflow-hidden cursor-pointer"
+        {/* Tactical Vehicle Status Button */}
+        <button 
+          onClick={() => setDiagnosticsOpen(true)}
+          className={`w-12 h-12 rounded-xl flex items-center justify-center border-2 transition-all relative group shadow-sm bg-flexigo-teal/5 border-flexigo-teal/20`}
         >
-           <span className="text-flexigo-teal text-xs font-black">{user?.name?.charAt(0) || 'R'}</span>
-        </div>
+           <svg viewBox="0 0 24 24" fill="none" stroke={theme === 'dark' ? '#39FF14' : '#0F766E'} strokeWidth="1.8" className="w-7 h-7 filter drop-shadow-sm group-hover:scale-110 transition-transform">
+             <path d="M14.5 7h4v2" />
+             <path d="M6 16c1.1 0 2-.9 2-2H4c0 1.1.9 2 2 2z" />
+             <path d="M18 16c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2z" />
+             <path d="M12 7h-7v4h14V7z" />
+             <path d="M8 7v-2" />
+             <path d="M16 7v-2" />
+           </svg>
+           <div className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-flexigo-teal rounded-full border-2 border-slate-900 flex items-center justify-center shadow-lg">
+             <div className="w-1 h-1 rounded-full bg-white animate-pulse" />
+           </div>
+        </button>
       </div>
     </header>
   );

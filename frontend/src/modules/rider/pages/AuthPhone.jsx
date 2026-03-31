@@ -16,9 +16,17 @@ export default function AuthPhone() {
 
   const isDark = theme === 'dark';
   const isValid = phone.length === 10 && /^\d+$/.test(phone);
+  const [error, setError] = useState('');
+  const [isShake, setIsShake] = useState(false);
 
   const handleSendOTP = () => {
-    if (!isValid) return;
+    if (!isValid) {
+      setError('Please enter a valid 10-digit mobile number');
+      setIsShake(true);
+      setTimeout(() => setIsShake(false), 500);
+      return;
+    }
+    setError('');
     storePhone(phone);
     setOtpSent(true);
     navigate('/rider/auth/otp');
@@ -44,16 +52,16 @@ export default function AuthPhone() {
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-          className="mb-12"
+          className="mb-12 flex flex-col items-center text-center"
         >
           <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 overflow-hidden p-2.5 transition-shadow"
+            className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 overflow-hidden p-0 transition-shadow mx-auto shadow-2xl"
             style={{ 
               background: 'linear-gradient(135deg, #39FF14, #22c55e)', 
               boxShadow: isDark ? '0 0 24px #39FF1444' : '0 4px 12px rgba(57,255,20,0.3)' 
             }}
           >
-            <img src={logo} alt="Flexigo" className="w-full h-full object-contain brightness-0" />
+            <img src={logo} alt="Flexigo" className="w-full h-full object-contain brightness-0 scale-[1.8]" />
           </div>
 
           <h1 className={`text-3xl font-heading font-black mb-2 transition-colors duration-500 ${
@@ -72,23 +80,42 @@ export default function AuthPhone() {
         {/* Form */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
+          animate={{ 
+            opacity: 1, 
+            y: 0,
+            x: isShake ? [-10, 10, -10, 10, 0] : 0
+          }}
           transition={{ delay: 0.2 }}
-          className="flex-1 flex flex-col gap-6"
+          className="flex-1 flex flex-col gap-6 items-center text-center"
         >
-          <AnimatedInput
-            label="Mobile Number"
-            type="tel"
-            inputMode="numeric"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value.replace(/\D/, '').slice(0, 10))}
-            placeholder="Enter 10-digit number"
-            prefix="+91"
-            maxLength={10}
-            autoFocus
-          />
+          <div className="w-full text-left">
+            <AnimatedInput
+              label="Mobile Number"
+              type="tel"
+              inputMode="numeric"
+              value={phone}
+              onChange={(e) => {
+                setError('');
+                setPhone(e.target.value.replace(/\D/, '').slice(0, 10));
+              }}
+              placeholder="Enter 10-digit number"
+              prefix="+91"
+              maxLength={10}
+              autoFocus
+              status={error ? 'error' : (isValid ? 'success' : '')}
+            />
+            {error && (
+              <motion.p 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-rose-500 text-[10px] font-bold uppercase tracking-widest mt-2 ml-1"
+              >
+                {error}
+              </motion.p>
+            )}
+          </div>
 
-          <p className={`text-xs transition-colors duration-500 ${
+          <p className={`text-xs transition-colors duration-500 max-w-[280px] ${
             isDark ? 'text-gray-600' : 'text-slate-500'
           }`}>
             By continuing, you agree to our{' '}

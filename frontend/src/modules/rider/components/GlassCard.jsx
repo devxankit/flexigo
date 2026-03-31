@@ -6,10 +6,10 @@ export function GlassCard({ children, className = '', onClick, glow = false, glo
   return (
     <div
       onClick={onClick}
-      className={`rounded-2xl flex flex-col transition-all duration-500 ${
+      className={`rounded-2xl border transition-all duration-500 ${
         theme === 'dark' 
           ? 'border-white/10 bg-white/5 backdrop-blur-xl' 
-          : 'border-slate-200 bg-white shadow-sm'
+          : 'border-slate-200 bg-white shadow-xl shadow-slate-200/40'
       } ${className}`}
       style={{
         boxShadow: glow 

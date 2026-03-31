@@ -58,11 +58,11 @@ const MapSection = () => {
               className="grid grid-cols-2 gap-12"
             >
               <div className="border-l-4 border-flexigo-teal pl-6">
-                <div className="text-4xl font-black font-heading text-flexigo-primary mb-1 tracking-tight">45+</div>
+                <div className="text-4xl font-black font-heading text-flexigo-primary mb-1 tracking-tight">2</div>
                 <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Cities</div>
               </div>
               <div className="border-l-4 border-slate-100 pl-6">
-                <div className="text-4xl font-black font-heading text-flexigo-primary mb-1 tracking-tight">1,200+</div>
+                <div className="text-4xl font-black font-heading text-flexigo-primary mb-1 tracking-tight">50</div>
                 <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Swap Hubs</div>
               </div>
             </motion.div>

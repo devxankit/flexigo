@@ -8,22 +8,25 @@ import { useRideStore } from '../store/rideStore';
 import { useThemeStore } from '../store/themeStore';
 import { useNavigate } from 'react-router-dom';
 
+import scooterRender from '../../../assets/scooter_render.png';
+
 export default function LiveGarage() {
   const navigate = useNavigate();
   const { vehicle, rideStatus, setUnlocking } = useRideStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
 
-  const handleStartRide = () => {
+  const handleUnlockVehicle = () => {
     setUnlocking();
-    navigate('/rider/ride');
+    // In a real app, this would trigger an IoT command to the scooter
+    alert("Vehicle Unlocked! You can now start your work session on other platforms.");
   };
 
   return (
-    <PageWrapper className="flex flex-col px-6 pb-32">
-      <div className="flex justify-between items-center mb-10">
+    <PageWrapper className="flex flex-col px-6 pt-6 pb-20">
+      <div className="flex justify-between items-center mb-4">
         <div className="flex flex-col gap-1">
-          <span className="text-[10px] tracking-[0.3em] uppercase font-black text-flexigo-teal">Live Garage Status</span>
+          <span className="text-[10px] tracking-[0.3em] uppercase font-black text-flexigo-teal">Vehicle Fleet Status</span>
           <h1 className={`text-2xl font-heading font-black transition-colors duration-500 ${
             isDark ? 'text-white' : 'text-slate-900'
           }`}>Your Vehicle</h1>
@@ -39,7 +42,7 @@ export default function LiveGarage() {
 
       <div className="flex-1 flex flex-col items-center">
         {/* Battery Visual Main */}
-        <div className="w-full max-w-[280px] py-10 relative">
+        <div className="w-full max-w-[280px] py-4 relative">
           <BatteryIndicator percentage={vehicle.battery} size="lg" />
           
           {/* Decorative Glow */}
@@ -48,21 +51,21 @@ export default function LiveGarage() {
           }`} />
         </div>
 
-        {/* Vehicle Image Placeholder */}
+        {/* Vehicle Image Professional Render */}
         <motion.div 
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="relative w-full h-40 mb-10 flex items-center justify-center"
+          initial={{ scale: 0.8, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="relative w-full h-56 mb-8 flex items-center justify-center p-4"
         >
           <img 
-            src="https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&q=80&w=400" 
-            alt="scooter silhouette" 
-            className={`w-full h-full object-contain grayscale transition-all duration-500 ${
-              isDark ? 'brightness-200 opacity-20' : 'brightness-50 opacity-10'
-            }`}
+            src={scooterRender} 
+            alt="Flexigo Electric Scooter" 
+            className="w-full h-full object-contain drop-shadow-2xl transition-all duration-500"
           />
-          <div className={`absolute inset-0 bg-gradient-to-t via-transparent to-transparent transition-colors duration-500 ${
-            isDark ? 'from-[#0A0A0F]' : 'from-slate-50'
+          {/* Subtle Dynamic Shadow */}
+          <div className={`absolute bottom-6 w-32 h-2 rounded-full blur-xl transition-colors duration-500 ${
+            isDark ? 'bg-white/5' : 'bg-slate-900/10 shadow-lg shadow-black/10'
           }`} />
         </motion.div>
 
@@ -75,7 +78,7 @@ export default function LiveGarage() {
             icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4"><path d="M12 2v20M2 12h20" strokeLinecap="round" strokeLinejoin="round" /></svg>}
           />
           <StatCard 
-            label="Ride Time" 
+            label="Active Duty" 
             value="142" 
             unit="MINS"
             color="#00D4FF"
@@ -107,8 +110,8 @@ export default function LiveGarage() {
               </div>
            </GlassCard>
 
-           <NeonButton variant="solid" size="full" onClick={handleStartRide}>
-              Start Ride
+           <NeonButton variant="solid" size="full" onClick={handleUnlockVehicle}>
+              Unlock Vehicle
            </NeonButton>
         </div>
       </div>

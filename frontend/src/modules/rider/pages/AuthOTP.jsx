@@ -22,7 +22,7 @@ export default function AuthOTP() {
     if (!isValid || loading) return;
     setLoading(true);
     // Simulate API call
-    await new Promise((r) => setTimeout(r, 1200));
+    await new Promise((r) => setTimeout(r, 50));
     setAuthenticated({ phone, name: 'Rider', id: 'U001' });
     setLoading(false);
     navigate('/rider/onboarding');
@@ -56,12 +56,12 @@ export default function AuthOTP() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-10"
+          className="mb-10 text-center flex flex-col items-center"
         >
           <div
-            className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-all ${
+            className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-all mx-auto ${
               isDark 
-                ? 'bg-flexigo-teal/10 border border-flexigo-teal/30' 
+                ? 'bg-flexigo-teal/10 border border-flexigo-teal/30 shadow-neon-sm' 
                 : 'bg-flexigo-teal/5 border border-flexigo-teal/20 shadow-sm'
             }`}
           >
@@ -72,7 +72,7 @@ export default function AuthOTP() {
           <h1 className={`text-3xl font-heading font-black mb-2 transition-colors duration-500 ${
             isDark ? 'text-white' : 'text-slate-900'
           }`}>Verify OTP</h1>
-          <p className={`text-sm transition-colors duration-500 ${
+          <p className={`text-sm transition-colors duration-500 max-w-[260px] ${
             isDark ? 'text-gray-500' : 'text-slate-500'
           }`}>
             We sent a 6-digit code to{' '}

@@ -53,7 +53,7 @@ export function RiderLayout() {
 
   return (
     <div className={`fixed inset-0 transition-colors duration-500 overflow-hidden overscroll-none touch-none ${
-      theme === 'dark' ? 'bg-[#0A0A0F]' : 'bg-slate-50'
+      theme === 'dark' ? 'bg-[#0A0A0F]' : 'bg-white'
     }`}>
       {/* Header Layer */}
       <div className="absolute top-0 left-0 right-0 z-[60] pointer-events-auto">

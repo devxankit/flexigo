@@ -42,6 +42,13 @@ export function NeonButton({ children, onClick, variant = 'green', size = 'md', 
       glow: isDark ? '0 0 20px #FF3B3044' : 'none',
       hoverGlow: isDark ? '0 0 30px #FF3B3066' : 'none',
     },
+    outline: {
+      bg: isDark ? 'from-transparent to-transparent' : 'from-transparent to-transparent',
+      border: isDark ? 'border-[#39FF14]/40 hover:border-[#39FF14]/80' : 'border-slate-300 hover:border-flexigo-teal',
+      text: isDark ? 'text-[#39FF14]' : 'text-slate-800',
+      glow: 'none',
+      hoverGlow: isDark ? '0 0 20px #39FF1422' : 'none',
+    },
   };
 
   const sizes = {
@@ -52,7 +59,7 @@ export function NeonButton({ children, onClick, variant = 'green', size = 'md', 
     full: 'w-full py-4 text-base',
   };
 
-  const v = variants[variant];
+  const v = variants[variant] || variants.green;
 
   return (
     <motion.button

@@ -24,7 +24,7 @@ export function PageWrapper({ children, className = '' }) {
       exit="exit"
       transition={pageTransition}
       className={`min-h-full w-full flex flex-col transition-colors duration-500 ${
-        theme === 'dark' ? 'bg-[#0A0A0F]' : 'bg-slate-50'
+        theme === 'dark' ? 'bg-[#0A0A0F]' : 'bg-white'
       } ${className}`}
     >
       {children}

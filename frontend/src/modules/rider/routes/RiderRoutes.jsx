@@ -10,6 +10,7 @@ import SubscriptionPlans from '../pages/SubscriptionPlans';
 import RideFlow from '../pages/RideFlow';
 import ProfileScreen from '../pages/ProfileScreen';
 import SupportScreen from '../pages/SupportScreen';
+import HubDetails from '../pages/HubDetails';
 import { RiderLayout } from '../components/RiderLayout';
 import { useAuthStore } from '../store/authStore';
 
@@ -36,8 +37,8 @@ export default function RiderRoutes() {
         <Route path="/onboarding" element={<OnboardingKYC />} />
         <Route path="/home" element={<HomeDashboard />} />
         <Route path="/garage" element={<LiveGarage />} />
-        <Route path="/subscription" element={<SubscriptionPlans />} />
-        <Route path="/ride" element={<RideFlow />} />
+        <Route path="/plans" element={<SubscriptionPlans />} />
+        <Route path="/hub/:id" element={<HubDetails />} />
         <Route path="/profile" element={<ProfileScreen />} />
         <Route path="/support" element={<SupportScreen />} />
       </Route>

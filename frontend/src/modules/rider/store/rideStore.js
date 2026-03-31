@@ -49,4 +49,6 @@ export const useRideStore = create((set, get) => ({
   resetRide: () => set({ rideStatus: 'idle', activeRide: null }),
 
   setUnlocking: () => set({ rideStatus: 'unlocking' }),
+  isDiagnosticsOpen: false,
+  setDiagnosticsOpen: (isOpen) => set({ isDiagnosticsOpen: isOpen }),
 }));

@@ -74,14 +74,14 @@ export default function SplashScreen() {
           style={{ opacity: 0 }}
         >
           <div
-            className={`w-24 h-24 rounded-3xl flex items-center justify-center overflow-hidden p-4 transition-all duration-1000 ${
+            className={`w-24 h-24 rounded-3xl flex items-center justify-center overflow-hidden p-0 transition-all duration-1000 ${
               isDark ? 'shadow-neon' : 'shadow-[0_0_40px_rgba(57,255,20,0.3)]'
             }`}
             style={{
               background: 'linear-gradient(135deg, #39FF14, #22c55e)',
             }}
           >
-            <img src={logo} alt="Flexigo" className="w-full h-full object-contain brightness-0" />
+            <img src={logo} alt="Flexigo" className="w-full h-full object-contain brightness-0 scale-[1.8]" />
           </div>
 
           <div className="text-center">
