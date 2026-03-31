@@ -38,6 +38,7 @@ export default function RiderRoutes() {
         <Route path="/home" element={<HomeDashboard />} />
         <Route path="/garage" element={<LiveGarage />} />
         <Route path="/plans" element={<SubscriptionPlans />} />
+        <Route path="/subscription" element={<SubscriptionPlans />} />
         <Route path="/hub/:id" element={<HubDetails />} />
         <Route path="/profile" element={<ProfileScreen />} />
         <Route path="/support" element={<SupportScreen />} />
