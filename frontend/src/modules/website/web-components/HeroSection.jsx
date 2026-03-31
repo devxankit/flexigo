@@ -77,10 +77,11 @@ const HeroSection = () => {
 
         {/* Visual Content - Real EV Scooter Image */}
         <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, delay: 0.2, type: 'spring' }}
-          className="flex-1 w-full relative"
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          className="flex-1 w-full relative group/scooter"
         >
           <div className="relative w-full aspect-square max-w-[600px] mx-auto flex items-center justify-center">
             {/* Clean white/neutral highlights instead of greenish glow */}
@@ -88,8 +89,11 @@ const HeroSection = () => {
             
             <img 
               src={heroImage} 
-              alt="Flexigo EV Scooter" 
-              className="relative z-10 w-full h-auto object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.1)] transition-transform duration-700 hover:scale-105"
+              alt="Flexigo V1 Scooter" 
+              fetchpriority="high"
+              loading="eager"
+              decoding="async"
+              className="w-full h-auto max-w-[500px] object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.8)] transition-transform duration-1000 group-hover/scooter:scale-[1.05]" 
             />
           </div>
         </motion.div>
