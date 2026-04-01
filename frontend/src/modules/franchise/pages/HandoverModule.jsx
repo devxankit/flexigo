@@ -12,7 +12,7 @@ import {
   CreditCard,
   Camera,
   ChevronRight,
-  ArrowLeftRight,
+  RefreshCw,
   ChevronLeft,
   Calendar,
   Zap,
@@ -443,9 +443,13 @@ export default function HandoverModule() {
            </div>
 
            {(selectedSubscriber || selectedVehicle) && (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-5 rounded-xl bg-emerald-600/5 border border-emerald-500/10 flex items-center gap-4">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="p-5 rounded-xl bg-emerald-600/5 border border-emerald-500/10 flex items-center gap-4 transition-all"
+              >
                  <div className="w-12 h-12 rounded-lg bg-[var(--bg-secondary)] border border-emerald-500/20 flex items-center justify-center text-emerald-600 shadow-sm shrink-0">
-                    <ArrowLeftRight size={20} />
+                    <RefreshCw size={24} />
                  </div>
                  <div className="space-y-0.5">
                     <h4 className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-wider">Authorized {mode}</h4>
