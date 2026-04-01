@@ -1,5 +1,5 @@
 import React from 'react';
-import { Twitter, Instagram, Linkedin, Zap, Mail, Phone, MapPin } from 'lucide-react';
+import { Twitter, Instagram, Linkedin, Zap, Mail, Phone, MapPin, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import logo from '../../../assets/logo.png';
 
@@ -85,7 +85,13 @@ const FooterSection = () => {
               <li className="flex items-center gap-3">
                  <Phone className="w-5 h-5 text-flexigo-teal shrink-0" />
                  <span className="text-slate-600 text-sm font-medium">
-                   1800-123-FLEX
+                   +91 99229 68093
+                 </span>
+              </li>
+              <li className="flex items-center gap-3">
+                 <MessageCircle className="w-5 h-5 text-flexigo-teal shrink-0" />
+                 <span className="text-slate-600 text-sm font-medium">
+                   +91 99229 68093 (WhatsApp)
                  </span>
               </li>
               <li className="flex items-center gap-3">
