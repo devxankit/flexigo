@@ -7,6 +7,7 @@ export function AnimatedInput({
   type = 'text',
   value,
   onChange,
+  name,
   placeholder,
   maxLength,
   prefix,
@@ -14,10 +15,17 @@ export function AnimatedInput({
   autoFocus = false,
   inputMode,
   disabled = false,
+  variant = 'default', // 'default' | 'minimal'
 }) {
   const [focused, setFocused] = useState(false);
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
+
+  const baseStyles = variant === 'minimal' 
+    ? (focused ? 'border-flexigo-teal' : 'border-transparent bg-transparent')
+    : (focused 
+        ? 'border-flexigo-teal shadow-[0_0_16px_rgba(57,255,20,0.15)] overflow-hidden' 
+        : isDark ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200 shadow-inner');
 
   return (
     <div className={`relative ${className}`}>
@@ -29,11 +37,7 @@ export function AnimatedInput({
         </label>
       )}
       <div
-        className={`relative flex items-center rounded-xl border transition-all duration-500 ${
-          focused 
-            ? 'border-flexigo-teal shadow-[0_0_16px_rgba(57,255,20,0.15)] overflow-hidden' 
-            : isDark ? 'bg-white/5 border-white/10' : 'bg-slate-100 border-slate-200 shadow-inner'
-        }`}
+        className={`relative flex items-center rounded-xl border transition-all duration-500 ${baseStyles}`}
       >
         {prefix && (
           <span className={`pl-4 font-black select-none text-lg transition-colors duration-500 ${
@@ -42,6 +46,7 @@ export function AnimatedInput({
         )}
         <input
           type={type}
+          name={name}
           value={value}
           onChange={onChange}
           placeholder={placeholder}

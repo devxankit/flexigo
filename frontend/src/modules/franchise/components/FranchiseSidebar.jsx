@@ -16,6 +16,8 @@ import {
 import { Link, useLocation } from 'react-router-dom';
 import { useFranchiseAuthStore as useAuthStore } from '../store/franchiseAuthStore';
 
+import logo from '../../../assets/logo.png';
+
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/franchise/dashboard' },
   { id: 'fleet', label: 'Fleet Ops', icon: Truck, path: '/franchise/fleet' },
@@ -41,8 +43,8 @@ export default function FranchiseSidebar() {
       {/* Sidebar Header Brand - Professional B2B Style */}
       <div className="h-14 border-b border-[var(--border-subtle)] flex items-center px-6 shrink-0 overflow-hidden">
         <div className="flex items-center gap-3 min-w-[200px]">
-          <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white shadow-lg shadow-emerald-900/20 shrink-0">
-             <Truck size={18} strokeWidth={2.5} />
+          <div className="w-9 h-9 rounded-xl bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center shadow-lg shadow-emerald-500/5 shrink-0 overflow-hidden">
+             <img src={logo} alt="Flexigo" className="w-full h-full object-contain scale-[1.6]" />
           </div>
           <AnimatePresence>
             {!collapsed && (
@@ -52,7 +54,7 @@ export default function FranchiseSidebar() {
                 exit={{ opacity: 0, x: -5 }}
                 className="flex flex-col leading-none"
               >
-                 <h2 className="text-sm font-bold tracking-tight text-[var(--text-primary)]">FLEXIGO</h2>
+                 <h2 className="text-sm font-bold tracking-tight text-[var(--text-primary)] uppercase">FLEXIGO</h2>
                  <p className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">Management</p>
               </motion.div>
             )}

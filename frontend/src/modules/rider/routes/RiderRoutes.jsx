@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import SplashScreen from '../pages/SplashScreen';
 import AuthPhone from '../pages/AuthPhone';
 import AuthOTP from '../pages/AuthOTP';
+import ProfileDetails from '../pages/ProfileDetails';
 import OnboardingKYC from '../pages/OnboardingKYC';
 import HomeDashboard from '../pages/HomeDashboard';
 import LiveGarage from '../pages/LiveGarage';
@@ -34,6 +35,7 @@ export default function RiderRoutes() {
       
       {/* Protected Layout Routes */}
       <Route element={<RiderLayout />}>
+        <Route path="/onboarding/details" element={<ProfileDetails />} />
         <Route path="/onboarding" element={<OnboardingKYC />} />
         <Route path="/home" element={<HomeDashboard />} />
         <Route path="/garage" element={<LiveGarage />} />

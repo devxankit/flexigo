@@ -55,6 +55,9 @@ export function BottomNav() {
   const { pathname } = useLocation();
   const { theme } = useThemeStore();
 
+  const isOnboarding = pathname.includes('/rider/onboarding');
+  if (isOnboarding) return null;
+
   return (
     <div
       className={`w-full px-6 pt-2 pb-6 transition-colors duration-500 ${

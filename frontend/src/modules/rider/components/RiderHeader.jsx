@@ -11,8 +11,8 @@ export function RiderHeader() {
   const { theme, toggleTheme } = useThemeStore();
   const { setDiagnosticsOpen } = useRideStore();
 
-  // Don't show header on splash or auth screens (they have their own branding)
-  const isAuth = pathname.includes('/rider/auth') || pathname === '/rider' || pathname === '/rider/';
+  // Don't show header on splash, auth, or onboarding screens
+  const isAuth = pathname.includes('/rider/auth') || pathname.includes('/rider/onboarding') || pathname === '/rider' || pathname === '/rider/';
   if (isAuth) return null;
 
   return (

@@ -25,7 +25,7 @@ export default function AuthOTP() {
     await new Promise((r) => setTimeout(r, 50));
     setAuthenticated({ phone, name: 'Rider', id: 'U001' });
     setLoading(false);
-    navigate('/rider/onboarding');
+    navigate('/rider/onboarding/details');
   };
 
   const handleResend = () => {
