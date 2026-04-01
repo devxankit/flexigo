@@ -21,7 +21,7 @@ import logo from '../../../assets/logo.png';
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/franchise/dashboard' },
   { id: 'fleet', label: 'Fleet Ops', icon: Truck, path: '/franchise/fleet' },
-  { id: 'handover', label: 'Intake Center', icon: Zap, path: '/franchise/handover' },
+  { id: 'handover', label: 'Handover', icon: ArrowLeftRight, path: '/franchise/handover' },
   { id: 'tracking', label: 'Subscribers', icon: Users, path: '/franchise/tracking' },
   { id: 'wallet', label: 'Financials', icon: Wallet, path: '/franchise/wallet' },
   { id: 'staff', label: 'Personnel', icon: Users, path: '/franchise/staff' },

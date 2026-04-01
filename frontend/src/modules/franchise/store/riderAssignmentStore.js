@@ -17,6 +17,20 @@ export const useSubscriberStore = create((set) => ({
     )
   })),
 
+  dispatchVehicle: (subscriberId, vehicleId, returnDate) => set((state) => ({
+    subscribers: state.subscribers.map(s => 
+      s.id === subscriberId 
+        ? { 
+            ...s, 
+            vehicleId, 
+            status: 'active', 
+            subscriptionStart: new Date().toISOString(),
+            subscriptionEnd: returnDate
+          } 
+        : s
+    )
+  })),
+
   returnVehicle: (subscriberId) => set((state) => ({
     subscribers: state.subscribers.map(s => 
       s.id === subscriberId 
