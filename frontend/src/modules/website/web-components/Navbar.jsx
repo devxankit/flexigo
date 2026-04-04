@@ -43,10 +43,10 @@ const Navbar = () => {
           />
           <div className="w-20 md:w-26 h-10 md:h-12" />
           <span className={cn(
-            "text-2xl font-heading font-bold tracking-tight transition-colors mt-0.5 whitespace-nowrap",
+            "text-2xl font-heading font-black tracking-tighter transition-colors mt-0.5 whitespace-nowrap uppercase",
             scrolled ? "text-flexigo-primary" : "text-black"
           )}>
-            FlexiGo
+            Flexigo <span className="text-flexigo-teal">E-Mobility</span>
           </span>
         </Link>
 

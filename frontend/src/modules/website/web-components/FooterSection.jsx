@@ -18,8 +18,8 @@ const FooterSection = () => {
                 className="w-20 h-20 absolute top-1/2 -translate-y-1/2 -left-3 object-contain transition-transform duration-300 group-hover:scale-105 z-10" 
               />
               <div className="w-14 h-10" />
-              <span className="text-2xl font-heading font-bold tracking-tight text-flexigo-primary mt-1 whitespace-nowrap relative z-20">
-                FlexiGo
+              <span className="text-2xl font-heading font-black tracking-tighter text-flexigo-primary mt-1 whitespace-nowrap relative z-20 uppercase">
+                Flexigo <span className="text-flexigo-teal">E-Mobility</span>
               </span>
             </a>
             <p className="text-slate-600 leading-relaxed mb-8 max-w-sm">
@@ -79,7 +79,7 @@ const FooterSection = () => {
               <li className="flex items-start gap-3">
                  <MapPin className="w-5 h-5 text-flexigo-teal shrink-0 mt-0.5" />
                  <span className="text-slate-600 text-sm leading-relaxed">
-                   Flexigo HQ, Koramangala, Bengaluru, Karnataka 560034
+                   Shop No. 03, Ground Floor, Building 'Krishna Avenue’ opposite to D mart, Survey Number :1 11/10/2, Baner Road, Tehsil Haveli, Pune- 411045, Maharashtra
                  </span>
               </li>
               <li className="flex items-center gap-3">
@@ -107,7 +107,7 @@ const FooterSection = () => {
 
         <div className="border-t border-slate-200 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
            <p className="text-slate-500 text-sm">
-             © {new Date().getFullYear()} Flexigo Mobility Pvt. Ltd. All rights reserved.
+             © {new Date().getFullYear()} Flexigo E-Mobility Pvt. Ltd. All rights reserved.
            </p>
            <div className="flex gap-6 text-sm">
              <a href="#" className="text-slate-500 hover:text-flexigo-primary transition-colors">Privacy Policy</a>

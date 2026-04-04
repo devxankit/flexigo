@@ -7,9 +7,7 @@ const VehicleShowcaseSection = () => {
 
   return (
     <section className="py-24 lg:py-32 bg-flexigo-dark text-white relative overflow-hidden">
-      {/* Dynamic light rays */}
-      <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-flexigo-teal/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-flexigo-accent/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-[-50%] h-[300px] bg-flexigo-teal/20 blur-[150px] opacity-40 pointer-events-none" />
 
       <div className="container mx-auto px-6 relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-16 lg:mb-24">
@@ -18,19 +16,21 @@ const VehicleShowcaseSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="text-flexigo-accent font-medium uppercase tracking-[0.2em] text-xs mb-4 flex items-center justify-center gap-2"
+            className="text-flexigo-teal font-black uppercase tracking-[0.3em] text-[10px] mb-4 flex items-center justify-center gap-3"
           >
-            <Zap className="w-5 h-5" /> The Machines
+            <div className="w-12 h-[1px] bg-flexigo-teal/30" />
+            <Zap className="w-4 h-4 fill-flexigo-teal" /> The Machines
+            <div className="w-12 h-[1px] bg-flexigo-teal/30" />
           </motion.div>
           <motion.h2
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-4xl md:text-6xl font-black font-heading leading-[1.1] tracking-tighter text-[#334155]"
+            className="text-4xl md:text-7xl font-black font-heading leading-[1.1] tracking-tighter text-white"
           >
             Engineering Meets <br />
-            Pure Performance.
+            Pure <span className="text-flexigo-teal italic">Performance.</span>
           </motion.h2>
         </div>
 
@@ -39,32 +39,35 @@ const VehicleShowcaseSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="relative max-w-6xl mx-auto rounded-[3rem] bg-white/[0.02] border border-white/5 p-8 lg:p-16 backdrop-blur-2xl overflow-hidden shadow-2xl [transform:translateZ(0)]"
+          className="relative max-w-6xl mx-auto rounded-[4rem] bg-gradient-to-b from-white/[0.05] to-transparent border border-white/10 p-8 lg:p-20 backdrop-blur-3xl overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)] [transform:translateZ(0)]"
         >
           {/* Glass glare effect */}
-          <div className="absolute top-0 left-[-100%] w-[50%] h-[200%] bg-gradient-to-r from-transparent via-white/5 to-transparent rotate-[30deg] pointer-events-none" />
+          <div className="absolute top-0 left-[-100%] w-[50%] h-[200%] bg-gradient-to-r from-transparent via-flexigo-teal/5 to-transparent rotate-[35deg] pointer-events-none group-hover:left-[200%] transition-all duration-[3000ms]" />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
             {/* Visual Side */}
-            <div className="lg:col-span-7 relative flex justify-center items-center py-12 lg:py-0">
-              {/* Central glowing platform */}
-              <div className="absolute bottom-10 w-[90%] h-14 bg-flexigo-teal/20 blur-[60px] rounded-[100%] animate-pulse" />
+            <div className="lg:col-span-7 relative flex justify-center items-center py-20 lg:py-0">
+              
+              {/* Massive Multi-Layer Pedestal Glow */}
+              <div className="absolute bottom-10 w-[120%] h-24 bg-flexigo-teal/20 blur-[100px] rounded-[100%] animate-pulse" />
+              <div className="absolute bottom-20 w-[60%] h-10 bg-flexigo-teal/30 blur-[40px] rounded-[100%]" />
+              <div className="absolute bottom-24 w-[30%] h-4 bg-flexigo-teal blur-[15px] rounded-[100%]" />
               
               {/* Scooter Showcase */}
               <div className="relative z-10 w-full flex flex-col items-center justify-center">
-                <div className="relative group/scooter px-4">
-                  {/* Digital Aura */}
-                  <div className="absolute inset-0 bg-flexigo-teal/5 rounded-full blur-[100px] scale-150 opacity-0 group-hover/scooter:opacity-100 transition-opacity duration-1000" />
+                <div className="relative group/scooter p-10">
+                  {/* Digital Aura Rings */}
+                  <div className="absolute inset-0 bg-flexigo-teal/5 rounded-full blur-[120px] scale-150 opacity-40" />
                   
                   <motion.div
-                    animate={{ y: [-10, 10, -10] }}
-                    transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
+                    animate={{ y: [-15, 15, -15] }}
+                    transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
                     className="relative"
                   >
                     <img 
                       src={heroImage} 
                       alt="Flexigo V1 Scooter" 
-                      className="w-full h-auto max-w-[500px] object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.8)] transition-transform duration-1000 group-hover/scooter:scale-[1.05]" 
+                      className="w-full h-auto max-w-[500px] object-contain transition-transform duration-1000 group-hover/scooter:scale-[1.05] drop-shadow-[0_0_15px_rgba(57,255,20,0.4)] drop-shadow-[0_0_50px_rgba(57,255,20,0.2)] drop-shadow-[0_30px_60px_rgba(0,0,0,0.8)]" 
                     />
                     
                     {/* High-Tech Scanline */}
@@ -102,10 +105,13 @@ const VehicleShowcaseSection = () => {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.3 }}
-                className="bg-black/40 border border-white/5 rounded-3xl p-8 backdrop-blur-3xl shadow-xl hover:border-flexigo-teal/20 transition-colors duration-500 group/card"
+                className="bg-black/60 border border-white/10 rounded-[2.5rem] p-8 backdrop-blur-3xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] hover:border-flexigo-teal/40 transition-colors duration-500 group/card relative overflow-hidden"
               >
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover/card:scale-110 transition-transform duration-500">
+                {/* Internal Card Glow */}
+                <div className="absolute -top-24 -right-24 w-48 h-48 bg-flexigo-teal/10 rounded-full blur-[60px]" />
+                
+                <div className="flex items-center gap-4 mb-8 relative z-10">
+                   <div className="w-14 h-14 rounded-2xl bg-flexigo-teal/10 border border-flexigo-teal/20 flex items-center justify-center text-flexigo-teal group-hover/card:scale-110 group-hover/card:bg-flexigo-teal group-hover/card:text-white transition-all duration-500 shadow-neon-sm">
                     <Battery className="w-6 h-6" />
                   </div>
                   <div>

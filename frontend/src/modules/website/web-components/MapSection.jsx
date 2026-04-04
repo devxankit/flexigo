@@ -1,15 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import indiaMap from '../../../assets/images/india_map_bg.png';
+import maharashtraMap from '../../../assets/images/maharashtra_map.png';
 
 const activeCities = [
-  { name: 'Bengaluru', top: '74%', left: '36%' },
-  { name: 'New Delhi', top: '30%', left: '33%' },
-  { name: 'Mumbai', top: '60%', left: '22%' },
-  { name: 'Hyderabad', top: '58%', left: '42%' },
-  { name: 'Pune', top: '65%', left: '26%' },
-  { name: 'Chennai', top: '82%', left: '35%' },
-  { name: 'Ahmedabad', top: '45%', left: '25%' },
+  { name: 'Mumbai', top: '48%', left: '18%' },
+  { name: 'Pune', top: '55%', left: '28%' },
+  { name: 'Nagpur', top: '28%', left: '76%' },
+  { name: 'Nashik', top: '32%', left: '30%' },
+  { name: 'Aurangabad', top: '40%', left: '44%' },
+  { name: 'Kolhapur', top: '55%', left: '34%' },
+  { name: 'Solapur', top: '54%', left: '52%' },
 ];
 
 const MapSection = () => {
@@ -18,7 +18,7 @@ const MapSection = () => {
       <div className="container mx-auto px-6 max-w-7xl">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
 
-          {/* Content: Left side unchanged */}
+          {/* Content */}
           <div className="max-w-xl">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -27,7 +27,7 @@ const MapSection = () => {
               transition={{ duration: 0.5 }}
               className="text-flexigo-teal font-black uppercase tracking-[0.25em] text-[10px] mb-6"
             >
-              Our Coverage
+              Maharashtra Operations
             </motion.div>
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
@@ -36,7 +36,7 @@ const MapSection = () => {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-4xl md:text-6xl font-black font-heading text-flexigo-primary leading-[1.1] mb-8 tracking-tighter"
             >
-              Expanding Rapidly <br /> across India.
+              The DNA of <br /> Maharashtra.
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -45,9 +45,9 @@ const MapSection = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-lg text-slate-500 leading-relaxed mb-12 font-medium"
             >
-              From bustling metros to emerging tier-2 cities, Flexigo is building the
-              densest EV infrastructure network in the country. Wherever you ride,
-              we've got your back.
+              Starting from the industrial hubs of Pune and Mumbai, Flexigo is 
+              wiring the entire state of Maharashtra with smart EV power. 
+              Our focus is local, our scale is massive.
             </motion.p>
 
             <motion.div
@@ -58,28 +58,28 @@ const MapSection = () => {
               className="grid grid-cols-2 gap-12"
             >
               <div className="border-l-4 border-flexigo-teal pl-6">
-                <div className="text-4xl font-black font-heading text-flexigo-primary mb-1 tracking-tight">2</div>
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Cities</div>
+                <div className="text-4xl font-black font-heading text-flexigo-primary mb-1 tracking-tight">7+</div>
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Major Cities</div>
               </div>
               <div className="border-l-4 border-slate-100 pl-6">
-                <div className="text-4xl font-black font-heading text-flexigo-primary mb-1 tracking-tight">50</div>
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Swap Hubs</div>
+                <div className="text-4xl font-black font-heading text-flexigo-primary mb-1 tracking-tight">120+</div>
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Planned Hubs</div>
               </div>
             </motion.div>
           </div>
 
-          {/* Map Visualization: Right side with Image */}
+          {/* Map Visualization */}
           <div className="relative w-full aspect-[4/5] md:aspect-square bg-slate-50/50 rounded-[3.5rem] border border-slate-100 flex items-center justify-center p-4 md:p-12 overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.02)]">
 
-            {/* India Map Image Background */}
+            {/* Maharashtra Map Image Background */}
             <div className="relative w-full h-full flex items-center justify-center">
               <motion.img
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 1 }}
-                src={indiaMap}
-                alt="India Map Coverage"
+                src={maharashtraMap}
+                alt="Maharashtra Coverage"
                 className="w-full h-full object-contain opacity-80 mix-blend-multiply transition-all duration-700 hover:scale-[1.02]"
               />
 
@@ -118,7 +118,7 @@ const MapSection = () => {
 
             <div className="absolute bottom-10 right-10 flex items-center gap-3 bg-white border border-slate-100 px-5 py-2.5 rounded-2xl shadow-xl shadow-slate-200/20 z-20">
               <span className="w-2.5 h-2.5 rounded-full bg-flexigo-teal animate-pulse" />
-              <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-1">Active Expansion</span>
+              <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest px-1">MH Priority Grid</span>
             </div>
           </div>
 

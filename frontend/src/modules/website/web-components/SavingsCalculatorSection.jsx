@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, animate } from 'framer-motion';
-import { ChevronDown, Info } from 'lucide-react';
+import { ChevronDown, Wallet, Zap, Fuel, ShieldCheck } from 'lucide-react';
 import { cn } from '../../../lib/utils';
 
 const SmoothCounter = ({ value }) => {
@@ -29,224 +29,145 @@ const SavingsCalculatorSection = () => {
     { label: 'Weekly', days: 6 },
   ];
 
-  // Constants (Mock values based on screenshot)
-  const iceMaintenance = period.label === 'Weekly' ? 250 : 1000;
-  const evMaintenance = period.label === 'Weekly' ? 60 : 250;
-  const iceEMI = period.label === 'Weekly' ? 750 : 3000;
-  const evEMI = period.label === 'Weekly' ? 1350 : 5400;
+  // Pure Flexigo Saving Logic (No Comparison)
+  const fuelSaving = Math.round(143 * period.days * (dailyEarnings / 1000));
+  const maintSaving = Math.round(28 * period.days * (dailyEarnings / 1000));
+  const totalSavings = fuelSaving + maintSaving;
   
-  const [iceMonthlyFuel, setIceMonthlyFuel] = useState(3714);
-  const [savings, setSavings] = useState(3714);
-
-  useEffect(() => {
-    // Basic logic: Fuel cost per period
-    // Monthly (26 days) approx 3714. Weekly (6 days) approx 3714 * (6/26) = 857
-    const calculatedIceFuel = (dailyEarnings / 1000) * (period.label === 'Monthly' ? 3714 : 857);
-    setIceMonthlyFuel(Math.round(calculatedIceFuel));
-    
-    // In the screenshot, savings focus on fuel or total gap. 
-    // Let's use fuel savings to match the visual focus on ₹3,714
-    setSavings(Math.round(calculatedIceFuel)); 
-  }, [dailyEarnings, period]);
-
-  const categories = [
-    { name: 'Maintenance', ice: iceMaintenance, ev: evMaintenance },
-    { name: 'EMI/Net Rental', ice: iceEMI, ev: evEMI },
-    { name: 'Fuel', ice: iceMonthlyFuel, ev: 0 },
-    { name: 'Initial Payment', ice: 20000, ev: 2100 },
-  ];
+  const handleSliderChange = (e) => {
+    setDailyEarnings(parseInt(e.target.value));
+  };
 
   return (
-    <section className="py-24 bg-white overflow-hidden">
-      <div className="container mx-auto px-6 max-w-7xl">
-        <div className="flex flex-col lg:flex-row gap-16 items-center">
+    <section className="py-24 bg-white overflow-hidden" id="savings-calculator">
+      <div className="container mx-auto px-6 max-w-6xl">
+        <div className="flex flex-col lg:flex-row gap-12 items-center">
           
-          {/* Left Side: Controls */}
+          {/* Left Side: Compact Controls */}
           <div className="w-full lg:w-1/2">
-            <motion.h2 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-4xl md:text-5xl font-bold font-heading text-flexigo-primary leading-tight mb-4"
-            >
-              How Much Can You Save?
-            </motion.h2>
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className="text-slate-500 mb-12 text-lg"
-            >
-              Slide and select to check your savings!
-            </motion.p>
+            <h2 className="text-4xl md:text-5xl font-black font-heading text-slate-900 tracking-tighter mb-4">
+               Keep More <span className="text-flexigo-teal italic">Profit.</span>
+            </h2>
+            <p className="text-slate-500 mb-12 font-medium">Slide to calculate your extra take-home pay.</p>
 
-            {/* Dropdown Selector */}
-            <div className="relative mb-10 z-50">
-              <div 
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full md:w-80 p-4 rounded-full border-2 border-[#10B981] flex items-center justify-between cursor-pointer bg-white group hover:shadow-lg hover:shadow-[#10B981]/10 transition-all duration-300"
-              >
-                <span className="font-bold text-[#334155]">{period.label} (Working Days - {period.days})</span>
-                <ChevronDown className={cn("w-5 h-5 text-slate-400 group-hover:text-[#10B981] transition-transform duration-300", isDropdownOpen && "rotate-180")} />
-              </div>
-              
-              <AnimatePresence>
-                {isDropdownOpen && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="absolute top-full left-0 mt-2 w-full md:w-80 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden"
-                  >
-                    {periods.map((p) => (
-                      <div 
-                        key={p.label}
-                        onClick={() => {
-                          setPeriod(p);
-                          setIsDropdownOpen(false);
-                        }}
-                        className={cn(
-                          "p-4 cursor-pointer transition-colors hover:bg-slate-50 font-bold",
-                          period.label === p.label ? "text-[#10B981] bg-[#10B981]/5" : "text-[#334155]"
-                        )}
-                      >
-                        {p.label} (Working Days - {p.days})
-                      </div>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            <div className="space-y-12 bg-slate-50/50 p-8 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+               {/* Period Toggle */}
+               <div className="flex bg-white p-1.5 rounded-2xl border border-slate-200 w-fit">
+                  {periods.map(p => (
+                    <button
+                      key={p.label}
+                      onClick={() => setPeriod(p)}
+                      className={cn(
+                        "px-6 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all",
+                        period.label === p.label ? "bg-flexigo-teal text-white shadow-lg shadow-flexigo-teal/20" : "text-slate-400 hover:text-slate-600"
+                      )}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+               </div>
 
-            {/* Slider */}
-            <div className="mb-12">
-              <div className="flex justify-between items-center mb-6">
-                <span className="text-xl font-medium text-slate-700">
-                  Daily Earnings : <span className="text-flexigo-teal font-bold">₹<SmoothCounter value={dailyEarnings} /></span>
-                </span>
-              </div>
-              <div className="relative h-2 w-full bg-slate-100 rounded-full">
-                <div 
-                  className="absolute top-0 left-0 h-full bg-flexigo-teal rounded-full"
-                  style={{ width: `${(dailyEarnings / 2000) * 100}%` }}
-                />
-                <input 
-                  type="range"
-                  min="0"
-                  max="2000"
-                  step="10"
-                  value={dailyEarnings}
-                  onChange={(e) => setDailyEarnings(parseInt(e.target.value))}
-                  className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer appearance-none"
-                />
-                <div 
-                  className="absolute top-1/2 -translate-y-1/2 w-8 h-8 bg-white border-4 border-flexigo-teal rounded-full shadow-md pointer-events-none"
-                  style={{ left: `calc(${(dailyEarnings / 2000) * 100}% - 16px)` }}
-                />
-              </div>
-              <div className="flex justify-between mt-4 text-sm font-medium text-slate-400">
-                <span>₹0</span>
-                <span>₹2,000</span>
-              </div>
-            </div>
-
-            {/* Result Area */}
-            <div className="space-y-2">
-              <motion.h4 
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="text-lg font-bold text-slate-800"
-              >
-                You Will Save Extra Savings With Flexigo Electric
-              </motion.h4>
-              <div className="text-4xl md:text-5xl font-black text-flexigo-teal font-heading">
-                ₹<SmoothCounter value={savings} /> <span className="text-xl font-bold">Per {period.label === 'Monthly' ? 'Month' : 'Week'}</span>
-              </div>
+               {/* Earnings Input */}
+               <div className="relative">
+                  <div className="flex justify-between items-end mb-6">
+                    <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Daily Revenue</span>
+                    <span className="text-4xl font-black font-heading text-slate-900 tracking-tighter">₹<SmoothCounter value={dailyEarnings} /></span>
+                  </div>
+                  
+                  {/* Highly Reactive Tactile Slider */}
+                  <div className="relative h-1 w-full bg-slate-200 rounded-full cursor-pointer flex items-center group/slider">
+                    <motion.div className="absolute left-0 h-full bg-flexigo-teal rounded-full" style={{ width: `${(dailyEarnings / 3000) * 100}%` }} />
+                    <input 
+                      type="range"
+                      min="0"
+                      max="3000"
+                      step="10"
+                      value={dailyEarnings}
+                      onChange={handleSliderChange}
+                      className="absolute inset-x-0 w-full h-12 opacity-0 cursor-pointer z-20"
+                    />
+                    <div 
+                      className="absolute top-1/2 -translate-y-1/2 w-10 h-10 bg-white border-[6px] border-flexigo-teal rounded-full shadow-[0_10px_40px_rgba(57,255,20,0.4)] pointer-events-none z-30 group-hover/slider:scale-110 transition-transform"
+                      style={{ left: `calc(${(dailyEarnings / 3000) * 100}% - 20px)` }}
+                    />
+                  </div>
+                  <div className="flex justify-between mt-4 text-[9px] font-black uppercase text-slate-400 tracking-widest px-1">
+                    <span>Low Revenue</span>
+                    <span>High Revenue</span>
+                  </div>
+               </div>
             </div>
           </div>
 
-          {/* Right Side: Visual Graph */}
-          <div className="lg:w-1/2 flex flex-col items-center">
-            {/* Legend */}
-            <div className="flex gap-4 mb-6 self-end">
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-[#10B981]" />
-                <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest">Flexigo EV</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-[#FACC15]" />
-                <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest">ICE Bikes</span>
-              </div>
-            </div>
-
-            {/* Bars Grid */}
-            <div className="w-full flex justify-around items-end gap-2 md:gap-4 min-h-[400px] pt-16 px-4">
-              {categories.map((cat, i) => {
-                const globalMax = Math.max(...categories.map(c => Math.max(c.ice, c.ev)));
-                const getScale = (val) => (val / globalMax) * 100;
+          {/* Right Side: Graphic Visual (Donut/Gauge Style) */}
+          <div className="lg:w-1/2 w-full flex flex-col items-center">
+             <div className="relative w-[340px] h-[340px] md:w-[420px] md:h-[420px] flex items-center justify-center">
                 
-                // Determine which one is smaller and larger for stacking
-                const smaller = cat.ice < cat.ev ? { val: cat.ice, type: 'ice' } : { val: cat.ev, type: 'ev' };
-                const larger = cat.ice >= cat.ev ? { val: cat.ice, type: 'ice' } : { val: cat.ev, type: 'ev' };
+                {/* Outer Glow Circle */}
+                <div className="absolute inset-0 border border-flexigo-teal/10 rounded-full animate-[pulse_4s_infinite]" />
+                <div className="absolute inset-10 border border-flexigo-teal/5 rounded-full" />
 
-                const renderBox = (item, isBottom) => {
-                  const isIce = item.type === 'ice';
-                  const height = getScale(item.val);
-                  
-                  return (
-                    <motion.div 
-                      initial={{ scaleY: 0 }}
-                      whileInView={{ scaleY: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.1, duration: 0.8, ease: "easeOut" }}
-                      style={{ height: `${Math.max(12, height)}%`, transformOrigin: isBottom ? 'bottom' : 'bottom' }}
-                      className={cn(
-                        "w-full max-w-[80px] flex flex-col items-center justify-center relative px-2 transition-all duration-500",
-                        isIce 
-                          ? "bg-gradient-to-b from-[#FDE047] to-[#FACC15] text-[#78350F]" 
-                          : "bg-gradient-to-b from-[#34D399] to-[#10B981] text-white",
-                        isBottom ? "rounded-b-[20px]" : "rounded-t-[20px]"
-                      )}
-                    >
-                      <span className={cn(
-                        "font-bold truncate",
-                        !isBottom && height > 30 ? "absolute top-4 text-sm" : "text-[10px] md:text-sm"
-                      )}>
-                        ₹{item.val.toLocaleString()}
-                      </span>
-                      
-                      {/* Huge Benefits Badge */}
-                      {cat.name === 'Initial Payment' && isIce && !isBottom && (
-                        <div className="absolute inset-x-0 bottom-4 flex items-center justify-center">
-                           <div className="bg-[#10B981] h-32 w-10 rounded-full flex items-center justify-center shadow-lg border-2 border-white/20">
-                              <span className="text-[9px] font-black text-white uppercase [writing-mode:vertical-lr] whitespace-nowrap tracking-wider">Huge Benefits</span>
-                           </div>
-                        </div>
-                      )}
-                    </motion.div>
-                  );
-                };
+                {/* Animated Savings Ring */}
+                <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
+                  <circle className="text-slate-50" strokeWidth="6" stroke="currentColor" fill="transparent" r="42" cx="50" cy="50" />
+                  <motion.circle
+                     className="text-flexigo-teal"
+                     strokeWidth="6"
+                     strokeDasharray="264"
+                     animate={{ strokeDashoffset: 264 - (264 * (totalSavings / 15000)) }}
+                     strokeDashoffset="264"
+                     strokeLinecap="round"
+                     stroke="currentColor"
+                     fill="transparent"
+                     r="42"
+                     cx="50"
+                     cy="50"
+                     style={{ filter: 'drop-shadow(0 0 10px rgba(57, 255, 20, 0.4))' }}
+                  />
+                </svg>
 
-                return (
-                  <div key={i} className="flex flex-col items-center flex-1 h-full">
-                    <div className="w-full flex flex-col items-center justify-end h-[320px] relative">
-                      {/* Larger item on top */}
-                      {renderBox(larger, false)}
-                      {/* Smaller item on bottom (always rendered even if 0 for consistency?) */}
-                      {renderBox(smaller, true)}
-                    </div>
-                    <div className="mt-8 text-sm md:text-lg font-bold text-[#334155] text-center leading-tight">
-                      {cat.name}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            
-            {/* Base Line */}
-            <div className="w-full h-[1px] bg-slate-200 mt-4" />
+                {/* Central Payout HUD */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                   <div className="w-12 h-12 rounded-full bg-slate-900 flex items-center justify-center mb-4 transition-transform hover:scale-110 hover:shadow-neon duration-500 cursor-help">
+                      <Wallet className="w-5 h-5 text-flexigo-teal" />
+                   </div>
+                   <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">Extra Profit</p>
+                   <div className="text-5xl md:text-6xl font-black font-heading text-slate-900 tracking-tighter mb-1">
+                      ₹<SmoothCounter value={totalSavings} />
+                   </div>
+                   <p className="text-sm font-bold text-flexigo-teal uppercase tracking-widest">{period.label} Overview</p>
+                </div>
+
+                {/* Satellite Feature Cards */}
+                <motion.div 
+                   initial={{ x: 20, opacity: 0 }}
+                   whileInView={{ x: 0, opacity: 1 }}
+                   className="absolute -top-4 -right-4 bg-white border border-slate-100 shadow-xl p-4 rounded-3xl flex items-center gap-3 backdrop-blur-sm z-20"
+                >
+                   <div className="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center text-orange-500">
+                      <Fuel className="w-4 h-4" />
+                   </div>
+                   <div>
+                      <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">Petrol Eliminated</p>
+                      <p className="text-xs font-black text-slate-800">₹<SmoothCounter value={fuelSaving} /></p>
+                   </div>
+                </motion.div>
+
+                <motion.div 
+                   initial={{ x: -20, opacity: 0 }}
+                   whileInView={{ x: 0, opacity: 1 }}
+                   transition={{ delay: 0.1 }}
+                   className="absolute -bottom-4 -left-4 bg-white border border-slate-100 shadow-xl p-4 rounded-3xl flex items-center gap-3 backdrop-blur-sm z-20"
+                >
+                   <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-500">
+                      <ShieldCheck className="w-4 h-4" />
+                   </div>
+                   <div>
+                      <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">Maintenance Cut</p>
+                      <p className="text-xs font-black text-slate-800">₹<SmoothCounter value={maintSaving} /></p>
+                   </div>
+                </motion.div>
+             </div>
           </div>
 
         </div>
