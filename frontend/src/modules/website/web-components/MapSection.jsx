@@ -27,7 +27,7 @@ const MapSection = () => {
               transition={{ duration: 0.5 }}
               className="text-flexigo-teal font-black uppercase tracking-[0.25em] text-[10px] mb-6"
             >
-              Maharashtra Operations
+              Our Coverage
             </motion.div>
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
@@ -36,7 +36,7 @@ const MapSection = () => {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-4xl md:text-6xl font-black font-heading text-flexigo-primary leading-[1.1] mb-8 tracking-tighter"
             >
-              The DNA of <br /> Maharashtra.
+              Expanding Rapidly <br /> across India.
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -45,9 +45,9 @@ const MapSection = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-lg text-slate-500 leading-relaxed mb-12 font-medium"
             >
-              Starting from the industrial hubs of Pune and Mumbai, Flexigo is 
-              wiring the entire state of Maharashtra with smart EV power. 
-              Our focus is local, our scale is massive.
+              From bustling metros to emerging tier-2 cities, Flexigo is building the
+              densest EV infrastructure network in the country. Wherever you ride,
+              we've got your back.
             </motion.p>
 
             <motion.div
@@ -58,12 +58,12 @@ const MapSection = () => {
               className="grid grid-cols-2 gap-12"
             >
               <div className="border-l-4 border-flexigo-teal pl-6">
-                <div className="text-4xl font-black font-heading text-flexigo-primary mb-1 tracking-tight">7+</div>
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Major Cities</div>
+                <div className="text-4xl font-black font-heading text-flexigo-primary mb-1 tracking-tight">2</div>
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Cities</div>
               </div>
               <div className="border-l-4 border-slate-100 pl-6">
-                <div className="text-4xl font-black font-heading text-flexigo-primary mb-1 tracking-tight">120+</div>
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Planned Hubs</div>
+                <div className="text-4xl font-black font-heading text-flexigo-primary mb-1 tracking-tight">10</div>
+                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Swap Hubs</div>
               </div>
             </motion.div>
           </div>
