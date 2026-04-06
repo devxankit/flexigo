@@ -4,6 +4,7 @@ import { ReactLenis } from '@studio-freight/react-lenis';
 // Import all sections
 import Navbar from '../web-components/Navbar';
 import HeroSection from '../web-components/HeroSection';
+import VideoSection from '../web-components/VideoSection';
 import StatsSection from '../web-components/StatsSection';
 import HowItWorksSection from '../web-components/HowItWorksSection';
 import FeaturesSection from '../web-components/FeaturesSection';
@@ -21,6 +22,7 @@ const WebHome = () => {
       
       <main>
         <HeroSection />
+        <VideoSection />
         <StatsSection />
         <HowItWorksSection />
         <FeaturesSection />
