@@ -3,7 +3,7 @@ import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import SplashScreen from '../pages/SplashScreen';
 import AuthPhone from '../pages/AuthPhone';
 import AuthOTP from '../pages/AuthOTP';
-import ProfileDetails from '../pages/ProfileDetails';
+
 import OnboardingKYC from '../pages/OnboardingKYC';
 import HomeDashboard from '../pages/HomeDashboard';
 import LiveGarage from '../pages/LiveGarage';
@@ -12,6 +12,7 @@ import RideFlow from '../pages/RideFlow';
 import ProfileScreen from '../pages/ProfileScreen';
 import SupportScreen from '../pages/SupportScreen';
 import HubDetails from '../pages/HubDetails';
+import WalletScreen from '../pages/WalletScreen';
 import { RiderLayout } from '../components/RiderLayout';
 import { useAuthStore } from '../store/authStore';
 
@@ -35,10 +36,11 @@ export default function RiderRoutes() {
       
       {/* Protected Layout Routes */}
       <Route element={<RiderLayout />}>
-        <Route path="/onboarding/details" element={<ProfileDetails />} />
+
         <Route path="/onboarding" element={<OnboardingKYC />} />
         <Route path="/home" element={<HomeDashboard />} />
         <Route path="/garage" element={<LiveGarage />} />
+        <Route path="/wallet" element={<WalletScreen />} />
         <Route path="/plans" element={<SubscriptionPlans />} />
         <Route path="/subscription" element={<SubscriptionPlans />} />
         <Route path="/hub/:id" element={<HubDetails />} />

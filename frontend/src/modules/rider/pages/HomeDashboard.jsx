@@ -8,6 +8,7 @@ import { useRideStore } from '../store/rideStore';
 import { useSubscriptionStore } from '../store/subscriptionStore';
 import { useThemeStore } from '../store/themeStore';
 import { useAuthStore } from '../store/authStore';
+import { useWalletStore } from '../store/walletStore';
 import logo from '../../../assets/logo.png';
 
 const chargingHubs = [
@@ -26,6 +27,7 @@ export default function HomeDashboard() {
   const { theme } = useThemeStore();
   const { user } = useAuthStore();
   const { activePlan } = useSubscriptionStore();
+  const { balance } = useWalletStore();
 
   const isDark = theme === 'dark';
 
@@ -37,7 +39,7 @@ export default function HomeDashboard() {
     <>
     <PageWrapper className={`relative min-h-screen ${isDark ? 'bg-[#0A1120]' : 'bg-slate-50/50'}`}>
       {/* Search and Greeting: Sticky Header Section on top of list */}
-      <div className={`sticky top-0 z-20 px-6 pt-4 pb-6 space-y-6 transition-colors duration-500 shadow-sm ${
+      <div className={`sticky top-0 z-20 px-6 pt-0 pb-6 space-y-6 transition-colors duration-500 shadow-sm ${
         isDark ? 'bg-[#0A1120]/90 backdrop-blur-xl border-white/5 border-b' : 'bg-white/90 backdrop-blur-xl border-slate-200 border-b'
       }`}>
         {/* Welcome Dashboard Section */}
@@ -93,6 +95,55 @@ export default function HomeDashboard() {
           <div className="w-px h-6 bg-slate-500/20" />
           <svg className="w-5 h-5 text-slate-400 ml-1 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
         </motion.div>
+
+        {/* Quick Stats: Wallet & Subscription */}
+        <div className="grid grid-cols-2 gap-4">
+           <motion.div
+             initial={{ opacity: 0, x: -10 }}
+             animate={{ opacity: 1, x: 0 }}
+             transition={{ delay: 0.3 }}
+             onClick={() => navigate('/rider/wallet')}
+             className="cursor-pointer"
+           >
+             <GlassCard className={`p-4 transition-all duration-500 hover:shadow-2xl border flex flex-col gap-1.5 ${
+               isDark ? 'bg-white/[0.03] border-white/10' : 'bg-white border-slate-200 shadow-sm'
+             }`}>
+                <div className="flex items-center justify-between">
+                   <div className="w-7 h-7 rounded-lg bg-flexigo-teal/10 flex items-center justify-center">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-4 h-4">
+                        <rect x="2" y="5" width="20" height="14" rx="2" />
+                        <path d="M16 12a2 2 0 100-4h-4v4h4z" />
+                        <path d="M22 10a2 2 0 11-4 0M2 10h16M2 14h16" />
+                      </svg>
+                   </div>
+                   <div className="text-[14px] font-black text-flexigo-teal tracking-tighter shadow-sm">₹{balance}</div>
+                </div>
+                <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>My Wallet</span>
+             </GlassCard>
+           </motion.div>
+
+           <motion.div
+             initial={{ opacity: 0, x: 10 }}
+             animate={{ opacity: 1, x: 0 }}
+             transition={{ delay: 0.35 }}
+             onClick={() => navigate('/rider/plans')}
+             className="cursor-pointer"
+           >
+             <GlassCard className={`p-4 transition-all duration-500 hover:shadow-2xl border flex flex-col gap-1.5 ${
+               isDark ? 'bg-white/[0.03] border-white/10' : 'bg-white border-slate-200 shadow-sm'
+             }`}>
+                <div className="flex items-center justify-between">
+                   <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#00D4FF" strokeWidth="2.5" className="w-4 h-4">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                   </div>
+                   <div className="text-[9px] font-black text-[#00D4FF] uppercase tracking-tighter shadow-sm">8 Days left</div>
+                </div>
+                <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>Current Plan</span>
+             </GlassCard>
+           </motion.div>
+        </div>
       </div>
 
       <div className="px-6 space-y-6 pt-2">

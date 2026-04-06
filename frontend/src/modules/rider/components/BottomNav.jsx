@@ -28,6 +28,18 @@ const tabs = [
     ),
   },
   {
+    id: 'wallet',
+    path: '/rider/wallet',
+    label: 'Wallet',
+    icon: (active, theme) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke={active ? '#39FF14' : (theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} strokeWidth="1.8" className="w-6 h-6">
+        <rect x="2" y="5" width="20" height="14" rx="2" />
+        <path d="M16 12a2 2 0 100-4h-4v4h4z" />
+        <path d="M22 10a2 2 0 11-4 0M2 10h16M2 14h16" />
+      </svg>
+    ),
+  },
+  {
     id: 'plans',
     path: '/rider/plans',
     label: 'Plans',
