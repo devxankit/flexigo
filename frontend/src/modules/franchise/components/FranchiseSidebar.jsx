@@ -12,7 +12,8 @@ import {
   ChevronLeft,
   ChevronRight,
   RefreshCw,
-  User as UserIcon
+  User as UserIcon,
+  Wrench
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useFranchiseAuthStore as useAuthStore } from '../store/franchiseAuthStore';
@@ -22,9 +23,10 @@ import logo from '../../../assets/logo.png';
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/franchise/dashboard' },
   { id: 'fleet', label: 'Fleet Ops', icon: Truck, path: '/franchise/fleet' },
+  { id: 'maintenance', label: 'Service Hub', icon: Wrench, path: '/franchise/maintenance' },
   { id: 'handover', label: 'Handover', icon: RefreshCw, path: '/franchise/handover' },
   { id: 'tracking', label: 'Subscribers', icon: Users, path: '/franchise/tracking' },
-  { id: 'wallet', label: 'Financials', icon: Wallet, path: '/franchise/wallet' },
+  { id: 'wallet', label: 'Settlements', icon: Wallet, path: '/franchise/wallet' },
   { id: 'staff', label: 'Personnel', icon: Users, path: '/franchise/staff' },
   { id: 'notifications', label: 'Alerts', icon: Bell, path: '/franchise/notifications' },
 ];

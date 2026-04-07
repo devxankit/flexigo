@@ -201,11 +201,29 @@ export default function HandoverModule() {
               <Zap size={40} className="animate-pulse" />
            </div>
            
-           <div className="space-y-2">
-              <h4 className="text-xl font-bold text-[var(--text-primary)]">Ready for Handover</h4>
-              <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest max-w-[280px] leading-relaxed">
-                 Handing over {selectedVehicle?.plate} to {selectedSubscriber?.name}. Ensure rider documents are verified physicaly.
-              </p>
+           <div className="space-y-4 w-full max-w-xs">
+              <div className="space-y-1">
+                 <h4 className="text-xl font-bold text-[var(--text-primary)]">Ready for Handover</h4>
+                 <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest leading-relaxed">
+                    Finalize dispatch of {selectedVehicle?.plate} to {selectedSubscriber?.name}.
+                 </p>
+              </div>
+
+              {/* Added E-Signature Gap Fix */}
+              <div className="p-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/10 space-y-3">
+                 <div className="flex justify-between items-center text-[8px] font-black uppercase tracking-widest text-emerald-600">
+                    <span>Rider E-Signature Required</span>
+                    <Smartphone size={12} />
+                 </div>
+                 <div className="h-24 bg-white/20 rounded-lg border border-dashed border-white/40 flex items-center justify-center relative group cursor-crosshair">
+                    <span className="text-[9px] font-bold text-white/40 uppercase tracking-widest group-hover:scale-110 transition-transform">Sign here on device</span>
+                    {/* Simulated Signature Line */}
+                    <div className="absolute inset-0 p-4 overflow-hidden pointer-events-none">
+                       <motion.div initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1 }} className="w-full h-full border-b-2 border-emerald-500/30 opacity-40 rotate-[2deg] translate-y-6" />
+                    </div>
+                 </div>
+                 <p className="text-[7px] font-bold text-[var(--text-tertiary)] uppercase leading-tight italic">By signing, the rider acknowledges vehicle condition and insurance obligations.</p>
+              </div>
            </div>
 
            <div className="w-full p-5 rounded-xl bg-[var(--bg-tertiary)]/20 border border-[var(--border-subtle)] text-left">
@@ -228,6 +246,7 @@ export default function HandoverModule() {
         </div>
       )
     }
+
   ];
 
   const intakeSteps = [

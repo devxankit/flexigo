@@ -149,6 +149,15 @@ export default function FranchiseLogin() {
                   </>
                 )}
               </button>
+              <div className="pt-6 text-center">
+                 <button 
+                   type="button"
+                   onClick={() => navigate('/franchise/onboarding')}
+                   className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 hover:text-emerald-500 transition-all flex items-center justify-center gap-2 mx-auto"
+                 >
+                    Become a Partner Node <ChevronRight size={14} />
+                 </button>
+              </div>
             </motion.form>
         </AnimatePresence>
 

@@ -25,6 +25,10 @@ export default function VehicleDetail() {
   const { vehicles } = useFleetStore();
 
   const vehicle = vehicles.find(v => v.id === vehicleId);
+  const [isKillModalOpen, setKillModalOpen] = useState(false);
+  const [killCoundown, setKillCountdown] = useState(5);
+  const [isExecuting, setIsExecuting] = useState(false);
+
 
   if (!vehicle) return (
     <div className="flex flex-col items-center justify-center h-[60vh] gap-4 text-center">
@@ -214,19 +218,35 @@ export default function VehicleDetail() {
                </div>
                
                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3.5 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl group hover:border-emerald-500/30 transition-all">
+                  <div className={`flex items-center justify-between p-3.5 bg-[var(--bg-tertiary)]/50 border rounded-xl group hover:border-emerald-500/30 transition-all ${
+                     new Date(vehicle.insuranceExpiry) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) ? 'border-rose-500/30' : 'border-[var(--border-subtle)]'
+                  }`}>
                      <div className="flex flex-col gap-0.5">
                         <span className="text-xs font-bold text-[var(--text-primary)] uppercase">Insurance Policy</span>
-                        <span className="text-[9px] font-bold text-[var(--text-tertiary)] tracking-tighter uppercase opacity-60">Expires Mar 2027</span>
+                        <span className={`text-[9px] font-bold tracking-tighter uppercase ${
+                           new Date(vehicle.insuranceExpiry) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) ? 'text-rose-500' : 'text-[var(--text-tertiary)] opacity-60'
+                        }`}>
+                           Expires {new Date(vehicle.insuranceExpiry).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+                        </span>
                      </div>
-                     <FileText size={16} className="text-emerald-600 opacity-60 group-hover:opacity-100 transition-opacity" />
+                     <FileText size={16} className={`opacity-60 group-hover:opacity-100 transition-opacity ${
+                        new Date(vehicle.insuranceExpiry) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) ? 'text-rose-500' : 'text-emerald-600'
+                     }`} />
                   </div>
-                  <div className="flex items-center justify-between p-3.5 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl group hover:border-emerald-500/30 transition-all">
+                  <div className={`flex items-center justify-between p-3.5 bg-[var(--bg-tertiary)]/50 border rounded-xl group hover:border-emerald-500/30 transition-all ${
+                     new Date(vehicle.pUCExpiry) < new Date(Date.now() + 15 * 24 * 60 * 60 * 1000) ? 'border-rose-500/30 ring-1 ring-rose-500/10' : 'border-[var(--border-subtle)]'
+                  }`}>
                      <div className="flex flex-col gap-0.5">
                         <span className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-tight">Pollution (PUC)</span>
-                        <span className="text-[9px] font-bold text-[var(--text-tertiary)] tracking-tighter uppercase opacity-60">Expires Sep 2026</span>
+                        <span className={`text-[9px] font-bold tracking-tighter uppercase ${
+                           new Date(vehicle.pUCExpiry) < new Date(Date.now() + 15 * 24 * 60 * 60 * 1000) ? 'text-rose-500 animate-pulse' : 'text-[var(--text-tertiary)] opacity-60'
+                        }`}>
+                           Expires {new Date(vehicle.pUCExpiry).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                        </span>
                      </div>
-                     <FileText size={16} className="text-emerald-600 opacity-60 group-hover:opacity-100 transition-opacity" />
+                     <FileText size={16} className={`opacity-60 group-hover:opacity-100 transition-opacity ${
+                        new Date(vehicle.pUCExpiry) < new Date(Date.now() + 15 * 24 * 60 * 60 * 1000) ? 'text-rose-500' : 'text-emerald-600'
+                     }`} />
                   </div>
                   <div className="flex items-center justify-between p-3.5 bg-[var(--bg-tertiary)]/20 border border-[var(--border-subtle)] rounded-xl opacity-40 grayscale">
                      <div className="flex flex-col gap-0.5">
@@ -249,12 +269,85 @@ export default function VehicleDetail() {
                      Instantly disable telemetry and operational access for this asset. Authorized Personnel only.
                   </p>
                </div>
-               <button className="w-full py-3 bg-red-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg active:scale-95">
+               <button 
+                  onClick={() => {
+                     setKillModalOpen(true);
+                     setKillCountdown(5);
+                  }}
+                  className="w-full py-3 bg-red-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg active:scale-95"
+               >
                   Execute Kill Command
                </button>
             </div>
          </div>
       </div>
+
+      {/* Kill Command Secure Terminal */}
+      <AnimatePresence>
+         {isKillModalOpen && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/90 backdrop-blur-xl">
+               <motion.div 
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="w-full max-w-sm bg-slate-900 border border-red-500/30 rounded-[2.5rem] p-10 text-center space-y-8 shadow-[0_0_100px_rgba(239,68,68,0.2)]"
+               >
+                  <div className="w-20 h-20 rounded-[1.5rem] bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 mx-auto animate-pulse">
+                     <ShieldAlert size={40} />
+                  </div>
+                  
+                  <div className="space-y-2">
+                     <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">Secure Terminal</h3>
+                     <p className="text-[10px] font-black text-red-500/60 uppercase tracking-[0.3em]">Protocol: ASSET_IMMOBILIZE_V4</p>
+                  </div>
+
+                  <div className="p-6 bg-black/40 rounded-2xl border border-white/5 text-left space-y-4">
+                     <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                        <span>Target Node</span>
+                        <span className="text-white">{vehicle.plate}</span>
+                     </div>
+                     <p className="text-[9px] font-medium text-gray-400 leading-relaxed uppercase tracking-wider">
+                        Executing this command will instantly revoke motor authorization and lock the battery hub. This action is irreversible without Master Root Clearance.
+                     </p>
+                  </div>
+
+                  <div className="space-y-4">
+                     <button 
+                        disabled={isExecuting}
+                        onClick={() => {
+                           setIsExecuting(true);
+                           setTimeout(() => {
+                              setIsExecuting(false);
+                              setKillModalOpen(false);
+                              alert("ASSET IMMOBILIZED • Master Node Informed");
+                           }, 2000);
+                        }}
+                        className={`w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-3 ${
+                           isExecuting ? 'bg-red-900/50 text-red-500 opacity-50' : 'bg-red-600 text-white hover:bg-red-700 shadow-xl shadow-red-900/40'
+                        }`}
+                     >
+                        {isExecuting ? (
+                           <>
+                              <div className="w-4 h-4 border-2 border-red-500/20 border-t-red-500 rounded-full animate-spin" />
+                              Transmitting...
+                           </>
+                        ) : (
+                           "Authorize Immobilization"
+                        )}
+                     </button>
+                     <button 
+                        disabled={isExecuting}
+                        onClick={() => setKillModalOpen(false)}
+                        className="w-full py-3 text-[10px] font-black uppercase tracking-[0.4em] text-gray-500 hover:text-white transition-colors"
+                     >
+                        Abort Command
+                     </button>
+                  </div>
+               </motion.div>
+            </div>
+         )}
+      </AnimatePresence>
+
     </div>
   );
 }

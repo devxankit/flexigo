@@ -102,11 +102,11 @@ export default function StaffManagement() {
           <div className="flex items-center gap-3">
             <div className="w-1 h-6 bg-violet-500 rounded-full shadow-sm" />
             <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
-              Personnel <span className="text-violet-500 uppercase">Registry</span>
+               Staff <span className="text-violet-500 uppercase">Registry</span>
             </h1>
           </div>
           <p className="text-[10px] font-bold uppercase tracking-wider ml-4 text-[var(--text-tertiary)]">
-             Manage hub authorizations, intake staff and operational access
+             Manage your team, hub roles, and access levels.
           </p>
         </div>
 
@@ -114,7 +114,7 @@ export default function StaffManagement() {
           onClick={() => setAddStaffOpen(true)}
           className="px-4 py-2 bg-slate-900 dark:bg-slate-100 text-slate-100 dark:text-slate-900 rounded-lg text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-all flex items-center gap-2 active:scale-95 shadow-lg"
         >
-           <UserPlus size={16} strokeWidth={2.5} /> Authorize Personnel
+           <UserPlus size={16} strokeWidth={2.5} /> Add New Staff
         </button>
       </div>
 
@@ -168,13 +168,13 @@ export default function StaffManagement() {
          </div>
          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
             <div className="space-y-1 max-w-xl">
-               <h3 className="text-lg font-bold text-[var(--text-primary)] uppercase tracking-tight">Personnel Audit Registry</h3>
+               <h3 className="text-lg font-bold text-[var(--text-primary)] uppercase tracking-tight">Staff Activity Log</h3>
                <p className="text-[10px] font-medium text-[var(--text-tertiary)] uppercase tracking-wider leading-relaxed">
-                  Every node interaction performed by authorized staff is cryptographically logged to ensure total hub operational integrity.
+                  Every action performed by your staff is logged to keep your hub operations secure.
                </p>
             </div>
             <button className="px-5 py-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] text-[10px] font-bold uppercase tracking-widest text-violet-600 hover:text-violet-700 transition-all shadow-sm">
-               Archive Logs Console
+               View Activity Logs
             </button>
          </div>
       </div>
@@ -201,9 +201,9 @@ export default function StaffManagement() {
                      <UserPlus size={32} strokeWidth={1.5} />
                   </div>
                   <div className="space-y-1 px-4">
-                     <h3 className="text-xl font-bold text-[var(--text-primary)] uppercase tracking-tight">Personnel Authorization</h3>
+                     <h3 className="text-xl font-bold text-[var(--text-primary)] uppercase tracking-tight">Add New Staff</h3>
                      <p className="text-[10px] font-medium text-[var(--text-tertiary)] uppercase tracking-wider leading-relaxed">
-                        Establishing a new authorized node identifier for Hub operations personnel.
+                        Create a new account for your hub staff.
                      </p>
                   </div>
                </div>

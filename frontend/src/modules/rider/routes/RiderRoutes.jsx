@@ -13,6 +13,8 @@ import ProfileScreen from '../pages/ProfileScreen';
 import SupportScreen from '../pages/SupportScreen';
 import HubDetails from '../pages/HubDetails';
 import WalletScreen from '../pages/WalletScreen';
+import PickupHistoryScreen from '../pages/PickupHistoryScreen';
+import RiderNotificationsScreen from '../pages/RiderNotificationsScreen';
 import { RiderLayout } from '../components/RiderLayout';
 import { useAuthStore } from '../store/authStore';
 
@@ -46,6 +48,8 @@ export default function RiderRoutes() {
         <Route path="/hub/:id" element={<HubDetails />} />
         <Route path="/profile" element={<ProfileScreen />} />
         <Route path="/support" element={<SupportScreen />} />
+        <Route path="/history" element={<PickupHistoryScreen />} />
+        <Route path="/notifications" element={<RiderNotificationsScreen />} />
       </Route>
     </Routes>
   );

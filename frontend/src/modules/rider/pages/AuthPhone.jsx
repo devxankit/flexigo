@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { PageWrapper } from '../components/PageWrapper';
 import { AnimatedInput } from '../components/AnimatedInput';
 import { NeonButton } from '../components/NeonButton';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
+import { X, ShieldCheck } from 'lucide-react';
 import logo from '../../../assets/logo.png';
 
 export default function AuthPhone() {
   const navigate = useNavigate();
   const [phone, setPhone] = useState('');
+  const [showLegal, setShowLegal] = useState(false);
   const { setPhone: storePhone, setOtpSent } = useAuthStore();
   const { theme } = useThemeStore();
 
@@ -119,8 +121,8 @@ export default function AuthPhone() {
             isDark ? 'text-gray-600' : 'text-slate-500'
           }`}>
             By continuing, you agree to our{' '}
-            <span className="text-flexigo-teal font-bold underline underline-offset-2">Terms of Service</span> &amp;{' '}
-            <span className="text-flexigo-teal font-bold underline underline-offset-2">Privacy Policy</span>
+            <span onClick={() => setShowLegal(true)} className="cursor-pointer text-flexigo-teal font-bold underline underline-offset-2">Terms of Service</span> &amp;{' '}
+            <span onClick={() => setShowLegal(true)} className="cursor-pointer text-flexigo-teal font-bold underline underline-offset-2">Privacy Policy</span>
           </p>
 
           <NeonButton
@@ -132,6 +134,40 @@ export default function AuthPhone() {
             {isValid ? 'Send OTP →' : 'Enter your number'}
           </NeonButton>
         </motion.div>
+
+        {/* Legal Modals */}
+        <AnimatePresence>
+          {showLegal && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="w-full max-w-sm bg-slate-900 border border-white/10 rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden"
+              >
+                <button 
+                  onClick={() => setShowLegal(false)}
+                  className="absolute top-6 right-6 p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+                >
+                  <X size={20} className="text-white" />
+                </button>
+                <div className="space-y-4">
+                  <div className="w-12 h-12 rounded-2xl bg-flexigo-teal/10 flex items-center justify-center text-flexigo-teal mb-6">
+                    <ShieldCheck size={24} />
+                  </div>
+                  <h2 className="text-xl font-black text-white uppercase italic tracking-tighter">Flexigo <span className="text-flexigo-teal">Legal Registry</span></h2>
+                  <div className="max-h-60 overflow-y-auto pr-4 custom-scrollbar text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-loose">
+                    <p className="mb-4">1. ELIGIBILITY: RIDER MUST BE 18+ WITH A VALID DRIVING PERMIT.</p>
+                    <p className="mb-4">2. DATA: WE ENCRYPT ALL KYC DATA FLOWS VIA RSA-4096 COMPLIANCE STANDARDS.</p>
+                    <p className="mb-4">3. REVENUE: SUBSCRIPTIONS ARE NON-REFUNDABLE ONCE ACTIVATED IN HUB DIRECTORY.</p>
+                    <p className="mb-4">4. PRIVACY: YOUR LOCATION DATA IS ONLY TRACKED DURING ACTIVE RIDE SESSIONS.</p>
+                  </div>
+                  <NeonButton size="full" variant="solid" onClick={() => setShowLegal(false)}>I Understand</NeonButton>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* Bottom decorative text */}
         <motion.p

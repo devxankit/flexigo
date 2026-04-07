@@ -77,22 +77,29 @@ export default function FleetManagement() {
       )
     },
     { 
-      header: 'Compliance Alerts', 
+      header: 'Documents', 
       accessor: 'insuranceExpiry', 
-      render: (row) => (
-        <div className="flex items-center gap-3">
-            <div className={`px-2 py-0.5 rounded border text-[9px] font-bold flex items-center gap-1.5 ${
-              new Date(row.pUCExpiry) < new Date() ? 'bg-red-500/10 border-red-500/20 text-red-500' : 'bg-[var(--bg-tertiary)] border-[var(--border-subtle)] text-[var(--text-secondary)]'
-            }`}>
-             <span className="uppercase tracking-tighter">PUC</span>
-             <span>{row.pUCExpiry.split('-')[1]}/{row.pUCExpiry.split('-')[0].slice(2)}</span>
-           </div>
-            <div className="px-2 py-0.5 rounded bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] text-[var(--text-secondary)] text-[9px] font-bold flex items-center gap-1.5">
-              <span className="uppercase tracking-tighter">INS</span>
-              <span>{row.insuranceExpiry.split('-')[1]}/{row.insuranceExpiry.split('-')[0].slice(2)}</span>
-            </div>
-        </div>
-      )
+      render: (row) => {
+        const isPUCExpiring = new Date(row.pUCExpiry) < new Date(Date.now() + 15 * 24 * 60 * 60 * 1000); // 15 days
+        const isINSExpiring = new Date(row.insuranceExpiry) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+        
+        return (
+          <div className="flex items-center gap-3">
+              <div className={`px-2 py-0.5 rounded border text-[9px] font-bold flex items-center gap-1.5 ${
+                isPUCExpiring ? 'bg-rose-500/10 border-rose-500/20 text-rose-500 animate-pulse' : 'bg-[var(--bg-tertiary)] border-[var(--border-subtle)] text-[var(--text-secondary)]'
+              }`}>
+               <span className="uppercase tracking-tighter">PUC</span>
+               <span>{row.pUCExpiry.split('-')[1]}/{row.pUCExpiry.split('-')[0].slice(2)}</span>
+             </div>
+              <div className={`px-2 py-0.5 rounded border text-[9px] font-bold flex items-center gap-1.5 ${
+                isINSExpiring ? 'bg-rose-500/10 border-rose-500/20 text-rose-500' : 'bg-[var(--bg-tertiary)] border-[var(--border-subtle)] text-[var(--text-secondary)]'
+              }`}>
+                <span className="uppercase tracking-tighter">INS</span>
+                <span>{row.insuranceExpiry.split('-')[1]}/{row.insuranceExpiry.split('-')[0].slice(2)}</span>
+              </div>
+          </div>
+        );
+      }
     },
     { 
       header: '', 
@@ -113,8 +120,8 @@ export default function FleetManagement() {
     { id: 'available', label: 'Idle / Available' },
     { id: 'assigned', label: 'Active Leases' },
     { id: 'in-transit', label: 'In-Transit' },
-    { id: 'in-service', label: 'Maintenance' },
-    { id: 'quarantined', label: 'Quarantined' },
+    { id: 'in-service', label: 'In Repair' },
+    { id: 'quarantined', label: 'Issue Flagged' },
   ];
 
   return (
@@ -129,12 +136,15 @@ export default function FleetManagement() {
             </h1>
           </div>
           <p className="text-[10px] font-bold uppercase tracking-wider ml-4 text-[var(--text-tertiary)]">
-             Operational Asset Directory • Central Registry
+             Fleet Status • Document Compliance
           </p>
         </div>
 
-        <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 transition-all flex items-center gap-2 active:scale-95 shadow-sm">
-           <Plus size={16} strokeWidth={2.5} /> Register Asset
+        <button 
+          onClick={() => navigate('/franchise/fleet/add')}
+          className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 transition-all flex items-center gap-2 active:scale-95 shadow-sm"
+        >
+           <Plus size={16} strokeWidth={2.5} /> Add Vehicle
         </button>
       </div>
 

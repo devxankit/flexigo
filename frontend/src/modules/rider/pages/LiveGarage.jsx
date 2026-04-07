@@ -1,4 +1,5 @@
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { PageWrapper } from '../components/PageWrapper';
 import { GlassCard } from '../components/GlassCard';
 import { BatteryIndicator } from '../components/BatteryIndicator';
@@ -7,6 +8,7 @@ import { NeonButton } from '../components/NeonButton';
 import { useRideStore } from '../store/rideStore';
 import { useThemeStore } from '../store/themeStore';
 import { useNavigate } from 'react-router-dom';
+import { X, Zap, Scan } from 'lucide-react';
 
 import scooterRender from '../../../assets/scooter_render.png';
 
@@ -15,6 +17,7 @@ export default function LiveGarage() {
   const { vehicle, rideStatus, setUnlocking } = useRideStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
+  const [showScanner, setShowScanner] = useState(false);
 
   const handleUnlockVehicle = () => {
     setUnlocking();
@@ -110,11 +113,66 @@ export default function LiveGarage() {
               </div>
            </GlassCard>
 
-           <NeonButton variant="solid" size="full" onClick={handleUnlockVehicle}>
-              Unlock Vehicle
-           </NeonButton>
+           <div className="flex gap-4">
+              <NeonButton variant="outline" className="flex-1" onClick={() => setShowScanner(true)}>
+                 <div className="flex items-center gap-2">
+                    <Scan size={16} /> QR Swap
+                 </div>
+              </NeonButton>
+              <NeonButton variant="solid" className="flex-1" onClick={handleUnlockVehicle}>
+                 Unlock Vehicle
+              </NeonButton>
+           </div>
         </div>
       </div>
+
+      {/* QR Scanner Simulation */}
+      <AnimatePresence>
+         {showScanner && (
+            <div className="fixed inset-0 z-[100] bg-black p-6 flex flex-col">
+               <div className="flex justify-between items-center mb-12">
+                  <button onClick={() => setShowScanner(false)} className="p-3 rounded-full bg-white/10">
+                     <X size={24} className="text-white" />
+                  </button>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Secure Scanner V2.4</span>
+                  <div className="w-10" />
+               </div>
+
+               <div className="flex-1 flex flex-col items-center justify-center">
+                  <div className="relative w-64 h-64">
+                     {/* Corner Brackets */}
+                     <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-flexigo-teal rounded-tl-xl" />
+                     <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-flexigo-teal rounded-tr-xl" />
+                     <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-flexigo-teal rounded-bl-xl" />
+                     <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-flexigo-teal rounded-br-xl" />
+                     
+                     {/* Scanning Line Animation */}
+                     <motion.div 
+                        animate={{ top: ['0%', '100%', '0%'] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                        className="absolute left-0 right-0 h-1 bg-flexigo-teal shadow-[0_0_15px_#39FF14] z-10"
+                     />
+                     
+                     <div className="absolute inset-0 bg-flexigo-teal/5 animate-pulse" />
+                  </div>
+                  <p className="mt-12 text-[10px] font-black uppercase tracking-[0.3em] text-flexigo-teal text-center leading-relaxed">
+                     Align QR Code on the<br />Battery Unit to Start Swap
+                  </p>
+               </div>
+
+               <div className="pb-10 grid grid-cols-2 gap-4">
+                  <button className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center gap-2">
+                     <Zap size={20} className="text-white/60" />
+                     <span className="text-[8px] font-black uppercase text-white/40">Flash</span>
+                  </button>
+                  <button className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center gap-2" onClick={() => setShowScanner(false)}>
+                     <X size={20} className="text-white/60" />
+                     <span className="text-[8px] font-black uppercase text-white/40">Cancel</span>
+                  </button>
+               </div>
+            </div>
+         )}
+      </AnimatePresence>
     </PageWrapper>
   );
 }

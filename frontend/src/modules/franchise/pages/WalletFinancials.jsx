@@ -88,6 +88,8 @@ export default function WalletFinancials() {
     }
   ];
 
+  const [showSettlement, setShowSettlement] = useState(false);
+
   return (
     <div className="space-y-6 pb-12">
       {/* Page Header */}
@@ -100,22 +102,28 @@ export default function WalletFinancials() {
             </h1>
           </div>
           <p className="text-[10px] font-bold uppercase tracking-wider ml-4 text-[var(--text-tertiary)]">
-             Operational Revenue • Commission Tracking Console
+             Earnings Tracking • Franchise Payout Console
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-           <button className="p-2.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-all shadow-sm">
+           <button 
+             onClick={() => setShowSettlement(true)}
+             className="p-2.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-all shadow-sm"
+           >
               <Download size={18} />
            </button>
            <button 
              onClick={() => setPayoutModalOpen(true)}
              className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 transition-all shadow-sm flex items-center gap-2 active:scale-95"
            >
-              Initialize Settlement <ArrowRight size={16} strokeWidth={2.5} />
+              Request Payout <ArrowRight size={16} strokeWidth={2.5} />
            </button>
         </div>
       </div>
+
+      {/* Financial Overview Grid omitted for brevity... */}
+
 
       {/* Financial Overview Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -129,7 +137,7 @@ export default function WalletFinancials() {
            <div className="space-y-1 relative z-10">
               <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-emerald-500/10 rounded-md border border-emerald-500/20">
                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                 <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-600">Settlement Balance</span>
+                 <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-600">Available to Withdraw</span>
               </div>
               <div className="flex items-baseline gap-4 mt-6">
                  <span className="text-[var(--text-tertiary)] text-2xl font-bold opacity-40 italic">₹</span>
@@ -139,7 +147,7 @@ export default function WalletFinancials() {
                  <div className="flex flex-col gap-0.5 mb-2">
                     <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
                        <TrendingUp size={12} />
-                       +12.4% <span className="opacity-60 text-[var(--text-tertiary)] tracking-normal italic">periodic surge</span>
+                       +12.4% <span className="opacity-60 text-[var(--text-tertiary)] tracking-normal italic">this month</span>
                     </span>
                     <span className="text-[9px] font-medium text-[var(--text-tertiary)] uppercase opacity-60">Verified 2 mins ago</span>
                  </div>
@@ -148,17 +156,17 @@ export default function WalletFinancials() {
 
            <div className="grid grid-cols-3 gap-6 pt-8 border-t border-[var(--border-subtle)] relative z-10">
               <div className="space-y-1">
-                 <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">Gross Ops Revenue</p>
+                 <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">Total Earnings</p>
                  <p className="text-xl font-bold text-[var(--text-primary)]">₹1.24L</p>
                  <div className="w-8 h-1 bg-emerald-500/20 rounded-full" />
               </div>
               <div className="space-y-1">
-                 <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">Node Platform Fee</p>
+                 <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">Platform Fee</p>
                  <p className="text-xl font-bold text-rose-500">₹8.40K</p>
                  <div className="w-8 h-1 bg-rose-500/20 rounded-full" />
               </div>
               <div className="space-y-1">
-                 <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">Cycle Payouts</p>
+                 <p className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">Paid to date</p>
                  <p className="text-xl font-bold text-blue-500">₹45.0K</p>
                  <div className="w-8 h-1 bg-blue-500/20 rounded-full" />
               </div>
@@ -168,8 +176,8 @@ export default function WalletFinancials() {
         {/* Payout History Terminal */}
         <div className="flex flex-col rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] shadow-sm p-6 overflow-hidden max-h-[300px] lg:max-h-full">
            <div className="space-y-1 mb-6">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--text-primary)] leading-none">Payout History</h3>
-              <p className="text-[10px] font-medium text-[var(--text-tertiary)] uppercase tracking-wide">Withdrawal Node Logs</p>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--text-primary)] leading-none">Recent Payouts</h3>
+              <p className="text-[10px] font-medium text-[var(--text-tertiary)] uppercase tracking-wide">Status of withdrawals</p>
            </div>
 
            <div className="flex-1 overflow-y-auto no-scrollbar space-y-3 pr-1">
@@ -254,9 +262,9 @@ export default function WalletFinancials() {
                      <Wallet size={32} strokeWidth={1.5} />
                   </div>
                   <div className="space-y-1 px-4">
-                     <h3 className="text-xl font-bold text-[var(--text-primary)] uppercase tracking-tight">Settlement Request</h3>
+                     <h3 className="text-xl font-bold text-[var(--text-primary)] uppercase tracking-tight">Request Payout</h3>
                      <p className="text-[10px] font-medium text-[var(--text-tertiary)] uppercase leading-relaxed tracking-wider">
-                        Transfers initiated to Hub Linked Account • Cycle: <span className="text-emerald-600 font-bold underline decoration-emerald-500/30 underline-offset-2">48H Batch</span>
+                        Money will be sent to your bank account within 48 hours.
                      </p>
                   </div>
                </div>
@@ -312,6 +320,103 @@ export default function WalletFinancials() {
           </>
         )}
       </AnimatePresence>
+      {/* Settlement Breakdown Overlay */}
+      <AnimatePresence>
+        {showSettlement && (
+          <>
+            <motion.div 
+               initial={{ opacity: 0 }}
+               animate={{ opacity: 1 }}
+               exit={{ opacity: 0 }}
+               onClick={() => setShowSettlement(false)}
+               className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-[100]"
+            />
+            <motion.div 
+               initial={{ y: '100%' }}
+               animate={{ y: 0 }}
+               exit={{ y: '100%' }}
+               className="fixed bottom-0 left-0 right-0 h-[80vh] bg-white text-slate-900 rounded-t-[3rem] p-10 z-[110] flex flex-col shadow-[0_-20px_50px_rgba(0,0,0,0.5)]"
+            >
+               <div className="flex justify-between items-start mb-8">
+                  <div className="space-y-1">
+                     <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
+                           <img src="/logo.png" className="w-5 h-5 invert" />
+                        </div>
+                        <h2 className="text-2xl font-black uppercase tracking-tighter italic">Flexigo <span className="text-slate-400">Settlement Node</span></h2>
+                     </div>
+                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Reference: FXG_SETL_MAR_26_V1</p>
+                  </div>
+                  <button onClick={() => setShowSettlement(false)} className="p-3 bg-slate-100 rounded-full hover:bg-slate-200 transition-all">
+                     <X size={24} />
+                  </button>
+               </div>
+
+               <div className="flex-1 overflow-y-auto pr-2 space-y-8 font-sans">
+                  <div className="grid grid-cols-2 gap-10">
+                     <div className="space-y-4">
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 bg-slate-100 py-1 px-3 rounded-full inline-block">Partner Identity</h4>
+                        <div className="text-sm font-bold space-y-1">
+                           <p>Koramangala Hub Operations</p>
+                           <p className="text-slate-500">GSTIN: 29XXXXX4821F1ZX</p>
+                        </div>
+                     </div>
+                     <div className="space-y-4 text-right">
+                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 bg-slate-100 py-1 px-3 rounded-full inline-block">Period Overview</h4>
+                        <div className="text-sm font-bold space-y-1">
+                           <p>01 Mar — 31 Mar 2026</p>
+                           <p className="text-emerald-600 uppercase">Status: Finalized</p>
+                        </div>
+                     </div>
+                  </div>
+
+                  <div className="border-y border-slate-100 py-8 space-y-6">
+                     <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Gross Subscription Revenue</span>
+                        <span className="text-lg font-black tracking-tight">₹1,24,500.00</span>
+                     </div>
+                     <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Franchise Commission (10%)</span>
+                        <span className="text-lg font-black tracking-tight text-emerald-600">₹12,450.00</span>
+                     </div>
+                     <div className="flex justify-between items-center text-rose-500">
+                        <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Ops Penalty / Deductions</span>
+                        <span className="text-lg font-black tracking-tight">-₹0.00</span>
+                     </div>
+                  </div>
+
+                  <div className="flex justify-between items-center bg-slate-900 text-white p-8 rounded-3xl">
+                     <div>
+                        <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40 mb-1">Total Payout Amount</p>
+                        <h3 className="text-4xl font-black tracking-tighter">₹12,450.00</h3>
+                     </div>
+                     <div className="flex flex-col items-end gap-2">
+                        <div className="px-3 py-1 bg-emerald-500 rounded-full text-[9px] font-black uppercase tracking-widest text-white">Verified Node</div>
+                        <p className="text-[10px] font-medium opacity-40 text-right">Settled to HDFC Bank A/C ****4821</p>
+                     </div>
+                  </div>
+
+                  <div className="bg-amber-50 border border-amber-100 p-6 rounded-2xl flex items-start gap-4">
+                     <ShieldCheck className="text-amber-500 shrink-0" size={20} />
+                     <p className="text-[10px] font-bold text-amber-900 leading-relaxed uppercase tracking-wider">
+                        This is an automated system-generated settlement report. Digital audit trail is active for regional compliance verification.
+                     </p>
+                  </div>
+               </div>
+
+               <div className="pt-8 flex gap-4">
+                  <button className="flex-1 py-4 bg-slate-100 text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-2">
+                     <Download size={16} /> Save PDF
+                  </button>
+                  <button className="flex-1 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+                     <History size={16} /> Dispute Node
+                  </button>
+               </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
+

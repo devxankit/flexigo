@@ -10,6 +10,9 @@ import WalletFinancials from '../pages/WalletFinancials';
 import StaffManagement from '../pages/StaffManagement';
 import NotificationsPage from '../pages/NotificationsPage';
 import VehicleDetail from '../pages/VehicleDetail';
+import AddVehiclePage from '../pages/AddVehiclePage';
+import FranchiseOnboarding from '../pages/FranchiseOnboarding';
+import MaintenanceScheduler from '../pages/MaintenanceScheduler';
 
 export default function FranchiseRoutes() {
   const { isAuthenticated } = useFranchiseAuthStore();
@@ -17,11 +20,14 @@ export default function FranchiseRoutes() {
   return (
     <Routes>
       <Route path="/" element={isAuthenticated ? <Navigate to="/franchise/dashboard" replace /> : <FranchiseLogin />} />
+      <Route path="/onboarding" element={<FranchiseOnboarding />} />
       
       {/* Protected Layout Routes */}
       <Route element={isAuthenticated ? <FranchiseLayout /> : <Navigate to="/franchise" replace />}>
         <Route path="/dashboard" element={<HubDashboard />} />
         <Route path="/fleet" element={<FleetManagement />} />
+        <Route path="/maintenance" element={<MaintenanceScheduler />} />
+        <Route path="/fleet/add" element={<AddVehiclePage />} />
         <Route path="/fleet/:vehicleId" element={<VehicleDetail />} />
         <Route path="/handover" element={<HandoverModule />} />
         <Route path="/tracking" element={<RiderTracking />} />
