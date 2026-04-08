@@ -7,7 +7,7 @@ const testimonials = [
     id: 1,
     name: 'Rahul Sharma',
     role: 'Food Delivery Partner',
-    city: 'Bengaluru',
+    city: 'Pune',
     image: 'https://i.pravatar.cc/150?img=11',
     text: "Switched to Flexigo 3 months ago. The battery swap feature is a lifesaver. I don't waste time charging anymore, which means I can complete more orders and earn at least 30% more daily.",
     rating: 5
@@ -16,7 +16,7 @@ const testimonials = [
     id: 2,
     name: 'Priya Patel',
     role: 'E-commerce Courier',
-    city: 'Ahmedabad',
+    city: 'Mumbai',
     image: 'https://i.pravatar.cc/150?img=5',
     text: "The zero maintenance promise is real. Whenever there's an issue with the brakes or tyres, the hub team replaces the scooter within 10 minutes. Complete peace of mind.",
     rating: 5
@@ -25,7 +25,7 @@ const testimonials = [
     id: 3,
     name: 'Vikram Singh',
     role: 'Logistics Rider',
-    city: 'New Delhi',
+    city: 'Nagpur',
     image: 'https://i.pravatar.cc/150?img=8',
     text: "I was spending Rs 300 daily on petrol. Now with the Weekly Pro plan, my expenses are fixed and much lower. The app is also very easy to use for tracking payments.",
     rating: 4
