@@ -46,7 +46,7 @@ const Navbar = () => {
             "text-2xl font-heading font-black tracking-tighter transition-colors mt-0.5 whitespace-nowrap uppercase",
             scrolled ? "text-flexigo-primary" : "text-black"
           )}>
-            Flexigo <span className="text-flexigo-teal">E-Mobility</span>
+            Flex<span className="text-flexigo-teal">igo E-Mobility</span>
           </span>
         </Link>
 

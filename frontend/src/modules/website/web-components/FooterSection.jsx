@@ -19,7 +19,7 @@ const FooterSection = () => {
               />
               <div className="w-24 h-10" />
               <span className="text-2xl font-heading font-black tracking-tighter text-flexigo-primary mt-1 whitespace-nowrap relative z-20 uppercase">
-                Flexigo <span className="text-flexigo-teal">E-Mobility</span>
+                Flex<span className="text-flexigo-teal">igo E-Mobility</span>
               </span>
             </a>
             <p className="text-slate-600 leading-relaxed mb-8 max-w-sm">
