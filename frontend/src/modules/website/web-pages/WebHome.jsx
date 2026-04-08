@@ -17,24 +17,26 @@ import FooterSection from '../web-components/FooterSection';
 
 const WebHome = () => {
   return (
-    <div className="landing-page-theme bg-white min-h-screen font-body text-slate-800 antialiased selection:bg-flexigo-teal selection:text-white overflow-x-hidden">
-      <Navbar />
-      
-      <main>
-        <HeroSection />
-        <VideoSection />
-        <StatsSection />
-        <HowItWorksSection />
-        <FeaturesSection />
-        <SavingsCalculatorSection />
-        <VehicleShowcaseSection />
-        <MapSection />
-        <TestimonialsSection />
-        <CtaSection />
-      </main>
+    <ReactLenis root options={{ lerp: 0.12, duration: 1.2, smoothWheel: true }}>
+      <div className="landing-page-theme bg-white min-h-screen font-body text-slate-800 antialiased selection:bg-flexigo-teal selection:text-white">
+        <Navbar />
+        
+        <main>
+          <HeroSection />
+          <VideoSection />
+          <StatsSection />
+          <HowItWorksSection />
+          <FeaturesSection />
+          <SavingsCalculatorSection />
+          <VehicleShowcaseSection />
+          <MapSection />
+          <TestimonialsSection />
+          <CtaSection />
+        </main>
 
-      <FooterSection />
-    </div>
+        <FooterSection />
+      </div>
+    </ReactLenis>
   );
 };
 

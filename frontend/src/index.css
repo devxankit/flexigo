@@ -45,9 +45,6 @@
     background-color: rgba(16, 185, 129, 0.3); /* selection:bg-emerald-500/30 */
   }
   
-  html {
-    scroll-behavior: smooth;
-  }
 
   body {
     background-color: var(--bg-primary);
