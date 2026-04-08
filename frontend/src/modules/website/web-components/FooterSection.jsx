@@ -8,14 +8,14 @@ const FooterSection = () => {
     <footer className="bg-slate-50 border-t border-slate-200 pt-20 pb-10">
       <div className="w-full px-4 md:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 lg:gap-8 mb-16">
-          
+
           {/* Brand Col */}
           <div className="lg:col-span-2">
             <a href="/" className="flex items-center group mb-6 relative w-max inline-flex">
-              <img 
-                src={logo} 
-                alt="FlexiGo Logo" 
-                className="w-32 h-32 absolute top-1/2 -translate-y-1/2 -left-4 object-contain transition-transform duration-300 group-hover:scale-105 z-10" 
+              <img
+                src={logo}
+                alt="FlexiGo Logo"
+                className="w-32 h-32 absolute top-1/2 -translate-y-1/2 -left-4 object-contain transition-transform duration-300 group-hover:scale-105 z-10"
               />
               <div className="w-24 h-10" />
               <span className="text-2xl font-heading font-black tracking-tighter text-flexigo-primary mt-1 whitespace-nowrap relative z-20 uppercase">
@@ -23,24 +23,24 @@ const FooterSection = () => {
               </span>
             </a>
             <p className="text-slate-600 leading-relaxed mb-8 max-w-sm">
-              Powering the future of micro-mobility and delivery logistics in India with 
+              Powering the future of micro-mobility and delivery logistics in India with
               smart, zero-maintenance EVs.
             </p>
             <div className="flex gap-4">
-               {[
-                 { icon: <Twitter className="w-5 h-5" />, label: 'Twitter' },
-                 { icon: <Instagram className="w-5 h-5" />, label: 'Instagram' },
-                 { icon: <Linkedin className="w-5 h-5" />, label: 'LinkedIn' },
-               ].map((social, i) => (
-                 <a 
-                   key={i} 
-                   href="#" 
-                   aria-label={social.label}
-                   className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-flexigo-primary hover:border-flexigo-teal transition-all duration-300 hover:shadow-md hover:-translate-y-1"
-                 >
-                   {social.icon}
-                 </a>
-               ))}
+              {[
+                { icon: <Twitter className="w-5 h-5" />, label: 'Twitter' },
+                { icon: <Instagram className="w-5 h-5" />, label: 'Instagram' },
+                { icon: <Linkedin className="w-5 h-5" />, label: 'LinkedIn' },
+              ].map((social, i) => (
+                <a
+                  key={i}
+                  href="#"
+                  aria-label={social.label}
+                  className="w-10 h-10 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-flexigo-primary hover:border-flexigo-teal transition-all duration-300 hover:shadow-md hover:-translate-y-1"
+                >
+                  {social.icon}
+                </a>
+              ))}
             </div>
           </div>
 
@@ -77,28 +77,28 @@ const FooterSection = () => {
             <h4 className="font-bold font-heading text-slate-900 mb-6">Contact Us</h4>
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
-                 <MapPin className="w-5 h-5 text-flexigo-teal shrink-0 mt-0.5" />
-                 <span className="text-slate-600 text-sm leading-relaxed">
-                   ‘Krushna Avenue’ Shop No-3,  SR NO: 111/10/Baner Pune City Pune(CB) 411045.
-                 </span>
+                <MapPin className="w-5 h-5 text-flexigo-teal shrink-0 mt-0.5" />
+                <span className="text-slate-600 text-sm leading-relaxed">
+                  ‘Krushna Avenue’,  SR NO: 111/10/Baner Pune City Pune(CB) 411045.
+                </span>
               </li>
               <li className="flex items-center gap-3">
-                 <Phone className="w-5 h-5 text-flexigo-teal shrink-0" />
-                 <span className="text-slate-600 text-sm font-medium">
-                   +91 99229 68093
-                 </span>
+                <Phone className="w-5 h-5 text-flexigo-teal shrink-0" />
+                <span className="text-slate-600 text-sm font-medium">
+                  +91 99229 68093
+                </span>
               </li>
               <li className="flex items-center gap-3">
-                 <MessageCircle className="w-5 h-5 text-flexigo-teal shrink-0" />
-                 <span className="text-slate-600 text-sm font-medium">
-                   +91 99229 68093 (WhatsApp)
-                 </span>
+                <MessageCircle className="w-5 h-5 text-flexigo-teal shrink-0" />
+                <span className="text-slate-600 text-sm font-medium">
+                  +91 99229 68093 (WhatsApp)
+                </span>
               </li>
               <li className="flex items-center gap-3">
-                 <Mail className="w-5 h-5 text-flexigo-teal shrink-0" />
-                 <span className="text-slate-600 text-sm font-medium">
-                   support@flexigoemobility.com
-                 </span>
+                <Mail className="w-5 h-5 text-flexigo-teal shrink-0" />
+                <span className="text-slate-600 text-sm font-medium">
+                  support@flexigoemobility.com
+                </span>
               </li>
             </ul>
           </div>
@@ -106,13 +106,13 @@ const FooterSection = () => {
         </div>
 
         <div className="border-t border-slate-200 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-           <p className="text-slate-500 text-sm">
-             © {new Date().getFullYear()} Flexigo E-Mobility Pvt. Ltd. All rights reserved.
-           </p>
-           <div className="flex gap-6 text-sm">
-             <a href="#" className="text-slate-500 hover:text-flexigo-primary transition-colors">Privacy Policy</a>
-             <a href="#" className="text-slate-500 hover:text-flexigo-primary transition-colors">Terms of Service</a>
-           </div>
+          <p className="text-slate-500 text-sm">
+            © {new Date().getFullYear()} Flexigo E-Mobility Pvt. Ltd. All rights reserved.
+          </p>
+          <div className="flex gap-6 text-sm">
+            <a href="#" className="text-slate-500 hover:text-flexigo-primary transition-colors">Privacy Policy</a>
+            <a href="#" className="text-slate-500 hover:text-flexigo-primary transition-colors">Terms of Service</a>
+          </div>
         </div>
       </div>
     </footer>

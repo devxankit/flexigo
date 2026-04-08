@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import projectVideo from '../../../assets/Young_adults_in_202604061128.mp4';
+import projectVideo from '../../../assets/Clean_brand-focused_ending(flexigo)._202604081303.mp4';
 
 const VideoSection = () => {
   const videoRef = useRef(null);
