@@ -79,7 +79,7 @@ const FooterSection = () => {
               <li className="flex items-start gap-3">
                  <MapPin className="w-5 h-5 text-flexigo-teal shrink-0 mt-0.5" />
                  <span className="text-slate-600 text-sm leading-relaxed">
-                   Shop No. 03, Ground Floor, Building 'Krishna Avenue’ opposite to D mart, Survey Number :1 11/10/2, Baner Road, Tehsil Haveli, Pune- 411045, Maharashtra
+                   ‘Krushna Avenue’ Shop No-3,  SR NO: 111/10/Baner Pune City Pune(CB) 411045.
                  </span>
               </li>
               <li className="flex items-center gap-3">
