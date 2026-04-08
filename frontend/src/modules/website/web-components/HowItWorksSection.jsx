@@ -7,19 +7,19 @@ const steps = [
     icon: <UserCheck className="w-8 h-8 text-flexigo-teal" />,
     title: 'Register & Verify',
     description: 'Download the app, complete KYC, and get approved in minutes. No complex paperwork.',
-    color: 'bg-green-50',
+    color: 'bg-orange-50',
   },
   {
     icon: <CreditCard className="w-8 h-8 text-flexigo-teal" />,
     title: 'Subscribe & Pay',
     description: 'Choose a daily, weekly, or monthly plan. All maintenance and insurance covered.',
-    color: 'bg-green-50',
+    color: 'bg-orange-50',
   },
   {
     icon: <Bike className="w-8 h-8 text-flexigo-accent" />,
     title: 'Ride & Earn',
     description: 'Pick up your EV from the nearest hub and start delivering immediately.',
-    color: 'bg-green-100',
+    color: 'bg-orange-100',
   },
 ];
 
@@ -54,7 +54,7 @@ const HowItWorksSection = () => {
           <div className="hidden md:block absolute top-[4.5rem] left-[15%] right-[15%] h-[2px] bg-slate-100 z-0 text-center">
             {/* Animated dashed line overlay */}
             <svg width="100%" height="2" className="absolute inset-0">
-               <line x1="0" y1="1" x2="100%" y2="1" stroke="#22C55E" strokeWidth="2" strokeDasharray="6 6" className="animate-[dash_60s_linear_infinite] opacity-30"/>
+               <line x1="0" y1="1" x2="100%" y2="1" stroke="#F97316" strokeWidth="2" strokeDasharray="6 6" className="animate-[dash_60s_linear_infinite] opacity-30"/>
             </svg>
           </div>
 

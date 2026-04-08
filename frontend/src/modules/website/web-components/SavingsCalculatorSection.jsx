@@ -87,7 +87,7 @@ const SavingsCalculatorSection = () => {
                       className="absolute inset-x-0 w-full h-12 opacity-0 cursor-pointer z-20"
                     />
                     <div 
-                      className="absolute top-1/2 -translate-y-1/2 w-10 h-10 bg-white border-[6px] border-flexigo-teal rounded-full shadow-[0_10px_40px_rgba(57,255,20,0.4)] pointer-events-none z-30 group-hover/slider:scale-110 transition-transform"
+                      className="absolute top-1/2 -translate-y-1/2 w-10 h-10 bg-white border-[6px] border-flexigo-primary rounded-full shadow-[0_10px_40px_rgba(249,115,22,0.4)] pointer-events-none z-30 group-hover/slider:scale-110 transition-transform"
                       style={{ left: `calc(${(dailyEarnings / 3000) * 100}% - 20px)` }}
                     />
                   </div>
@@ -104,14 +104,14 @@ const SavingsCalculatorSection = () => {
              <div className="relative w-[340px] h-[340px] md:w-[420px] md:h-[420px] flex items-center justify-center">
                 
                 {/* Outer Glow Circle */}
-                <div className="absolute inset-0 border border-flexigo-teal/10 rounded-full animate-[pulse_4s_infinite]" />
-                <div className="absolute inset-10 border border-flexigo-teal/5 rounded-full" />
+                <div className="absolute inset-0 border border-flexigo-primary/10 rounded-full animate-[pulse_4s_infinite]" />
+                <div className="absolute inset-10 border border-flexigo-primary/5 rounded-full" />
 
                 {/* Animated Savings Ring */}
                 <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
                   <circle className="text-slate-50" strokeWidth="6" stroke="currentColor" fill="transparent" r="42" cx="50" cy="50" />
                   <motion.circle
-                     className="text-flexigo-teal"
+                     className="text-flexigo-primary"
                      strokeWidth="6"
                      strokeDasharray="264"
                      animate={{ strokeDashoffset: 264 - (264 * (totalSavings / 15000)) }}
@@ -122,20 +122,20 @@ const SavingsCalculatorSection = () => {
                      r="42"
                      cx="50"
                      cy="50"
-                     style={{ filter: 'drop-shadow(0 0 10px rgba(57, 255, 20, 0.4))' }}
+                     style={{ filter: 'drop-shadow(0 0 10px rgba(249, 115, 22, 0.4))' }}
                   />
                 </svg>
 
                 {/* Central Payout HUD */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                    <div className="w-12 h-12 rounded-full bg-slate-900 flex items-center justify-center mb-4 transition-transform hover:scale-110 hover:shadow-neon duration-500 cursor-help">
-                      <Wallet className="w-5 h-5 text-flexigo-teal" />
+                      <Wallet className="w-5 h-5 text-flexigo-primary" />
                    </div>
                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-1">Extra Profit</p>
                    <div className="text-5xl md:text-6xl font-black font-heading text-slate-900 tracking-tighter mb-1">
                       ₹<SmoothCounter value={totalSavings} />
                    </div>
-                   <p className="text-sm font-bold text-flexigo-teal uppercase tracking-widest">{period.label} Overview</p>
+                   <p className="text-sm font-bold text-flexigo-primary uppercase tracking-widest">{period.label} Overview</p>
                 </div>
 
                 {/* Satellite Feature Cards */}
@@ -159,7 +159,7 @@ const SavingsCalculatorSection = () => {
                    transition={{ delay: 0.1 }}
                    className="absolute -bottom-4 -left-4 bg-white border border-slate-100 shadow-xl p-4 rounded-3xl flex items-center gap-3 backdrop-blur-sm z-20"
                 >
-                   <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-500">
+                   <div className="w-8 h-8 rounded-xl bg-flexigo-primary/10 flex items-center justify-center text-flexigo-primary">
                       <ShieldCheck className="w-4 h-4" />
                    </div>
                    <div>

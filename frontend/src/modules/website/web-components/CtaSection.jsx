@@ -42,10 +42,10 @@ const CtaSection = () => {
              </p>
 
              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-               <button className="w-full sm:w-auto px-8 py-4 bg-flexigo-accent hover:bg-[#00e67a] text-flexigo-primary rounded-full font-bold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_30px_rgba(0,255,136,0.4)] flex items-center justify-center gap-2 group">
-                 Download App
-                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-               </button>
+                <button className="w-full sm:w-auto px-8 py-4 bg-flexigo-teal hover:bg-flexigo-primary text-white rounded-full font-bold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_30px_rgba(249,115,22,0.4)] flex items-center justify-center gap-2 group">
+                  Download App
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </button>
                <button className="w-full sm:w-auto px-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-full font-medium text-lg transition-all duration-300 backdrop-blur-md border border-white/10 hover:border-white/30 hidden sm:block">
                  Talk to Sales
                </button>

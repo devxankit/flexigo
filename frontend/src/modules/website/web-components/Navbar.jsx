@@ -39,9 +39,9 @@ const Navbar = () => {
           <img 
             src={logo} 
             alt="FlexiGo Logo" 
-            className="w-24 h-24 md:w-32 md:h-32 absolute top-1/2 -translate-y-1/2 left-0 object-contain transition-transform duration-300 group-hover:scale-105 z-10" 
+            className="w-26 h-26 md:w-36 md:h-36 absolute top-1/2 -translate-y-1/2 -left-1 object-contain transition-transform duration-300 group-hover:scale-105 z-10" 
           />
-          <div className="w-20 md:w-26 h-10 md:h-12" />
+          <div className="w-22 md:w-30 h-10 md:h-12" />
           <span className={cn(
             "text-2xl font-heading font-black tracking-tighter transition-colors mt-0.5 whitespace-nowrap uppercase",
             scrolled ? "text-flexigo-primary" : "text-black"

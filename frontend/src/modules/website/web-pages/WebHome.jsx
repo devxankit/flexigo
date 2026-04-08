@@ -17,7 +17,7 @@ import FooterSection from '../web-components/FooterSection';
 
 const WebHome = () => {
   return (
-    <div className="bg-white min-h-screen font-body text-slate-800 antialiased selection:bg-flexigo-teal selection:text-white overflow-x-hidden">
+    <div className="landing-page-theme bg-white min-h-screen font-body text-slate-800 antialiased selection:bg-flexigo-teal selection:text-white overflow-x-hidden">
       <Navbar />
       
       <main>

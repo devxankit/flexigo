@@ -67,7 +67,7 @@ const VehicleShowcaseSection = () => {
                     <img 
                       src={heroImage} 
                       alt="Flexigo V1 Scooter" 
-                      className="w-full h-auto max-w-[500px] object-contain transition-transform duration-1000 group-hover/scooter:scale-[1.05] drop-shadow-[0_0_15px_rgba(57,255,20,0.4)] drop-shadow-[0_0_50px_rgba(57,255,20,0.2)] drop-shadow-[0_30px_60px_rgba(0,0,0,0.8)]" 
+                      className="w-full h-auto max-w-[500px] object-contain transition-transform duration-1000 group-hover/scooter:scale-[1.05] drop-shadow-[0_0_15px_rgba(249,115,22,0.4)] drop-shadow-[0_0_50px_rgba(249,115,22,0.2)] drop-shadow-[0_30px_60px_rgba(0,0,0,0.8)]" 
                     />
                     
                     {/* High-Tech Scanline */}
@@ -82,7 +82,7 @@ const VehicleShowcaseSection = () => {
                   <motion.div 
                     initial={{ x: 20, opacity: 0 }}
                     whileInView={{ x: 0, opacity: 1 }}
-                    className="absolute top-[20%] -right-4 lg:-right-12 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full shadow-[0_10px_30px_rgba(16,185,129,0.4)] rotate-12 flex items-center gap-2 z-30"
+                    className="absolute top-[20%] -right-4 lg:-right-12 bg-flexigo-teal text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full shadow-[0_10px_30px_rgba(249,115,22,0.4)] rotate-12 flex items-center gap-2 z-30"
                   >
                     <Zap className="w-3 h-3 fill-white" />
                     120km Ultra Range
@@ -124,14 +124,14 @@ const VehicleShowcaseSection = () => {
                   <div>
                     <div className="flex justify-between text-xs mb-3 font-bold uppercase tracking-wider">
                        <span className="text-slate-400">Current Battery State</span>
-                       <span className="text-emerald-400">98% Nominal</span>
+                       <span className="text-flexigo-teal">98% Nominal</span>
                     </div>
                     <div className="w-full h-3 bg-white/5 rounded-full overflow-hidden p-[2px]">
                        <motion.div 
                          initial={{ width: 0 }}
                          whileInView={{ width: '98%' }}
                          transition={{ duration: 2, ease: [0.16, 1, 0.3, 1], delay: 0.8 }}
-                         className="h-full bg-gradient-to-r from-emerald-600 via-emerald-400 to-flexigo-accent rounded-full relative"
+                         className="h-full bg-gradient-to-r from-flexigo-teal to-flexigo-accent rounded-full relative"
                        >
                          <motion.div 
                            animate={{ left: ['-100%', '100%'] }}

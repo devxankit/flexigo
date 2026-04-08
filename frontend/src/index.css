@@ -102,4 +102,15 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     @apply bg-white/20;
   }
+
+  .landing-page-theme {
+    --color-flexigo-primary: #1A2A6B; /* Navy Blue - from logo */
+    --color-flexigo-teal: #F97316;    /* Vivid Orange - from accents */
+    --color-flexigo-accent: #FFD700;  /* Yellow - from lightning icon */
+    --color-flexigo-bg: #FFFFFF;
+    --color-flexigo-dark: #1C1C1C;
+    
+    /* Selection color for landing page */
+    --selection-bg: rgba(249, 115, 22, 0.3); /* Orange selection */
+  }
 }

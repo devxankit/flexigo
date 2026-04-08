@@ -15,9 +15,9 @@ const FooterSection = () => {
               <img 
                 src={logo} 
                 alt="FlexiGo Logo" 
-                className="w-20 h-20 absolute top-1/2 -translate-y-1/2 -left-3 object-contain transition-transform duration-300 group-hover:scale-105 z-10" 
+                className="w-32 h-32 absolute top-1/2 -translate-y-1/2 -left-4 object-contain transition-transform duration-300 group-hover:scale-105 z-10" 
               />
-              <div className="w-14 h-10" />
+              <div className="w-24 h-10" />
               <span className="text-2xl font-heading font-black tracking-tighter text-flexigo-primary mt-1 whitespace-nowrap relative z-20 uppercase">
                 Flexigo <span className="text-flexigo-teal">E-Mobility</span>
               </span>
