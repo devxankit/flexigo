@@ -38,9 +38,9 @@ export default function HomeDashboard() {
   return (
     <>
     <PageWrapper className={`relative min-h-screen ${isDark ? 'bg-[#0A1120]' : 'bg-slate-50/50'}`}>
-      {/* Search and Greeting: Sticky Header Section on top of list */}
-      <div className={`sticky top-0 z-20 px-6 pt-0 pb-6 space-y-6 transition-colors duration-500 shadow-sm ${
-        isDark ? 'bg-[#0A1120]/90 backdrop-blur-xl border-white/5 border-b' : 'bg-white/90 backdrop-blur-xl border-slate-200 border-b'
+      {/* Search and Greeting: Header Section that scrolls away */}
+      <div className={`relative z-10 px-6 pt-4 pb-6 space-y-6 transition-colors duration-500 ${
+        isDark ? 'bg-transparent' : 'bg-transparent'
       }`}>
         {/* Welcome Dashboard Section */}
         <div className="flex items-center justify-between">

@@ -46,6 +46,8 @@ export function RiderLayout() {
 
   // Screens that shouldn't have the global layout (Splash, Auth)
   const isAuth = pathname === '/rider' || pathname === '/rider/' || pathname.includes('/rider/auth');
+  const showHeader = !pathname.includes('/rider/onboarding') && !isAuth;
+  const showBottomNav = !pathname.includes('/rider/onboarding') && !isAuth;
 
   if (isAuth) {
     return <Outlet />;
@@ -56,16 +58,18 @@ export function RiderLayout() {
       theme === 'dark' ? 'bg-[#0A0A0F]' : 'bg-white'
     }`}>
       {/* Header Layer */}
-      <div className={`absolute top-0 left-0 right-0 z-[60] transition-colors duration-500 ${
-        theme === 'dark' 
-          ? 'bg-[#0A0A0F]' 
-          : 'bg-white/80 backdrop-blur-xl'
-      }`}>
-        <RiderHeader />
-      </div>
+      {showHeader && (
+        <div className={`absolute top-0 left-0 right-0 z-[60] transition-colors duration-500 ${
+          theme === 'dark' 
+            ? 'bg-[#0A0A0F]' 
+            : 'bg-white/80 backdrop-blur-xl'
+        }`}>
+          <RiderHeader />
+        </div>
+      )}
       
       {/* Scrollable Content Layer */}
-      <main className="absolute inset-x-0 top-0 bottom-0 overflow-y-auto overflow-x-hidden pt-[100px] pb-32 px-0 z-0 select-none touch-pan-y">
+      <main className={`absolute inset-x-0 top-0 bottom-0 overflow-y-auto overflow-x-hidden ${showHeader ? 'pt-[100px]' : 'pt-0'} ${showBottomNav ? 'pb-32' : 'pb-10'} px-0 z-0 select-none touch-pan-y`}>
         <Outlet />
       </main>
 

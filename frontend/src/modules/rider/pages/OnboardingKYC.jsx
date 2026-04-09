@@ -65,7 +65,7 @@ export default function OnboardingKYC() {
   };
 
   return (
-    <PageWrapper className="flex flex-col px-6 pt-12 pb-10">
+    <PageWrapper className="flex flex-col px-6 pt-8 pb-10">
       <div className="flex items-center justify-between mb-8">
         <h1 className={`text-2xl font-heading font-black transition-colors duration-500 ${
           isDark ? 'text-white' : 'text-slate-900'
