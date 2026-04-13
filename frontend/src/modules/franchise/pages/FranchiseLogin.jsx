@@ -8,12 +8,14 @@ import {
   ArrowRight, 
   LayoutDashboard,
   ShieldAlert,
-  ChevronRight
+  ChevronRight,
+  Plus,
+  Cpu,
+  Lock,
+  Network
 } from 'lucide-react';
 import { useFranchiseAuthStore } from '../store/franchiseAuthStore';
 import logo from '../../../assets/logo.png';
-
-// Roles removed to streamline directly into credentials
 
 export default function FranchiseLogin() {
   const navigate = useNavigate();
@@ -28,11 +30,11 @@ export default function FranchiseLogin() {
     let isValid = true;
 
     if (formData.id.trim().length < 4) {
-      newErrors.id = 'Personnel ID must be at least 4 characters';
+      newErrors.id = 'INVALID_PERSONNEL_ID';
       isValid = false;
     }
     if (formData.pin.length < 6) {
-      newErrors.pin = 'Access PIN must be at least 6 characters';
+      newErrors.pin = 'PIN_LENGTH_VIOLATION';
       isValid = false;
     }
 
@@ -57,133 +59,152 @@ export default function FranchiseLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 font-body flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* Background Subtle Gradient */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.05),transparent_50%)]" />
+    <div className="min-h-screen bg-[var(--bg-primary)] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      {/* Background Architectural Layer */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.08),transparent_60%)] pointer-events-none" />
+      <div className="absolute inset-0 opacity-[0.02] pointer-events-none overflow-hidden">
+         <div className="absolute top-0 left-0 w-full h-[1px] bg-emerald-500 animate-pulse" style={{ top: '10%' }} />
+         <div className="absolute top-0 left-0 w-full h-[1px] bg-emerald-500 animate-pulse" style={{ top: '90%' }} />
+         <div className="absolute top-0 left-0 h-full w-[1px] bg-emerald-500 animate-pulse" style={{ left: '10%' }} />
+         <div className="absolute top-0 right-0 h-full w-[1px] bg-emerald-500 animate-pulse" style={{ right: '10%' }} />
+      </div>
 
-      {/* Main Login Card */}
+      {/* Main Login Hub */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ 
           opacity: 1, 
-          scale: 1,
-          x: isErrorShake ? [-10, 10, -10, 10, 0] : 0
+          y: 0,
+          x: isErrorShake ? [-8, 8, -8, 8, 0] : 0
         }}
-        transition={{ duration: isErrorShake ? 0.4 : 0.4 }}
-        className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-8 md:p-10 shadow-2xl overflow-hidden"
+        transition={{ duration: 0.5 }}
+        className="relative w-full max-w-[340px] bg-slate-900 border border-[var(--border-subtle)] rounded-[2.5rem] p-8 shadow-2xl overflow-hidden shadow-emerald-950/20"
       >
-        {/* Header Section */}
-        <div className="flex flex-col items-center mb-10 text-center">
-          <div className="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center mb-6 shadow-sm">
-            <img src={logo} alt="Flexigo" className="w-8 h-8 object-contain invert" />
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white uppercase">
-            Franchise <span className="text-emerald-500">Portal</span>
-          </h1>
-          <p className="text-slate-400 text-xs font-medium uppercase tracking-wider mt-2 leading-relaxed">
-            Authorized Personnel Hub Access
-          </p>
+        {/* Internal Decor */}
+        <div className="absolute top-0 right-0 p-4 opacity-[0.03] pointer-events-none">
+           <Cpu size={120} className="text-emerald-500" />
         </div>
 
-        <AnimatePresence mode="wait">
-            <motion.form 
-              key="login-form"
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              onSubmit={handleLogin}
-              className="space-y-5"
+        {/* Header Section */}
+        <div className="flex flex-col items-center mb-10 text-center relative z-10">
+          <div className="w-10 h-10 bg-emerald-600 rounded-2xl flex items-center justify-center mb-5 shadow-inner scale-110">
+            <img src={logo} alt="Flexigo" className="w-6 h-6 object-contain invert" />
+          </div>
+          <div className="space-y-1">
+             <h1 className="text-xl font-black tracking-tighter text-[var(--text-primary)] uppercase italic leading-none">
+                NODE <span className="text-emerald-500">ACCESS</span>
+             </h1>
+             <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.4em] italic opacity-60">
+                PARTNER_PROTOCOL • SIGMA_V2
+             </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleLogin} className="space-y-4 relative z-10">
+          <div className="space-y-3">
+             <div className="space-y-1.5">
+               <div className="flex justify-between items-center px-1">
+                  <label className="text-[7.5px] font-black uppercase tracking-widest text-emerald-500 italic opacity-60">PERSONNEL_ID</label>
+                  {errors.id && <span className="text-[7px] font-black text-rose-500 uppercase italic animate-pulse">{errors.id}</span>}
+               </div>
+               <div className={`p-2.5 bg-[var(--bg-secondary)] border rounded-xl flex items-center gap-3 transition-all shadow-inner ${
+                 errors.id ? 'border-rose-500/40 ring-1 ring-rose-500/10' : 'border-[var(--border-subtle)] focus-within:border-emerald-500/40'
+               }`}>
+                 <Smartphone className={`${errors.id ? 'text-rose-500' : 'text-slate-600'}`} size={14} />
+                 <input 
+                   required
+                   type="text" 
+                   value={formData.id}
+                   onChange={(e) => setFormData({ ...formData, id: e.target.value.slice(0, 12) })}
+                   className="bg-transparent border-none outline-none text-[10px] text-[var(--text-primary)] placeholder:text-slate-800 w-full font-black uppercase tracking-widest italic"
+                   placeholder="NODE_IDENTIFIER"
+                 />
+               </div>
+             </div>
+
+             <div className="space-y-1.5">
+               <div className="flex justify-between items-center px-1">
+                  <label className="text-[7.5px] font-black uppercase tracking-widest text-emerald-500 italic opacity-60">HANDSHAKE_PIN</label>
+                  {errors.pin && <span className="text-[7px] font-black text-rose-500 uppercase italic animate-pulse">{errors.pin}</span>}
+               </div>
+               <div className={`p-2.5 bg-[var(--bg-secondary)] border rounded-xl flex items-center gap-3 transition-all shadow-inner ${
+                 errors.pin ? 'border-rose-500/40 ring-1 ring-rose-500/10' : 'border-[var(--border-subtle)] focus-within:border-emerald-500/40'
+               }`}>
+                 <Lock className={`${errors.pin ? 'text-rose-500' : 'text-slate-600'}`} size={14} />
+                 <input 
+                   required
+                   type="password" 
+                   inputMode="numeric"
+                   value={formData.pin}
+                   onChange={(e) => setFormData({ ...formData, pin: e.target.value.replace(/\D/g, '').slice(0, 6) })}
+                   className="bg-transparent border-none outline-none text-[10px] text-[var(--text-primary)] placeholder:text-slate-800 w-full font-black tracking-[0.6em] italic"
+                   placeholder="••••••"
+                 />
+               </div>
+             </div>
+          </div>
+
+          <div className="flex flex-col gap-3 pt-2">
+            <button 
+              disabled={loading}
+              className="w-full h-11 rounded-xl bg-emerald-600-white text-[9px] font-black uppercase tracking-[0.3em] shadow-lg shadow-emerald-950/40 hover:bg-emerald-500 active:scale-[0.98] disabled:opacity-50 transition-all flex items-center justify-center gap-2 italic relative overflow-hidden group"
             >
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-emerald-500 ml-1">Personnel ID</label>
-                  <div className={`p-3 bg-slate-800/50 border rounded-xl flex items-center gap-3 transition-all ${
-                    errors.id ? 'border-rose-500/50 ring-1 ring-rose-500/20' : 'border-slate-700 focus-within:border-emerald-500/40 focus-within:ring-1 focus-within:ring-emerald-500/20'
-                  }`}>
-                    <Smartphone className={`${errors.id ? 'text-rose-400' : 'text-slate-500'}`} size={18} />
-                    <input 
-                      required
-                      type="text" 
-                      placeholder="Enter mobile or hub ID" 
-                      value={formData.id}
-                      onChange={(e) => setFormData({ ...formData, id: e.target.value.slice(0, 12) })}
-                      className="bg-transparent border-none outline-none text-sm text-white placeholder:text-slate-600 w-full font-medium"
-                    />
-                  </div>
-                  {errors.id && <p className="text-[10px] font-bold text-rose-500 ml-1 mt-1 animate-in fade-in slide-in-from-top-1">{errors.id}</p>}
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  SYNCING...
                 </div>
+              ) : (
+                <>
+                  CONNECT_NODE <Network size={12} className="group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+            </button>
 
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-emerald-500 ml-1">Access PIN</label>
-                  <div className={`p-3 bg-slate-800/50 border rounded-xl flex items-center gap-3 transition-all ${
-                    errors.pin ? 'border-rose-500/50 ring-1 ring-rose-500/20' : 'border-slate-700 focus-within:border-emerald-500/40 focus-within:ring-1 focus-within:ring-emerald-500/20'
-                  }`}>
-                    <ShieldCheck className={`${errors.pin ? 'text-rose-400' : 'text-slate-500'}`} size={18} />
-                    <input 
-                      required
-                      type="password" 
-                      inputMode="numeric"
-                      placeholder="••••••" 
-                      value={formData.pin}
-                      onChange={(e) => setFormData({ ...formData, pin: e.target.value.replace(/\D/g, '').slice(0, 6) })}
-                      className="bg-transparent border-none outline-none text-sm text-white placeholder:text-slate-600 w-full font-medium tracking-[0.3em]"
-                    />
-                  </div>
-                  {errors.pin && <p className="text-[10px] font-bold text-rose-500 ml-1 mt-1 animate-in fade-in slide-in-from-top-1">{errors.pin}</p>}
-                </div>
-              </div>
+            <button 
+              type="button"
+              onClick={() => navigate('/franchise/onboarding')}
+              className="w-full h-11 rounded-xl border border-[var(--border-subtle)] bg-white/5 text-[var(--text-secondary)] text-[8.5px] font-black uppercase tracking-widest hover:border-[var(--border-subtle)] hover:text-white transition-all flex items-center justify-center gap-2 italic shadow-sm"
+            >
+              INITIALIZE_ONBOARDING <Plus size={14} />
+            </button>
+          </div>
 
-              <button 
-                disabled={loading}
-                className="w-full h-12 rounded-xl bg-emerald-600 text-white font-bold text-xs uppercase tracking-widest shadow-lg shadow-emerald-900/20 hover:bg-emerald-500 active:scale-[0.98] disabled:opacity-50 transition-all duration-200 flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                    Verifying...
-                  </>
-                ) : (
-                  <>
-                    Initialize Session <ArrowRight size={16} />
-                  </>
-                )}
-              </button>
-              <div className="pt-6 text-center">
-                 <button 
-                   type="button"
-                   onClick={() => navigate('/franchise/onboarding')}
-                   className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 hover:text-emerald-500 transition-all flex items-center justify-center gap-2 mx-auto"
-                 >
-                    Become a Partner Node <ChevronRight size={14} />
-                 </button>
-              </div>
-            </motion.form>
-        </AnimatePresence>
+          <div className="text-center pt-2">
+             <button 
+               type="button"
+               className="text-[7.5px] font-black uppercase tracking-[0.3em] text-slate-700 hover:text-emerald-500 transition-all italic"
+             >
+                LOST_ACCESS_CREDENTIALS?
+             </button>
+          </div>
+        </form>
 
         {/* Technical Footer */}
-        <div className="mt-10 pt-6 border-t border-slate-800/50 text-center flex flex-col items-center gap-4">
-           <div className="flex items-center gap-4 text-slate-600">
-             <div className="flex items-center gap-1.5 pr-4">
-               <ShieldAlert size={12} strokeWidth={2.5} />
-               <span className="text-[9px] font-bold uppercase tracking-widest leading-none">Secured Node</span>
+        <div className="mt-10 pt-6 border-t border-[var(--border-subtle)] text-center space-y-4 relative z-10">
+           <div className="flex items-center justify-center gap-6 text-slate-700">
+             <div className="flex items-center gap-1.5 grayscale opacity-40">
+               <ShieldAlert size={10} strokeWidth={3} />
+               <span className="text-[7.5px] font-black uppercase tracking-widest italic">SECURE_SYNC</span>
              </div>
-             <span className="text-[9px] font-bold uppercase tracking-widest leading-none">v2.4.1 Ops</span>
+             <div className="w-px h-2 bg-white/5" />
+             <span className="text-[7.5px] font-black uppercase tracking-widest italic opacity-40">BUILD_2.4.1_PRO</span>
            </div>
-           <p className="text-[9px] font-medium text-slate-700 uppercase tracking-tighter">Proprietary System. Access Monitored.</p>
+           <p className="text-[7px] font-black text-slate-800 uppercase tracking-widest italic">FLEXIGO_SYSTEMS_AUTH_MONITORED_PEER_LOG</p>
         </div>
       </motion.div>
 
-      {/* Floating Status Bar - Global Decor */}
-      <div className="mt-8 flex items-center gap-6 px-5 py-2.5 bg-slate-900/50 rounded-full border border-slate-800 shadow-xl opacity-60">
+      {/* Persistence Decor */}
+      <div className="mt-8 flex items-center gap-5 px-4 py-2 bg-slate-900 border border-[var(--border-subtle)] rounded-full shadow-2xl opacity-40 hover:opacity-100 transition-opacity">
          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-500">Service Online</span>
+            <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[7.5px] font-black uppercase tracking-widest text-emerald-500 italic">CORE_NET_ON</span>
          </div>
-         <div className="w-px h-3 bg-slate-800" />
-         <div className="flex items-center gap-2 text-slate-500">
-            <Smartphone size={10} />
-            <span className="text-[9px] font-bold uppercase tracking-widest whitespace-nowrap">End-to-End Encryption</span>
+         <div className="w-px h-3 bg-white/5" />
+         <div className="flex items-center gap-2 text-[var(--text-tertiary)]">
+            <Cpu size={8} />
+            <span className="text-[7.5px] font-black uppercase tracking-widest italic">RSA_4096_LOCKED</span>
          </div>
       </div>
     </div>

@@ -56,53 +56,53 @@ export default function HrManagementPage() {
   };
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-6 pb-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-         <div className="space-y-1">
-            <div className="flex items-center gap-3">
-               <div className="w-1.5 h-6 bg-emerald-600 rounded-full" />
-               <h1 className="text-2xl font-black tracking-tighter text-[var(--text-primary)] uppercase italic">
-                  Staff <span className="text-emerald-500">Registry</span>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+         <div className="space-y-0.5">
+            <div className="flex items-center gap-2">
+               <div className="w-1 h-5 bg-emerald-600 rounded-full" />
+               <h1 className="text-xl font-black tracking-tighter text-[var(--text-primary)] uppercase italic">
+                  Team <span className="text-emerald-500">Registry</span>
                </h1>
             </div>
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-tertiary)] ml-4">
-               Manage Team • Access Control • Attendance
+            <p className="text-[8px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] ml-3">
+               Staff Management & Access Control
             </p>
          </div>
          
-         <div className="flex items-center gap-3">
+         <div className="flex items-center gap-2">
             <button 
                onClick={() => { setModalType('add'); setIsModalOpen(true); }}
-               className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-950/20 active:scale-95"
+               className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95"
             >
-               <UserPlus size={14} strokeWidth={3} /> Add New Staff
+               <UserPlus size={12} strokeWidth={3} /> Add Staff
             </button>
             <button 
                onClick={() => { setModalType('payouts'); setIsModalOpen(true); }}
-               className="flex items-center gap-2 px-5 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl text-[var(--text-primary)] text-[10px] font-black uppercase tracking-widest hover:border-emerald-500/30 transition-all active:scale-95 shadow-sm"
+               className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-primary)] text-[9px] font-black uppercase tracking-widest hover:border-emerald-500/30 transition-all active:scale-95 shadow-sm"
             >
-               <CreditCard size={14} /> Payouts
+               <CreditCard size={12} /> Payouts
             </button>
          </div>
       </div>
 
       {/* KPI Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-         <AdminStatCard title="Total Staff" value={employees.length} icon={Users} color="emerald" subtitle="Active employees" />
-         <AdminStatCard title="On Duty" value="38" icon={CheckCircle2} color="blue" subtitle="Present today" />
-         <AdminStatCard title="Performance" value="98.8%" icon={Activity} color="emerald" subtitle="Overall team rating" />
-         <AdminStatCard title="Leave Requests" value="03" icon={Clock} color="rose" subtitle="Pending approval" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+         <AdminStatCard title="Total Staff" value={employees.length} icon={Users} color="emerald" subtitle="Active Team" />
+         <AdminStatCard title="On Duty" value="38" icon={CheckCircle2} color="blue" subtitle="Present Now" />
+         <AdminStatCard title="Performance" value="98.8%" icon={Activity} color="emerald" subtitle="Efficiency Rating" />
+         <AdminStatCard title="Leaves" value="03" icon={Clock} color="rose" subtitle="Pending Alpha" />
       </div>
 
       {/* Tabbed Navigation */}
-      <div className="flex border-b border-[var(--border-subtle)] gap-10">
-         {['employees', 'attendance', 'leaves', 'payroll', 'access'].map((tab) => (
+      <div className="flex border-b border-[var(--border-subtle)] gap-6">
+         {['employees', 'attendance', 'leaves', 'payroll'].map((tab) => (
             <button 
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-4 px-2 text-[10px] font-black uppercase tracking-[0.3em] transition-all relative ${
-                activeTab === tab ? 'text-emerald-500' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'
+              className={`pb-2 px-1 text-[9px] font-black uppercase tracking-widest transition-all relative italic ${
+                activeTab === tab ? 'text-emerald-500' : 'text-[var(--text-tertiary)] hover:text-emerald-500'
               }`}
             >
                {tab}
@@ -113,24 +113,24 @@ export default function HrManagementPage() {
          ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
          {/* Main Staff Registry */}
-         <div className="lg:col-span-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-[2.5rem] overflow-hidden shadow-sm">
-            <div className="p-8 border-b border-[var(--border-subtle)] flex items-center justify-between bg-[var(--bg-tertiary)]/10">
-               <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-inner">
-                     <Users size={20} />
+         <div className="lg:col-span-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-sm">
+            <div className="px-6 py-3 border-b border-[var(--border-subtle)] flex items-center justify-between bg-[var(--bg-tertiary)]/10">
+               <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-inner">
+                     <Users size={16} />
                   </div>
-                  <h3 className="text-sm font-black text-[var(--text-primary)] uppercase tracking-widest leading-none">
-                     {activeTab === 'employees' ? 'Team Registry' : activeTab.toUpperCase() + ' STREAM'}
+                  <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-wider leading-none italic">
+                     {activeTab === 'employees' ? 'Registry Payload' : activeTab.toUpperCase() + ' STREAM'}
                   </h3>
                </div>
                <div className="relative group">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-tertiary)] group-focus-within:text-emerald-500" />
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--text-tertiary)] group-focus-within:text-emerald-500 transition-colors" />
                   <input 
                     type="text" 
                     placeholder="Search personnel..." 
-                    className="pl-10 pr-4 py-2 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none w-48 transition-all"
+                    className="pl-8 pr-3 py-1.5 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-lg text-[9px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none w-32 transition-all text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50"
                   />
                </div>
             </div>
@@ -138,9 +138,9 @@ export default function HrManagementPage() {
             <div className="overflow-x-auto no-scrollbar">
                <table className="w-full text-left">
                   <thead>
-                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/30">
-                        {['Staff ID', 'Name & Role', 'Department', 'Shift', 'Access Scope', 'Status'].map((header) => (
-                           <th key={header} className="py-5 px-8 text-[10px] font-black uppercase tracking-[0.25em] text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
+                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
+                        {['Staff ID', 'Name & Role', 'Dept', 'Shift', 'Access', 'Status'].map((header) => (
+                           <th key={header} className="py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
                         ))}
                      </tr>
                   </thead>
@@ -153,23 +153,23 @@ export default function HrManagementPage() {
                               animate={{ opacity: 1 }}
                               exit={{ opacity: 0 }}
                               key={emp.id} 
-                              className="group/row hover:bg-[var(--bg-tertiary)]/50 transition-colors cursor-pointer"
+                              className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]"
                            >
-                              <td className="py-6 px-8 font-black text-[9px] text-[var(--text-tertiary)] uppercase tracking-widest">{emp.id}</td>
-                              <td className="py-6 px-8 whitespace-nowrap">
-                                 <div className="flex flex-col gap-0.5">
-                                    <span className="text-xs font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight">{emp.name}</span>
-                                    <span className="text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest leading-none mt-1">{emp.role}</span>
+                              <td className="py-3 px-6 font-black text-[7.5px] text-[var(--text-tertiary)] uppercase tracking-widest leading-none">{emp.id}</td>
+                              <td className="py-3 px-6 whitespace-nowrap">
+                                 <div className="flex flex-col">
+                                    <span className="font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic">{emp.name}</span>
+                                    <span className="text-[7.5px] font-bold text-[var(--text-tertiary)] uppercase mt-1 italic tracking-widest leading-none">{emp.role}</span>
                                  </div>
                               </td>
-                              <td className="py-6 px-8 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-wider italic">{emp.dept}</td>
-                              <td className="py-6 px-8 text-[10px] font-black text-[var(--text-primary)] uppercase">{emp.shift}</td>
-                              <td className="py-6 px-8 text-[10px] font-black text-[var(--text-primary)] uppercase">
-                                 {emp.role === 'Fleet Lead' ? 'Full Control' : 'Standard'}
+                              <td className="py-3 px-6 text-[9px] font-black text-[var(--text-tertiary)] uppercase italic leading-none">{emp.dept}</td>
+                              <td className="py-3 px-6 text-[9px] font-black text-[var(--text-primary)] uppercase leading-none">{emp.shift}</td>
+                              <td className="py-3 px-6 text-[9px] font-black text-[var(--text-primary)] uppercase leading-none italic">
+                                 {emp.role.includes('Lead') ? 'Level_4' : 'Level_2'}
                               </td>
-                              <td className="py-6 px-8">
-                                 <div className={`inline-flex px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm ${
-                                    emp.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-slate-500/10 text-slate-500 border border-slate-500/20'
+                              <td className="py-3 px-6">
+                                 <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border ${
+                                    emp.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-slate-500/10 text-slate-500 border-slate-500/10'
                                  }`}>
                                     {emp.status}
                                  </div>
@@ -184,53 +184,53 @@ export default function HrManagementPage() {
 
          {/* Right Sidebar Assets */}
          <div className="space-y-6">
-            <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-[2.5rem] p-8 shadow-sm">
-               <div className="flex items-center justify-between mb-8 pb-4 border-b border-[var(--border-subtle)]">
-                  <h3 className="text-sm font-black text-[var(--text-primary)] uppercase tracking-widest italic">Efficiency Index</h3>
-                  <div className="p-1 px-3 bg-emerald-500/10 rounded-full text-[8px] font-black text-emerald-500 uppercase tracking-widest animate-pulse border border-emerald-500/20">Live Sync</div>
+            <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-5 shadow-sm border-t-4 border-t-emerald-600">
+               <div className="flex items-center justify-between mb-6 pb-2 border-b border-[var(--border-subtle)]">
+                  <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-widest italic">Efficiency Matrix</h3>
+                  <div className="px-2 py-0.5 bg-emerald-500/10 rounded-full text-[7px] font-black text-emerald-500 uppercase tracking-widest animate-pulse italic">Live Sync</div>
                </div>
 
-               <div className="space-y-6">
+               <div className="space-y-3">
                   {[
-                    { label: 'Team Handover Rate', rate: '99.2%', status: 'high' },
-                    { label: 'SLA Fulfillment', rate: '14min', status: 'high' },
-                    { label: 'Attendance Ratio', rate: '94%', status: 'med' },
+                    { label: 'Handover Rate', rate: '99.2%', val: 92 },
+                    { label: 'SLA Fulfillment', rate: '14min', val: 84 },
+                    { label: 'Attendance', rate: '94%', val: 94 },
                   ].map((stat) => (
-                    <div key={stat.label} className="p-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl group hover:border-emerald-500/30 transition-all cursor-crosshair">
-                       <div className="flex justify-between items-center mb-3">
-                          <span className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">{stat.label}</span>
-                          <span className={`text-[11px] font-black tracking-tighter ${stat.status === 'high' ? 'text-emerald-500' : 'text-amber-500'}`}>{stat.rate}</span>
+                    <div key={stat.label} className="p-3 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl group hover:border-emerald-500/30 transition-all cursor-pointer shadow-sm">
+                       <div className="flex justify-between items-center mb-1.5">
+                          <span className="text-[9px] font-black text-[var(--text-primary)] uppercase leading-none italic">{stat.label}</span>
+                          <span className="text-[10px] font-black text-emerald-500 italic tracking-tight">{stat.rate}</span>
                        </div>
-                       <div className="w-full h-1.5 bg-[var(--bg-secondary)] rounded-full overflow-hidden shadow-inner">
-                          <div className={`h-full ${stat.status === 'high' ? 'bg-emerald-600' : 'bg-amber-600'} group-hover:animate-pulse transition-all`} style={{ width: stat.status === 'high' ? '92%' : '84%' }} />
+                       <div className="w-full h-1 bg-[var(--bg-secondary)] rounded-full overflow-hidden shadow-inner">
+                          <div className="h-full bg-emerald-600 transition-all duration-1000" style={{ width: `${stat.val}%` }} />
                        </div>
                     </div>
                   ))}
                </div>
 
-               <div className="mt-10 p-6 bg-emerald-600/5 border border-emerald-500/20 rounded-2xl space-y-4">
-                  <div className="flex items-center gap-2">
-                     <History size={16} className="text-emerald-600" />
-                     <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em]">Automated Rotations</p>
+               <div className="mt-8 p-3 bg-emerald-600/5 border border-emerald-500/10 rounded-xl space-y-2">
+                  <div className="flex items-center gap-1.5">
+                     <History size={12} className="text-emerald-600" />
+                     <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Rotations</p>
                   </div>
-                  <p className="text-[10px] text-[var(--text-tertiary)] font-bold leading-relaxed italic uppercase tracking-tighter">
-                     Personnel shifts are optimized via the <span className="text-emerald-500 font-black underline decoration-emerald-500/30">CORE INTELLIGENCE</span> engine every 24 hours.
+                  <p className="text-[8px] text-[var(--text-tertiary)] font-bold italic uppercase tracking-widest leading-relaxed">
+                     Automated shift balancing every 24h via Alpha Engine.
                   </p>
                </div>
             </div>
 
             {/* Leave Approval Strip */}
-            <div className="p-6 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-[2rem] flex items-center justify-between group cursor-pointer hover:border-rose-500/30 transition-all shadow-sm">
-               <div className="flex items-center gap-4">
-                  <div className="p-3 bg-rose-500/10 text-rose-500 rounded-2xl group-hover:rotate-6 transition-transform shadow-inner">
-                     <Calendar size={22} />
+            <div className="p-3 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl flex items-center justify-between group cursor-pointer hover:border-rose-500/30 transition-all shadow-sm border-l-4 border-l-rose-600">
+               <div className="flex items-center gap-3">
+                  <div className="p-2 bg-rose-500/10 text-rose-500 rounded-lg group-hover:rotate-6 transition-transform shadow-inner">
+                     <Calendar size={18} />
                   </div>
-                  <div className="space-y-0.5">
-                     <p className="text-xs font-black text-[var(--text-primary)] uppercase tracking-widest leading-none">Leave Requests</p>
-                     <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mt-1 italic animate-pulse">03 Pending Nodes</p>
+                  <div>
+                     <p className="text-[10px] font-black text-[var(--text-primary)] uppercase leading-none">Leave Requests</p>
+                     <p className="text-[8px] font-black text-rose-500 uppercase mt-1 italic animate-pulse tracking-widest leading-none">03 Pending Sync</p>
                   </div>
                </div>
-               <ChevronRight size={20} className="text-[var(--text-tertiary)] group-hover:text-rose-500 group-hover:translate-x-1 transition-all" />
+               <ChevronRight size={16} className="text-[var(--text-tertiary)]/50 group-hover:text-rose-500 group-hover:translate-x-0.5 transition-all" />
             </div>
          </div>
       </div>
@@ -238,76 +238,63 @@ export default function HrManagementPage() {
       {/* HR Action Modal */}
       <AnimatePresence>
          {isModalOpen && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
                <motion.div 
-                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                  className="w-full max-w-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-[3rem] p-12 shadow-2xl space-y-10"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="w-full max-w-md bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-8 shadow-2xl space-y-6"
                >
                   <div className="flex items-center justify-between">
-                     <div className="space-y-1">
-                        <h2 className="text-2xl font-black text-[var(--text-primary)] uppercase tracking-tighter italic">
-                           {modalType === 'add' ? 'New' : 'Salary'} <span className="text-emerald-500">Staff Member</span>
+                     <div className="space-y-0.5">
+                        <h2 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-tighter italic leading-none">
+                           {modalType === 'add' ? 'Staff' : 'Payroll'} <span className="text-emerald-500">Initiator</span>
                         </h2>
-                        <p className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.4em]">Section: HUB_STAFF_V2</p>
+                        <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">SECTION: HUB_STAFF_V2</p>
                      </div>
-                     <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-rose-600/10 hover:text-rose-500 transition-all rounded-2xl border border-transparent hover:border-rose-500/20">
-                        <X size={24} />
+                     <button onClick={() => setIsModalOpen(false)} className="p-1.5 hover:bg-rose-600/10 hover:text-rose-500 transition-all rounded-lg">
+                        <X size={18} />
                      </button>
                   </div>
 
                   {modalType === 'add' ? (
-                     <form onSubmit={handleAddEmployee} className="space-y-10">
-                        <div className="space-y-8">
-                           <div className="space-y-3">
-                              <label className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
-                                 <UserCheck size={12} className="text-emerald-500" /> Full Name
-                              </label>
+                     <form onSubmit={handleAddEmployee} className="space-y-6">
+                        <div className="space-y-4">
+                           <div className="space-y-1.5">
+                              <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Staff Identity Name</label>
                               <input 
                                  autoFocus
                                  value={newEmployee.name}
                                  onChange={(e) => setNewEmployee({...newEmployee, name: e.target.value})}
-                                 placeholder="e.g. Vikram Batra"
-                                 className="w-full px-8 py-5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-3xl text-sm font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500/40 outline-none transition-all placeholder:text-[var(--text-tertiary)]/50 italic shadow-inner"
+                                 placeholder="Full Name"
+                                 className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic"
                               />
                            </div>
-
-                           <div className="space-y-3">
-                              <label className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2 flex items-center gap-2">
-                                 <ShieldCheck size={12} className="text-emerald-500" /> Designation / Role
-                              </label>
+                           <div className="space-y-1.5">
+                              <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">System Designation</label>
                               <input 
                                  value={newEmployee.role}
                                  onChange={(e) => setNewEmployee({...newEmployee, role: e.target.value})}
-                                 placeholder="e.g. Senior Fleet Manager"
-                                 className="w-full px-8 py-5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-3xl text-sm font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500/40 outline-none transition-all placeholder:text-[var(--text-tertiary)]/50 italic shadow-inner"
+                                 placeholder="Role"
+                                 className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic"
                               />
                            </div>
                         </div>
-
                         <button 
                            type="submit"
-                           className="w-full py-6 bg-emerald-600 text-white rounded-[2rem] text-[10px] font-black uppercase tracking-[0.4em] shadow-2xl shadow-emerald-950/40 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-4 group"
+                           className="w-full py-3 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-emerald-950/20 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2"
                         >
-                           <Zap size={20} fill="white" className="group-hover:animate-bounce" /> Confirm Staff Registration
+                           <Zap size={14} fill="white" /> Execute Staff Sync
                         </button>
                      </form>
                   ) : (
-                     <div className="space-y-10 text-center py-6">
-                        <div className="w-24 h-24 bg-emerald-600/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/20 shadow-inner">
-                           <CreditCard size={40} className="text-emerald-500" />
+                     <div className="text-center py-4 space-y-4">
+                        <div className="w-16 h-16 bg-emerald-600/10 rounded-full flex items-center justify-center mx-auto border border-emerald-500/10 shadow-inner">
+                           <CreditCard size={32} className="text-emerald-500" />
                         </div>
-                        <div className="space-y-3">
-                           <p className="text-sm font-black text-[var(--text-primary)] uppercase tracking-widest italic">Awaiting Settlement Sync</p>
-                           <p className="text-[11px] text-[var(--text-tertiary)] font-bold uppercase tracking-wider leading-relaxed px-10">Payroll processing for the current cycle is scheduled for <span className="text-emerald-500">tomorrow at 04:00 AM</span>. All attendance nodes must be verified beforehand.</p>
-                        </div>
-                        <button 
-                           onClick={() => setIsModalOpen(false)}
-                           className="w-full mt-6 py-5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-[2rem] text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-primary)] hover:border-emerald-500/40 transition-all active:scale-95"
-                        >
-                           Exit Module Registry
-                        </button>
+                        <p className="text-[10px] font-black text-[var(--text-primary)] uppercase italic leading-relaxed tracking-widest">Verification Node Pending</p>
+                        <p className="text-[8px] text-[var(--text-tertiary)] font-bold uppercase tracking-wider leading-relaxed">Payroll module requires 04:00 verification sync.</p>
+                        <button onClick={() => setIsModalOpen(false)} className="w-full py-2.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[9px] font-black uppercase tracking-widest">Exit Module</button>
                      </div>
                   )}
                </motion.div>

@@ -24,31 +24,31 @@ export default function ActivityFeed() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
-          <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 border-l-2 border-emerald-500 pl-3">Node Stream</h3>
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter ml-3">Real-time hub operations</p>
+          <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-primary)] italic border-l-2 border-emerald-500 pl-2">LIVE_REGISTRY</h3>
+          <p className="text-[6.5px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.3em] opacity-40 ml-2 italic leading-none mt-1">REAL-TIME_HUB_OPERATIONS</p>
         </div>
-        <button className="text-[10px] font-black text-emerald-600 uppercase tracking-widest hover:text-emerald-700 transition-colors">View All</button>
+        <button className="text-[7px] font-black text-emerald-500 uppercase tracking-widest hover:text-emerald-400 transition-colors italic shadow-inner">VIEW_ALL</button>
       </div>
 
-      <div className="space-y-3 relative">
+      <div className="space-y-2 relative">
         {activities.map((item) => {
           const Icon = item.icon;
           return (
             <div 
               key={item.id}
-              className="flex gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-emerald-500/30 transition-all duration-300 group shadow-sm"
+              className="flex gap-3 p-2.5 rounded-xl bg-[var(--bg-tertiary)]/10 border border-[var(--border-subtle)] hover:border-emerald-500/20 transition-all duration-300 group shadow-inner"
             >
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border border-transparent shadow-sm ${item.color} group-hover:scale-105 transition-transform duration-500`}>
-                <Icon size={18} strokeWidth={2.5} />
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border border-[var(--border-subtle)] shadow-sm ${item.color} group-hover:scale-105 transition-transform duration-500`}>
+                <Icon size={12} strokeWidth={3} />
               </div>
-              <div className="flex-1 space-y-1">
+              <div className="flex-1 space-y-0.5">
                  <div className="flex items-center justify-between">
-                    <h4 className="text-[11px] font-black text-slate-900 group-hover:text-emerald-600 transition-colors uppercase tracking-tight">{item.title}</h4>
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter flex items-center gap-1">
-                      <Clock size={10} strokeWidth={3} /> {item.time}
+                    <h4 className="text-[9px] font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic truncate">{item.title}</h4>
+                    <span className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-1 opacity-60 italic leading-none">
+                      <Clock size={8} strokeWidth={3} /> {item.time}
                     </span>
                  </div>
-                 <p className="text-[10px] font-bold text-slate-600 uppercase tracking-tight leading-none">
+                 <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-tight leading-none italic opacity-40 truncate">
                    {item.description}
                  </p>
               </div>

@@ -74,32 +74,32 @@ export default function DataCard({
       onMouseLeave={handleMouseLeave}
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.985 }}
-      className={`p-6 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] shadow-sm transition-colors hover:border-emerald-500/30 group relative overflow-hidden perspective-1000 ${className}`}
+      className={`p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] shadow-inner transition-colors hover:border-emerald-500/30 group relative overflow-hidden perspective-1000 ${className}`}
       style={{ transformStyle: 'preserve-3d' }}
     >
       <div className="flex items-start justify-between relative z-10 pointer-events-none">
         <div className="space-y-4 flex-1">
-          <div className="space-y-1">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)]">{title}</p>
-            <div className="flex items-baseline gap-2">
-              <h3 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">{value}</h3>
+          <div className="space-y-0.5 mt-1">
+            <p className="text-[6.5px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] italic leading-none">{title}</p>
+            <div className="flex items-end gap-2 mt-1">
+              <h3 className="text-lg font-black text-[var(--text-primary)] tracking-tighter italic leading-none">{value}</h3>
               {trend && (
-                <span className={`text-[10px] font-bold flex items-center gap-0.5 ${trend === 'up' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                <span className={`text-[7px] font-black uppercase tracking-widest italic flex items-center gap-0.5 leading-none ${trend === 'up' ? 'text-emerald-500' : 'text-rose-500'}`}>
                   {trend === 'up' ? '↑' : '↓'} {trendValue}
                 </span>
               )}
             </div>
           </div>
-          <p className="text-[10px] font-medium text-[var(--text-tertiary)] uppercase tracking-wide opacity-60 line-clamp-1">
+          <p className="text-[6px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] italic opacity-40 line-clamp-1 mt-1 leading-none">
             {subtitle}
           </p>
         </div>
         
         <div 
           ref={iconRef}
-          className={`p-3 rounded-lg border shadow-sm ${colorClasses[color] || colorClasses.emerald}`}
+          className={`w-6 h-6 flex items-center justify-center rounded-lg border shadow-inner ${colorClasses[color] || colorClasses.emerald}`}
         >
-          {Icon && <Icon size={20} strokeWidth={2.5} />}
+          {Icon && <Icon size={12} strokeWidth={3} />}
         </div>
       </div>
 

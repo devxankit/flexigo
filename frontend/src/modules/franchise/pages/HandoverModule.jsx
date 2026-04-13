@@ -357,16 +357,16 @@ export default function HandoverModule() {
   return (
     <div className="flex flex-col h-[calc(100vh-120px)] gap-6 no-scrollbar overflow-y-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <div className="w-1 h-6 bg-emerald-500 rounded-full" />
-            <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
-              Handover <span className="text-emerald-500">Terminal</span>
-            </h1>
-          </div>
-          <p className="text-[10px] font-bold uppercase tracking-wider ml-4 text-[var(--text-tertiary)]">
-             Operational Asset Exchange Terminal • v2.0
-          </p>
+        <div className="space-y-0.5">
+           <div className="flex items-center gap-2">
+             <div className="w-1 h-3 bg-emerald-500 rounded-full" />
+             <h1 className="text-lg font-black tracking-tighter text-[var(--text-primary)] uppercase italic leading-none">
+               Handover <span className="text-emerald-500">Terminal</span>
+             </h1>
+           </div>
+           <p className="text-[7px] font-black uppercase tracking-[0.3em] text-[var(--text-tertiary)] ml-3 italic opacity-40 leading-none">
+              OPERATIONAL_ASSET_EXCHANGE_TERMINAL • V2.0
+           </p>
         </div>
 
         {/* Tab Controls */}
@@ -391,18 +391,18 @@ export default function HandoverModule() {
       </div>
 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-6 min-h-0">
-        <div className="lg:col-span-2 flex flex-col gap-6 overflow-hidden">
-           <div className="flex-1 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] shadow-sm flex flex-col overflow-hidden">
-              <div className="px-6 py-5 border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/10">
-                 <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--text-primary)]">
-                   {mode === 'dispatch' ? 'Available Assets' : 'Expected Intake'}
+        <div className="lg:col-span-2 flex flex-col gap-4 overflow-hidden">
+           <div className="flex-1 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] shadow-inner flex flex-col overflow-hidden">
+              <div className="px-4 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/10">
+                 <h3 className="text-[9px] font-black uppercase tracking-[0.2em] italic text-[var(--text-primary)] leading-none">
+                   {mode === 'dispatch' ? 'AVAILABLE_ASSETS' : 'EXPECTED_INTAKE'}
                  </h3>
-                 <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 mt-0.5 leading-none">
-                   {mode === 'dispatch' ? 'Ready for Handover' : 'Due for Return Today'}
+                 <p className="text-[6.5px] font-black uppercase tracking-[0.3em] italic text-emerald-500 mt-1 opacity-60 leading-none">
+                   {mode === 'dispatch' ? 'READY_FOR_HANDOVER' : 'DUE_FOR_RETURN_TODAY'}
                  </p>
               </div>
 
-              <div className="flex-1 overflow-y-auto no-scrollbar p-3 space-y-2">
+              <div className="flex-1 overflow-y-auto no-scrollbar p-2 space-y-2">
                  {mode === 'dispatch' ? (
                    availableVehicles.map((v) => (
                       <motion.div
@@ -418,15 +418,15 @@ export default function HandoverModule() {
                         className="p-4 rounded-lg border cursor-pointer hover:bg-[var(--bg-tertiary)] transition-all group shrink-0"
                       >
                          <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${selectedVehicle?.id === v.id ? 'bg-emerald-600/10 border-emerald-500/30 text-emerald-600' : 'bg-[var(--bg-tertiary)] border-[var(--border-subtle)] text-slate-400'}`}>
-                               <Truck size={20} />
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${selectedVehicle?.id === v.id ? 'bg-emerald-600/10 border-emerald-500/30 text-emerald-600' : 'bg-[var(--bg-tertiary)] border-[var(--border-subtle)] text-slate-400'}`}>
+                               <Truck size={14} />
                             </div>
                             <div className="flex-1">
                                <div className="flex items-center justify-between mb-0.5">
-                                  <h4 className="text-xs font-bold text-[var(--text-primary)]">{v.plate}</h4>
-                                  <span className="text-[8px] font-black uppercase text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">Ready</span>
+                                  <h4 className="text-[9px] font-black italic tracking-wider text-[var(--text-primary)]">{v.plate}</h4>
+                                  <span className="text-[6.5px] font-black uppercase tracking-widest italic text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">READY</span>
                                </div>
-                               <p className="text-[10px] font-medium text-[var(--text-tertiary)] uppercase">{v.model}</p>
+                               <p className="text-[7.5px] font-black italic text-[var(--text-tertiary)] uppercase">{v.model}</p>
                             </div>
                          </div>
                       </motion.div>
@@ -491,14 +491,14 @@ export default function HandoverModule() {
                  />
                </motion.div>
              ) : (
-               <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full rounded-xl border-2 border-dashed border-[var(--border-subtle)] flex flex-col items-center justify-center text-center gap-4 p-10 bg-[var(--bg-tertiary)]/10">
-                  <div className="w-16 h-16 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] flex items-center justify-center text-slate-400 opacity-50">
-                     <Zap size={32} strokeWidth={1.5} />
+               <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full rounded-xl border-border-[var(--border-subtle)] border-dashed border-2 flex flex-col items-center justify-center text-center gap-4 p-10 bg-[var(--bg-secondary)] shadow-inner">
+                  <div className="w-12 h-12 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-tertiary)] opacity-50 shadow-inner">
+                     <Zap size={20} strokeWidth={2} />
                   </div>
                   <div className="space-y-1">
-                     <h3 className="text-xl font-bold text-[var(--text-secondary)] uppercase">Terminal Ready</h3>
-                     <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider max-w-[200px] mx-auto opacity-60">
-                        Please select {mode === 'dispatch' ? 'a vehicle' : 'a rider'} to start the inspection protocol.
+                     <h3 className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-widest italic">TERMINAL_READY</h3>
+                     <p className="text-[6.5px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] max-w-[200px] mx-auto opacity-60 italic leading-relaxed pt-1">
+                        PLEASE_SELECT_{mode === 'dispatch' ? 'A_VEHICLE' : 'A_RIDER'}_TO_START_THE_INSPECTION_PROTOCOL.
                      </p>
                   </div>
                </motion.div>

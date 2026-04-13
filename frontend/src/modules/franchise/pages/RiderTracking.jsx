@@ -14,7 +14,6 @@ import {
   Filter,
   Truck,
   User as UserIcon,
-  ChevronRight,
   CreditCard,
   CheckCircle2
 } from 'lucide-react';
@@ -22,222 +21,193 @@ import { useRiderAssignmentStore } from '../store/riderAssignmentStore';
 import { useFleetStore } from '../store/fleetStore';
 import GlassTable from '../components/GlassTable';
 import StatusBadge from '../components/StatusBadge';
+import OpsFilter from '../components/OpsFilter';
 
 export default function SubscriberConsole() {
   const { subscribers = [] } = useRiderAssignmentStore();
   const { vehicles = [] } = useFleetStore();
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilters, setActiveFilters] = useState({
+    range: 'Last 7 Days',
+    metrics: {}
+  });
+
+  const handleFilterChange = (newFilters) => {
+    setActiveFilters(newFilters);
+    console.log('Subscriber Filter Sync:', newFilters);
+  };
 
   const filteredSubscribers = useMemo(() => {
     if (!subscribers) return [];
-    return subscribers.filter(s => 
-      (s.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) || 
-      (s.phone || '').includes(searchQuery)
-    );
+    return subscribers.filter(s => {
+      const q = searchQuery.toLowerCase();
+      return (
+        (s.name?.toLowerCase() || '').includes(q) || 
+        (s.phone || '').includes(q) ||
+        (s.id?.toLowerCase() || '').includes(q) ||
+        (s.licenseNo?.toLowerCase() || '').includes(q) ||
+        (s.vehicleId?.toLowerCase() || '').includes(q)
+      );
+    });
   }, [subscribers, searchQuery]);
 
-  const columns = [
-    {
-      header: 'Subscriber',
-      accessor: 'name',
-      render: (row) => (
-        <div className="flex items-center gap-3">
-           <div className="w-10 h-10 rounded-lg bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 shadow-sm">
-              <UserIcon size={20} />
-           </div>
-           <div className="flex flex-col">
-              <span className="text-sm font-bold text-[var(--text-primary)]">{row.name}</span>
-              <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">{row.phone}</span>
-           </div>
-        </div>
-      )
-    },
-    {
-      header: 'Assigned EV',
-      accessor: 'vehicleId',
-      render: (row) => {
-        const vehicle = vehicles.find(v => v.id === row.vehicleId);
-        return vehicle ? (
-          <div className="flex items-center gap-3">
-             <div className="w-8 h-8 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] flex items-center justify-center text-emerald-600">
-                <Truck size={16} />
-             </div>
-             <div className="flex flex-col">
-                <span className="text-emerald-600 text-xs font-bold tracking-tight">{vehicle.plate}</span>
-                <span className="text-[9px] font-bold text-[var(--text-tertiary)] uppercase">{vehicle.model}</span>
-             </div>
-          </div>
-        ) : (
-          <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-50">No EV Assigned</span>
-        );
-      }
-    },
-    {
-      header: 'Subscription Plan',
-      accessor: 'subscriptionPlan',
-      render: (row) => (
-        <div className="flex flex-col">
-           <span className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-tight">{row.subscriptionPlan}</span>
-           <div className="flex items-center gap-1.5 mt-0.5">
-              <CreditCard size={10} className="text-emerald-500" />
-              <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-widest">Active Lease</span>
-           </div>
-        </div>
-      )
-    },
-    {
-      header: 'Status',
-      accessor: 'status',
-      render: (row) => <StatusBadge status={row.status} />
-    },
-    {
-      header: 'Subscription Period',
-      accessor: 'subscriptionStart',
-      render: (row) => (
-        <div className="flex flex-col">
-           <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--text-secondary)]">
-              <Clock size={12} className="text-[var(--text-tertiary)]" />
-              {row.subscriptionStart ? new Date(row.subscriptionStart).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'Not Started'}
-           </div>
-           {row.subscriptionEnd && (
-             <div className="flex items-center gap-1.5 text-[9px] font-bold text-amber-500 uppercase tracking-widest mt-0.5">
-               <Calendar size={10} />
-               Ends {new Date(row.subscriptionEnd).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-             </div>
-           )}
-        </div>
-      )
-    },
-    {
-      header: '',
-      accessor: 'actions',
-      render: (row) => (
-        <div className="flex items-center gap-2">
-           <button className="p-2 border border-[var(--border-subtle)] rounded-lg hover:bg-emerald-600/10 hover:text-emerald-600 transition-all text-[var(--text-tertiary)] shadow-sm">
-              <MessageSquare size={16} />
-           </button>
-           <button className="p-2 border border-[var(--border-subtle)] rounded-lg hover:bg-[var(--bg-tertiary)] transition-all text-[var(--text-tertiary)] shadow-sm">
-              <MoreVertical size={16} />
-           </button>
-        </div>
-      )
-    }
-  ];
-
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-3 pb-8">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <div className="w-1 h-6 bg-blue-500 rounded-full shadow-sm" />
-            <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] uppercase">
-              Subscriber <span className="text-blue-500">Console</span>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-2">
+            <div className="w-1 h-3 bg-blue-500 rounded-full" />
+            <h1 className="text-lg font-black tracking-tighter text-[var(--text-primary)] uppercase italic leading-none">
+              PERSONNEL <span className="text-blue-500">REGISTRY</span>
             </h1>
           </div>
-          <p className="text-[10px] font-extrabold uppercase tracking-widest ml-4 text-[var(--text-secondary)] opacity-80">
-             Active Subscription Monitoring • EV Fleet Allocation
+          <p className="text-[7.5px] font-black uppercase tracking-[0.3em] text-[var(--text-tertiary)] ml-3 italic opacity-60 leading-none mt-1">
+             NETWORK_ALLOCATION • SUBSCRIBER_PERSISTENCE
           </p>
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto">
-           <div className="relative flex-1 md:w-72 group">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-[var(--text-tertiary)] group-focus-within:text-blue-500 transition-colors">
-                 <Search size={16} />
-              </div>
+        <div className="flex items-center gap-2 w-full md:w-auto">
+           <div className="relative flex-1 md:w-48 group">
+              <Search size={10} className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-600 group-focus-within:text-blue-500 transition-colors" />
               <input 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search subscribers..." 
-                className="w-full pl-10 pr-4 py-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-sm text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-blue-500/20 focus:border-blue-500/40 transition-all font-medium placeholder:text-[var(--text-tertiary)] shadow-sm"
+                placeholder="SEARCH_PERSONNEL..." 
+                className="w-full pl-8 pr-4 py-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl text-[7.5px] font-black uppercase tracking-widest text-[var(--text-primary)] focus:outline-none focus:border-blue-500/30 transition-all placeholder:text-slate-600 italic shadow-inner leading-none"
               />
            </div>
            
-           <button className="p-2.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg hover:bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] transition-all active:scale-95 shadow-sm">
-              <Filter size={18} />
-           </button>
+           <OpsFilter 
+             onFilterChange={handleFilterChange}
+             filters={[
+               { id: 'status', label: 'PERSONNEL_STATUS', options: ['Active', 'Pending', 'Suspended'] },
+               { id: 'plan', label: 'SUB_TIER', options: ['Standard', 'Premium', 'Enterprise'] }
+             ]}
+           />
         </div>
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-         <motion.div 
-           initial={{ opacity: 0, y: 20 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ delay: 0.1 }}
-           className="p-5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] flex items-center gap-4 shadow-sm hover:border-emerald-500/20 transition-all"
-         >
-            <div className="w-11 h-11 rounded-lg bg-emerald-600/10 flex items-center justify-center text-emerald-600 border border-emerald-500/10">
-               <Users size={22} />
-            </div>
-            <div className="space-y-0.5">
-               <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)]">Active Subscribers</p>
-               <h4 className="text-xl font-bold text-[var(--text-primary)]">{subscribers.filter(s => s.status === 'active').length}</h4>
-            </div>
-         </motion.div>
-         <motion.div 
-           initial={{ opacity: 0, y: 20 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ delay: 0.2 }}
-           className="p-5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] flex items-center gap-4 shadow-sm hover:border-blue-500/20 transition-all"
-         >
-            <div className="w-11 h-11 rounded-lg bg-blue-600/10 flex items-center justify-center text-blue-500 border border-blue-500/10">
-               <Zap size={22} />
-            </div>
-            <div className="space-y-0.5">
-               <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)]">Fleet Utilization</p>
-               <h4 className="text-xl font-bold text-[var(--text-primary)]">88%</h4>
-            </div>
-         </motion.div>
-         <motion.div 
-           initial={{ opacity: 0, y: 20 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ delay: 0.3 }}
-           className="p-5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] flex items-center gap-4 shadow-sm hover:border-amber-500/20 transition-all"
-         >
-            <div className="w-11 h-11 rounded-lg bg-amber-600/10 flex items-center justify-center text-amber-500 border border-amber-500/10">
-               <Calendar size={22} />
-            </div>
-            <div className="space-y-0.5">
-               <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)]">Pending Onboarding</p>
-               <h4 className="text-xl font-bold text-[var(--text-primary)]">{subscribers.filter(s => s.status === 'pending').length}</h4>
-            </div>
-         </motion.div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+         {[
+           { label: 'ACTIVE_PERSONNEL', val: subscribers.filter(s => s.status === 'active').length.toString().padStart(2, '0'), icon: Users, color: 'emerald' },
+           { label: 'NETWORK_UTILIZATION', val: '88.4%', icon: Zap, color: 'blue' },
+           { label: 'REGISTRY_QUEUE', val: subscribers.filter(s => s.status === 'pending').length.toString().padStart(2, '0'), icon: Calendar, color: 'amber' }
+         ].map((m, i) => (
+           <motion.div 
+             key={m.label}
+             initial={{ opacity: 0, y: 5 }}
+             animate={{ opacity: 1, y: 0 }}
+             transition={{ delay: i * 0.05 }}
+             className="px-5 py-4 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] flex items-center gap-4 shadow-inner hover:border-[var(--border-subtle)] transition-all group overflow-hidden relative"
+           >
+              <div className="absolute top-0 right-0 p-3 opacity-[0.03] scale-125 rotate-12 transition-transform group-hover:rotate-45">
+                 <m.icon size={60} />
+              </div>
+              <div className={`w-10 h-10 rounded-xl bg-${m.color}-500/10 flex items-center justify-center text-${m.color}-500 shadow-inner`}>
+                 <m.icon size={20} strokeWidth={2.5} />
+              </div>
+              <div className="space-y-1 relative z-10">
+                 <p className="text-[7.5px] font-black uppercase tracking-[0.3em] text-[var(--text-tertiary)] italic leading-none opacity-80">{m.label}</p>
+                 <h4 className="text-3xl font-black text-[var(--text-primary)] tracking-tighter italic leading-none mt-1">{m.val}</h4>
+              </div>
+           </motion.div>
+         ))}
       </div>
 
       {/* Main Table */}
       <GlassTable 
-         columns={columns} 
+         columns={[
+           {
+             header: 'PERSONNEL_PROFILE',
+             accessor: 'name',
+             render: (row) => (
+               <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 shadow-inner">
+                     <UserIcon size={14} strokeWidth={2.5} />
+                  </div>
+                  <div className="flex flex-col">
+                     <span className="text-[9.5px] font-black text-[var(--text-primary)] uppercase italic leading-none tracking-tighter">{row.name}</span>
+                     <span className="text-[6.5px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] mt-1.5 italic leading-none opacity-80">{row.phone}</span>
+                  </div>
+               </div>
+             )
+           },
+           {
+             header: 'NODE_ALLOCATION',
+             accessor: 'vehicleId',
+             render: (row) => {
+               const vehicle = vehicles.find(v => v.id === row.vehicleId);
+               return vehicle ? (
+                 <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] flex items-center justify-center text-emerald-500 shadow-inner">
+                       <Truck size={14} strokeWidth={2.5} />
+                    </div>
+                    <div className="flex flex-col">
+                       <span className="text-emerald-500 text-[9.5px] font-black tracking-tighter italic leading-none">{vehicle.plate}</span>
+                       <span className="text-[6.5px] font-black text-[var(--text-tertiary)] uppercase italic tracking-[0.2em] mt-1.5 leading-none opacity-80">{vehicle.model}</span>
+                    </div>
+                 </div>
+               ) : (
+                 <span className="text-[7px] font-black text-slate-600 uppercase tracking-[0.3em] italic opacity-60">NULL_ALLOCATION</span>
+               );
+             }
+           },
+           {
+             header: 'SUBSCRIPTION_TIER',
+             accessor: 'subscriptionPlan',
+             render: (row) => (
+               <div className="flex flex-col">
+                  <span className="text-[8.5px] font-black text-[var(--text-primary)] uppercase italic tracking-[0.2em] leading-none">{row.subscriptionPlan?.toUpperCase()}</span>
+                  <div className="flex items-center gap-1.5 mt-1.5 opacity-80">
+                     <CreditCard size={10} className="text-blue-500" />
+                     <span className="text-[6.5px] font-black text-blue-500 uppercase tracking-[0.2em] italic leading-none">NODE_LEASE</span>
+                  </div>
+               </div>
+             )
+           },
+           {
+             header: 'PROTOCOL_STATUS',
+             accessor: 'status',
+             render: (row) => <StatusBadge status={row.status} />
+           },
+           {
+             header: 'HANDSHAKE_TX',
+             accessor: 'subscriptionStart',
+             render: (row) => (
+               <div className="flex flex-col">
+                  <div className="flex items-center gap-1.5 text-[8.5px] font-black text-[var(--text-primary)] italic leading-none">
+                     <Clock size={10} strokeWidth={2.5} className="text-slate-600" />
+                     {row.subscriptionStart ? new Date(row.subscriptionStart).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }).toUpperCase() : 'N/A'}
+                  </div>
+                  {row.subscriptionEnd && (
+                    <div className="flex items-center gap-1.5 text-[6.5px] font-black text-amber-500 uppercase tracking-[0.3em] mt-2 italic opacity-80 leading-none">
+                      <Calendar size={10} strokeWidth={2.5} />
+                      EXPIRE {new Date(row.subscriptionEnd).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }).toUpperCase()}
+                    </div>
+                  )}
+               </div>
+             )
+           },
+           {
+             header: '',
+             accessor: 'actions',
+             render: (row) => (
+               <div className="flex items-center gap-1.5">
+                  <button className="p-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl hover:bg-blue-600/10 hover:border-blue-500/20 hover:text-blue-500 transition-all text-slate-600 shadow-inner">
+                     <MessageSquare size={12} strokeWidth={2.5} />
+                  </button>
+                  <button className="p-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl hover:bg-white/5 hover:border-[var(--border-subtle)] hover:text-white transition-all text-slate-600 shadow-inner">
+                     <MoreVertical size={12} strokeWidth={2.5} />
+                  </button>
+               </div>
+            )
+           }
+         ]} 
          data={filteredSubscribers} 
-         onRowClick={(row) => console.log('Viewing Subscriber:', row)} 
+         onRowClick={(row) => console.log('Viewing Personnel:', row)} 
       />
-
-      {/* Subscription Management Console */}
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.4 }}
-        className="p-8 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm overflow-hidden relative"
-      >
-         <div className="absolute top-0 right-0 p-12 opacity-[0.02] scale-[2.5] rotate-12 pointer-events-none">
-            <CreditCard size={120} className="text-blue-500" />
-         </div>
-         
-         <div className="flex items-center gap-5 relative z-10">
-            <div className="w-14 h-14 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-600 shadow-sm">
-               <CreditCard size={28} />
-            </div>
-            <div className="space-y-1">
-               <h3 className="text-lg font-bold text-[var(--text-primary)] leading-tight uppercase tracking-tight">Subscription Management</h3>
-               <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider italic">Manage EV lease plans, renewals and subscriber onboarding</p>
-            </div>
-         </div>
-         
-         <button className="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg active:scale-95 relative z-10 flex items-center gap-2">
-            Add New Subscriber <ChevronRight size={14} strokeWidth={3} />
-         </button>
-      </motion.div>
-
     </div>
   );
 }

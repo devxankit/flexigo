@@ -45,6 +45,11 @@
     background-color: rgba(16, 185, 129, 0.3); /* selection:bg-emerald-500/30 */
   }
   
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
 
   body {
     background-color: var(--bg-primary);

@@ -50,7 +50,41 @@ export default function AdminLayout() {
               
               <div className="flex items-center gap-1">
                 <button 
-                  onClick={toggleTheme}
+                  onClick={(e) => {
+                    if (!document.startViewTransition) {
+                      toggleTheme();
+                      return;
+                    }
+
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const x = ((rect.left + rect.width / 2) / window.innerWidth) * 100;
+                    const y = ((rect.top + rect.height / 2) / window.innerHeight) * 100;
+                    
+                    const endRadius = Math.hypot(
+                      Math.max(x, 100 - x),
+                      Math.max(y, 100 - y)
+                    );
+
+                    const transition = document.startViewTransition(() => {
+                      toggleTheme();
+                    });
+
+                    transition.ready.then(() => {
+                      document.documentElement.animate(
+                        {
+                          clipPath: [
+                            `circle(0 at ${x}% ${y}%)`,
+                            `circle(${endRadius * 1.5}% at ${x}% ${y}%)`,
+                          ],
+                        },
+                        {
+                          duration: 600,
+                          easing: "ease-in-out",
+                          pseudoElement: "::view-transition-new(root)",
+                        }
+                      );
+                    });
+                  }}
                   className="p-2 text-[var(--text-tertiary)] hover:text-emerald-500 rounded-lg transition-all relative group"
                 >
                    {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}

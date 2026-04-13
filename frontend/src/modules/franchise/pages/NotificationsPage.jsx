@@ -15,10 +15,10 @@ import { useFranchiseNotificationStore } from '../store/notificationStore';
 import NotificationItem from '../components/NotificationItem';
 
 const filterTabs = [
-  { id: 'all', label: 'All Events' },
-  { id: 'unread', label: 'Unread' },
-  { id: 'danger', label: 'Critical' },
-  { id: 'warning', label: 'Warnings' },
+  { id: 'all', label: 'ALL_EVENTS' },
+  { id: 'unread', label: 'UNREAD' },
+  { id: 'danger', label: 'CRITICAL' },
+  { id: 'warning', label: 'WARNINGS' },
 ];
 
 export default function NotificationsPage() {
@@ -36,73 +36,73 @@ export default function NotificationsPage() {
     return matchesFilter && matchesSearch;
   });
 
+  const getMetricClasses = (color) => {
+    switch (color) {
+      case 'rose': return { bg: 'bg-rose-500/5', border: 'border-rose-500/10 hover:border-rose-500/30', text: 'text-rose-600', iconBg: 'bg-rose-500/10' };
+      case 'blue': return { bg: 'bg-blue-500/5', border: 'border-blue-500/10 hover:border-blue-500/30', text: 'text-blue-600', iconBg: 'bg-blue-500/10' };
+      case 'emerald': return { bg: 'bg-emerald-500/5', border: 'border-emerald-500/10 hover:border-emerald-500/30', text: 'text-emerald-600', iconBg: 'bg-emerald-500/10' };
+      default: return { bg: 'bg-emerald-500/5', border: 'border-emerald-500/10 hover:border-emerald-500/30', text: 'text-emerald-600', iconBg: 'bg-emerald-500/10' };
+    }
+  };
+
   return (
     <div className="space-y-6 pb-12">
-      {/* Page Header */}
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <div className="w-1 h-6 bg-emerald-500 rounded-full shadow-sm" />
-            <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)] uppercase">
-              Alert <span className="text-emerald-500">Console</span>
-            </h1>
-          </div>
-          <p className="text-[10px] font-bold uppercase tracking-wider ml-4 text-[var(--text-tertiary)]">
-             Operational Stream • Real-time Node Activity
-          </p>
-        </div>
+         <div className="space-y-0.5">
+            <div className="flex items-center gap-2">
+               <div className="w-1 h-3 bg-emerald-500 rounded-full" />
+               <h1 className="text-xl font-black tracking-tighter text-[var(--text-primary)] uppercase italic leading-none">
+                  ALERT <span className="text-emerald-500">CONSOLE</span>
+               </h1>
+            </div>
+            <p className="text-[7.5px] font-black uppercase tracking-[0.3em] text-[var(--text-tertiary)] ml-3 italic opacity-60 leading-none mt-1">
+               OPERATIONAL_STREAM • NODE_ACTIVITY_REGISTRY
+            </p>
+         </div>
 
-        <button 
-          onClick={markAllRead}
-          className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/5 text-emerald-600 border border-emerald-500/10 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-600/10 transition-all outline-none shadow-sm"
-        >
-          <CheckCircle2 size={14} /> Clear all as read
-        </button>
+         <button 
+           onClick={markAllRead}
+           className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600-white hover:shadow-lg hover:shadow-emerald-950/40 transition-all shadow-inner italic leading-none"
+         >
+           <CheckCircle2 size={12} strokeWidth={3} /> MARK_ALL_RECONCILED
+         </button>
       </div>
 
       {/* Metric Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-         <div className="p-6 rounded-xl bg-rose-500/5 border border-rose-500/10 flex items-center justify-between shadow-sm hover:border-rose-500/20 transition-all">
-            <div className="space-y-0.5">
-               <p className="text-[10px] font-bold uppercase tracking-widest text-rose-600">Priority Alerts</p>
-               <h4 className="text-3xl font-bold text-rose-600">02</h4>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-rose-600/10 flex items-center justify-center text-rose-600 shadow-sm">
-               <AlertTriangle size={20} />
-            </div>
-         </div>
-         <div className="p-6 rounded-xl bg-blue-500/5 border border-blue-500/10 flex items-center justify-between shadow-sm hover:border-blue-500/20 transition-all">
-            <div className="space-y-0.5">
-               <p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Ops Events</p>
-               <h4 className="text-3xl font-bold text-blue-600">14</h4>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-blue-600/10 flex items-center justify-center text-blue-500 shadow-sm">
-               <Zap size={20} />
-            </div>
-         </div>
-         <div className="p-6 rounded-xl bg-emerald-500/5 border border-emerald-500/10 flex items-center justify-between shadow-sm hover:border-emerald-500/20 transition-all">
-            <div className="space-y-0.5">
-               <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600">Active Unread</p>
-               <h4 className="text-3xl font-bold text-emerald-600">{unreadCount}</h4>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-emerald-600/10 flex items-center justify-center text-emerald-600 shadow-sm">
-               <Bell size={20} />
-            </div>
-         </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+         {[
+           { label: 'PRIORITY_ALERTS', val: '02', color: 'rose', icon: AlertTriangle, status: 'CRIT' },
+           { label: 'OPS_MONITORING', val: '14', color: 'blue', icon: Zap, status: 'LIVE' },
+           { label: 'ACTIVE_UNREAD', val: unreadCount.toString().padStart(2, '0'), color: 'emerald', icon: Bell, status: 'SYNC' }
+         ].map((stat) => {
+           const classes = getMetricClasses(stat.color);
+           return (
+             <div key={stat.label} className={`p-4 rounded-2xl ${classes.bg} border ${classes.border} flex items-center justify-between shadow-inner transition-all cursor-crosshair relative overflow-hidden group`}>
+                <div className="space-y-1 relative z-10">
+                   <p className={`text-[7.5px] font-black uppercase tracking-[0.3em] ${classes.text} italic leading-none opacity-80`}>{stat.label}</p>
+                   <h4 className={`text-3xl font-black italic tracking-tighter ${classes.text} leading-none`}>{stat.val}</h4>
+                </div>
+                <div className={`w-10 h-10 rounded-xl ${classes.iconBg} flex items-center justify-center ${classes.text} shadow-inner relative z-10 transition-transform group-hover:scale-110`}>
+                   <stat.icon size={20} strokeWidth={2.5} />
+                </div>
+                <div className={`absolute top-2 right-2 text-[6.5px] font-black ${classes.text} opacity-20 uppercase tracking-[0.3em] font-mono leading-none`}>{stat.status}</div>
+             </div>
+           );
+         })}
       </div>
 
-      {/* Control Bar: Filters & Search */}
-      <div className="flex flex-col md:flex-row items-center gap-4">
-         {/* Filter Tabs - Professional Pill */}
-         <div className="flex bg-[var(--bg-secondary)] border border-[var(--border-subtle)] p-1 rounded-lg shadow-sm">
+      {/* Control Bar */}
+      <div className="flex flex-col md:flex-row items-center gap-3">
+         <div className="flex bg-[var(--bg-secondary)] border border-[var(--border-subtle)] p-1 rounded-xl shadow-inner shrink-0">
             {filterTabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setFilter(tab.id)}
-                className={`px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider transition-all duration-200 ${
+                className={`px-4 py-2 rounded-lg text-[7.5px] font-black uppercase tracking-[0.3em] transition-all duration-300 italic leading-none ${
                   filter === tab.id 
-                  ? 'bg-emerald-600 text-white shadow-sm' 
-                  : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
+                  ? 'bg-emerald-600-white shadow-lg shadow-emerald-950/40 border border-emerald-500/20' 
+                  : 'text-[var(--text-tertiary)] hover:text-white hover:bg-white/5 border border-transparent'
                 }`}
               >
                 {tab.label}
@@ -110,22 +110,19 @@ export default function NotificationsPage() {
             ))}
          </div>
 
-         {/* Search Filter */}
          <div className="relative flex-1 group w-full">
-            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-[var(--text-tertiary)] group-focus-within:text-emerald-500 transition-colors">
-               <Search size={16} />
-            </div>
+            <Search size={12} strokeWidth={2.5} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-emerald-500 transition-colors" />
             <input 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search alert payload indexed..." 
-              className="w-full pl-10 pr-4 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-sm text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500/40 transition-all font-medium placeholder:text-[var(--text-tertiary)] shadow-sm"
+              placeholder="SEARCH ALERT PAYLOAD INDEXED..." 
+              className="w-full pl-10 pr-4 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl text-[8px] font-black text-[var(--text-primary)] focus:outline-none focus:border-emerald-500/30 transition-all placeholder:text-slate-600 uppercase tracking-[0.3em] italic shadow-inner leading-none"
             />
          </div>
       </div>
 
       {/* Notifications List */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         <AnimatePresence mode="popLayout">
           {filteredNotifications.length > 0 ? (
             filteredNotifications.map((notif) => (
@@ -139,24 +136,23 @@ export default function NotificationsPage() {
             <motion.div 
                initial={{ opacity: 0 }}
                animate={{ opacity: 1 }}
-               className="py-20 text-center border-2 border-dashed border-[var(--border-subtle)] rounded-xl bg-[var(--bg-tertiary)]/10 flex flex-col items-center gap-4"
+               className="py-16 text-center border border-dashed border-[var(--border-subtle)] rounded-2xl bg-[var(--bg-tertiary)] flex flex-col items-center gap-4 shadow-inner"
             >
-               <div className="w-12 h-12 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-tertiary)] opacity-30 shadow-sm">
-                  <Bell size={24} strokeWidth={1.5} />
+               <div className="w-12 h-12 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] flex items-center justify-center text-slate-600 shadow-inner group">
+                  <Bell size={20} strokeWidth={2} className="group-hover:text-emerald-500 transition-colors" />
                </div>
-               <div className="space-y-1">
-                  <p className="text-xs font-bold uppercase tracking-widest text-[var(--text-secondary)]">Operational Stream Clear</p>
-                  <p className="text-[10px] font-medium text-[var(--text-tertiary)] uppercase tracking-tighter opacity-60">No pending notifications in current node</p>
+               <div className="space-y-1.5">
+                  <p className="text-[9.5px] font-black uppercase tracking-[0.3em] text-[var(--text-primary)] italic leading-none">OPERATIONAL_STREAM_RECONCILED</p>
+                  <p className="text-[7px] font-black text-emerald-500 uppercase tracking-[0.3em] opacity-80 italic leading-none">SYSTEM_NODE_STATUS: OPTIMAL</p>
                </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Footer Audit Decor */}
-      <div className="pt-10 flex flex-col items-center gap-4">
-         <div className="w-px h-10 bg-gradient-to-b from-[var(--border-subtle)] to-transparent" />
-         <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-[var(--text-tertiary)] opacity-40">Verified Secure Node Payload (HUB-CORE-01)</p>
+      <div className="pt-8 flex flex-col items-center gap-3">
+         <div className="w-px h-12 bg-gradient-to-b from-white/10 to-transparent" />
+         <p className="text-[7.5px] font-black uppercase tracking-[0.4em] text-[var(--text-tertiary)] opacity-40 italic leading-none">VERIFIED_NODE_AUDIT: HUB_KOR_01</p>
       </div>
     </div>
   );

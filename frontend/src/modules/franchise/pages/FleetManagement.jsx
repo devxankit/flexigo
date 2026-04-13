@@ -42,16 +42,16 @@ export default function FleetManagement() {
       header: 'Vehicle Identifier', 
       accessor: 'plate', 
       render: (row) => (
-        <div className="flex flex-col gap-0.5">
-          <span className="text-emerald-600 dark:text-emerald-500 text-sm font-black tracking-tight">{row.plate}</span>
-          <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase">{row.model}</span>
+        <div className="flex flex-col gap-0">
+          <span className="text-emerald-500 text-[9px] font-black italic tracking-[0.2em] uppercase leading-tight">{row.plate}</span>
+          <span className="text-[6.5px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.3em] italic opacity-60 leading-none">{row.model}</span>
         </div>
       )
     },
     { 
       header: 'VIN Number', 
       accessor: 'vin', 
-      render: (row) => <span className="text-[10px] font-bold text-[var(--text-secondary)] font-mono tracking-wider uppercase">{row.vin}</span>
+      render: (row) => <span className="text-[7px] font-black text-[var(--text-tertiary)] font-mono tracking-[0.2em] italic uppercase opacity-60">{row.vin}</span>
     },
     { 
       header: 'Hub Status', 
@@ -62,17 +62,17 @@ export default function FleetManagement() {
       header: 'Energy State', 
       accessor: 'battery', 
       render: (row) => (
-        <div className="flex items-center gap-3">
-          <div className="flex-1 w-16 h-1 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
+        <div className="flex items-center gap-2 w-20">
+          <div className="flex-1 h-1 bg-[var(--bg-tertiary)] rounded-full overflow-hidden shadow-inner border border-white/5">
              <motion.div 
                initial={{ width: 0 }}
                animate={{ width: `${row.battery}%` }}
-               className={`h-full ${
-                 row.battery > 60 ? 'bg-emerald-500' : row.battery > 20 ? 'bg-amber-500' : 'bg-red-500'
+               className={`h-full shadow-[0_0_8px_currentColor] ${
+                 row.battery > 60 ? 'bg-emerald-500 text-emerald-500' : row.battery > 20 ? 'bg-amber-500 text-amber-500' : 'bg-red-500 text-red-500'
                }`} 
              />
           </div>
-          <span className="text-[10px] font-bold text-[var(--text-secondary)]">{row.battery}%</span>
+          <span className="text-[7.5px] font-black text-[var(--text-primary)] italic">{row.battery}%</span>
         </div>
       )
     },
@@ -84,18 +84,18 @@ export default function FleetManagement() {
         const isINSExpiring = new Date(row.insuranceExpiry) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
         
         return (
-          <div className="flex items-center gap-3">
-              <div className={`px-2 py-0.5 rounded border text-[9px] font-bold flex items-center gap-1.5 ${
+          <div className="flex items-center gap-2">
+              <div className={`px-1.5 py-0.5 rounded border text-[6.5px] font-black italic flex items-center gap-1 ${
                 isPUCExpiring ? 'bg-rose-500/10 border-rose-500/20 text-rose-500 animate-pulse' : 'bg-[var(--bg-tertiary)] border-[var(--border-subtle)] text-[var(--text-secondary)]'
               }`}>
-               <span className="uppercase tracking-tighter">PUC</span>
-               <span>{row.pUCExpiry.split('-')[1]}/{row.pUCExpiry.split('-')[0].slice(2)}</span>
+               <span className="uppercase tracking-[0.2em] leading-none">PUC</span>
+               <span className="leading-none">{row.pUCExpiry.split('-')[1]}/{row.pUCExpiry.split('-')[0].slice(2)}</span>
              </div>
-              <div className={`px-2 py-0.5 rounded border text-[9px] font-bold flex items-center gap-1.5 ${
+              <div className={`px-1.5 py-0.5 rounded border text-[6.5px] font-black italic flex items-center gap-1 ${
                 isINSExpiring ? 'bg-rose-500/10 border-rose-500/20 text-rose-500' : 'bg-[var(--bg-tertiary)] border-[var(--border-subtle)] text-[var(--text-secondary)]'
               }`}>
-                <span className="uppercase tracking-tighter">INS</span>
-                <span>{row.insuranceExpiry.split('-')[1]}/{row.insuranceExpiry.split('-')[0].slice(2)}</span>
+                <span className="uppercase tracking-[0.2em] leading-none">INS</span>
+                <span className="leading-none">{row.insuranceExpiry.split('-')[1]}/{row.insuranceExpiry.split('-')[0].slice(2)}</span>
               </div>
           </div>
         );
@@ -128,41 +128,41 @@ export default function FleetManagement() {
     <div className="space-y-6 pb-12">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <div className="w-1 h-6 bg-emerald-500 rounded-full" />
-            <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
-              Fleet <span className="text-emerald-500">Inventory</span>
-            </h1>
-          </div>
-          <p className="text-[10px] font-bold uppercase tracking-wider ml-4 text-[var(--text-tertiary)]">
-             Fleet Status • Document Compliance
-          </p>
+        <div className="space-y-0.5">
+           <div className="flex items-center gap-2">
+             <div className="w-1 h-3 bg-emerald-500 rounded-full" />
+             <h1 className="text-lg font-black tracking-tighter text-[var(--text-primary)] uppercase italic leading-none">
+               Fleet <span className="text-emerald-500">Inventory</span>
+             </h1>
+           </div>
+           <p className="text-[7px] font-black uppercase tracking-[0.3em] text-[var(--text-tertiary)] ml-3 italic opacity-40 leading-none">
+              FLEET_STATUS • DOCUMENT_COMPLIANCE
+           </p>
         </div>
 
         <button 
           onClick={() => navigate('/franchise/fleet/add')}
-          className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 transition-all flex items-center gap-2 active:scale-95 shadow-sm"
+          className="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-[7.5px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all flex items-center gap-1.5 active:scale-95 shadow-lg shadow-emerald-950/20 italic leading-none"
         >
-           <Plus size={16} strokeWidth={2.5} /> Add Vehicle
+           <Plus size={10} strokeWidth={3} /> ADD_VEHICLE
         </button>
       </div>
 
       {/* Filters & Search Bar */}
       <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
          {/* Filter Tabs */}
-         <div className="flex bg-[var(--bg-secondary)] border border-[var(--border-subtle)] p-1 rounded-lg overflow-x-auto no-scrollbar max-w-full shadow-sm">
+         <div className="flex bg-[var(--bg-secondary)] border border-[var(--border-subtle)] p-1 rounded-xl overflow-x-auto no-scrollbar max-w-full shadow-inner">
             {filterTabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setFilter(tab.id)}
-                className={`px-4 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-200 ${
+                className={`px-3 py-1.5 rounded-lg text-[7px] font-black uppercase tracking-widest whitespace-nowrap transition-all duration-200 italic leading-none ${
                   filter === tab.id 
                   ? 'bg-emerald-600 text-white shadow-sm' 
                   : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
                 }`}
               >
-                {tab.label}
+                {tab.id.replace(/-/g, '_')}
               </button>
             ))}
          </div>
@@ -170,13 +170,13 @@ export default function FleetManagement() {
          {/* Search Bar - Professional Pill */}
          <div className="relative w-full lg:w-80 group">
             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-[var(--text-tertiary)] group-focus-within:text-emerald-500 transition-colors">
-               <Search size={16} />
+               <Search size={12} strokeWidth={3} />
             </div>
             <input 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search Plate or VIN..." 
-              className="w-full pl-10 pr-4 py-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-sm text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500/40 transition-all font-medium placeholder:text-[var(--text-tertiary)]"
+              placeholder="SEARCH_PLATE_OR_VIN..." 
+              className="w-full pl-8 pr-4 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500/40 transition-all italic tracking-widest placeholder:text-[var(--text-tertiary)] placeholder:opacity-40 shadow-inner"
             />
          </div>
       </div>
@@ -208,45 +208,42 @@ export default function FleetManagement() {
                className="fixed top-0 right-0 h-full w-full max-w-xl bg-[var(--bg-secondary)] border-l border-[var(--border-subtle)] z-[70] shadow-2xl flex flex-col"
             >
                {/* Drawer Header */}
-               <div className="flex items-center justify-between px-8 h-16 border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/10">
-                  <div className="flex items-center gap-4">
+               <div className="flex items-center justify-between px-6 h-12 border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/10 shadow-inner">
+                  <div className="flex items-center gap-3">
                      <button 
                         onClick={() => setSelectedVehicle(null)}
-                        className="p-2 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-all"
+                        className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] rounded bg-[var(--bg-secondary)] border border-[var(--border-subtle)] shadow-inner transition-all group"
                      >
-                        <X size={18} />
+                        <X size={14} className="group-hover:rotate-90 transition-transform" />
                      </button>
                      <div className="h-4 w-px bg-[var(--border-subtle)]" />
                      <button 
                         onClick={() => navigate(`/franchise/fleet/${selectedVehicle.id}`)}
-                        className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 hover:text-emerald-700 font-sans"
+                        className="text-[7.5px] font-black uppercase tracking-[0.2em] italic text-emerald-500 hover:text-emerald-400 group flex items-center gap-1"
                      >
-                        Detailed Profile →
+                        DETAILED_PROFILE <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
                      </button>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 scale-90">
                      <StatusBadge status={selectedVehicle.status} />
-                     <button className="p-2 text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-all">
-                        <MoreVertical size={18} />
-                     </button>
                   </div>
                </div>
 
-               <div className="flex-1 overflow-y-auto no-scrollbar p-8">
+               <div className="flex-1 overflow-y-auto no-scrollbar p-6">
                   {/* Vehicle Identity */}
-                  <div className="flex items-start gap-6 mb-10">
-                     <div className="w-24 h-24 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 shadow-sm">
-                        <Zap size={32} />
+                  <div className="flex items-start gap-4 mb-8">
+                     <div className="w-14 h-14 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] shadow-inner flex items-center justify-center text-emerald-500">
+                        <Zap size={24} strokeWidth={1.5} />
                      </div>
-                     <div className="flex-1 min-w-0 pt-2">
-                        <h2 className="text-3xl font-bold tracking-tight text-[var(--text-primary)]">
+                     <div className="flex-1 min-w-0 pt-1">
+                        <h2 className="text-xl font-black tracking-tighter italic text-[var(--text-primary)] leading-none">
                            {selectedVehicle.plate}
                         </h2>
-                        <div className="flex items-center gap-3 mt-1">
-                           <span className="text-[10px] font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded uppercase tracking-wider">
+                        <div className="flex items-center gap-2 mt-2">
+                           <span className="text-[7.5px] font-black text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded uppercase tracking-[0.2em] italic leading-none">
                               {selectedVehicle.model}
                            </span>
-                           <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest font-mono">
+                           <span className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] italic leading-none opacity-60">
                               VIN: {selectedVehicle.vin}
                            </span>
                         </div>
@@ -254,59 +251,59 @@ export default function FleetManagement() {
                   </div>
 
                   {/* Operational Summary */}
-                  <div className="grid grid-cols-3 gap-4 mb-10">
-                     <div className="p-4 rounded-xl bg-[var(--bg-tertiary)]/30 border border-[var(--border-subtle)] space-y-2">
-                        <div className="text-emerald-600 flex items-center gap-2">
-                           <Battery size={14} />
-                           <span className="text-[9px] font-bold uppercase tracking-wider opacity-60 text-[var(--text-primary)]">Efficiency</span>
+                  <div className="grid grid-cols-3 gap-3 mb-8">
+                     <div className="p-3 rounded-xl bg-black border border-[var(--border-subtle)] space-y-1.5 shadow-inner relative overflow-hidden">
+                        <div className="text-emerald-500 flex items-center gap-1.5 mb-2 relative z-10">
+                           <Battery size={10} strokeWidth={3} />
+                           <span className="text-[6.5px] font-black uppercase tracking-[0.2em] opacity-60 text-emerald-500 italic leading-none">EFFICIENCY</span>
                         </div>
-                        <p className="text-xl font-bold text-[var(--text-primary)]">{selectedVehicle.battery}%</p>
+                        <p className="text-lg font-black italic text-white leading-none relative z-10">{selectedVehicle.battery}%</p>
                      </div>
-                     <div className="p-4 rounded-xl bg-[var(--bg-tertiary)]/30 border border-[var(--border-subtle)] space-y-2">
-                        <div className="text-blue-500 flex items-center gap-2">
-                           <Navigation size={14} />
-                           <span className="text-[9px] font-bold uppercase tracking-wider opacity-60 text-[var(--text-primary)]">Range</span>
+                     <div className="p-3 rounded-xl bg-black border border-[var(--border-subtle)] space-y-1.5 shadow-inner relative overflow-hidden">
+                        <div className="text-blue-500 flex items-center gap-1.5 mb-2 relative z-10">
+                           <Navigation size={10} strokeWidth={3} />
+                           <span className="text-[6.5px] font-black uppercase tracking-[0.2em] opacity-60 text-blue-500 italic leading-none">MAX_RANGE</span>
                         </div>
-                        <p className="text-xl font-bold text-[var(--text-primary)]">{selectedVehicle.range} <span className="text-[10px] opacity-40">KM</span></p>
+                        <p className="text-lg font-black italic text-white leading-none relative z-10">{selectedVehicle.range} <span className="text-[8px] opacity-40">KM</span></p>
                      </div>
-                     <div className="p-4 rounded-xl bg-[var(--bg-tertiary)]/30 border border-[var(--border-subtle)] space-y-2">
-                        <div className="text-amber-500 flex items-center gap-2">
-                           <ShieldCheck size={14} />
-                           <span className="text-[9px] font-bold uppercase tracking-wider opacity-60 text-[var(--text-primary)]">Health</span>
+                     <div className="p-3 rounded-xl bg-black border border-[var(--border-subtle)] space-y-1.5 shadow-inner relative overflow-hidden">
+                        <div className="text-amber-500 flex items-center gap-1.5 mb-2 relative z-10">
+                           <ShieldCheck size={10} strokeWidth={3} />
+                           <span className="text-[6.5px] font-black uppercase tracking-[0.2em] opacity-60 text-amber-500 italic leading-none">SYS_HEALTH</span>
                         </div>
-                        <p className="text-xl font-bold text-[var(--text-primary)]">Optimum</p>
+                        <p className="text-lg font-black italic text-white leading-none relative z-10 uppercase tracking-tighter">OPTIMUM</p>
                      </div>
                   </div>
 
                   {/* Logs Section */}
-                  <div className="space-y-6">
+                  <div className="space-y-4">
                      <div className="flex items-center gap-6 border-b border-[var(--border-subtle)]">
-                        <button className="px-1 py-3 text-[10px] font-bold uppercase tracking-widest text-emerald-600 border-b-2 border-emerald-600">Maintenance Activity</button>
-                        <button className="px-1 py-3 text-[10px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors">Documentation</button>
+                        <button className="px-1 py-2 text-[7.5px] font-black uppercase tracking-[0.2em] italic text-emerald-500 border-b-2 border-emerald-500 flex gap-2"><History size={10}/> MAINT_ACTIVITY</button>
+                        <button className="px-1 py-2 text-[7.5px] font-black uppercase tracking-[0.2em] italic text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors opacity-60 flex gap-2"><FileText size={10}/> DOCUMENTATION</button>
                      </div>
 
-                     <div className="space-y-3">
+                     <div className="space-y-2">
                         {selectedVehicle.maintenanceLogs.length > 0 ? (
                           selectedVehicle.maintenanceLogs.map((log, i) => (
-                            <div key={i} className="flex gap-4 p-4 bg-[var(--bg-tertiary)]/20 border border-[var(--border-subtle)] rounded-xl group hover:bg-[var(--bg-tertiary)] transition-all">
-                               <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-                                  <History size={14} className="text-slate-400" />
+                            <div key={i} className="flex gap-3 p-3 bg-[var(--bg-tertiary)]/10 border border-[var(--border-subtle)] rounded-xl group hover:border-emerald-500/20 transition-all shadow-inner">
+                               <div className="w-8 h-8 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] shadow-inner flex items-center justify-center shrink-0">
+                                  <History size={12} className="text-emerald-500" />
                                </div>
                                <div className="flex-1 min-w-0">
                                   <div className="flex items-center justify-between mb-1">
-                                     <h4 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-tight">{log.type}</h4>
-                                     <span className="text-[9px] font-medium text-[var(--text-tertiary)]">{log.date}</span>
+                                     <h4 className="text-[9px] font-black text-[var(--text-primary)] uppercase tracking-tight italic truncate">{log.type}</h4>
+                                     <span className="text-[6.5px] font-black uppercase tracking-widest text-[var(--text-tertiary)] italic leading-none">{log.date}</span>
                                   </div>
-                                  <p className="text-[10px] font-medium text-[var(--text-tertiary)]">Certified Hub Technician: {log.staff}</p>
+                                  <p className="text-[6.5px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] italic opacity-60 truncate">CERT_TECH: {log.staff}</p>
                                </div>
                             </div>
                           ))
                         ) : (
-                          <div className="py-12 border-2 border-dashed border-[var(--border-subtle)] rounded-xl flex flex-col items-center justify-center gap-3 text-center">
-                             <History size={24} className="text-[var(--text-tertiary)] opacity-30" />
-                             <div className="space-y-0.5">
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">Log Under Review</p>
-                                <p className="text-[9px] font-medium text-[var(--text-tertiary)] opacity-60 uppercase">Healthy asset history</p>
+                          <div className="py-8 border border-dashed border-[var(--border-subtle)] rounded-xl flex flex-col items-center justify-center gap-2 text-center bg-[var(--bg-secondary)] shadow-inner">
+                             <History size={18} className="text-[var(--text-tertiary)] opacity-30" />
+                             <div className="space-y-1">
+                                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] italic">LOG_UNDER_REVIEW</p>
+                                <p className="text-[6.5px] font-black text-[var(--text-tertiary)] opacity-40 uppercase tracking-[0.3em] italic">HEALTHY_ASSET_HISTORY</p>
                              </div>
                           </div>
                         )}
@@ -315,12 +312,12 @@ export default function FleetManagement() {
                </div>
 
                {/* Drawer Footer */}
-               <div className="p-6 border-t border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/10 grid grid-cols-2 gap-3">
-                  <button className="py-2.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] text-[10px] font-bold uppercase tracking-widest text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] transition-all flex items-center justify-center gap-2">
-                     <FileText size={14} /> Compliance Audit
+               <div className="p-4 border-t border-[var(--border-subtle)] bg-[var(--bg-secondary)] grid grid-cols-2 gap-3 shadow-inner">
+                  <button className="py-2.5 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] text-[7.5px] font-black uppercase tracking-[0.2em] italic text-[var(--text-primary)] hover:border-emerald-500/20 transition-all flex items-center justify-center gap-2 shadow-inner">
+                     <FileText size={10} strokeWidth={3} /> COMPLIANCE_AUDIT
                   </button>
-                  <button className="py-2.5 rounded-lg bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-700 transition-all flex items-center justify-center gap-2 shadow-sm">
-                     <Settings size={14} /> Service Console
+                  <button className="py-2.5 rounded-xl bg-emerald-600 text-white text-[7.5px] font-black uppercase tracking-[0.2em] italic hover:bg-emerald-500 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/20 active:scale-95">
+                     <Settings size={10} strokeWidth={3} /> SERVICE_CONSOLE
                   </button>
                </div>
             </motion.div>

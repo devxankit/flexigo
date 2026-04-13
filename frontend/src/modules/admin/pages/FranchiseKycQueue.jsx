@@ -17,7 +17,8 @@ import {
   Download,
   MoreVertical,
   Check,
-  UserX
+  UserX,
+  Activity
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
@@ -46,49 +47,58 @@ export default function FranchiseKycQueue() {
   };
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-6 pb-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-         <div className="space-y-1">
-            <div className="flex items-center gap-3">
-               <div className="w-1.5 h-6 bg-emerald-600 rounded-full" />
-               <h1 className="text-2xl font-black tracking-tighter text-[var(--text-primary)] uppercase italic">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+         <div className="space-y-0.5">
+            <div className="flex items-center gap-2">
+               <div className="w-1 h-5 bg-emerald-600 rounded-full" />
+               <h1 className="text-xl font-black tracking-tighter text-[var(--text-primary)] uppercase italic">
                   Franchise <span className="text-emerald-500">Boarding</span>
                </h1>
             </div>
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-tertiary)] ml-4">
-               Partner Verification • Infrastructure Registry
+            <p className="text-[8px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] ml-3">
+               Partner Verification & Ops Registry
             </p>
          </div>
          
-         <div className="flex items-center gap-3">
+         <div className="flex items-center gap-2">
             <div className="relative group">
-               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-tertiary)] group-focus-within:text-emerald-500 transition-colors" />
+               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--text-tertiary)] group-focus-within:text-emerald-500 transition-colors" />
                <input 
                  type="text" 
-                 placeholder="Search Partner/GSTIN..." 
-                 className="pl-10 pr-4 py-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500/30 outline-none transition-all w-64 text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50"
+                 placeholder="Search Partner..." 
+                 className="pl-8 pr-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all w-32 text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50"
                />
             </div>
          </div>
       </div>
 
       {/* KPI Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-         <AdminStatCard title="Partner Queued" value={records.length} icon={Building2} color="emerald" subtitle="Awaiting Decision" />
-         <AdminStatCard title="GST Verified" value="100%" icon={ShieldCheck} color="blue" subtitle="Govt API Sync" />
-         <AdminStatCard title="Zone Coverage" value="14 Cities" icon={MapPin} color="emerald" subtitle="Network Expansion" />
-         <AdminStatCard title="Doc Integrity" value="99.2%" icon={CheckCircle} color="emerald" subtitle="Validated Uploads" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+         <AdminStatCard title="Queued" value={records.length} icon={Building2} color="emerald" subtitle="Waitlist Nodes" />
+         <AdminStatCard title="GST Sync" value="100%" icon={ShieldCheck} color="blue" subtitle="Verified Alpha" />
+         <AdminStatCard title="Markets" value="14" icon={MapPin} color="emerald" subtitle="Active Cities" />
+         <AdminStatCard title="Integrity" value="99.2%" icon={Activity} color="emerald" subtitle="Doc Score" />
       </div>
 
       {/* Registry */}
-      <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-[2.5rem] overflow-hidden shadow-sm">
+      <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-sm">
+         <div className="px-6 py-3 border-b border-[var(--border-subtle)] flex items-center justify-between bg-[var(--bg-tertiary)]/10">
+            <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-wider leading-none italic">Franchise Payload Registry</h3>
+            <div className="flex items-center gap-1.5">
+               <button className="p-1.5 text-[var(--text-tertiary)] hover:text-emerald-500 rounded-lg transition-all">
+                  <Filter size={14} />
+               </button>
+            </div>
+         </div>
+
          <div className="overflow-x-auto no-scrollbar">
             <table className="w-full">
                <thead>
-                  <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/30">
-                     {['Partner Identity', 'Entity Type', 'Zone Node', 'Submission', 'Status', 'Actions'].map((header) => (
-                        <th key={header} className="text-left py-5 px-8 text-[10px] font-black uppercase tracking-[0.25em] text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
+                  <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
+                     {['Partner Identity', 'Entity', 'Zone Node', 'Submission', 'Status', 'Actions'].map((header) => (
+                        <th key={header} className="text-left py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
                      ))}
                   </tr>
                </thead>
@@ -101,47 +111,47 @@ export default function FranchiseKycQueue() {
                          animate={{ opacity: 1 }}
                          exit={{ opacity: 0 }}
                          key={record.id} 
-                         className="group/row hover:bg-[var(--bg-tertiary)]/50 transition-colors cursor-pointer"
+                         className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]"
                          onClick={() => openDetails(record)}
                        >
-                          <td className="py-6 px-8 whitespace-nowrap">
+                          <td className="py-2.5 px-6 whitespace-nowrap">
                              <div className="flex flex-col gap-0.5">
-                                <span className="text-xs font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic">{record.name}</span>
-                                <span className="text-[9px] font-bold text-[var(--text-tertiary)] tracking-widest">{record.id}</span>
+                                <span className="font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic leading-none">{record.name}</span>
+                                <span className="text-[7px] font-bold text-[var(--text-tertiary)] tracking-widest uppercase mt-1 leading-none italic">{record.id}</span>
                              </div>
                           </td>
-                          <td className="py-6 px-8 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">{record.type}</td>
-                          <td className="py-6 px-8 flex items-center gap-2">
-                             <MapPin size={12} className="text-emerald-500" />
-                             <span className="text-[10px] font-black text-[var(--text-primary)] uppercase italic tracking-widest">{record.city}</span>
+                          <td className="py-2.5 px-6 font-black text-[var(--text-tertiary)] uppercase tracking-widest leading-none italic">{record.type}</td>
+                          <td className="py-2.5 px-6">
+                             <div className="flex items-center gap-1.5 leading-none">
+                                <MapPin size={10} className="text-emerald-500 opacity-60" />
+                                <span className="font-black text-[var(--text-primary)] uppercase italic tracking-widest leading-none">{record.city}</span>
+                             </div>
                           </td>
-                          <td className="py-6 px-8 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">{record.date}</td>
-                          <td className="py-6 px-8">
-                             <div className={`inline-flex px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shadow-sm ${
-                                record.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 
-                                record.status === 'pending' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' : 
-                                'bg-rose-500/10 text-rose-500 border border-rose-500/20'
+                          <td className="py-2.5 px-6 font-black text-[var(--text-tertiary)] uppercase tracking-widest whitespace-nowrap leading-none italic">{record.date}</td>
+                          <td className="py-2.5 px-6">
+                             <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border leading-none ${
+                                record.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 
+                                record.status === 'pending' ? 'bg-blue-500/10 text-blue-500 border-blue-500/10' : 
+                                'bg-rose-500/10 text-rose-500 border-rose-500/10'
                              }`}>
                                 {record.status}
                              </div>
                           </td>
-                          <td className="py-6 px-8">
-                             <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                          <td className="py-2.5 px-6">
+                             <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                                 <button 
                                    onClick={() => openDetails(record)}
-                                   className="p-2 bg-[var(--bg-tertiary)] hover:bg-emerald-600/10 border border-[var(--border-subtle)] hover:border-emerald-500/20 rounded-xl text-[var(--text-tertiary)] hover:text-emerald-500 transition-all font-black"
+                                   className="p-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-emerald-500 hover:border-emerald-500/30 transition-all font-black"
                                 >
-                                   <Eye size={14} />
+                                   <Eye size={12} />
                                 </button>
                                 {record.status === 'pending' && (
-                                   <>
-                                      <button 
-                                         onClick={() => handleAction(record.id, 'approved')}
-                                         className="p-2 bg-emerald-600 text-white rounded-xl shadow-lg shadow-emerald-900/20 hover:bg-emerald-700 transition-all group/btn"
-                                      >
-                                         <CheckCircle size={14} className="group-hover/btn:scale-110 transition-transform" />
-                                      </button>
-                                   </>
+                                   <button 
+                                      onClick={() => handleAction(record.id, 'approved')}
+                                      className="p-1.5 bg-emerald-600 text-white rounded-lg shadow-md hover:bg-emerald-700 transition-all active:scale-95"
+                                   >
+                                      <CheckCircle size={12} />
+                                   </button>
                                 )}
                              </div>
                           </td>
@@ -156,84 +166,78 @@ export default function FranchiseKycQueue() {
       {/* Details Modal */}
       <AnimatePresence>
          {isModalOpen && selectedRecord && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/90 backdrop-blur-sm">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
                <motion.div 
-                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                  className="w-full max-w-2xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-[3.5rem] p-12 shadow-2xl relative overflow-hidden"
+                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                  className="w-full max-w-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-6 shadow-2xl relative overflow-hidden"
                >
-                  <div className="absolute top-0 right-0 p-8 opacity-5">
-                     <Building2 size={120} />
+                  <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none">
+                     <Building2 size={100} />
                   </div>
 
-                  <div className="flex items-center justify-between mb-10 pb-6 border-b border-[var(--border-subtle)] relative z-10">
-                     <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-inner">
-                           <Building2 size={32} />
+                  <div className="flex items-center justify-between mb-6 pb-4 border-b border-[var(--border-subtle)] relative z-10">
+                     <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-inner">
+                           <Building2 size={20} />
                         </div>
-                        <div className="space-y-1">
-                           <h2 className="text-2xl font-black text-[var(--text-primary)] uppercase tracking-tighter italic leading-none">{selectedRecord.name}</h2>
-                           <p className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.4em]">PARTNER_NODE: {selectedRecord.id}</p>
+                        <div className="space-y-0.5">
+                           <h2 className="text-base font-black text-[var(--text-primary)] uppercase tracking-tighter italic leading-none">{selectedRecord.name}</h2>
+                           <p className="text-[7px] font-black text-emerald-500 uppercase tracking-widest leading-none">NODE_ID: {selectedRecord.id}</p>
                         </div>
                      </div>
-                     <button onClick={() => setIsModalOpen(false)} className="p-3 hover:bg-rose-600/10 hover:text-rose-500 transition-all rounded-2xl">
-                        <X size={24} />
+                     <button onClick={() => setIsModalOpen(false)} className="p-1.5 hover:bg-rose-600/10 hover:text-rose-500 transition-all rounded-lg">
+                        <X size={18} />
                      </button>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-8 mb-12 relative z-10">
-                     <div className="space-y-6">
-                        <h4 className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.3em] flex items-center gap-2">
-                           <FileText size={12} className="text-emerald-500" /> Business Docs
+                  <div className="grid grid-cols-2 gap-5 mb-6 relative z-10">
+                     <div className="space-y-3">
+                        <h4 className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-1.5 italic">
+                           <FileText size={10} className="text-emerald-500" /> Documents
                         </h4>
-                        <div className="space-y-3">
-                           {['GSTIN Certificate', 'Entity Registration', 'Bank Passbook / Cheque', 'Partner PAN'].map(doc => (
-                              <div key={doc} className="p-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl flex items-center justify-between group hover:border-emerald-500/30 transition-all cursor-pointer">
-                                 <span className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-tight">{doc}</span>
-                                 <ChevronRight size={14} className="text-[var(--text-tertiary)] group-hover:text-emerald-500 group-hover:translate-x-1 transition-all" />
+                        <div className="space-y-1.5">
+                           {['GST_Certificate', 'Registration', 'Bank_KYC', 'Partner_PAN'].map(doc => (
+                              <div key={doc} className="p-2.5 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl flex items-center justify-between group hover:border-emerald-500/30 transition-all cursor-pointer">
+                                 <span className="text-[9px] font-black text-[var(--text-primary)] uppercase tracking-tight italic leading-none">{doc}</span>
+                                 <Download size={10} className="text-[var(--text-tertiary)]/50 group-hover:text-emerald-500 transition-all" />
                               </div>
                            ))}
                         </div>
                      </div>
 
-                     <div className="space-y-6">
-                        <h4 className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.3em] flex items-center gap-2">
-                           <ShieldCheck size={12} className="text-emerald-500" /> Validation Engine
+                     <div className="space-y-3">
+                        <h4 className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-1.5 italic">
+                           <ShieldCheck size={10} className="text-emerald-500" /> Verification
                         </h4>
-                        <div className="p-6 bg-emerald-600/5 border border-emerald-500/10 rounded-3xl space-y-4">
-                           <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-                              <span className="text-[var(--text-tertiary)]">GST Integration</span>
-                              <span className="text-emerald-500">ACTIVE_SYNC</span>
-                           </div>
-                           <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-                              <span className="text-[var(--text-tertiary)]">Identity Match</span>
-                              <span className="text-emerald-500">99.8% CERTAINTY</span>
-                           </div>
-                           <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-                              <span className="text-[var(--text-tertiary)]">Hub Geozoning</span>
-                              <span className="text-emerald-500">ELIBILITY_OK</span>
-                           </div>
+                        <div className="p-3 bg-emerald-600/5 border border-emerald-500/10 rounded-xl space-y-2">
+                           {['GST Sync', 'ID Check', 'Zoning'].map((label, idx) => (
+                              <div key={label} className="flex justify-between items-center text-[7.5px] font-black uppercase italic leading-none">
+                                 <span className="text-[var(--text-tertiary)]">{label}</span>
+                                 <span className="text-emerald-500">{idx === 1 ? '99.8% OK' : 'PASSED'}</span>
+                              </div>
+                           ))}
                         </div>
-                        <div className="p-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl space-y-1">
-                           <p className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Initial Capacity</p>
-                           <p className="text-xl font-black text-[var(--text-primary)] tracking-tighter italic">{selectedRecord.hubs} Regional Hubs</p>
+                        <div className="p-2.5 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl flex flex-col items-center">
+                           <p className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest leading-none italic mb-1">Planned Capacity</p>
+                           <p className="text-base font-black text-[var(--text-primary)] tracking-tighter italic leading-none">{selectedRecord.hubs} HUB NODES</p>
                         </div>
                      </div>
                   </div>
 
-                  <div className="flex gap-4 relative z-10 pt-8 border-t border-[var(--border-subtle)]">
+                  <div className="flex gap-2.5 relative z-10 pt-5 border-t border-[var(--border-subtle)]">
                      {selectedRecord.status === 'pending' ? (
                         <>
                            <button 
-                              onClick={() => { handleAction(selectedRecord.id, 'approved'); setIsDetailModalOpen(false); }}
-                              className="flex-1 py-6 bg-emerald-600 text-white rounded-[2rem] text-[11px] font-black uppercase tracking-[0.4em] shadow-2xl shadow-emerald-950/40 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-4 group"
+                              onClick={() => { handleAction(selectedRecord.id, 'approved'); setIsModalOpen(false); }}
+                              className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-emerald-950/20 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2"
                            >
-                              <Zap size={20} fill="white" className="group-hover:animate-bounce" /> Authorize Franchise Node
+                              <Zap size={14} fill="currentColor" /> Authorize Franchise
                            </button>
                            <button 
-                              onClick={() => { handleAction(selectedRecord.id, 'rejected'); setIsDetailModalOpen(false); }}
-                              className="px-10 py-6 bg-rose-600/10 text-rose-500 border border-rose-500/20 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.4em] hover:bg-rose-600/20 transition-all active:scale-95"
+                              onClick={() => { handleAction(selectedRecord.id, 'rejected'); setIsModalOpen(false); }}
+                              className="px-5 py-3 bg-rose-600/10 text-rose-500 border border-rose-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-600/20 transition-all active:scale-95 italic"
                            >
                               Decline
                            </button>
@@ -241,7 +245,7 @@ export default function FranchiseKycQueue() {
                      ) : (
                         <button 
                            onClick={() => setIsModalOpen(false)}
-                           className="w-full py-5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-[2rem] text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-primary)] hover:border-emerald-500/30 transition-all"
+                           className="w-full py-2.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[8px] font-black uppercase tracking-widest text-[var(--text-primary)] hover:border-emerald-500/30 transition-all font-black"
                         >
                            Exit Payload Registry
                         </button>
