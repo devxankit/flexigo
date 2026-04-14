@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Building2, 
   UserCheck, 
@@ -31,13 +31,18 @@ export default function FranchiseOnboarding() {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  
+  useEffect(() => {
+    document.documentElement.classList.add('dark');
+    document.documentElement.style.backgroundColor = '#020617';
+  }, []);
 
   const steps = [
-    { id: 1, label: 'Identity', icon: Fingerprint },
-    { id: 2, label: 'Entity', icon: Building2 },
-    { id: 3, label: 'Plan', icon: Layers },
-    { id: 4, label: 'Settlement', icon: Landmark },
-    { id: 5, label: 'Compliance', icon: ShieldCheck },
+    { id: 1, label: 'Profile', icon: Fingerprint },
+    { id: 2, label: 'Business', icon: Building2 },
+    { id: 3, label: 'Hub Plan', icon: Layers },
+    { id: 4, label: 'Payments', icon: Landmark },
+    { id: 5, label: 'KYC', icon: ShieldCheck },
     { id: 6, label: 'Review', icon: Target },
   ];
 
@@ -54,7 +59,7 @@ export default function FranchiseOnboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <div className="dark min-h-screen bg-[var(--bg-primary)] flex flex-col items-center justify-center p-6 relative overflow-hidden text-[var(--text-primary)]">
       {/* Background Decor */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.08),transparent_70%)] pointer-events-none" />
       <div className="absolute inset-x-0 top-0 h-[1px] bg-emerald-500/10" />
@@ -77,7 +82,7 @@ export default function FranchiseOnboarding() {
           </p>
           <button 
             onClick={() => navigate('/franchise')}
-            className="w-full py-4 bg-emerald-600-white rounded-2xl text-[8px] font-black uppercase tracking-[0.4em] shadow-lg shadow-emerald-950/40 hover:bg-emerald-500 transition-all active:scale-95 flex items-center justify-center gap-3 italic group"
+            className="w-full py-4 bg-emerald-600 text-white rounded-2xl text-[8px] font-black uppercase tracking-[0.4em] shadow-lg shadow-emerald-950/40 hover:bg-emerald-500 transition-all active:scale-95 flex items-center justify-center gap-3 italic group"
           >
             ACCESS_DASHBOARD <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
           </button>
@@ -90,10 +95,10 @@ export default function FranchiseOnboarding() {
               <img src={logo} alt="Flexigo" className="w-6 h-6 object-contain invert opacity-80" />
             </div>
             <h1 className="text-2xl font-black text-[var(--text-primary)] uppercase italic tracking-tighter leading-none">
-              NODE <span className="text-emerald-500">PROVISIONING</span>
+              Franchise <span className="text-emerald-500">Registration</span>
             </h1>
             <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.4em] mt-2 italic opacity-60">
-              PHASE_01: INFRASTRUCTURE_HANDSHAKE
+              Step 1: Hub Partner Onboarding
             </p>
           </div>
 
@@ -112,7 +117,7 @@ export default function FranchiseOnboarding() {
                  return (
                    <div key={s.id} className="relative z-10 flex flex-col items-center gap-2">
                       <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 border shadow-inner ${
-                        isActive ? 'bg-emerald-600-white shadow-emerald-950/50 scale-110' : 
+                        isActive ? 'bg-emerald-600 text-white shadow-emerald-950/50 scale-110' : 
                         isCompleted ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : 
                         'bg-[var(--bg-primary)] border-[var(--border-subtle)] text-slate-700'
                       }`}>
@@ -130,29 +135,29 @@ export default function FranchiseOnboarding() {
                {step === 1 && (
                  <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                     <div className="space-y-0.5">
-                       <h3 className="text-sm font-black text-[var(--text-primary)] uppercase italic tracking-tight">IDENTITY_TERMINAL</h3>
-                       <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-60">REGISTRY: OWNER_CREDENTIALS</p>
+                       <h3 className="text-sm font-black text-[var(--text-primary)] uppercase italic tracking-tight">Personal Details</h3>
+                       <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-60">Owner Information & Contact</p>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                        <div className="col-span-2 space-y-1.5">
-                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Full_Legal_Identifier</label>
-                          <input required className="w-full px-4 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="ENTER FULL NAME..." />
+                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Full Legal Name</label>
+                          <input required className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="ENTER FULL NAME..." />
                        </div>
                        <div className="space-y-1.5">
-                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Aadhaar_ID</label>
-                          <input required className="w-full px-4 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="XXXX XXXX XXXX" />
+                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Aadhaar Number</label>
+                          <input required className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="XXXX XXXX XXXX" />
                        </div>
                        <div className="space-y-1.5">
-                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">PAN_TX</label>
-                          <input required className="w-full px-4 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="ABCDE1234F" />
+                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">PAN Card Number</label>
+                          <input required className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="ABCDE1234F" />
                        </div>
                        <div className="space-y-1.5">
-                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Node_Comm_Line</label>
-                          <input required className="w-full px-4 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="+91 XXXX" />
+                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Mobile Number</label>
+                          <input required className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="+91 XXXX" />
                        </div>
                        <div className="space-y-1.5">
-                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Node_Email_Root</label>
-                          <input required type="email" className="w-full px-4 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] lowercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="partner@domain.com" />
+                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Email Address</label>
+                          <input required type="email" className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] lowercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="partner@domain.com" />
                        </div>
                     </div>
                  </motion.div>
@@ -161,25 +166,25 @@ export default function FranchiseOnboarding() {
                {step === 2 && (
                  <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                     <div className="space-y-0.5">
-                       <h3 className="text-sm font-black text-[var(--text-primary)] uppercase italic tracking-tight">ENTITY_&_INFRASTRUCTURE</h3>
-                       <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-60">REGISTRY: BUSINESS_NODE_LOCATION</p>
+                       <h3 className="text-sm font-black text-[var(--text-primary)] uppercase italic tracking-tight">Business Profile</h3>
+                       <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-60">Company & Hub Details</p>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                        <div className="col-span-2 space-y-1.5">
-                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Entity_Nominal</label>
-                          <input required className="w-full px-4 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="FIRM IDENTITY" />
+                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Business Name</label>
+                          <input required className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="FIRM IDENTITY" />
                        </div>
                        <div className="space-y-1.5">
-                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">GSTIN_Registry</label>
-                          <input required className="w-full px-4 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="29XXXXX" />
+                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">GST Number</label>
+                          <input required className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="29XXXXX" />
                        </div>
                        <div className="space-y-1.5">
-                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Deployment_Node</label>
-                          <input required className="w-full px-4 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="BANGALORE" />
+                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Operational City</label>
+                          <input required className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="BANGALORE" />
                        </div>
                        <div className="col-span-2 space-y-1.5">
-                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Hub_Coordinates</label>
-                          <textarea rows={2} required className="w-full px-4 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20 no-scrollbar" placeholder="ENTER HUB ADDRESS..." />
+                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Hub Address</label>
+                          <textarea rows={2} required className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20 no-scrollbar" placeholder="Enter complete hub location address..." />
                        </div>
                     </div>
                  </motion.div>
@@ -188,21 +193,23 @@ export default function FranchiseOnboarding() {
                {step === 3 && (
                  <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                     <div className="space-y-0.5">
-                       <h3 className="text-sm font-black text-[var(--text-primary)] uppercase italic tracking-tight">GROWTH_PROTOCOL</h3>
-                       <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-60">SELECTION: DEPLOYMENT_TIER</p>
+                       <h3 className="text-sm font-black text-[var(--text-primary)] uppercase italic tracking-tight">Select Plan</h3>
+                       <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-60">Choose your hub scale</p>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                        {[
-                         { name: 'STANDARD', fee: '50K', yield: '20 UNITS', color: 'slate-500' },
-                         { name: 'PREMIUM', fee: '1.5L', yield: '50 UNITS', color: 'emerald-500' },
-                         { name: 'ENTERPRISE', fee: '5L+', yield: 'UNLIMITED', color: 'purple-500' }
+                         { name: 'Tier 1', fee: '15K', vehicles: '25', color: 'slate-500' },
+                         { name: 'Tier 2', fee: '28K', vehicles: '50', color: 'emerald-500' },
+                         { name: 'Tier 3', fee: '52K', vehicles: '100', color: 'blue-500' },
+                         { name: 'Tier 4', fee: '75K', vehicles: '150', color: 'purple-500' },
+                         { name: 'Tier 5', fee: '95K', vehicles: '200', color: 'rose-500' }
                        ].map((tier) => (
-                         <div key={tier.name} className="p-4 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl hover:border-emerald-500/20 transition-all cursor-pointer group relative overflow-hidden shadow-inner">
-                            <div className={`text-[6px] font-black uppercase tracking-[0.3em] mb-3 text-${tier.color} italic`}>{tier.name}_NODE</div>
-                            <div className="text-lg font-black text-[var(--text-primary)] uppercase italic mb-1 leading-none">₹{tier.fee}</div>
-                            <div className="text-[7.5px] font-black text-slate-600 uppercase tracking-widest italic leading-none">SEC_DEPOSIT</div>
+                         <div key={tier.name} className="p-4 bg-black/20 border border-[var(--border-subtle)] rounded-2xl hover:border-emerald-500/20 transition-all cursor-pointer group relative overflow-hidden shadow-inner">
+                            <div className={`text-[6px] font-black uppercase tracking-[0.3em] mb-3 text-${tier.color} italic`}>{tier.name}</div>
+                            <div className="text-xl font-black text-[var(--text-primary)] uppercase italic mb-1 leading-none">₹{tier.fee}</div>
+                            <div className="text-[7.5px] font-black text-slate-600 uppercase tracking-widest italic leading-none">Monthly Plan Fee</div>
                             <div className="mt-4 pt-3 border-t border-[var(--border-subtle)] flex items-center justify-between">
-                               <span className="text-[7px] font-black text-[var(--text-tertiary)] italic uppercase">YIELD: {tier.yield}</span>
+                               <span className="text-[7px] font-black text-[var(--text-tertiary)] italic uppercase">Fleet: {tier.vehicles} Vehicles</span>
                                <div className="w-4 h-4 rounded-lg border border-[var(--border-subtle)] flex items-center justify-center group-hover:border-emerald-500 transition-all">
                                   <div className="w-1.5 h-1.5 rounded bg-emerald-500 opacity-0 group-hover:opacity-100 transition-all shadow-[0_0_8px_#10b981]" />
                                </div>
@@ -216,21 +223,21 @@ export default function FranchiseOnboarding() {
                {step === 4 && (
                  <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                     <div className="space-y-0.5">
-                       <h3 className="text-sm font-black text-[var(--text-primary)] uppercase italic tracking-tight">SETTLEMENT_NODE</h3>
-                       <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-60">REGISTRY: BANK_TX_PIPES</p>
+                       <h3 className="text-sm font-black text-[var(--text-primary)] uppercase italic tracking-tight">Bank Information</h3>
+                       <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-60">Payment and Settlement Details</p>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                        <div className="col-span-2 space-y-1.5">
-                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Account_Proxy</label>
-                          <input required className="w-full px-4 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="NAME AS PER BANK" />
+                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Beneficiary Name</label>
+                          <input required className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="NAME AS PER BANK" />
                        </div>
                        <div className="space-y-1.5">
-                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Account_TX_Num</label>
-                          <input required type="password" className="w-full px-4 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="XXXX XXXX XXXX" />
+                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Account Number</label>
+                          <input required type="password" className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="XXXX XXXX XXXX" />
                        </div>
                        <div className="space-y-1.5">
-                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">IFSC_CODE</label>
-                          <input required className="w-full px-4 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="UTIBXXXX" />
+                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">IFSC Code</label>
+                          <input required className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="UTIBXXXX" />
                        </div>
                     </div>
                  </motion.div>
@@ -239,15 +246,15 @@ export default function FranchiseOnboarding() {
                {step === 5 && (
                  <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                     <div className="space-y-0.5">
-                       <h3 className="text-sm font-black text-[var(--text-primary)] uppercase italic tracking-tight">COMPLIANCE_PAYLOAD</h3>
-                       <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-60">SYNCHRONIZATION: DOC_REGISTRY</p>
+                       <h3 className="text-sm font-black text-[var(--text-primary)] uppercase italic tracking-tight">Upload Documents</h3>
+                       <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-60">Verification and KYC Documents</p>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                        {[
-                         { name: 'GSTIN_CERT', key: 'gst' },
-                         { name: 'ENTITY_REG', key: 'entity' },
-                         { name: 'AADHAAR_DOC', key: 'aadhaar' },
-                         { name: 'PAN_DOC', key: 'pan' }
+                         { name: 'GST Certificate', key: 'gst' },
+                         { name: 'Registration Proof', key: 'entity' },
+                         { name: 'Aadhaar Copy', key: 'aadhaar' },
+                         { name: 'PAN Card Copy', key: 'pan' }
                        ].map((doc) => (
                          <div key={doc.key} className="relative group">
                             <input type="file" id={`upload-${doc.key}`} className="hidden" accept=".pdf,.jpg,.jpeg,.png" />
@@ -272,8 +279,8 @@ export default function FranchiseOnboarding() {
                {step === 6 && (
                  <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
                     <div className="space-y-0.5">
-                       <h3 className="text-sm font-black text-[var(--text-primary)] uppercase italic tracking-tight">PROTOCOL_REVIEW</h3>
-                       <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-60">VALIDATION: FINAL_COMMIT</p>
+                       <h3 className="text-sm font-black text-[var(--text-primary)] uppercase italic tracking-tight">Final Review</h3>
+                       <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-60">Confirm your application</p>
                     </div>
                     <div className="bg-emerald-600/5 border border-emerald-500/10 rounded-[2rem] p-6 space-y-6 relative overflow-hidden shadow-inner">
                        <div className="absolute top-0 right-0 p-4 opacity-5 rotate-12 pointer-events-none">
@@ -284,16 +291,16 @@ export default function FranchiseOnboarding() {
                              <Globe size={20} />
                           </div>
                           <div className="space-y-0.5">
-                             <p className="text-[7.5px] font-black text-emerald-500 uppercase tracking-[0.3em] italic">NODE_AUTHORIZATION</p>
-                             <h4 className="text-xl font-black text-[var(--text-primary)] uppercase italic tracking-tighter leading-none">READY_FOR_CLEARANCE</h4>
+                             <p className="text-[7.5px] font-black text-emerald-500 uppercase tracking-[0.3em] italic">Ready for Verification</p>
+                             <h4 className="text-xl font-black text-[var(--text-primary)] uppercase italic tracking-tighter leading-none">Hub Registration Complete</h4>
                           </div>
                        </div>
                        <div className="grid grid-cols-2 gap-3">
-                          <div className="flex items-center gap-2.5 p-3.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl shadow-inner">
+                          <div className="flex items-center gap-2.5 p-3.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl shadow-inner">
                              <ShieldCheck size={14} className="text-emerald-500" />
-                             <span className="text-[8px] font-black text-[var(--text-primary)] uppercase tracking-widest italic">INTEGRITY_100%</span>
+                             <span className="text-[8px] font-black text-[var(--text-primary)] uppercase tracking-widest italic">Data Verified</span>
                           </div>
-                          <div className="flex items-center gap-2.5 p-3.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl shadow-inner">
+                          <div className="flex items-center gap-2.5 p-3.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl shadow-inner">
                              <Briefcase size={14} className="text-emerald-500" />
                              <span className="text-[8px] font-black text-[var(--text-primary)] uppercase tracking-widest italic">BILLING_SYNCED</span>
                           </div>
@@ -309,14 +316,14 @@ export default function FranchiseOnboarding() {
                       onClick={handlePrev} 
                       className="px-6 py-3.5 bg-[var(--bg-primary)] border border-[var(--border-subtle)] text-[var(--text-tertiary)] rounded-xl text-[8px] font-black uppercase tracking-[0.3em] hover:bg-white/5 hover:text-white transition-all italic shadow-inner"
                     >
-                      REV_PHASE
+                      BACK
                     </button>
                   )}
                    <button 
                     type={step === 6 ? 'submit' : 'button'} 
                     onClick={step === 6 ? undefined : handleNext} 
                     disabled={isSubmitting}
-                    className="flex-1 py-3.5 bg-emerald-600-white rounded-xl text-[9px] font-black uppercase tracking-[0.4em] shadow-lg shadow-emerald-950/40 hover:bg-emerald-500 transition-all active:scale-95 flex items-center justify-center gap-3 italic relative overflow-hidden group"
+                    className="flex-1 py-3.5 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-[0.4em] shadow-lg shadow-emerald-950/40 hover:bg-emerald-500 transition-all active:scale-95 flex items-center justify-center gap-3 italic relative overflow-hidden group"
                   >
                      {isSubmitting ? (
                         <div className="flex items-center gap-2">
@@ -325,7 +332,7 @@ export default function FranchiseOnboarding() {
                         </div>
                      ) : (
                         <>
-                           {step === 6 ? 'DEPLOY_PARTNER_NODE' : 'COMMIT_NEXT_PHASE'} <ChevronRight size={14} />
+                           {step === 6 ? 'Submit Application' : 'Continue'} <ChevronRight size={14} />
                         </>
                      )}
                      <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
@@ -337,11 +344,11 @@ export default function FranchiseOnboarding() {
           <div className="mt-8 flex items-center justify-center gap-6 opacity-30 italic">
              <div className="flex items-center gap-2">
                 <ShieldCheck size={10} className="text-emerald-500" />
-                <span className="text-[7.5px] font-black text-[var(--text-primary)] uppercase tracking-widest">TLS_1.3_AUTH_LAYER</span>
+                <span className="text-[7.5px] font-black text-[var(--text-primary)] uppercase tracking-widest">Secure Verification</span>
              </div>
              <div className="flex items-center gap-2">
                 <FileText size={10} className="text-emerald-500" />
-                <span className="text-[7.5px] font-black text-[var(--text-primary)] uppercase tracking-widest">AUDIT_POLICY_COMMITTED</span>
+                <span className="text-[7.5px] font-black text-[var(--text-primary)] uppercase tracking-widest">Partner Policy Applied</span>
              </div>
           </div>
         </div>

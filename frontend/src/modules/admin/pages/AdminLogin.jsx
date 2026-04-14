@@ -42,7 +42,7 @@ export default function AdminLogin() {
        if (success) {
          navigate('/admin/dashboard');
        } else {
-         setError('INVALID PROTOCOL: Access Denied. Verify root credentials.');
+         setError('Access Denied: Invalid admin credentials.');
          setIsLoading(false);
        }
     }, 1200);
@@ -83,7 +83,7 @@ export default function AdminLogin() {
               Flexigo <span className="text-emerald-500">Root.</span>
            </h1>
            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.4em] mt-3">
-              Master Command Entry
+              Administrator Login
            </p>
         </div>
 
@@ -100,7 +100,7 @@ export default function AdminLogin() {
                    type="email"
                    value={email}
                    onChange={(e) => setEmail(e.target.value)}
-                   placeholder="Root Address..."
+                   placeholder="Admin Email"
                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/40 transition-all placeholder:text-slate-600 placeholder:uppercase placeholder:tracking-widest"
                  />
               </div>
@@ -115,7 +115,7 @@ export default function AdminLogin() {
                    type="password"
                    value={password}
                    onChange={(e) => setPassword(e.target.value)}
-                   placeholder="Security Protocol..."
+                   placeholder="Password"
                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl pl-12 pr-4 py-4 text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/40 transition-all placeholder:text-slate-600 placeholder:uppercase placeholder:tracking-widest"
                  />
               </div>
@@ -148,7 +148,7 @@ export default function AdminLogin() {
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                  ) : (
                     <>
-                      Initialize Access
+                      Login
                       <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
                     </>
                  )}
@@ -160,7 +160,7 @@ export default function AdminLogin() {
         <div className="mt-12 pt-8 border-t border-white/5 flex items-center justify-between opacity-30">
            <div className="flex flex-col gap-1">
               <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Protocol</span>
-              <span className="text-[9px] font-black text-white uppercase italic">SSL_SECURED_0.8</span>
+              <span className="text-[9px] font-black text-white uppercase italic">Secure Access</span>
            </div>
            <div className="flex flex-col gap-1 items-end">
               <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">System Load</span>

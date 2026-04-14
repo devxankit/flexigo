@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useThemeStore } from "../store/themeStore";
@@ -6,6 +7,14 @@ import FranchiseHeader from "./FranchiseHeader";
 
 export default function FranchiseLayout() {
   const { theme } = useThemeStore();
+  
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
+    // Also set background color to match to prevent white overscroll
+    root.style.backgroundColor = theme === 'dark' ? '#020617' : '#F8FAFC';
+  }, [theme]);
 
   return (
     <div className={`flex h-screen w-full bg-[var(--bg-primary)] overflow-hidden transition-colors duration-300 ${theme}`}>
@@ -23,7 +32,7 @@ export default function FranchiseLayout() {
           <FranchiseHeader />
         </motion.div>
         
-        <main className="flex-1 overflow-y-auto no-scrollbar p-6 bg-[var(--bg-primary)] w-full w-full">
+        <main className="flex-1 overflow-y-auto overscroll-y-none no-scrollbar p-6 bg-[var(--bg-primary)] w-full w-full">
           <AnimatePresence mode="wait">
             <motion.div
               key={window.location.pathname}

@@ -53,7 +53,7 @@ export default function OnboardingKYC() {
       await new Promise(r => setTimeout(r, 1500));
       setKycStatus('verified');
       setLoading(false);
-      navigate('/rider/subscription');
+      navigate('/rider/plans');
     }
   };
 

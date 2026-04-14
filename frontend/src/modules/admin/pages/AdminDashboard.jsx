@@ -39,7 +39,7 @@ export default function AdminDashboard() {
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
-    console.log('Admin Network Sync:', newFilters);
+    console.log('Syncing Filters:', newFilters);
   };
 
 
@@ -87,7 +87,7 @@ export default function AdminDashboard() {
                onFilterChange={handleFilterChange}
                filters={[
                   { id: 'region', label: 'Region', options: ['North', 'West', 'South', 'Central'] },
-                  { id: 'integrity', label: 'Integrity', options: ['Optimal', 'Warning', 'Critical'] }
+                  { id: 'integrity', label: 'Health', options: ['Optimal', 'Warning', 'Critical'] }
                ]}
             />
             <div className="w-px h-5 bg-[var(--border-subtle)] mx-0.5" />
@@ -114,10 +114,10 @@ export default function AdminDashboard() {
 
       {/* Primary KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-         <AdminStatCard title="Revenue" value={`₹${(networkStats.grossRevenue / 100000).toFixed(1)}L`} trend="up" trendValue="+12%" icon={Zap} color="emerald" subtitle="MTD Earnings" />
-         <AdminStatCard title="On Road" value={networkStats.activeFleet} trend="up" trendValue="+5%" icon={Activity} color="blue" subtitle="Live Units" />
+         <AdminStatCard title="Revenue" value={`₹${(networkStats.grossRevenue / 100000).toFixed(1)}L`} trend="up" trendValue="+12%" icon={Zap} color="emerald" subtitle="Monthly Earnings" />
+         <AdminStatCard title="On Road" value={networkStats.activeFleet} trend="up" trendValue="+5%" icon={Activity} color="blue" subtitle="Active Vehicles" />
          <AdminStatCard title="Total Hubs" value={networkStats.totalHubs} icon={Warehouse} color="emerald" subtitle="Operational" />
-         <AdminStatCard title="Uptime" value={networkStats.avgUptime} icon={ShieldCheck} color="emerald" subtitle="Network L-99" />
+         <AdminStatCard title="Uptime" value={networkStats.avgUptime} icon={ShieldCheck} color="emerald" subtitle="Live Performance" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -133,8 +133,8 @@ export default function AdminDashboard() {
                      <TrendingUp size={16} />
                   </div>
                   <div>
-                     <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-wider">Revenue Growth Pulse</h3>
-                     <p className="text-[7px] font-bold text-[var(--text-tertiary)] uppercase mt-0.5">Yield Performance Trend</p>
+                     <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-wider">Revenue Breakdown</h3>
+                     <p className="text-[7px] font-bold text-[var(--text-tertiary)] uppercase mt-0.5">Performance trends over time</p>
                   </div>
                </div>
             </div>
@@ -218,8 +218,8 @@ export default function AdminDashboard() {
                   <Warehouse size={16} />
                </div>
                <div>
-                  <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-wider leading-none">Global Node Monitor</h3>
-                  <p className="text-[7px] font-bold text-[var(--text-tertiary)] uppercase mt-0.5 italic">Real-time Telemetry Service</p>
+                  <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-wider leading-none">Active Hub Locations</h3>
+                  <p className="text-[7px] font-bold text-[var(--text-tertiary)] uppercase mt-0.5 italic">Live status of all centers</p>
                </div>
             </div>
              <button 
@@ -234,7 +234,7 @@ export default function AdminDashboard() {
             <table className="w-full">
                <thead>
                   <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
-                     {['Hub Identity', 'Location', 'Assets', 'MTD Yield', 'Integrity', 'Status'].map((header) => (
+                     {['Hub Name', 'Location', 'Assets', 'Earnings', 'Health', 'Status'].map((header) => (
                         <th key={header} className="text-left py-3 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">
                            {header}
                         </th>

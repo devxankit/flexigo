@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import AdminSidebar from './AdminSidebar';
 import { useAdminAuthStore } from '../store/adminAuthStore';
@@ -9,6 +9,13 @@ import { Search, Bell, Settings, Command, Sun, Moon } from 'lucide-react';
 export default function AdminLayout() {
   const { isAuthenticated, user } = useAdminAuthStore();
   const { theme, toggleTheme } = useAdminThemeStore();
+  
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
+    root.style.backgroundColor = theme === 'dark' ? '#020617' : '#F8FAFC';
+  }, [theme]);
 
   if (!isAuthenticated) {
     return <Navigate to="/admin/login" replace />;
@@ -32,7 +39,7 @@ export default function AdminLayout() {
                     <Search size={14} />
                  </div>
                  <input 
-                   placeholder="Search Network Assets, Hubs, or Subscribers... [⌘K]" 
+                   placeholder="Search Hubs, Vehicles, or Staff... [⌘K]" 
                    className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl pl-10 pr-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500/30 transition-all placeholder:text-[var(--text-tertiary)]/50"
                  />
                  <div className="absolute right-3 inset-y-0 flex items-center pointer-events-none">
@@ -45,7 +52,7 @@ export default function AdminLayout() {
               {/* Network Status Active Badge */}
               <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-emerald-500/5 border border-emerald-500/10 rounded-full">
                  <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]" />
-                 <span className="text-[9px] font-black uppercase text-emerald-500 tracking-widest">Network Live</span>
+                 <span className="text-[9px] font-black uppercase text-emerald-500 tracking-widest">Status: Active</span>
               </div>
               
               <div className="flex items-center gap-1">
@@ -102,8 +109,8 @@ export default function AdminLayout() {
 
               <div className="flex items-center gap-3 pl-2">
                  <div className="flex flex-col text-right hidden lg:flex">
-                    <span className="text-xs font-black text-[var(--text-primary)] hover:text-emerald-500 cursor-pointer transition-colors leading-none">{user?.name || 'Root Admin'}</span>
-                    <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest leading-none mt-1">Super User</span>
+                    <span className="text-xs font-black text-[var(--text-primary)] hover:text-emerald-500 cursor-pointer transition-colors leading-none">{user?.name || 'Admin Console'}</span>
+                    <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest leading-none mt-1">Administrator</span>
                  </div>
                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 border border-white/10 flex items-center justify-center shadow-lg shadow-emerald-950/20 cursor-help group relative">
                     <span className="font-black text-xs text-white">RA</span>
@@ -114,7 +121,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Dynamic Viewport */}
-        <main className="flex-1 overflow-y-auto no-scrollbar pt-8 px-10 pb-20 relative bg-[var(--bg-primary)] transition-colors duration-300">
+        <main className="flex-1 overflow-y-auto overscroll-y-none no-scrollbar pt-8 px-10 pb-20 relative bg-[var(--bg-primary)] transition-colors duration-300">
            {/* Discrete Grid Pattern Backdrop */}
            <div className="absolute inset-0 bg-[radial-gradient(#10b981_0.5px,transparent_0.5px)] [background-size:24px_24px] opacity-[0.03] pointer-events-none" />
            

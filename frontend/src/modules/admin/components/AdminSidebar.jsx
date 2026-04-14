@@ -33,12 +33,12 @@ import logo from '../../../assets/logo.png';
 
 const navigationGroups = [
   {
-    title: "Intelligence",
+    title: "Insights",
     items: [
       { id: 'dashboard', label: 'Overview', icon: LayoutDashboard, path: '/admin/dashboard' },
-      { id: 'analysis', label: 'Deep Analytics', icon: BarChart3, path: '/admin/analytics' },
-      { id: 'vehicle-analytics', label: 'Vehicle Insights', icon: Settings, path: '/admin/vehicle-analytics' },
-      { id: 'rider-behaviour', label: 'Rider Behavior', icon: Target, path: '/admin/rider-behaviour' },
+      { id: 'analysis', label: 'Platform Analytics', icon: BarChart3, path: '/admin/analytics' },
+      { id: 'vehicle-analytics', label: 'Vehicle Stats', icon: Settings, path: '/admin/vehicle-analytics' },
+      { id: 'rider-behaviour', label: 'Riders', icon: Target, path: '/admin/rider-behaviour' },
     ]
   },
   {
@@ -76,7 +76,7 @@ const navigationGroups = [
       { id: 'compliance', label: 'Compliance', icon: ClipboardCheck, path: '/admin/compliance' },
       { id: 'engagement', label: 'Engagement & CRM', icon: Ticket, path: '/admin/engagement' },
       { id: 'security', label: 'Security & Audit', icon: Lock, path: '/admin/security' },
-      { id: 'notifications', label: 'Alert Center', icon: Bell, path: '/admin/notifications' },
+      { id: 'notifications', label: 'Notifications', icon: Bell, path: '/admin/notifications' },
     ]
   }
 ];
@@ -99,7 +99,7 @@ export default function AdminSidebar() {
           {!collapsed && (
             <div className="flex flex-col leading-none">
                <h2 className="text-sm font-bold tracking-tight text-[var(--text-primary)] uppercase">FLEXIGO <span className="text-emerald-500">ROOT</span></h2>
-               <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-[0.2em]">Command Center</p>
+               <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-[0.2em]">Portal Console</p>
             </div>
           )}
         </div>
@@ -163,7 +163,7 @@ export default function AdminSidebar() {
               {!collapsed && (
                 <div className="flex-1 min-w-0">
                    <p className="text-[11px] font-bold text-[var(--text-primary)] truncate uppercase tracking-tight">{user?.name || 'Administrator'}</p>
-                   <p className="text-[8px] font-bold text-emerald-500 uppercase tracking-widest">Root Access</p>
+                   <p className="text-[8px] font-bold text-emerald-500 uppercase tracking-widest">Admin Account</p>
                 </div>
               )}
               {!collapsed && (

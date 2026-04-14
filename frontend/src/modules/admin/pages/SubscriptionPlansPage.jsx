@@ -23,6 +23,14 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
 
+const initialFranchisePlans = [
+  { id: "FRAN-025", name: "Tier 1: 25 Vehicles", type: "Franchise", price: 15000, deposit: 10000, features: ["Up to 25 Vehicles", "Priority Maintenance", "Basic Hub Dashboard"], status: "active" },
+  { id: "FRAN-050", name: "Tier 2: 50 Vehicles", type: "Franchise", price: 28000, deposit: 20000, features: ["Up to 50 Vehicles", "Assigned Fleet Manager", "Advanced Analytics"], status: "active" },
+  { id: "FRAN-100", name: "Tier 3: 100 Vehicles", type: "Franchise", price: 52000, deposit: 40000, features: ["Up to 100 Vehicles", "Regional Support Hub", "Full Operation Control"], status: "active" },
+  { id: "FRAN-150", name: "Tier 4: 150 Vehicles", type: "Franchise", price: 75000, deposit: 60000, features: ["Up to 150 Vehicles", "Dedicated Ops Lead", "Custom Billing Solutions"], status: "active" },
+  { id: "FRAN-200", name: "Tier 5: 200 Vehicles", type: "Franchise", price: 95000, deposit: 80000, features: ["Up to 200 Vehicles", "Strategic Growth Partner", "Enterprise API Access"], status: "active" },
+];
+
 const initialPlans = [
   { id: 'PLAN-001', name: 'Daily Quick', type: 'Daily', price: 250, deposit: 500, features: ['24h Access', 'Basic Support', 'Standard Hub Pickups'], status: 'active' },
   { id: 'PLAN-002', name: 'Weekly Professional', type: 'Weekly', price: 1450, deposit: 2000, features: ['Priority Support', 'Unlimited Swaps', 'Roadside Assist'], status: 'active' },
@@ -30,7 +38,13 @@ const initialPlans = [
 ];
 
 export default function SubscriptionPlansPage() {
-  const [plans, setPlans] = useState(initialPlans);
+  const [activeTab, setActiveTab] = useState('Rider');
+  const [riderPlans, setRiderPlans] = useState(initialPlans);
+  const [franchisePlans, setFranchisePlans] = useState(initialFranchisePlans);
+  
+  const plans = activeTab === 'Rider' ? riderPlans : franchisePlans;
+  const setPlans = activeTab === 'Rider' ? setRiderPlans : setFranchisePlans;
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
   const [formData, setFormData] = useState({ name: '', type: 'Daily', price: '', deposit: '', features: '' });
@@ -80,15 +94,15 @@ export default function SubscriptionPlansPage() {
     <div className="space-y-6 pb-12">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-         <div className="space-y-0.5">
+          <div className="space-y-0.5">
             <div className="flex items-center gap-2">
                <div className="w-1 h-5 bg-emerald-600 rounded-full" />
                <h1 className="text-xl font-black tracking-tighter text-[var(--text-primary)] uppercase italic">
-                  Subscription <span className="text-emerald-500">Engine</span>
+                  Subscription <span className="text-emerald-500">Plans</span>
                </h1>
             </div>
             <p className="text-[8px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] ml-3">
-               Pricing Protocols & Revenue Tier Management
+               Manage rider and franchise subscriptions
             </p>
          </div>
          
@@ -96,7 +110,7 @@ export default function SubscriptionPlansPage() {
            onClick={() => handleOpenModal()}
            className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95 flex items-center gap-1.5"
          >
-            <Plus size={12} strokeWidth={3} /> Create Tier
+            <Plus size={12} strokeWidth={3} /> Add New Plan
          </button>
       </div>
 
@@ -108,9 +122,26 @@ export default function SubscriptionPlansPage() {
          <AdminStatCard title="Growth Tier" value="24%" icon={TrendingUp} color="emerald" subtitle="Monthly Expansion" />
       </div>
 
+      {/* Tab Selector */}
+      <div className="flex bg-[var(--bg-secondary)] border border-[var(--border-subtle)] p-1 rounded-xl shadow-inner w-fit">
+        {['Rider', 'Franchise'].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-6 py-2 rounded-lg text-[9px] font-black uppercase tracking-[0.3em] transition-all italic leading-none ${
+              activeTab === tab 
+              ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-950/40 border border-emerald-500/20' 
+              : 'text-[var(--text-tertiary)] hover:text-white hover:bg-white/5 border border-transparent'
+            }`}
+          >
+            {tab} Plans
+          </button>
+        ))}
+      </div>
+
       {/* Plans Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-         <AnimatePresence mode='popLayout'>
+         <AnimatePresence mode="popLayout">
             {plans.map((plan) => (
                <motion.div 
                  layout
@@ -152,7 +183,7 @@ export default function SubscriptionPlansPage() {
                   </div>
 
                   <div className="space-y-2 mb-6 relative z-10">
-                     <p className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-50">Protocol Features</p>
+                     <p className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-50">Included Service & Features</p>
                      <div className="space-y-1.5">
                         {plan.features.map((f, i) => (
                            <div key={i} className="flex items-center gap-2">
@@ -192,9 +223,9 @@ export default function SubscriptionPlansPage() {
                   <div className="flex items-center justify-between mb-8 relative z-10 border-b border-[var(--border-subtle)] pb-4">
                      <div className="space-y-1">
                         <h2 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tighter italic leading-none">
-                           {editingPlan ? 'Configure' : 'Deploy'} <span className="text-emerald-500">Tier Node</span>
-                        </h2>
-                        <p className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-50">Node Registry: SUBS_ENG_6.0</p>
+                            {editingPlan ? 'Edit' : 'Create'} <span className="text-emerald-500">Subscription Plan</span>
+                         </h2>
+                         <p className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-50">System Version v6.0</p>
                      </div>
                      <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-rose-600/10 hover:text-rose-500 transition-all rounded-lg">
                         <X size={18} />
@@ -248,7 +279,7 @@ export default function SubscriptionPlansPage() {
                            />
                         </div>
                         <div className="col-span-2 space-y-2">
-                           <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic leading-none">Service Protocols (Features, comma separated)</label>
+                            <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic leading-none">Included Features (comma separated)</label>
                            <textarea 
                               required
                               rows={2}
@@ -264,7 +295,7 @@ export default function SubscriptionPlansPage() {
                         type="submit"
                         className="w-full py-4 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.3em] shadow-lg shadow-emerald-950/20 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-3"
                      >
-                        <Zap size={16} fill="white" /> Execute Tier Deployment
+                        <Zap size={16} fill="white" /> Save Plan
                      </button>
                   </form>
                </motion.div>

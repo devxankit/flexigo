@@ -55,9 +55,11 @@ export default function HomeDashboard() {
                  Hello, <span className="text-flexigo-teal">{user?.name?.split(' ')[0] || 'Rider'}</span>!
                </h1>
              </div>
-             <p className={`text-[10px] font-black uppercase tracking-[0.2em] ml-4 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                Active Plan: <span className="text-flexigo-teal font-bold">{activePlan?.name || 'Weekly Pro'}</span>
-             </p>
+             {activePlan && (
+               <p className={`text-[10px] font-black uppercase tracking-[0.2em] ml-4 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                  Active Plan: <span className="text-flexigo-teal font-bold">{activePlan?.name}</span>
+               </p>
+             )}
            </motion.div>
 
            <div className={`p-1 rounded-full border flex items-center gap-2 pl-3 pr-1 backdrop-blur-xl ${
@@ -122,27 +124,29 @@ export default function HomeDashboard() {
              </GlassCard>
            </motion.div>
 
-           <motion.div
-             initial={{ opacity: 0, x: 10 }}
-             animate={{ opacity: 1, x: 0 }}
-             transition={{ delay: 0.35 }}
-             onClick={() => navigate('/rider/plans')}
-             className="cursor-pointer"
-           >
-             <GlassCard className={`p-4 transition-all duration-500 hover:shadow-2xl border flex flex-col gap-1.5 ${
-               isDark ? 'bg-white/[0.03] border-white/10' : 'bg-white border-slate-200 shadow-sm'
-             }`}>
-                <div className="flex items-center justify-between">
-                   <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#00D4FF" strokeWidth="2.5" className="w-4 h-4">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                   </div>
-                   <div className="text-[9px] font-black text-[#00D4FF] uppercase tracking-tighter shadow-sm">8 Days left</div>
-                </div>
-                <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>Current Plan</span>
-             </GlassCard>
-           </motion.div>
+           {activePlan && (
+             <motion.div
+               initial={{ opacity: 0, x: 10 }}
+               animate={{ opacity: 1, x: 0 }}
+               transition={{ delay: 0.35 }}
+               onClick={() => navigate('/rider/plans')}
+               className="cursor-pointer"
+             >
+               <GlassCard className={`p-4 transition-all duration-500 hover:shadow-2xl border flex flex-col gap-1.5 ${
+                 isDark ? 'bg-white/[0.03] border-white/10' : 'bg-white border-slate-200 shadow-sm'
+               }`}>
+                  <div className="flex items-center justify-between">
+                     <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#00D4FF" strokeWidth="2.5" className="w-4 h-4">
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                     </div>
+                     <div className="text-[9px] font-black text-[#00D4FF] uppercase tracking-tighter shadow-sm">Active</div>
+                  </div>
+                  <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>Current Plan</span>
+               </GlassCard>
+             </motion.div>
+           )}
         </div>
       </div>
 

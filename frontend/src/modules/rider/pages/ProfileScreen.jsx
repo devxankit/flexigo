@@ -3,12 +3,14 @@ import { PageWrapper } from '../components/PageWrapper';
 import { GlassCard } from '../components/GlassCard';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
+import { useSubscriptionStore } from '../store/subscriptionStore';
 import { useNavigate } from 'react-router-dom';
 
 export default function ProfileScreen() {
   const { user, logout, kycStatus } = useAuthStore();
   const { theme } = useThemeStore();
   const navigate = useNavigate();
+  const { activePlan } = useSubscriptionStore();
   const isDark = theme === 'dark';
 
   const handleLogout = () => {
@@ -22,13 +24,13 @@ export default function ProfileScreen() {
   };
 
   const sections = [
-    {
+    ...(activePlan ? [{
       title: 'Current Subscription',
       items: [
-        { label: 'My Plan', value: 'Weekly Premium', color: '#39FF14' },
-        { label: 'Usage History', value: '18 Days' }
+        { label: 'My Plan', value: activePlan.name, color: '#39FF14' },
+        { label: 'Usage Status', value: 'Active' }
       ]
-    },
+    }] : []),
     {
       title: 'Verified Documents',
       items: [

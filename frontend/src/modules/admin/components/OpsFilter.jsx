@@ -93,7 +93,7 @@ export default function OpsFilter({
             className="absolute top-full right-0 mt-3 w-80 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-[100] overflow-hidden"
           >
             <div className="flex border-b border-[var(--border-subtle)]">
-              <button onClick={() => setActiveTab('date')} className={`flex-1 py-3 text-[9px] font-black uppercase tracking-[0.2em] transition-all ${activeTab === 'date' ? 'text-emerald-500 border-b-2 border-emerald-500 bg-emerald-500/5' : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'}`}>Time Window</button>
+              <button onClick={() => setActiveTab('date')} className={`flex-1 py-3 text-[9px] font-black uppercase tracking-[0.2em] transition-all ${activeTab === 'date' ? 'text-emerald-500 border-b-2 border-emerald-500 bg-emerald-500/5' : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'}`}>Date Range</button>
               <button onClick={() => setActiveTab('metrics')} className={`flex-1 py-3 text-[9px] font-black uppercase tracking-[0.2em] transition-all ${activeTab === 'metrics' ? 'text-emerald-500 border-b-2 border-emerald-500 bg-emerald-500/5' : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'}`}>Metrics</button>
             </div>
             <div className="p-5 max-h-[350px] overflow-y-auto no-scrollbar">

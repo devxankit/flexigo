@@ -15,10 +15,10 @@ import { useFranchiseNotificationStore } from '../store/notificationStore';
 import NotificationItem from '../components/NotificationItem';
 
 const filterTabs = [
-  { id: 'all', label: 'ALL_EVENTS' },
-  { id: 'unread', label: 'UNREAD' },
-  { id: 'danger', label: 'CRITICAL' },
-  { id: 'warning', label: 'WARNINGS' },
+  { id: 'all', label: 'All' },
+  { id: 'unread', label: 'Unread' },
+  { id: 'danger', label: 'Critical' },
+  { id: 'warning', label: 'Warnings' },
 ];
 
 export default function NotificationsPage() {
@@ -53,28 +53,28 @@ export default function NotificationsPage() {
             <div className="flex items-center gap-2">
                <div className="w-1 h-3 bg-emerald-500 rounded-full" />
                <h1 className="text-xl font-black tracking-tighter text-[var(--text-primary)] uppercase italic leading-none">
-                  ALERT <span className="text-emerald-500">CONSOLE</span>
+                  Hub <span className="text-emerald-500">Notifications</span>
                </h1>
             </div>
             <p className="text-[7.5px] font-black uppercase tracking-[0.3em] text-[var(--text-tertiary)] ml-3 italic opacity-60 leading-none mt-1">
-               OPERATIONAL_STREAM • NODE_ACTIVITY_REGISTRY
+               Stay updated with system activities
             </p>
          </div>
 
          <button 
            onClick={markAllRead}
-           className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600-white hover:shadow-lg hover:shadow-emerald-950/40 transition-all shadow-inner italic leading-none"
+           className="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white hover:shadow-lg hover:shadow-emerald-950/40 transition-all shadow-inner italic leading-none rounded-lg"
          >
-           <CheckCircle2 size={12} strokeWidth={3} /> MARK_ALL_RECONCILED
+           <CheckCircle2 size={12} strokeWidth={3} /> Mark all as read
          </button>
       </div>
 
       {/* Metric Overview */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
          {[
-           { label: 'PRIORITY_ALERTS', val: '02', color: 'rose', icon: AlertTriangle, status: 'CRIT' },
-           { label: 'OPS_MONITORING', val: '14', color: 'blue', icon: Zap, status: 'LIVE' },
-           { label: 'ACTIVE_UNREAD', val: unreadCount.toString().padStart(2, '0'), color: 'emerald', icon: Bell, status: 'SYNC' }
+           { label: 'Priority Alerts', val: '02', color: 'rose', icon: AlertTriangle, status: 'Alerts' },
+           { label: 'Operations', val: '14', color: 'blue', icon: Zap, status: 'Active' },
+           { label: 'Unread Messages', val: unreadCount.toString().padStart(2, '0'), color: 'emerald', icon: Bell, status: 'Syncing' }
          ].map((stat) => {
            const classes = getMetricClasses(stat.color);
            return (
@@ -101,7 +101,7 @@ export default function NotificationsPage() {
                 onClick={() => setFilter(tab.id)}
                 className={`px-4 py-2 rounded-lg text-[7.5px] font-black uppercase tracking-[0.3em] transition-all duration-300 italic leading-none ${
                   filter === tab.id 
-                  ? 'bg-emerald-600-white shadow-lg shadow-emerald-950/40 border border-emerald-500/20' 
+                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-950/40 border border-emerald-500/20' 
                   : 'text-[var(--text-tertiary)] hover:text-white hover:bg-white/5 border border-transparent'
                 }`}
               >
@@ -115,8 +115,8 @@ export default function NotificationsPage() {
             <input 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="SEARCH ALERT PAYLOAD INDEXED..." 
-              className="w-full pl-10 pr-4 py-2.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl text-[8px] font-black text-[var(--text-primary)] focus:outline-none focus:border-emerald-500/30 transition-all placeholder:text-slate-600 uppercase tracking-[0.3em] italic shadow-inner leading-none"
+              placeholder="Search notifications..." 
+              className="w-full pl-10 pr-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[8px] font-black text-[var(--text-primary)] focus:outline-none focus:border-emerald-500/30 transition-all placeholder:text-slate-600 uppercase tracking-[0.3em] italic shadow-inner leading-none"
             />
          </div>
       </div>
@@ -142,8 +142,8 @@ export default function NotificationsPage() {
                   <Bell size={20} strokeWidth={2} className="group-hover:text-emerald-500 transition-colors" />
                </div>
                <div className="space-y-1.5">
-                  <p className="text-[9.5px] font-black uppercase tracking-[0.3em] text-[var(--text-primary)] italic leading-none">OPERATIONAL_STREAM_RECONCILED</p>
-                  <p className="text-[7px] font-black text-emerald-500 uppercase tracking-[0.3em] opacity-80 italic leading-none">SYSTEM_NODE_STATUS: OPTIMAL</p>
+                  <p className="text-[9.5px] font-black uppercase tracking-[0.3em] text-[var(--text-primary)] italic leading-none">All notifications cleared</p>
+                  <p className="text-[7px] font-black text-emerald-500 uppercase tracking-[0.3em] opacity-80 italic leading-none">No new alerts at the moment</p>
                </div>
             </motion.div>
           )}
