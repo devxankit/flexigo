@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, 
@@ -20,17 +20,45 @@ import {
 } from 'lucide-react';
 import GlassTable from '../components/GlassTable';
 import StatusBadge from '../components/StatusBadge';
-
-const initialStaff = [
-  { id: 'S-001', name: 'Vivek Sharma', role: 'Partner', phone: '+91 91234 56789', lastActive: '2026-03-31T14:45:00', status: 'active', permissions: 'Full Root Access' },
-  { id: 'S-002', name: 'Mehul Manager', role: 'Manager', phone: '+91 99887 76655', lastActive: '2026-03-31T14:30:00', status: 'active', permissions: 'Ops, Fleet, Logistics' },
-  { id: 'S-003', name: 'Rahul Attendant', role: 'Attendant', phone: '+91 77665 54433', lastActive: '2026-03-31T12:00:00', status: 'active', permissions: 'Intake, Diagnostics' },
-  { id: 'S-004', name: 'Ankita Staff', role: 'Attendant', phone: '+91 88776 65544', lastActive: '2026-03-30T10:00:00', status: 'paused', permissions: 'Intake, Logistics' },
-];
+import { useStaffStore } from '../store/staffStore';
+import { useFranchiseAuthStore } from '../store/franchiseAuthStore';
 
 export default function StaffManagement() {
-  const [staff, setStaff] = useState(initialStaff);
+  const { staff, fetchStaff, addStaff, deleteStaff, updateStaffStatus } = useStaffStore();
+  const { franchise } = useFranchiseAuthStore();
   const [isAddStaffOpen, setAddStaffOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    role: 'Attendant',
+  });
+
+  useEffect(() => {
+    if (franchise?._id || franchise?.id) {
+        fetchStaff(franchise._id || franchise.id);
+    }
+  }, [franchise, fetchStaff]);
+
+  const handleAddStaff = async () => {
+    const res = await addStaff(formData);
+    if (res.success) {
+        setAddStaffOpen(false);
+        setFormData({ name: '', phone: '', role: 'Attendant' });
+    } else {
+        alert(res.message);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to remove this personnel node?')) {
+        await deleteStaff(id);
+    }
+  };
+
+  const handleStatusToggle = async (id, currentStatus) => {
+    const newStatus = currentStatus === 'active' ? 'paused' : 'active';
+    await updateStaffStatus(id, newStatus);
+  };
 
   const columns = [
     {
@@ -83,10 +111,16 @@ export default function StaffManagement() {
       accessor: 'actions',
       render: (row) => (
         <div className="flex items-center gap-1.5">
-           <button className="p-1.5 border border-[var(--border-subtle)] rounded hover:bg-emerald-600/10 hover:border-emerald-500/20 transition-all text-[var(--text-tertiary)] hover:text-emerald-500 shadow-inner group">
-              <ShieldCheck size={12} strokeWidth={3} className="group-hover:scale-110 transition-transform" />
+           <button 
+             onClick={() => handleStatusToggle(row._id || row.id, row.status)}
+             className={`p-1.5 border border-[var(--border-subtle)] rounded transition-all shadow-inner group ${row.status === 'active' ? 'hover:bg-amber-600/10 hover:border-amber-500/20 text-[var(--text-tertiary)] hover:text-amber-500' : 'hover:bg-emerald-600/10 hover:border-emerald-500/20 text-[var(--text-tertiary)] hover:text-emerald-500'}`}
+           >
+              {row.status === 'active' ? <Lock size={12} strokeWidth={3} /> : <Unlock size={12} strokeWidth={3} />}
            </button>
-           <button className="p-1.5 border border-[var(--border-subtle)] rounded hover:bg-rose-500/10 hover:border-rose-500/20 transition-all text-[var(--text-tertiary)] hover:text-rose-500 shadow-inner group">
+           <button 
+             onClick={() => handleDelete(row._id || row.id)}
+             className="p-1.5 border border-[var(--border-subtle)] rounded hover:bg-rose-500/10 hover:border-rose-500/20 transition-all text-[var(--text-tertiary)] hover:text-rose-500 shadow-inner group"
+           >
               <Trash2 size={12} strokeWidth={3} className="group-hover:scale-110 transition-transform" />
            </button>
         </div>
@@ -120,33 +154,41 @@ export default function StaffManagement() {
 
       {/* Access Statistics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-         <div className="p-3 rounded-xl bg-black border border-[var(--border-subtle)] flex flex-col gap-2 shadow-inner hover:border-emerald-500/20 transition-all relative overflow-hidden group">
+          <div className="p-3 rounded-xl bg-black border border-[var(--border-subtle)] flex flex-col gap-2 shadow-inner hover:border-emerald-500/20 transition-all relative overflow-hidden group">
             <div className="text-emerald-500 flex items-center gap-1.5 relative z-10">
                <ShieldAlert size={10} strokeWidth={3} />
                <span className="text-[6.5px] font-black uppercase tracking-[0.2em] opacity-60 text-emerald-500 italic leading-none">LEAD_PARTNERS</span>
             </div>
-            <p className="text-xl font-black text-white italic leading-none relative z-10">01</p>
+            <p className="text-xl font-black text-white italic leading-none relative z-10">
+                {staff.filter(s => s.role === 'Partner').length.toString().padStart(2, '0')}
+            </p>
          </div>
          <div className="p-3 rounded-xl bg-black border border-[var(--border-subtle)] flex flex-col gap-2 shadow-inner hover:border-blue-500/20 transition-all relative overflow-hidden group">
             <div className="text-blue-500 flex items-center gap-1.5 relative z-10">
                <Settings size={10} strokeWidth={3} />
                <span className="text-[6.5px] font-black uppercase tracking-[0.2em] opacity-60 text-blue-500 italic leading-none">OPS_MANAGERS</span>
             </div>
-            <p className="text-xl font-black text-white italic leading-none relative z-10">01</p>
+            <p className="text-xl font-black text-white italic leading-none relative z-10">
+                {staff.filter(s => s.role === 'Manager').length.toString().padStart(2, '0')}
+            </p>
          </div>
          <div className="p-3 rounded-xl bg-black border border-[var(--border-subtle)] flex flex-col gap-2 shadow-inner hover:border-slate-500/20 transition-all relative overflow-hidden group">
             <div className="text-white flex items-center gap-1.5 relative z-10">
                <Users size={10} strokeWidth={3} />
                <span className="text-[6.5px] font-black uppercase tracking-[0.2em] opacity-60 text-white italic leading-none">TOTAL_PERSONNEL</span>
             </div>
-            <p className="text-xl font-black text-white italic leading-none relative z-10">04</p>
+            <p className="text-xl font-black text-white italic leading-none relative z-10">
+                {staff.length.toString().padStart(2, '0')}
+            </p>
          </div>
          <div className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-violet-500/20 border-l-2 border-l-violet-500 flex flex-col gap-2 shadow-inner hover:border-violet-500/40 transition-all relative overflow-hidden group">
             <div className="text-violet-500 flex items-center gap-1.5 relative z-10">
                <Lock size={10} strokeWidth={3} />
                <span className="text-[6.5px] font-black uppercase tracking-[0.2em] opacity-80 text-violet-500 italic leading-none">RESTRICTED_ACCESS</span>
             </div>
-            <p className="text-xl font-black text-violet-500 italic leading-none relative z-10">0</p>
+            <p className="text-xl font-black text-violet-500 italic leading-none relative z-10">
+                {staff.filter(s => s.status === 'paused').length}
+            </p>
          </div>
       </div>
 
@@ -205,7 +247,13 @@ export default function StaffManagement() {
                      <p className="text-[7.5px] font-black uppercase tracking-[0.2em] text-violet-500 italic ml-1">PERSONNEL_LEGAL_NAME</p>
                      <div className="flex items-center gap-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] p-2 rounded-xl focus-within:border-violet-500/30 transition-all shadow-inner">
                         <User size={12} className="text-[var(--text-tertiary)]" strokeWidth={3} />
-                        <input type="text" placeholder="RAHUL_ATTENDANT..." className="bg-transparent border-none outline-none text-[var(--text-primary)] text-[9px] font-black tracking-widest italic w-full placeholder:text-[var(--text-tertiary)]/50" />
+                        <input 
+                          type="text" 
+                          placeholder="RAHUL_ATTENDANT..." 
+                          value={formData.name}
+                          onChange={(e) => setFormData({...formData, name: e.target.value})}
+                          className="bg-transparent border-none outline-none text-[var(--text-primary)] text-[9px] font-black tracking-widest italic w-full placeholder:text-[var(--text-tertiary)]/50" 
+                        />
                      </div>
                   </div>
 
@@ -213,16 +261,27 @@ export default function StaffManagement() {
                      <p className="text-[7.5px] font-black uppercase tracking-[0.2em] text-violet-500 italic ml-1">SECURE_CONTACT_NODE</p>
                      <div className="flex items-center gap-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] p-2 rounded-xl focus-within:border-violet-500/30 transition-all shadow-inner">
                         <Smartphone size={12} className="text-[var(--text-tertiary)]" strokeWidth={3} />
-                        <input type="text" placeholder="+91_00000_00000" className="bg-transparent border-none outline-none text-[var(--text-primary)] text-[9px] font-black tracking-widest italic w-full placeholder:text-[var(--text-tertiary)]/50" />
+                        <input 
+                          type="text" 
+                          placeholder="+91_00000_00000" 
+                          value={formData.phone}
+                          onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                          className="bg-transparent border-none outline-none text-[var(--text-primary)] text-[9px] font-black tracking-widest italic w-full placeholder:text-[var(--text-tertiary)]/50" 
+                        />
                      </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                      <div className="space-y-1.5 px-1">
                         <p className="text-[7.5px] font-black uppercase tracking-[0.2em] text-violet-500 italic ml-1">ASSIGNED_PRIVILEGE</p>
-                        <select className="bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] p-2 rounded-xl text-[var(--text-primary)] text-[7.5px] font-black tracking-widest w-full outline-none focus:border-violet-500/30 transition-all shadow-inner appearance-none cursor-pointer italic">
-                           <option>ATTENDANT</option>
-                           <option>MANAGER</option>
+                        <select 
+                          value={formData.role}
+                          onChange={(e) => setFormData({...formData, role: e.target.value})}
+                          className="bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] p-2 rounded-xl text-[var(--text-primary)] text-[7.5px] font-black tracking-widest w-full outline-none focus:border-violet-500/30 transition-all shadow-inner appearance-none cursor-pointer italic"
+                        >
+                           <option value="Attendant">ATTENDANT</option>
+                           <option value="Manager">MANAGER</option>
+                           <option value="Partner">PARTNER</option>
                         </select>
                      </div>
                      <div className="space-y-1.5 px-1">
@@ -242,7 +301,7 @@ export default function StaffManagement() {
                         DISCARD
                      </button>
                      <button 
-                        onClick={() => setAddStaffOpen(false)}
+                        onClick={handleAddStaff}
                         className="flex-1 py-2.5 rounded-xl bg-violet-600 text-white text-[7.5px] font-black uppercase tracking-[0.3em] hover:bg-violet-500 transition-all shadow-lg active:scale-95 shadow-violet-950/20 italic"
                      >
                         CONFIRM_NODE

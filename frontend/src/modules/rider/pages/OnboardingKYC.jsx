@@ -31,9 +31,18 @@ export default function OnboardingKYC() {
   const adhaarBackRef = useRef(null);
   const licenseRef = useRef(null);
 
-  const { setKycStatus } = useAuthStore();
+  const { updateKYC, phone } = useAuthStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
+
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
 
   const handleFileChange = (type, e) => {
     const file = e.target.files[0];
@@ -44,16 +53,29 @@ export default function OnboardingKYC() {
 
   const handleNext = async () => {
     if (currentStep < steps.length) {
-      setLoading(true);
-      await new Promise(r => setTimeout(r, 1000));
       setCurrentStep(prev => prev + 1);
-      setLoading(false);
     } else {
       setLoading(true);
-      await new Promise(r => setTimeout(r, 1500));
-      setKycStatus('verified');
-      setLoading(false);
-      navigate('/rider/plans');
+      try {
+          const kycData = {
+              phone,
+              selfie: await fileToBase64(uploads.selfie),
+              aadhaarFront: await fileToBase64(uploads.aadhaarFront),
+              aadhaarBack: await fileToBase64(uploads.aadhaarBack),
+              drivingLicense: await fileToBase64(uploads.license)
+          };
+
+          const result = await updateKYC(kycData);
+          if (result.success) {
+              navigate('/rider/plans');
+          } else {
+              alert(result.message);
+          }
+      } catch (error) {
+          alert('Error processing files. Please try again.');
+      } finally {
+          setLoading(false);
+      }
     }
   };
 

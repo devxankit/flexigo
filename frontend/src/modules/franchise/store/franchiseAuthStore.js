@@ -1,27 +1,94 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import api from '../../../lib/axios';
 
 export const useFranchiseAuthStore = create(
   persist(
-    (set) => ({
+    (set, get) => ({
       isAuthenticated: false,
-      user: null, // { id: 'F-001', name: 'Vivek Sharma', role: 'Partner', hub: 'FlexiHub Koramangala' }
-      role: null, // Partner | Manager | Attendant
-      hubId: 'HUB-KOR-01',
+      user: null,
+      phone: null,
+      otpSent: false,
+      registrationData: {},
+      currentStep: 1,
+      isVerified: false,
+      token: null,
 
-      login: (credentials) => {
-        // Mock login
-        const mockUser = {
-          id: 'F-001',
-          name: 'Vivek Sharma',
-          role: credentials.role || 'Partner',
-          hub: 'FlexiHub Koramangala',
-        };
-        set({ isAuthenticated: true, user: mockUser, role: mockUser.role });
+      setStep: (step) => set({ currentStep: step }),
+      setIsVerified: (status) => set({ isVerified: status }),
+      setPhone: (phone) => set({ phone }),
+
+      sendOTP: async (phone) => {
+        try {
+          const res = await api.post('/franchise/auth/send-otp', { phone });
+          if (res.data.success) {
+            set({ phone, otpSent: true });
+            return { success: true };
+          }
+        } catch (error) {
+          return { success: false, message: error.response?.data?.message || 'Failed to send OTP' };
+        }
       },
 
-      logout: () => set({ isAuthenticated: false, user: null, role: null }),
+      verifyOTP: async (otp) => {
+        try {
+          const { phone } = get();
+          const res = await api.post('/franchise/auth/verify-otp', { phone, otp });
+          if (res.data.success) {
+            set({ 
+              isAuthenticated: true, 
+              user: res.data.franchise, 
+              token: res.data.token 
+            });
+            return { success: true, franchise: res.data.franchise };
+          }
+        } catch (error) {
+          return { success: false, message: error.response?.data?.message || 'Invalid OTP' };
+        }
+      },
+
+      updateRegistration: async (data) => {
+        try {
+          const { user, phone: storePhone } = get();
+          const id = user?.id || user?._id; 
+          const phone = data.phone || storePhone;
+          const res = await api.post('/franchise/update-registration', { ...data, phone, id });
+          
+          if (res.data.success) {
+            // Filter out any potentially large data before updating state
+            const { kycDetails, ...cleanFranchise } = res.data.franchise;
+            
+            set({ 
+              registrationData: cleanFranchise,
+              user: cleanFranchise,
+              phone: cleanFranchise.phone 
+            });
+            
+            return res.data;
+          }
+          return res.data;
+        } catch (error) {
+          console.error('Update Error:', error);
+          return { success: false, message: 'Failed to update' };
+        }
+      },
+
+      logout: () => {
+          set({ isAuthenticated: false, user: null, phone: null, otpSent: false, registrationData: {}, currentStep: 1, isVerified: false, token: null });
+          localStorage.removeItem('franchise-auth');
+      },
     }),
-    { name: 'franchise-auth' }
+    { 
+      name: 'franchise-auth',
+      partialize: (state) => ({
+        isAuthenticated: state.isAuthenticated,
+        user: state.user,
+        token: state.token,
+        phone: state.phone,
+        currentStep: state.currentStep,
+        isVerified: state.isVerified,
+        registrationData: state.registrationData, 
+      })
+    }
   )
 );

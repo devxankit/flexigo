@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -15,18 +15,27 @@ import {
   ShieldCheck,
   Zap,
   ArrowLeft,
+  ArrowRight,
   Navigation,
   X
 } from 'lucide-react';
 import { useFleetStore } from '../store/fleetStore';
+import { useFranchiseAuthStore } from '../store/franchiseAuthStore';
 import GlassTable from '../components/GlassTable';
 import StatusBadge from '../components/StatusBadge';
 
 export default function FleetManagement() {
   const navigate = useNavigate();
-  const { vehicles, filter, setFilter } = useFleetStore();
+  const { vehicles, filter, setFilter, fetchVehicles, isLoading } = useFleetStore();
+  const { user } = useFranchiseAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+
+  useEffect(() => {
+    if (user?.id || user?._id) {
+        fetchVehicles(user.id || user._id);
+    }
+  }, [user]);
 
   const filteredVehicles = useMemo(() => {
     return vehicles.filter(v => {
@@ -89,13 +98,13 @@ export default function FleetManagement() {
                 isPUCExpiring ? 'bg-rose-500/10 border-rose-500/20 text-rose-500 animate-pulse' : 'bg-[var(--bg-tertiary)] border-[var(--border-subtle)] text-[var(--text-secondary)]'
               }`}>
                <span className="uppercase tracking-[0.2em] leading-none">PUC</span>
-               <span className="leading-none">{row.pUCExpiry.split('-')[1]}/{row.pUCExpiry.split('-')[0].slice(2)}</span>
+               <span className="leading-none">{row.pUCExpiry ? `${row.pUCExpiry.split('-')[1]}/${row.pUCExpiry.split('-')[0].slice(2)}` : 'N/A'}</span>
              </div>
               <div className={`px-1.5 py-0.5 rounded border text-[6.5px] font-black italic flex items-center gap-1 ${
                 isINSExpiring ? 'bg-rose-500/10 border-rose-500/20 text-rose-500' : 'bg-[var(--bg-tertiary)] border-[var(--border-subtle)] text-[var(--text-secondary)]'
               }`}>
                 <span className="uppercase tracking-[0.2em] leading-none">INS</span>
-                <span className="leading-none">{row.insuranceExpiry.split('-')[1]}/{row.insuranceExpiry.split('-')[0].slice(2)}</span>
+                <span className="leading-none">{row.insuranceExpiry ? `${row.insuranceExpiry.split('-')[1]}/${row.insuranceExpiry.split('-')[0].slice(2)}` : 'N/A'}</span>
               </div>
           </div>
         );

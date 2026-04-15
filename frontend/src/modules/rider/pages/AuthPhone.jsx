@@ -13,25 +13,36 @@ export default function AuthPhone() {
   const navigate = useNavigate();
   const [phone, setPhone] = useState('');
   const [showLegal, setShowLegal] = useState(false);
-  const { setPhone: storePhone, setOtpSent } = useAuthStore();
+  const { sendOTP } = useAuthStore();
   const { theme } = useThemeStore();
+  const [loading, setLoading] = useState(false);
 
   const isDark = theme === 'dark';
   const isValid = phone.length === 10 && /^\d+$/.test(phone);
   const [error, setError] = useState('');
   const [isShake, setIsShake] = useState(false);
 
-  const handleSendOTP = () => {
+  const handleSendOTP = async () => {
     if (!isValid) {
       setError('Please enter a valid 10-digit mobile number');
       setIsShake(true);
       setTimeout(() => setIsShake(false), 500);
       return;
     }
+    
+    setLoading(true);
     setError('');
-    storePhone(phone);
-    setOtpSent(true);
-    navigate('/rider/auth/otp');
+    
+    const result = await sendOTP(phone);
+    setLoading(false);
+
+    if (result.success) {
+      navigate('/rider/auth/otp');
+    } else {
+      setError(result.message);
+      setIsShake(true);
+      setTimeout(() => setIsShake(false), 500);
+    }
   };
 
   return (
@@ -129,9 +140,9 @@ export default function AuthPhone() {
             variant={isValid ? 'solid' : 'green'}
             size="full"
             onClick={handleSendOTP}
-            disabled={!isValid}
+            disabled={!isValid || loading}
           >
-            {isValid ? 'Send OTP →' : 'Enter your number'}
+            {loading ? 'Sending OTP...' : (isValid ? 'Send OTP →' : 'Enter your number')}
           </NeonButton>
         </motion.div>
 

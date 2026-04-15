@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -24,9 +25,9 @@ export default function VehicleDetail() {
   const navigate = useNavigate();
   const { vehicles } = useFleetStore();
 
-  const vehicle = vehicles.find(v => v.id === vehicleId);
+  const vehicle = vehicles.find(v => (v._id || v.id) === vehicleId);
   const [isKillModalOpen, setKillModalOpen] = useState(false);
-  const [killCoundown, setKillCountdown] = useState(5);
+  const [killCountdown, setKillCountdown] = useState(5);
   const [isExecuting, setIsExecuting] = useState(false);
 
 

@@ -1,49 +1,72 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import api from '../../../lib/axios';
 
 export const useWalletStore = create(
   persist(
     (set, get) => ({
-      balance: 2450,
-      transactions: [
-        { id: 1, type: 'credit', label: 'Added to wallet', amount: 500, date: '30 Mar 2026', time: '10:22 AM' },
-        { id: 2, type: 'debit', label: 'Weekly Plan - Renewal', amount: 1499, date: '28 Mar 2026', time: '09:00 AM' },
-        { id: 3, type: 'debit', label: 'Ride - Koramangala to HSR', amount: 0, date: '27 Mar 2026', time: '06:45 PM' },
-        { id: 4, type: 'credit', label: 'Added to wallet', amount: 2000, date: '25 Mar 2026', time: '11:10 AM' },
-        { id: 5, type: 'debit', label: 'Battery Swap Fee', amount: 50, date: '24 Mar 2026', time: '03:30 PM' },
-      ],
+      balance: 0,
+      transactions: [],
+      loading: false,
 
-      addMoney: (amount) =>
-        set((state) => ({
-          balance: state.balance + amount,
-          transactions: [
-            {
-              id: Date.now(),
-              type: 'credit',
-              label: 'Added to wallet',
-              amount,
-              date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-              time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-            },
-            ...state.transactions,
-          ],
-        })),
+      fetchWalletData: async (phone) => {
+        if (!phone) return;
+        set({ loading: true });
+        try {
+          const res = await api.get(`/rider/wallet/${phone}`);
+          if (res.data.success) {
+            set({ 
+              balance: res.data.walletBalance, 
+              transactions: res.data.transactions 
+            });
+          }
+        } catch (error) {
+          console.error('Failed to fetch wallet data', error);
+        } finally {
+          set({ loading: false });
+        }
+      },
 
-      deductMoney: (amount, label) =>
+      addMoney: async (phone, amount) => {
+        try {
+          const res = await api.post('/rider/wallet/add', { phone, amount });
+          if (res.data.success) {
+            set((state) => ({
+              balance: res.data.walletBalance,
+              transactions: [
+                {
+                  _id: Date.now(),
+                  type: 'credit',
+                  description: 'Added to wallet',
+                  amount,
+                  createdAt: new Date().toISOString(),
+                },
+                ...state.transactions,
+              ],
+            }));
+            return { success: true };
+          }
+        } catch (error) {
+          return { success: false, message: error.response?.data?.message || 'Failed to add money' };
+        }
+      },
+
+      deductMoney: (amount, label) => {
+        // Logic for local deduction if needed, but ideally should hit API
         set((state) => ({
           balance: Math.max(0, state.balance - amount),
           transactions: [
             {
-              id: Date.now(),
+              _id: Date.now(),
               type: 'debit',
-              label,
+              description: label,
               amount,
-              date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-              time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+              createdAt: new Date().toISOString(),
             },
             ...state.transactions,
           ],
-        })),
+        }));
+      },
     }),
     { name: 'rider-wallet' }
   )

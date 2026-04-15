@@ -29,7 +29,7 @@ export default function MaintenanceScheduler() {
   const [activeTab, setActiveTab] = useState('upcoming');
   
   const maintenanceHistory = vehicles.flatMap(v => 
-    v.maintenanceLogs.map(log => ({ ...log, vehicleId: v.id, plate: v.plate }))
+    (v.maintenanceLogs || []).map(log => ({ ...log, vehicleId: v._id || v.id, plate: v.plate }))
   ).sort((a, b) => new Date(b.date) - new Date(a.date));
 
   const [formData, setFormData] = useState({
@@ -39,23 +39,27 @@ export default function MaintenanceScheduler() {
     priority: 'Standard'
   });
 
-  const handleBookService = (e) => {
+  const handleBookService = async (e) => {
     e.preventDefault();
-    const v = vehicles.find(veh => veh.id === selectedVehicleId);
+    const v = vehicles.find(veh => (veh._id || veh.id) === selectedVehicleId);
     if (!v) return;
 
     const newLog = {
       date: new Date().toISOString().split('T')[0],
       type: formData.type,
       staff: formData.staff,
-      notes: formData.notes
+      description: formData.notes
     };
 
-    addMaintenanceLog(selectedVehicleId, newLog);
-    updateVehicleStatus(selectedVehicleId, 'in-service');
-    setIsModalOpen(false);
-    setFormData({ type: 'Regular Inspection', staff: '', notes: '', priority: 'Standard' });
-    setSelectedVehicleId('');
+    const res = await addMaintenanceLog(selectedVehicleId, newLog);
+    if (res.success) {
+      await updateVehicleStatus(selectedVehicleId, 'in-service');
+      setIsModalOpen(false);
+      setFormData({ type: 'Regular Inspection', staff: '', notes: '', priority: 'Standard' });
+      setSelectedVehicleId('');
+    } else {
+      alert(res.message || 'Failed to authorize service sync');
+    }
   };
 
   return (
@@ -143,9 +147,9 @@ export default function MaintenanceScheduler() {
                ).map((vehicle) => (
                   <motion.div 
                     layout
-                    key={vehicle.id}
+                    key={vehicle._id || vehicle.id}
                     className="p-3 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl flex items-center justify-between hover:border-emerald-500/30 transition-all group cursor-pointer shadow-inner"
-                    onClick={() => navigate(`/franchise/fleet/${vehicle.id}`)}
+                    onClick={() => navigate(`/franchise/fleet/${vehicle._id || vehicle.id}`)}
                   >
                      <div className="flex items-center gap-4">
                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${
@@ -245,7 +249,7 @@ export default function MaintenanceScheduler() {
                            >
                               <option value="">SELECT_VEHICLE...</option>
                               {vehicles.filter(v => v.status !== 'in-service').map(v => (
-                                 <option key={v.id} value={v.id}>{v.plate} ({v.model})</option>
+                                 <option key={v._id || v.id} value={v._id || v.id}>{v.plate} ({v.model})</option>
                               ))}
                            </select>
                         </div>

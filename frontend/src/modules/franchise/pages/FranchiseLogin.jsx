@@ -19,10 +19,14 @@ import logo from '../../../assets/logo.png';
 
 export default function FranchiseLogin() {
   const navigate = useNavigate();
-  const { login } = useFranchiseAuthStore();
+  const { sendOTP, verifyOTP } = useFranchiseAuthStore();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({ id: '', pin: '' });
-  const [errors, setErrors] = useState({ id: '', pin: '' });
+  
+  // OTP States
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [errors, setErrors] = useState({ phone: '', otp: '' });
   const [isErrorShake, setIsErrorShake] = useState(false);
   
   useEffect(() => {
@@ -30,37 +34,38 @@ export default function FranchiseLogin() {
     document.documentElement.style.backgroundColor = '#020617';
   }, []);
 
-  const validate = () => {
-    let newErrors = { id: '', pin: '' };
-    let isValid = true;
-
-    if (formData.id.trim().length < 4) {
-      newErrors.id = 'INVALID_Partner ID';
-      isValid = false;
-    }
-    if (formData.pin.length < 6) {
-      newErrors.pin = 'PIN_LENGTH_VIOLATION';
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-    return isValid;
-  };
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (!validate()) {
+  const handleSendOTP = async (e) => {
+    if (e) e.preventDefault();
+    if (phone.length !== 10) {
+      setErrors({ ...errors, phone: 'INVALID_NUMBER' });
       setIsErrorShake(true);
       setTimeout(() => setIsErrorShake(false), 500);
       return;
     }
     setLoading(true);
-    setErrors({ id: '', pin: '' });
-    setTimeout(() => {
-      login({ role: 'Partner' });
-      setLoading(false);
+    const res = await sendOTP(phone);
+    setLoading(false);
+    if (res.success) setOtpSent(true);
+    else {
+      setErrors({ ...errors, phone: res.message });
+      setIsErrorShake(true);
+      setTimeout(() => setIsErrorShake(false), 500);
+    }
+  };
+
+  const handleVerifyOTP = async (e) => {
+    if (e) e.preventDefault();
+    if (otp.length < 6) return;
+    setLoading(true);
+    const res = await verifyOTP(otp);
+    setLoading(false);
+    if (res.success) {
       navigate('/franchise/dashboard');
-    }, 1500);
+    } else {
+      setErrors({ ...errors, otp: res.message });
+      setIsErrorShake(true);
+      setTimeout(() => setIsErrorShake(false), 500);
+    }
   };
 
   return (
@@ -105,47 +110,54 @@ export default function FranchiseLogin() {
           </div>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4 relative z-10">
+        <form 
+          onSubmit={(e) => {
+            e.preventDefault();
+            if(!otpSent) handleSendOTP(e);
+            else handleVerifyOTP(e);
+          }} 
+          className="space-y-4 relative z-10"
+        >
           <div className="space-y-3">
              <div className="space-y-1.5">
-               <div className="flex justify-between items-center px-1">
-                  <label className="text-[7.5px] font-black uppercase tracking-widest text-emerald-500 italic opacity-60">Partner ID</label>
-                  {errors.id && <span className="text-[7px] font-black text-rose-500 uppercase italic animate-pulse">{errors.id}</span>}
-               </div>
-               <div className={`p-2.5 bg-black/20 border rounded-xl flex items-center gap-3 transition-all shadow-inner ${
-                 errors.id ? 'border-rose-500/40 ring-1 ring-rose-500/10' : 'border-[var(--border-subtle)] focus-within:border-emerald-500/40'
-               }`}>
-                 <Smartphone className={`${errors.id ? 'text-rose-500' : 'text-slate-500'}`} size={14} />
-                 <input 
-                   required
-                   type="text" 
-                   value={formData.id}
-                   onChange={(e) => setFormData({ ...formData, id: e.target.value.slice(0, 12) })}
-                   className="bg-transparent border-none outline-none text-[10px] text-[var(--text-primary)] placeholder:text-slate-500 w-full font-black uppercase tracking-widest italic"
-                   placeholder="Enter ID"
-                 />
-               </div>
+                <div className="flex justify-between items-center px-1">
+                   <label className="text-[7.5px] font-black uppercase tracking-widest text-emerald-500 italic opacity-60">Mobile Number</label>
+                   {errors.phone && <span className="text-[7px] font-black text-rose-500 uppercase italic animate-pulse">{errors.phone}</span>}
+                </div>
+                <div className={`p-2.5 bg-black/20 border rounded-xl flex items-center gap-3 transition-all shadow-inner ${
+                  errors.phone ? 'border-rose-500/40 ring-1 ring-rose-500/10' : 'border-[var(--border-subtle)] focus-within:border-emerald-500/40'
+                }`}>
+                  <Smartphone className={`${errors.phone ? 'text-rose-500' : 'text-slate-500'}`} size={14} />
+                  <input 
+                    required
+                    type="text" 
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    className="bg-transparent border-none outline-none text-[10px] text-[var(--text-primary)] placeholder:text-slate-500 w-full font-black tracking-widest italic"
+                    placeholder="ENTER REGISTERED MOBILE"
+                  />
+                </div>
              </div>
 
              <div className="space-y-1.5">
-               <div className="flex justify-between items-center px-1">
-                  <label className="text-[7.5px] font-black uppercase tracking-widest text-emerald-500 italic opacity-60">Access PIN</label>
-                  {errors.pin && <span className="text-[7px] font-black text-rose-500 uppercase italic animate-pulse">{errors.pin}</span>}
-               </div>
-               <div className={`p-2.5 bg-black/20 border rounded-xl flex items-center gap-3 transition-all shadow-inner ${
-                 errors.pin ? 'border-rose-500/40 ring-1 ring-rose-500/10' : 'border-[var(--border-subtle)] focus-within:border-emerald-500/40'
-               }`}>
-                 <Lock className={`${errors.pin ? 'text-rose-500' : 'text-slate-500'}`} size={14} />
-                 <input 
-                   required
-                   type="password" 
-                   inputMode="numeric"
-                   value={formData.pin}
-                   onChange={(e) => setFormData({ ...formData, pin: e.target.value.replace(/\D/g, '').slice(0, 6) })}
-                   className="bg-transparent border-none outline-none text-[10px] text-[var(--text-primary)] placeholder:text-slate-500 w-full font-black tracking-[0.6em] italic"
-                   placeholder="••••••"
-                 />
-               </div>
+                <div className="flex justify-between items-center px-1">
+                   <label className="text-[7.5px] font-black uppercase tracking-widest text-emerald-500 italic opacity-60">Security OTP (Default: 123456)</label>
+                   {errors.otp && <span className="text-[7px] font-black text-rose-500 uppercase italic animate-pulse">{errors.otp}</span>}
+                </div>
+                <div className={`p-2.5 bg-black/20 border rounded-xl flex items-center gap-3 transition-all shadow-inner ${
+                  errors.otp ? 'border-rose-500/40 ring-1 ring-rose-500/10' : 'border-[var(--border-subtle)] focus-within:border-emerald-500/40'
+                }`}>
+                  <Lock className={`${errors.otp ? 'text-rose-500' : 'text-slate-500'}`} size={14} />
+                  <input 
+                    required
+                    type="text" 
+                    inputMode="numeric"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    className="bg-transparent border-none outline-none text-[10px] text-[var(--text-primary)] placeholder:text-slate-500 w-full font-black tracking-[0.6em] italic"
+                    placeholder="••••••"
+                  />
+                </div>
              </div>
           </div>
 
@@ -157,22 +169,32 @@ export default function FranchiseLogin() {
               {loading ? (
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                  Authenticating...
+                  AUTHENTICATING...
                 </div>
               ) : (
                 <>
-                  Login <Network size={12} className="group-hover:translate-x-1 transition-transform" />
+                  {otpSent ? 'VERIFY ACCESS' : 'INITIALIZE SESSION'} <Network size={12} className="group-hover:translate-x-1 transition-transform" />
                 </>
               )}
               <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
             </button>
+
+            {otpSent && (
+               <button 
+                  type="button"
+                  onClick={() => { setOtpSent(false); setOtp(''); }}
+                  className="text-[7px] font-black text-slate-500 hover:text-white uppercase italic tracking-widest text-center py-2 transition-colors"
+               >
+                  Use Different Number
+               </button>
+            )}
 
             <button 
               type="button"
               onClick={() => navigate('/franchise/onboarding')}
               className="w-full h-11 rounded-xl border border-[var(--border-subtle)] bg-white/5 text-[var(--text-secondary)] text-[8.5px] font-black uppercase tracking-widest hover:border-emerald-500/40 hover:text-white transition-all flex items-center justify-center gap-2 italic shadow-sm"
             >
-              Register as Partner <Plus size={14} />
+              Create New Node <Plus size={14} />
             </button>
           </div>
 

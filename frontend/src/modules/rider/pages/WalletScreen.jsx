@@ -1,35 +1,41 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PageWrapper } from '../components/PageWrapper';
 import { GlassCard } from '../components/GlassCard';
 import { NeonButton } from '../components/NeonButton';
 import { Modal } from '../components/Modal';
 import { useWalletStore } from '../store/walletStore';
+import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
 
 export default function WalletScreen() {
-  const { balance, transactions, addMoney } = useWalletStore();
+  const { balance, transactions, addMoney, fetchWalletData } = useWalletStore();
+  const { phone } = useAuthStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
   const [isTopUpOpen, setIsTopUpOpen] = useState(false);
   const [amount, setAmount] = useState('');
   const [processing, setProcessing] = useState(false);
 
+  useEffect(() => {
+    if (phone) {
+      fetchWalletData(phone);
+    }
+  }, [phone]);
+
   const handleTopUp = async () => {
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return;
     
     setProcessing(true);
-    // Simulate Razorpay opening and payment flow
-    console.log('Opening Razorpay for amount:', amount);
-    await new Promise(r => setTimeout(r, 2000));
-    
-    addMoney(Number(amount));
+    const result = await addMoney(phone, Number(amount));
     setProcessing(false);
-    setIsTopUpOpen(false);
-    setAmount('');
-    
-    // Show success notification or similar (simulated)
-    alert(`₹${amount} added successfully!`);
+
+    if (result.success) {
+      setIsTopUpOpen(false);
+      setAmount('');
+    } else {
+      alert(result.message);
+    }
   };
 
   return (
@@ -80,46 +86,46 @@ export default function WalletScreen() {
           </div>
 
           <div className="space-y-4">
-             {transactions.map((tx) => (
-               <div key={tx.id} className={`flex items-center gap-4 py-2 border-b transition-colors duration-500 last:border-0 ${
-                 isDark ? 'border-white/05' : 'border-slate-100'
-               }`}>
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-500 ${
-                    tx.type === 'credit' 
-                      ? 'bg-flexigo-teal/10' 
-                      : isDark ? 'bg-white/[0.03]' : 'bg-slate-100'
-                  }`}>
-                    {tx.type === 'credit' ? (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-5 h-5">
-                        <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    ) : (
-                      <svg viewBox="0 0 24 24" fill="none" stroke={isDark ? '#00D4FF' : '#0EA5E9'} strokeWidth="2.5" className="w-5 h-5">
-                        <path d="M12 5v14M5 12l7 7 7-7" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                     <h4 className={`text-sm font-black transition-colors duration-500 ${
-                       isDark ? 'text-white' : 'text-slate-900'
-                     }`}>
-                       {tx.label}
-                     </h4>
-                     <p className={`text-[10px] font-bold mt-0.5 transition-colors duration-500 ${
-                       isDark ? 'text-gray-400' : 'text-slate-400'
-                     }`}>
-                       {tx.date} • {tx.time}
-                     </p>
-                  </div>
-                  <div className={`text-right font-black transition-colors duration-500 ${
-                    tx.type === 'credit' 
-                      ? 'text-flexigo-teal' 
-                      : isDark ? 'text-white/80' : 'text-slate-900'
-                  }`}>
-                    {tx.type === 'credit' ? '+' : '-'} ₹{tx.amount}
-                  </div>
-               </div>
-             ))}
+             {[...transactions].map((tx) => (
+                <div key={tx._id} className={`flex items-center gap-4 py-2 border-b transition-colors duration-500 last:border-0 ${
+                  isDark ? 'border-white/05' : 'border-slate-100'
+                }`}>
+                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-500 ${
+                     tx.type === 'credit' 
+                       ? 'bg-flexigo-teal/10' 
+                       : isDark ? 'bg-white/[0.03]' : 'bg-slate-100'
+                   }`}>
+                     {tx.type === 'credit' ? (
+                       <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-5 h-5">
+                         <path d="M12 19V5M5 12l7-7 7 7" strokeLinecap="round" strokeLinejoin="round" />
+                       </svg>
+                     ) : (
+                       <svg viewBox="0 0 24 24" fill="none" stroke={isDark ? '#00D4FF' : '#0EA5E9'} strokeWidth="2.5" className="w-5 h-5">
+                         <path d="M12 5v14M5 12l7 7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+                       </svg>
+                     )}
+                   </div>
+                   <div className="flex-1">
+                      <h4 className={`text-sm font-black transition-colors duration-500 ${
+                        isDark ? 'text-white' : 'text-slate-900'
+                      }`}>
+                        {tx.description}
+                      </h4>
+                      <p className={`text-[10px] font-bold mt-0.5 transition-colors duration-500 ${
+                        isDark ? 'text-gray-400' : 'text-slate-400'
+                      }`}>
+                        {new Date(tx.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} • {new Date(tx.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                   </div>
+                   <div className={`text-right font-black transition-colors duration-500 ${
+                     tx.type === 'credit' 
+                       ? 'text-flexigo-teal' 
+                       : isDark ? 'text-white/80' : 'text-slate-900'
+                   }`}>
+                     {tx.type === 'credit' ? '+' : '-'} ₹{tx.amount}
+                   </div>
+                </div>
+              ))}
           </div>
        </div>
 

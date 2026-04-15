@@ -26,16 +26,58 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import logo from '../../../assets/logo.png';
 
+import { useFranchiseAuthStore } from '../store/franchiseAuthStore';
+
 export default function FranchiseOnboarding() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
+  const { 
+    phone: storePhone, 
+    sendOTP, 
+    verifyOTP, 
+    updateRegistration, 
+    registrationData,
+    currentStep: persistedStep,
+    setStep: setPersistedStep,
+    isVerified: persistedVerified,
+    setIsVerified: setPersistedVerified
+  } = useFranchiseAuthStore();
+
+  const [step, setStep] = useState(persistedStep || 1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   
+  // OTP States
+  const [phone, setPhone] = useState(storePhone || '');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [isVerified, setIsVerified] = useState(persistedVerified || false);
+  const [otpError, setOtpError] = useState('');
+
+  const [formData, setFormData] = useState({
+    ownerName: registrationData.ownerName || '',
+    email: registrationData.email || '',
+    aadhaarNumber: registrationData.aadhaarNumber || '',
+    panNumber: registrationData.panNumber || '',
+    businessDetails: registrationData.businessDetails || { name: '', type: '', location: '', address: '' },
+    hubPlan: registrationData.hubPlan || { id: '', name: '', price: 0 },
+    bankDetails: registrationData.bankDetails || { beneficiary: '', accountNo: '', ifsc: '' },
+    kycDocs: { gst: null, entity: null, aadhaar: null, pan: null }
+  });
+
   useEffect(() => {
     document.documentElement.classList.add('dark');
     document.documentElement.style.backgroundColor = '#020617';
   }, []);
+
+  // Update persisted step when local step changes
+  useEffect(() => {
+     setPersistedStep(step);
+  }, [step]);
+
+  // Update persisted verified status
+  useEffect(() => {
+     setPersistedVerified(isVerified);
+  }, [isVerified]);
 
   const steps = [
     { id: 1, label: 'Profile', icon: Fingerprint },
@@ -46,16 +88,77 @@ export default function FranchiseOnboarding() {
     { id: 6, label: 'Review', icon: Target },
   ];
 
-  const handleNext = () => setStep(prev => prev + 1);
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleSendOTP = async () => {
+    if (phone.length !== 10) {
+      setOtpError('ENTER_VALID_PHONE');
+      return;
+    }
+    setIsSubmitting(true);
+    const res = await sendOTP(phone);
+    setIsSubmitting(false);
+    if (res.success) setOtpSent(true);
+    else setOtpError(res.message);
+  };
+
+  const handleVerifyOTP = async () => {
+    setIsSubmitting(true);
+    const res = await verifyOTP(otp);
+    setIsSubmitting(false);
+    if (res.success) {
+      setIsVerified(true);
+      if (res.franchise.isRegistered) {
+         navigate('/franchise/dashboard');
+      }
+    } else {
+      setOtpError(res.message);
+    }
+  };
+
+  const handleNext = async () => {
+    // Optionally save state to backend at each step
+    setStep(prev => prev + 1);
+  };
+
   const handlePrev = () => setStep(prev => prev - 1);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSuccess(true);
-    }, 2500);
+    
+    try {
+        const kycDetails = {
+            aadhaarFront: formData.kycDocs.aadhaar ? await fileToBase64(formData.kycDocs.aadhaar) : null,
+            panCard: formData.kycDocs.pan ? await fileToBase64(formData.kycDocs.pan) : null,
+            businessLicense: formData.kycDocs.gst ? await fileToBase64(formData.kycDocs.gst) : null,
+            // entity is extra, mapped to businessLicense for now
+        };
+
+        const res = await updateRegistration({
+            ...formData,
+            phone,
+            kycDetails,
+            markAsRegistered: true
+        });
+
+        if (res.success) {
+            setIsSuccess(true);
+        } else {
+            alert(res.message);
+        }
+    } catch (error) {
+        alert('ERROR_PROCESSING_PAYLOAD');
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
   return (
@@ -134,60 +237,186 @@ export default function FranchiseOnboarding() {
             <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
                {step === 1 && (
                  <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                    <div className="space-y-0.5">
-                       <h3 className="text-sm font-black text-[var(--text-primary)] uppercase italic tracking-tight">Personal Details</h3>
-                       <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-60">Owner Information & Contact</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                       <div className="col-span-2 space-y-1.5">
-                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Full Legal Name</label>
-                          <input required className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="ENTER FULL NAME..." />
+                    {!isVerified ? (
+                       <div className="space-y-6 max-w-sm mx-auto py-4">
+                          <div className="space-y-1 text-center mb-8">
+                             <h3 className="text-xl font-black text-emerald-500 uppercase italic tracking-tight">Identity Access</h3>
+                             <p className="text-[7.5px] font-black text-slate-500 uppercase tracking-widest italic leading-relaxed">Enter credentials for secure onboarding session</p>
+                          </div>
+                          
+                          <div className="space-y-4">
+                             <div className="space-y-1.5 relative z-50">
+                                <label className="text-[7px] font-black text-emerald-500/60 uppercase tracking-widest ml-1 italic">Authorized Phone Number</label>
+                                <div className="relative">
+                                   <input 
+                                      required
+                                      type="tel"
+                                      value={phone}
+                                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                                      className={`w-full bg-black/40 border border-white/10 p-4 rounded-2xl text-sm font-black text-white italic tracking-[0.2em] placeholder:text-slate-800 outline-none focus:border-emerald-500/40 transition-all ${otpSent ? 'opacity-50' : 'cursor-text'}`}
+                                      placeholder="ENTER 10-DIGIT NUMBER"
+                                      readOnly={otpSent}
+                                   />
+                                   {!otpSent && (
+                                      <button 
+                                         type="button"
+                                         onClick={handleSendOTP}
+                                         disabled={isSubmitting || phone.length < 10}
+                                         className="absolute right-2 top-1/2 -translate-y-1/2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-[7px] font-black uppercase rounded-xl transition-all disabled:opacity-30 italic shadow-xl z-50"
+                                      >
+                                         SEND CODE
+                                      </button>
+                                   )}
+                                </div>
+                             </div>
+
+                             {otpSent && (
+                                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+                                   <div className="space-y-1.5">
+                                      <label className="text-[7px] font-black text-blue-500/60 uppercase tracking-widest ml-1 italic">Validation Key (Default: 123456)</label>
+                                      <input 
+                                         value={otp}
+                                         onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                         className="w-full bg-black/40 border border-white/5 p-4 rounded-2xl text-2xl font-black text-emerald-500 text-center tracking-[1em] outline-none shadow-inner focus:border-emerald-500/20"
+                                         placeholder="••••••"
+                                      />
+                                   </div>
+                                   <button 
+                                      onClick={handleVerifyOTP}
+                                      disabled={isSubmitting || otp.length < 6}
+                                      className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] font-black uppercase rounded-2xl transition-all shadow-xl shadow-emerald-950/40 italic flex items-center justify-center gap-3 group"
+                                   >
+                                      INITIALIZE_SESSION <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                                   </button>
+                                   <button 
+                                      onClick={() => { setOtpSent(false); setOtp(''); }}
+                                      className="w-full py-2 text-[7px] font-black text-slate-700 hover:text-white uppercase tracking-widest italic transition-colors"
+                                   >
+                                      USE_DIFFERENT_NUMBER
+                                   </button>
+                                </motion.div>
+                             )}
+
+                             {otpError && (
+                                <p className="text-[7px] font-black text-rose-500 text-center uppercase tracking-widest animate-pulse italic mt-2">{otpError}</p>
+                             )}
+                          </div>
                        </div>
-                       <div className="space-y-1.5">
-                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Aadhaar Number</label>
-                          <input required className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="XXXX XXXX XXXX" />
+                    ) : (
+                       <div className="space-y-6">
+                          <div className="space-y-0.5">
+                             <h3 className="text-sm font-black text-[var(--text-primary)] uppercase italic tracking-tight">Personal Details</h3>
+                             <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-60">Owner Information & Contact</p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                             <div className="col-span-2 space-y-1.5">
+                                <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Full Legal Name</label>
+                                <input 
+                                   required 
+                                   value={formData.ownerName}
+                                   onChange={(e) => setFormData({...formData, ownerName: e.target.value})}
+                                   className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" 
+                                   placeholder="ENTER FULL NAME..." 
+                                />
+                             </div>
+                             <div className="space-y-1.5">
+                                <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Aadhaar Number</label>
+                                <input 
+                                   required 
+                                   value={formData.aadhaarNumber}
+                                   onChange={(e) => setFormData({...formData, aadhaarNumber: e.target.value})}
+                                   className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" 
+                                   placeholder="XXXX XXXX XXXX" 
+                                />
+                             </div>
+                             <div className="space-y-1.5">
+                                <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">PAN Card Number</label>
+                                <input 
+                                   required 
+                                   value={formData.panNumber}
+                                   onChange={(e) => setFormData({...formData, panNumber: e.target.value})}
+                                   className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" 
+                                   placeholder="ABCDE1234F" 
+                                />
+                             </div>
+                             <div className="space-y-1.5">
+                                 <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Mobile Number</label>
+                                 <input 
+                                    required
+                                    type="tel"
+                                    value={phone}
+                                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                                    className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" 
+                                    placeholder="ENTER 10-DIGIT MOBILE" 
+                                 />
+                              </div>
+                             <div className="space-y-1.5">
+                                <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Email Address</label>
+                                <input 
+                                   required 
+                                   type="email" 
+                                   value={formData.email}
+                                   onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                   className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] lowercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" 
+                                   placeholder="partner@domain.com" 
+                                />
+                             </div>
+                          </div>
                        </div>
-                       <div className="space-y-1.5">
-                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">PAN Card Number</label>
-                          <input required className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="ABCDE1234F" />
-                       </div>
-                       <div className="space-y-1.5">
-                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Mobile Number</label>
-                          <input required className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="+91 XXXX" />
-                       </div>
-                       <div className="space-y-1.5">
-                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Email Address</label>
-                          <input required type="email" className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] lowercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="partner@domain.com" />
-                       </div>
-                    </div>
+                    )}
                  </motion.div>
                )}
 
                {step === 2 && (
-                 <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                    <div className="space-y-0.5">
-                       <h3 className="text-sm font-black text-[var(--text-primary)] uppercase italic tracking-tight">Business Profile</h3>
-                       <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-60">Company & Hub Details</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                       <div className="col-span-2 space-y-1.5">
-                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Business Name</label>
-                          <input required className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="FIRM IDENTITY" />
-                       </div>
-                       <div className="space-y-1.5">
-                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">GST Number</label>
-                          <input required className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="29XXXXX" />
-                       </div>
-                       <div className="space-y-1.5">
-                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Operational City</label>
-                          <input required className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="BANGALORE" />
-                       </div>
-                       <div className="col-span-2 space-y-1.5">
-                          <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Hub Address</label>
-                          <textarea rows={2} required className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20 no-scrollbar" placeholder="Enter complete hub location address..." />
-                       </div>
-                    </div>
-                 </motion.div>
+                  <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                     <div className="space-y-0.5">
+                        <h3 className="text-sm font-black text-[var(--text-primary)] uppercase italic tracking-tight">Business Profile</h3>
+                        <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-60">Company & Hub Details</p>
+                     </div>
+                     <div className="grid grid-cols-2 gap-3">
+                        <div className="col-span-2 space-y-1.5">
+                           <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Business Name</label>
+                           <input 
+                              required 
+                              value={formData.businessDetails.name}
+                              onChange={(e) => setFormData({...formData, businessDetails: {...formData.businessDetails, name: e.target.value}})}
+                              className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" 
+                              placeholder="FIRM IDENTITY" 
+                           />
+                        </div>
+                        <div className="space-y-1.5">
+                           <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">GST Number</label>
+                           <input 
+                              required 
+                              value={formData.businessDetails.type}
+                              onChange={(e) => setFormData({...formData, businessDetails: {...formData.businessDetails, type: e.target.value}})}
+                              className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" 
+                              placeholder="29XXXXX" 
+                           />
+                        </div>
+                        <div className="space-y-1.5">
+                           <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Operational City</label>
+                           <input 
+                              required 
+                              value={formData.businessDetails.location}
+                              onChange={(e) => setFormData({...formData, businessDetails: {...formData.businessDetails, location: e.target.value}})}
+                              className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" 
+                              placeholder="BANGALORE" 
+                           />
+                        </div>
+                        <div className="col-span-2 space-y-1.5">
+                           <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Hub Address</label>
+                           <textarea 
+                              rows={2} 
+                              required 
+                              value={formData.businessDetails.address}
+                              onChange={(e) => setFormData({...formData, businessDetails: {...formData.businessDetails, address: e.target.value}})}
+                              className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20 no-scrollbar" 
+                              placeholder="Enter complete hub location address..." 
+                           />
+                        </div>
+                     </div>
+                  </motion.div>
                )}
 
                {step === 3 && (
@@ -198,20 +427,34 @@ export default function FranchiseOnboarding() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                        {[
-                         { name: 'Tier 1', fee: '15K', vehicles: '25', color: 'slate-500' },
-                         { name: 'Tier 2', fee: '28K', vehicles: '50', color: 'emerald-500' },
-                         { name: 'Tier 3', fee: '52K', vehicles: '100', color: 'blue-500' },
-                         { name: 'Tier 4', fee: '75K', vehicles: '150', color: 'purple-500' },
-                         { name: 'Tier 5', fee: '95K', vehicles: '200', color: 'rose-500' }
+                         { id: 'T1', name: 'Tier 1', fee: '15K', price: 15000, vehicles: '25', color: '#64748b' },
+                         { id: 'T2', name: 'Tier 2', fee: '28K', price: 28000, vehicles: '50', color: '#10b981' },
+                         { id: 'T3', name: 'Tier 3', fee: '52K', price: 52000, vehicles: '100', color: '#3b82f6' },
+                         { id: 'T4', name: 'Tier 4', fee: '75K', price: 75000, vehicles: '150', color: '#a855f7' },
+                         { id: 'T5', name: 'Tier 5', fee: '95K', price: 95000, vehicles: '200', color: '#f43f5e' }
                        ].map((tier) => (
-                         <div key={tier.name} className="p-4 bg-black/20 border border-[var(--border-subtle)] rounded-2xl hover:border-emerald-500/20 transition-all cursor-pointer group relative overflow-hidden shadow-inner">
-                            <div className={`text-[6px] font-black uppercase tracking-[0.3em] mb-3 text-${tier.color} italic`}>{tier.name}</div>
+                         <div 
+                            key={tier.id} 
+                             onClick={() => {
+                                 const planData = { id: tier.id, name: tier.name, price: tier.price };
+                                 setFormData({...formData, hubPlan: planData });
+                                 updateRegistration({ hubPlan: planData, phone });
+                             }}
+                            className={`p-4 bg-black/20 border rounded-2xl transition-all cursor-pointer group relative overflow-hidden shadow-inner ${
+                                formData.hubPlan.id === tier.id ? 'border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'border-[var(--border-subtle)] hover:border-emerald-500/20'
+                            }`}
+                         >
+                            <div className="text-[6px] font-black uppercase tracking-[0.3em] mb-3 italic" style={{ color: tier.color }}>{tier.name}</div>
                             <div className="text-xl font-black text-[var(--text-primary)] uppercase italic mb-1 leading-none">₹{tier.fee}</div>
                             <div className="text-[7.5px] font-black text-slate-600 uppercase tracking-widest italic leading-none">Monthly Plan Fee</div>
                             <div className="mt-4 pt-3 border-t border-[var(--border-subtle)] flex items-center justify-between">
                                <span className="text-[7px] font-black text-[var(--text-tertiary)] italic uppercase">Fleet: {tier.vehicles} Vehicles</span>
-                               <div className="w-4 h-4 rounded-lg border border-[var(--border-subtle)] flex items-center justify-center group-hover:border-emerald-500 transition-all">
-                                  <div className="w-1.5 h-1.5 rounded bg-emerald-500 opacity-0 group-hover:opacity-100 transition-all shadow-[0_0_8px_#10b981]" />
+                               <div className={`w-4 h-4 rounded-lg border flex items-center justify-center transition-all ${
+                                   formData.hubPlan.id === tier.id ? 'border-emerald-500' : 'border-[var(--border-subtle)] group-hover:border-emerald-500'
+                               }`}>
+                                  <div className={`w-1.5 h-1.5 rounded transition-all ${
+                                      formData.hubPlan.id === tier.id ? 'bg-emerald-500 opacity-100 shadow-[0_0_8px_#10b981]' : 'bg-emerald-500 opacity-0 group-hover:opacity-10'
+                                  }`} />
                                </div>
                             </div>
                          </div>
@@ -229,51 +472,82 @@ export default function FranchiseOnboarding() {
                     <div className="grid grid-cols-2 gap-3">
                        <div className="col-span-2 space-y-1.5">
                           <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Beneficiary Name</label>
-                          <input required className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="NAME AS PER BANK" />
+                          <input 
+                             required 
+                             value={formData.bankDetails.beneficiary}
+                             onChange={(e) => setFormData({...formData, bankDetails: {...formData.bankDetails, beneficiary: e.target.value}})}
+                             className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" 
+                             placeholder="NAME AS PER BANK" 
+                          />
                        </div>
                        <div className="space-y-1.5">
                           <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Account Number</label>
-                          <input required type="password" className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="XXXX XXXX XXXX" />
+                          <input 
+                             required 
+                             type="text" 
+                             value={formData.bankDetails.accountNo}
+                             onChange={(e) => setFormData({...formData, bankDetails: {...formData.bankDetails, accountNo: e.target.value}})}
+                             className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" 
+                             placeholder="XXXX XXXX XXXX" 
+                          />
                        </div>
                        <div className="space-y-1.5">
                           <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">IFSC Code</label>
-                          <input required className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" placeholder="UTIBXXXX" />
+                          <input 
+                             required 
+                             value={formData.bankDetails.ifsc}
+                             onChange={(e) => setFormData({...formData, bankDetails: {...formData.bankDetails, ifsc: e.target.value}})}
+                             className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" 
+                             placeholder="UTIBXXXX" 
+                          />
                        </div>
                     </div>
                  </motion.div>
                )}
 
                {step === 5 && (
-                 <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-                    <div className="space-y-0.5">
-                       <h3 className="text-sm font-black text-[var(--text-primary)] uppercase italic tracking-tight">Upload Documents</h3>
-                       <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-60">Verification and KYC Documents</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                       {[
-                         { name: 'GST Certificate', key: 'gst' },
-                         { name: 'Registration Proof', key: 'entity' },
-                         { name: 'Aadhaar Copy', key: 'aadhaar' },
-                         { name: 'PAN Card Copy', key: 'pan' }
-                       ].map((doc) => (
-                         <div key={doc.key} className="relative group">
-                            <input type="file" id={`upload-${doc.key}`} className="hidden" accept=".pdf,.jpg,.jpeg,.png" />
-                            <label 
-                              htmlFor={`upload-${doc.key}`}
-                              className="w-full p-4 border border-[var(--border-subtle)] rounded-2xl flex flex-col items-center gap-3 transition-all cursor-pointer hover:border-emerald-500/20 hover:bg-emerald-500/5 bg-[var(--bg-tertiary)] shadow-inner group"
-                            >
-                               <div className="w-8 h-8 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-subtle)] flex items-center justify-center text-slate-700 group-hover:text-emerald-500 group-hover:scale-105 transition-all shadow-inner">
-                                  <Upload size={14} />
-                               </div>
-                               <div className="text-center">
-                                  <p className="text-[7.5px] font-black text-[var(--text-primary)] uppercase tracking-widest italic mb-0.5">{doc.name}</p>
-                                  <p className="text-[6.5px] font-black text-slate-700 uppercase tracking-widest opacity-60">PDF/JPEG_AUTH</p>
-                               </div>
-                            </label>
-                         </div>
-                       ))}
-                    </div>
-                 </motion.div>
+                  <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                     <div className="space-y-0.5">
+                        <h3 className="text-sm font-black text-[var(--text-primary)] uppercase italic tracking-tight">Upload Documents</h3>
+                        <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-60">Verification and KYC Documents</p>
+                     </div>
+                     <div className="grid grid-cols-2 gap-3">
+                        {[
+                          { name: 'GST Certificate', key: 'gst' },
+                          { name: 'Registration Proof', key: 'entity' },
+                          { name: 'Aadhaar Copy', key: 'aadhaar' },
+                          { name: 'PAN Card Copy', key: 'pan' }
+                        ].map((doc) => (
+                          <div key={doc.key} className="relative group">
+                             <input 
+                                type="file" 
+                                id={`upload-${doc.key}`} 
+                                className="hidden" 
+                                accept=".pdf,.jpg,.jpeg,.png" 
+                                onChange={(e) => setFormData({...formData, kycDocs: {...formData.kycDocs, [doc.key]: e.target.files[0]}})}
+                             />
+                             <label 
+                                htmlFor={`upload-${doc.key}`}
+                                className={`w-full p-4 border rounded-2xl flex flex-col items-center gap-3 transition-all cursor-pointer shadow-inner group ${
+                                    formData.kycDocs[doc.key] ? 'border-emerald-500 bg-emerald-500/10' : 'border-[var(--border-subtle)] bg-[var(--bg-tertiary)] hover:border-emerald-500/20 hover:bg-emerald-500/5'
+                                }`}
+                             >
+                                <div className={`w-8 h-8 rounded-xl border flex items-center justify-center transition-all shadow-inner ${
+                                    formData.kycDocs[doc.key] ? 'bg-emerald-600 text-white' : 'bg-[var(--bg-primary)] border-[var(--border-subtle)] text-slate-700'
+                                }`}>
+                                   {formData.kycDocs[doc.key] ? <CheckCircle size={14} /> : <Upload size={14} />}
+                                </div>
+                                <div className="text-center">
+                                   <p className="text-[7.5px] font-black text-[var(--text-primary)] uppercase tracking-widest italic mb-0.5">{doc.name}</p>
+                                   <p className={`text-[6.5px] font-black uppercase tracking-widest opacity-60 ${formData.kycDocs[doc.key] ? 'text-emerald-500' : 'text-slate-700'}`}>
+                                       {formData.kycDocs[doc.key] ? 'UPLOADED_✓' : 'PDF/JPEG_AUTH'}
+                                   </p>
+                                </div>
+                             </label>
+                          </div>
+                        ))}
+                     </div>
+                  </motion.div>
                )}
 
                {step === 6 && (
@@ -319,24 +593,26 @@ export default function FranchiseOnboarding() {
                       BACK
                     </button>
                   )}
-                   <button 
-                    type={step === 6 ? 'submit' : 'button'} 
-                    onClick={step === 6 ? undefined : handleNext} 
-                    disabled={isSubmitting}
-                    className="flex-1 py-3.5 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-[0.4em] shadow-lg shadow-emerald-950/40 hover:bg-emerald-500 transition-all active:scale-95 flex items-center justify-center gap-3 italic relative overflow-hidden group"
-                  >
-                     {isSubmitting ? (
-                        <div className="flex items-center gap-2">
-                           <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                           <span className="animate-pulse">AUTHORIZING_PAYLOAD...</span>
-                        </div>
-                     ) : (
-                        <>
-                           {step === 6 ? 'Submit Application' : 'Continue'} <ChevronRight size={14} />
-                        </>
-                     )}
-                     <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                  </button>
+                  {(step > 1 || isVerified) && (
+                    <button 
+                      type={step === 6 ? 'submit' : 'button'} 
+                      onClick={step === 6 ? undefined : handleNext} 
+                      disabled={isSubmitting}
+                      className="flex-1 py-3.5 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-[0.4em] shadow-lg shadow-emerald-950/40 hover:bg-emerald-500 transition-all active:scale-95 flex items-center justify-center gap-3 italic relative overflow-hidden group"
+                    >
+                       {isSubmitting ? (
+                          <div className="flex items-center gap-2">
+                             <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                             <span className="animate-pulse">AUTHORIZING_PAYLOAD...</span>
+                          </div>
+                       ) : (
+                          <>
+                             {step === 6 ? 'Submit Application' : 'Continue'} <ChevronRight size={14} />
+                          </>
+                       )}
+                       <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                    </button>
+                  )}
                </div>
             </form>
           </div>

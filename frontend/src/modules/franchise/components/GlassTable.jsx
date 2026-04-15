@@ -54,11 +54,12 @@ export default function GlassTable({ columns, data, onRowClick, emptyMessage = "
                       </td>
                     ))}
                     
-                    {/* GSAP Sticky Hover Underline Effect */}
-                    <motion.div 
-                      layoutId="table-row-hover"
-                      className="absolute inset-0 bg-gradient-to-r from-emerald-500/[0.04] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none -z-10"
-                    />
+                    <td className="absolute inset-0 pointer-events-none -z-10">
+                      <motion.div 
+                        layoutId="table-row-hover"
+                        className="absolute inset-0 bg-gradient-to-r from-emerald-500/[0.04] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+                      />
+                    </td>
                   </motion.tr>
                 ))
               ) : (

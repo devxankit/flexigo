@@ -12,8 +12,9 @@ export default function AuthOTP() {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [resent, setResent] = useState(false);
-  const { phone, setAuthenticated } = useAuthStore();
+  const { phone, verifyOTP } = useAuthStore();
   const { theme } = useThemeStore();
+  const [error, setError] = useState('');
 
   const isDark = theme === 'dark';
   const isValid = otp.length === 6;
@@ -21,11 +22,20 @@ export default function AuthOTP() {
   const handleVerify = async () => {
     if (!isValid || loading) return;
     setLoading(true);
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 50));
-    setAuthenticated({ phone, name: 'Rider', id: 'U001' });
+    setError('');
+
+    const result = await verifyOTP(otp);
     setLoading(false);
-    navigate('/rider/onboarding');
+
+    if (result.success) {
+      if (result.rider?.isRegistered) {
+        navigate('/rider/home');
+      } else {
+        navigate('/rider/onboarding');
+      }
+    } else {
+      setError(result.message);
+    }
   };
 
   const handleResend = () => {
@@ -112,6 +122,17 @@ export default function AuthOTP() {
           )}
         </motion.div>
 
+        {/* Error message */}
+        {error && (
+          <motion.p
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-rose-500 text-xs font-black uppercase text-center mb-6"
+          >
+            {error}
+          </motion.p>
+        )}
+
         {/* Dev hint */}
         <div
           className={`rounded-xl px-4 py-3 mb-8 text-center border transition-all duration-500 ${
@@ -120,7 +141,7 @@ export default function AuthOTP() {
               : 'bg-flexigo-teal/5 border-flexigo-teal/10 shadow-sm'
           }`}
         >
-          <p className="text-flexigo-teal text-[10px] font-black uppercase tracking-[0.2em]">Demo: Enter any 6 digits to continue</p>
+          <p className="text-flexigo-teal text-[10px] font-black uppercase tracking-[0.2em]">Default OTP: 123456</p>
         </div>
 
         <NeonButton

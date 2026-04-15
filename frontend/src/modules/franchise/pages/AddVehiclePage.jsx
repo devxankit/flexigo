@@ -14,13 +14,19 @@ import {
   Search,
   ZapOff,
   History,
+  ArrowRight,
   X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useFleetStore } from '../store/fleetStore';
+import { useFranchiseAuthStore } from '../store/franchiseAuthStore';
 
 export default function AddVehiclePage() {
   const navigate = useNavigate();
+  const { addVehicle } = useFleetStore();
+  const { user } = useFranchiseAuthStore();
+  
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -32,21 +38,51 @@ export default function AddVehiclePage() {
     manufactureDate: '',
     insurancePolicy: '',
     insuranceExpiry: '',
-    pucNumber: '',
-    pucExpiry: ''
+    pUCNumber: '',
+    pUCExpiry: '',
+    rcImage: ''
   });
 
   const nextStep = () => setStep(prev => prev + 1);
   const prevStep = () => setStep(prev => prev - 1);
 
-  const handleSubmit = (e) => {
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const base64 = await fileToBase64(file);
+      setFormData({ ...formData, rcImage: base64 });
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulate API delay
-    setTimeout(() => {
+    
+    try {
+      const res = await addVehicle({
+        ...formData,
+        franchise: user?.id || user?._id
+      });
+      
+      if (res.success) {
+        setIsSuccess(true);
+      } else {
+        alert(res.message);
+      }
+    } catch (error) {
+      alert('Internal Submission Error');
+    } finally {
       setIsSubmitting(false);
-      setIsSuccess(true);
-    }, 2000);
+    }
   };
 
   return (
@@ -177,14 +213,31 @@ export default function AddVehiclePage() {
                    <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">RTO Documentation & Legal Assets</p>
                 </div>
                 <div className="grid grid-cols-2 gap-6">
-                  <div className="col-span-2 space-y-3 p-8 border-2 border-dashed border-[var(--border-subtle)] rounded-3xl flex flex-col items-center gap-4 group hover:border-emerald-500/40 hover:bg-emerald-600/5 transition-all cursor-pointer">
-                     <div className="w-12 h-12 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
-                        <Upload size={24} />
-                     </div>
-                     <div className="text-center">
-                        <p className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-widest mb-1 italic">RC Certificate Sync</p>
-                        <p className="text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest opacity-60">Upload High-Res (Front & Back)</p>
-                     </div>
+                  <div className="col-span-2">
+                    <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">RC Certificate Sync</label>
+                    <label className={`mt-3 w-full p-8 border-2 border-dashed rounded-3xl flex flex-col items-center gap-4 group transition-all cursor-pointer ${
+                        formData.rcImage ? 'border-emerald-500 bg-emerald-600/5' : 'border-[var(--border-subtle)] hover:border-emerald-500/40 hover:bg-emerald-600/5'
+                    }`}>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleImageUpload} 
+                        className="hidden" 
+                      />
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform ${
+                          formData.rcImage ? 'bg-emerald-600 text-white' : 'bg-emerald-600/10 border border-emerald-500/20 text-emerald-500 group-hover:scale-110'
+                      }`}>
+                         {formData.rcImage ? <CheckCircle size={24} /> : <Upload size={24} />}
+                      </div>
+                      <div className="text-center">
+                         <p className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-widest mb-1 italic">
+                            {formData.rcImage ? 'DOCUMENT_SYNCED_✓' : 'RC Certificate Sync'}
+                         </p>
+                         <p className="text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest opacity-60">
+                            {formData.rcImage ? 'IMAGE_PAYLOAD_READY' : 'Upload High-Res (Front & Back)'}
+                         </p>
+                      </div>
+                    </label>
                   </div>
                   <div className="space-y-2">
                     <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Insurance Policy No.</label>
@@ -203,6 +256,26 @@ export default function AddVehiclePage() {
                       required
                       value={formData.insuranceExpiry}
                       onChange={(e) => setFormData({...formData, insuranceExpiry: e.target.value})}
+                      className="w-full px-6 py-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic text-[var(--text-secondary)]"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">PUC Number</label>
+                    <input 
+                      required
+                      value={formData.pUCNumber}
+                      onChange={(e) => setFormData({...formData, pUCNumber: e.target.value})}
+                      placeholder="PUC_9900/88"
+                      className="w-full px-6 py-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all placeholder:text-[var(--text-tertiary)]/50 italic text-[var(--text-secondary)]"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">PUC Expiry</label>
+                    <input 
+                      type="date"
+                      required
+                      value={formData.pUCExpiry}
+                      onChange={(e) => setFormData({...formData, pUCExpiry: e.target.value})}
                       className="w-full px-6 py-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic text-[var(--text-secondary)]"
                     />
                   </div>
