@@ -42,6 +42,26 @@ const FooterSection = () => {
                 </a>
               ))}
             </div>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-wrap gap-3 mt-8">
+              <a 
+                href="tel:+919922968093" 
+                className="inline-flex items-center gap-2 px-6 py-3 bg-flexigo-primary text-white rounded-full font-semibold hover:bg-flexigo-teal transition-all shadow-lg shadow-flexigo-primary/20 group text-sm"
+              >
+                <Phone className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+                Call Now
+              </a>
+              <a 
+                href="https://wa.me/919922968093" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-[#25D366] text-white rounded-full font-semibold hover:bg-[#128C7E] transition-all shadow-lg shadow-green-500/20 group text-sm"
+              >
+                <MessageCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                WhatsApp
+              </a>
+            </div>
           </div>
 
           {/* Links Col 1 */}
@@ -84,21 +104,21 @@ const FooterSection = () => {
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-flexigo-teal shrink-0" />
-                <span className="text-slate-600 text-sm font-medium">
+                <a href="tel:+919922968093" className="text-slate-600 text-sm font-medium hover:text-flexigo-teal transition-colors">
                   +91 99229 68093
-                </span>
+                </a>
               </li>
               <li className="flex items-center gap-3">
                 <MessageCircle className="w-5 h-5 text-flexigo-teal shrink-0" />
-                <span className="text-slate-600 text-sm font-medium">
+                <a href="https://wa.me/919922968093" target="_blank" rel="noopener noreferrer" className="text-slate-600 text-sm font-medium hover:text-flexigo-teal transition-colors">
                   +91 99229 68093 (WhatsApp)
-                </span>
+                </a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-flexigo-teal shrink-0" />
-                <span className="text-slate-600 text-sm font-medium">
+                <a href="mailto:support@flexigoemobility.com" className="text-slate-600 text-sm font-medium hover:text-flexigo-teal transition-colors">
                   support@flexigoemobility.com
-                </span>
+                </a>
               </li>
             </ul>
           </div>
