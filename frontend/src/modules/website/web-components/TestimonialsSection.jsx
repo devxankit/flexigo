@@ -108,7 +108,7 @@ const TestimonialsSection = () => {
              </div>
           </div>
 
-          <div className="w-full lg:w-2/3 h-[400px] relative">
+          <div className="w-full lg:w-2/3 min-h-[450px] sm:min-h-[400px] relative">
              <AnimatePresence initial={false} custom={direction}>
                 <motion.div
                   key={currentIndex}

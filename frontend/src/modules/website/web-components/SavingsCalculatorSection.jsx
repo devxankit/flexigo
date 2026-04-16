@@ -100,8 +100,8 @@ const SavingsCalculatorSection = () => {
           </div>
 
           {/* Right Side: Graphic Visual (Donut/Gauge Style) */}
-          <div className="lg:w-1/2 w-full flex flex-col items-center">
-             <div className="relative w-[340px] h-[340px] md:w-[420px] md:h-[420px] flex items-center justify-center">
+          <div className="lg:w-1/2 w-full flex flex-col items-center overflow-hidden">
+             <div className="relative w-full max-w-[280px] sm:max-w-[420px] aspect-square flex items-center justify-center">
                 
                 {/* Outer Glow Circle */}
                 <div className="absolute inset-0 border border-flexigo-primary/10 rounded-full animate-[pulse_4s_infinite]" />
@@ -142,9 +142,9 @@ const SavingsCalculatorSection = () => {
                 <motion.div 
                    initial={{ x: 20, opacity: 0 }}
                    whileInView={{ x: 0, opacity: 1 }}
-                   className="absolute -top-4 -right-4 bg-white border border-slate-100 shadow-xl p-4 rounded-3xl flex items-center gap-3 backdrop-blur-sm z-20"
+                   className="absolute top-0 right-0 sm:-top-4 sm:-right-4 bg-white border border-slate-100 shadow-xl p-3 sm:p-4 rounded-2xl sm:rounded-3xl flex items-center gap-3 backdrop-blur-sm z-20"
                 >
-                   <div className="w-8 h-8 rounded-xl bg-orange-100 flex items-center justify-center text-orange-500">
+                   <div className="w-8 h-8 rounded-lg sm:rounded-xl bg-orange-100 flex items-center justify-center text-orange-500">
                       <Fuel className="w-4 h-4" />
                    </div>
                    <div>
@@ -152,12 +152,12 @@ const SavingsCalculatorSection = () => {
                       <p className="text-xs font-black text-slate-800">₹<SmoothCounter value={fuelSaving} /></p>
                    </div>
                 </motion.div>
-
+ 
                 <motion.div 
                    initial={{ x: -20, opacity: 0 }}
                    whileInView={{ x: 0, opacity: 1 }}
                    transition={{ delay: 0.1 }}
-                   className="absolute -bottom-4 -left-4 bg-white border border-slate-100 shadow-xl p-4 rounded-3xl flex items-center gap-3 backdrop-blur-sm z-20"
+                   className="absolute bottom-0 left-0 sm:-bottom-4 sm:-left-4 bg-white border border-slate-100 shadow-xl p-3 sm:p-4 rounded-2xl sm:rounded-3xl flex items-center gap-3 backdrop-blur-sm z-20"
                 >
                    <div className="w-8 h-8 rounded-xl bg-flexigo-primary/10 flex items-center justify-center text-flexigo-primary">
                       <ShieldCheck className="w-4 h-4" />

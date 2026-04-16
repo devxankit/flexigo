@@ -51,17 +51,21 @@
     mix-blend-mode: normal;
   }
 
-  body {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html, body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 300ms;
+    -moz-osx-ua-font-smoothing: grayscale;
+    transition: color 300ms, background-color 300ms;
     font-family: var(--font-body);
-    overflow-x: hidden;
-    overscroll-behavior: none;
+    margin: 0;
+    padding: 0;
+    max-width: 100vw;
+    overflow-x: clip;
   }
   
   h1, h2, h3, h4, h5, h6 {

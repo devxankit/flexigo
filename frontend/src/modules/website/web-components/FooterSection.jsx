@@ -5,7 +5,7 @@ import logo from '../../../assets/logo.png';
 
 const FooterSection = () => {
   return (
-    <footer className="bg-slate-50 border-t border-slate-200 pt-20 pb-10">
+    <footer className="bg-slate-50 border-t border-slate-200 pt-20 pb-10 overflow-hidden">
       <div className="w-full px-4 md:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 lg:gap-8 mb-16">
 
@@ -43,25 +43,6 @@ const FooterSection = () => {
               ))}
             </div>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-wrap gap-3 mt-8">
-              <a 
-                href="tel:+919922968093" 
-                className="inline-flex items-center gap-2 px-6 py-3 bg-flexigo-primary text-white rounded-full font-semibold hover:bg-flexigo-teal transition-all shadow-lg shadow-flexigo-primary/20 group text-sm"
-              >
-                <Phone className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-                Call Now
-              </a>
-              <a 
-                href="https://wa.me/919922968093" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-[#25D366] text-white rounded-full font-semibold hover:bg-[#128C7E] transition-all shadow-lg shadow-green-500/20 group text-sm"
-              >
-                <MessageCircle className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                WhatsApp
-              </a>
-            </div>
           </div>
 
           {/* Links Col 1 */}

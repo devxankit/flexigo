@@ -27,7 +27,7 @@ const VehicleShowcaseSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-4xl md:text-7xl font-black font-heading leading-[1.1] tracking-tighter text-white"
+            className="text-4xl md:text-6xl lg:text-7xl font-black font-heading leading-[1.1] tracking-tighter text-white px-2"
           >
             Engineering Meets <br />
             Pure <span className="text-flexigo-teal italic">Performance.</span>
@@ -39,25 +39,23 @@ const VehicleShowcaseSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="relative max-w-6xl mx-auto rounded-[4rem] bg-gradient-to-b from-white/[0.05] to-transparent border border-white/10 p-8 lg:p-20 backdrop-blur-3xl overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)] [transform:translateZ(0)]"
+          className="relative max-w-6xl mx-auto rounded-[2rem] md:rounded-[4rem] bg-gradient-to-b from-white/[0.05] to-transparent border border-white/10 p-6 md:p-12 lg:p-20 backdrop-blur-3xl overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)] [transform:translateZ(0)]"
         >
           {/* Glass glare effect */}
           <div className="absolute top-0 left-[-100%] w-[50%] h-[200%] bg-gradient-to-r from-transparent via-flexigo-teal/5 to-transparent rotate-[35deg] pointer-events-none group-hover:left-[200%] transition-all duration-[3000ms]" />
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
             {/* Visual Side */}
-            <div className="lg:col-span-7 relative flex justify-center items-center py-20 lg:py-0">
+            <div className="lg:col-span-7 relative flex justify-center items-center py-10 lg:py-0">
               
               {/* Massive Multi-Layer Pedestal Glow */}
-              <div className="absolute bottom-10 w-[120%] h-24 bg-flexigo-teal/20 blur-[100px] rounded-[100%] animate-pulse" />
-              <div className="absolute bottom-20 w-[60%] h-10 bg-flexigo-teal/30 blur-[40px] rounded-[100%]" />
-              <div className="absolute bottom-24 w-[30%] h-4 bg-flexigo-teal blur-[15px] rounded-[100%]" />
+              <div className="absolute bottom-10 w-full h-24 bg-flexigo-teal/20 blur-[60px] md:blur-[100px] rounded-[100%] animate-pulse" />
               
               {/* Scooter Showcase */}
               <div className="relative z-10 w-full flex flex-col items-center justify-center">
-                <div className="relative group/scooter p-10">
+                <div className="relative group/scooter p-4 md:p-10">
                   {/* Digital Aura Rings */}
-                  <div className="absolute inset-0 bg-flexigo-teal/5 rounded-full blur-[120px] scale-150 opacity-40" />
+                  <div className="absolute inset-0 bg-flexigo-teal/5 rounded-full blur-[80px] md:blur-[120px] scale-150 opacity-40" />
                   
                   <motion.div
                     animate={{ y: [-15, 15, -15] }}
@@ -67,7 +65,7 @@ const VehicleShowcaseSection = () => {
                     <img 
                       src={heroImage} 
                       alt="Flexigo V1 Scooter" 
-                      className="w-full h-auto max-w-[500px] object-contain transition-transform duration-1000 group-hover/scooter:scale-[1.05] drop-shadow-[0_0_15px_rgba(249,115,22,0.4)] drop-shadow-[0_0_50px_rgba(249,115,22,0.2)] drop-shadow-[0_30px_60px_rgba(0,0,0,0.8)]" 
+                      className="w-full h-auto max-w-[260px] md:max-w-[500px] object-contain transition-transform duration-1000 group-hover/scooter:scale-[1.05] drop-shadow-[0_0_15px_rgba(249,115,22,0.4)]" 
                     />
                     
                     {/* High-Tech Scanline */}
@@ -82,15 +80,15 @@ const VehicleShowcaseSection = () => {
                   <motion.div 
                     initial={{ x: 20, opacity: 0 }}
                     whileInView={{ x: 0, opacity: 1 }}
-                    className="absolute top-[20%] -right-4 lg:-right-12 bg-flexigo-teal text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-full shadow-[0_10px_30px_rgba(249,115,22,0.4)] rotate-12 flex items-center gap-2 z-30"
+                    className="absolute top-[10%] -right-2 lg:-right-12 bg-flexigo-teal text-white text-[8px] sm:text-[10px] font-black uppercase tracking-widest px-3 py-1.5 sm:px-4 sm:py-2 rounded-full shadow-[0_10px_30px_rgba(249,115,22,0.4)] rotate-12 flex items-center gap-2 z-30"
                   >
                     <Zap className="w-3 h-3 fill-white" />
-                    120km Ultra Range
+                    120km Range
                   </motion.div>
                 </div>
 
                 <div className="mt-16 text-center">
-                  <div className="text-[10px] font-black tracking-[0.6em] text-slate-600 uppercase mb-3">Serial No. F-V1-2024</div>
+                  <div className="text-[10px] font-black tracking-[0.3em] md:tracking-[0.6em] text-slate-600 uppercase mb-3">Serial No. F-V1-2024</div>
                   <div className="text-5xl font-black tracking-tighter text-white italic bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-500">
                     FLEXIGO V1
                   </div>
@@ -152,7 +150,7 @@ const VehicleShowcaseSection = () => {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.4 }}
-                className="grid grid-cols-2 gap-4"
+                className="grid grid-cols-1 sm:grid-cols-2 gap-4"
               >
                 <div className="bg-black/40 border border-white/5 rounded-3xl p-6 backdrop-blur-3xl hover:border-flexigo-teal/20 transition-colors duration-500">
                    <p className="text-[10px] font-black tracking-widest text-slate-500 uppercase mb-2">Max Velocity</p>
@@ -190,7 +188,7 @@ const VehicleShowcaseSection = () => {
         </motion.div>
 
         {/* Technical Specs Summary Bar */}
-        <div className="mt-16 flex flex-wrap justify-center gap-12 lg:gap-24 opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-700">
+        <div className="mt-16 flex flex-wrap justify-center gap-6 md:gap-12 lg:gap-24 opacity-40 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-700">
            {['250kg Payload', 'Dual Hub Motor', 'ABS Braking', 'Live GPS Tracking'].map((spec) => (
              <div key={spec} className="flex items-center gap-3">
                <div className="w-1.5 h-1.5 rounded-full bg-flexigo-teal" />

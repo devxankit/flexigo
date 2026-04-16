@@ -33,15 +33,15 @@ const Navbar = () => {
           : 'bg-transparent py-3'
       )}
     >
-      <div className="w-full px-2 md:px-4 flex justify-between items-center">
+      <div className="w-full max-w-7xl mx-auto px-4 flex justify-between items-center">
         {/* Logo */}
         <Link to="/" className="flex items-center group relative">
           <img 
             src={logo} 
             alt="FlexiGo Logo" 
-            className="w-26 h-26 md:w-36 md:h-36 absolute top-1/2 -translate-y-1/2 -left-1 object-contain transition-transform duration-300 group-hover:scale-105 z-10" 
+            className="w-24 h-24 md:w-36 md:h-36 absolute top-1/2 -translate-y-1/2 -left-2 object-contain transition-transform duration-300 group-hover:scale-105 z-10" 
           />
-          <div className="w-22 md:w-30 h-10 md:h-12" />
+          <div className="w-18 md:w-30 h-10 md:h-12" />
           <span className={cn(
             "text-2xl font-heading font-black tracking-tighter transition-colors mt-0.5 whitespace-nowrap uppercase",
             scrolled ? "text-flexigo-primary" : "text-black"
@@ -51,7 +51,7 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop Links */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden lg:flex items-center gap-8">
           {navLinks.map((link) => (
             <a
               key={link.name}
@@ -87,10 +87,11 @@ const Navbar = () => {
 
         {/* Mobile menu toggle */}
         <button
-          className="md:hidden text-flexigo-primary"
+          className="md:hidden p-2 text-flexigo-primary relative z-[60]"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle Menu"
         >
-          {mobileMenuOpen ? <X /> : <Menu />}
+          {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
       </div>
 
@@ -98,29 +99,44 @@ const Navbar = () => {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute top-full left-0 w-full bg-white shadow-xl border-t border-slate-100 py-4 px-6 md:hidden flex flex-col gap-4"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="absolute top-0 left-0 w-full bg-white/95 backdrop-blur-xl shadow-2xl border-b border-slate-100 overflow-hidden md:hidden z-50 pt-24 pb-10"
           >
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className="text-lg font-medium text-slate-700"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {link.name}
-              </a>
-            ))}
-            <div className="h-px bg-slate-100 my-2" />
-            <div className="flex flex-col gap-3">
-              <button className="w-full text-center py-3 text-slate-700 font-medium border border-slate-200 rounded-xl">
-                Log In
-              </button>
-              <button className="w-full text-center py-3 bg-flexigo-primary text-white font-medium rounded-xl">
-                Get Started
-              </button>
+            <div className="flex flex-col gap-5 px-6">
+              {navLinks.map((link, i) => (
+                <motion.a
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  key={link.name}
+                  href={link.href}
+                  className="text-xl font-heading font-bold text-slate-800 hover:text-flexigo-teal transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {link.name}
+                </motion.a>
+              ))}
+              <div className="h-px bg-slate-100 my-1" />
+              <div className="flex flex-col gap-3">
+                <motion.button 
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="w-full py-3.5 text-slate-700 font-bold border-2 border-slate-100 rounded-xl hover:bg-slate-50 transition-colors"
+                >
+                  Log In
+                </motion.button>
+                <motion.button 
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="w-full py-3.5 bg-flexigo-primary text-white font-bold rounded-xl shadow-xl shadow-flexigo-primary/20"
+                >
+                  Get Started
+                </motion.button>
+              </div>
             </div>
           </motion.div>
         )}
