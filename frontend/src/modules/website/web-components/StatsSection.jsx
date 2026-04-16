@@ -21,9 +21,9 @@ const StatCounter = ({ end, suffix }) => {
   });
 
   return (
-    <div className="text-5xl lg:text-6xl font-bold font-heading mb-4 text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70">
+    <div className="text-4xl sm:text-5xl lg:text-6xl font-bold font-heading mb-4 text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70">
       <span ref={countUpRef} />
-      <span className="text-flexigo-accent ml-1">{suffix}</span>
+      <span className="text-flexigo-teal ml-1">{suffix}</span>
     </div>
   );
 };

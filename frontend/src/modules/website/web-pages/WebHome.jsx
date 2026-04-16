@@ -14,6 +14,7 @@ import MapSection from '../web-components/MapSection';
 import TestimonialsSection from '../web-components/TestimonialsSection';
 import CtaSection from '../web-components/CtaSection';
 import FooterSection from '../web-components/FooterSection';
+import FloatingContactButtons from '../web-components/FloatingContactButtons';
 
 const WebHome = () => {
   return (
@@ -35,6 +36,7 @@ const WebHome = () => {
         </main>
 
         <FooterSection />
+        <FloatingContactButtons />
       </div>
     </ReactLenis>
   );
