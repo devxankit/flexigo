@@ -18,25 +18,24 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
-import { adminDataStore } from '../store/adminDataStore';
+import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function SubscriberRegistryPage() {
-  const { networkStats } = adminDataStore;
+  const { subscribers, fetchSubscribers, networkStats, fetchDashboardStats } = useAdminDataStore();
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [subscribers, setSubscribers] = React.useState([
-    { id: 'USR-9021', name: 'Arjun Kapur', email: 'arjun.k@corp.com', phone: '+91 91234 56780', persona: 'High-Value Rider', location: 'Maharashtra_Alpha_4', status: 'verified' },
-    { id: 'USR-4412', name: 'Zeba Khan', email: 'zeba.khan@node.in', phone: '+91 88765 43210', persona: 'Merchant Partner', location: 'Maharashtra_Alpha_4', status: 'verified' },
-    { id: 'USR-7721', name: 'Vikram Singh', email: 'vikram.s@flexigo.com', phone: '+91 99887 66554', persona: 'Corporate Enterprise', location: 'Maharashtra_Alpha_1', status: 'warning' },
-    { id: 'USR-1029', name: 'Priya Mani', email: 'priya.m@tech.com', phone: '+91 91234 11223', persona: 'Daily Subscriber', location: 'Maharashtra_Alpha_2', status: 'verified' }
-  ]);
+
+  React.useEffect(() => {
+    fetchSubscribers();
+    if (networkStats.totalSubscribers === 0) fetchDashboardStats();
+  }, []);
 
   const filteredSubscribers = subscribers.filter(s => {
     const q = searchQuery.toLowerCase();
     return (
-      s.name.toLowerCase().includes(q) || 
-      s.id.toLowerCase().includes(q) ||
-      s.email.toLowerCase().includes(q) ||
-      s.phone.includes(q)
+      (s.name?.toLowerCase() || '').includes(q) || 
+      ((s._id || s.id)?.toString().toLowerCase() || '').includes(q) ||
+      (s.email?.toLowerCase() || '').includes(q) ||
+      (s.phone || '').includes(q)
     );
   });
 

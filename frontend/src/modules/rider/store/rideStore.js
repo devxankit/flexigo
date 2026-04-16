@@ -10,8 +10,11 @@ export const useRideStore = create((set, get) => ({
     location: 'Hub A - Koramangala',
     plateNumber: 'KA 05 EV 1234',
   },
+  currentAddress: 'Detecting Location...',
   activeRide: null,
   rideHistory: [],
+
+  setCurrentAddress: (address) => set({ currentAddress: address }),
 
   startRide: () => {
     const startTime = Date.now();

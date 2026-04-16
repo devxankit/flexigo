@@ -24,13 +24,18 @@ import StatusBadge from '../components/StatusBadge';
 import OpsFilter from '../components/OpsFilter';
 
 export default function SubscriberConsole() {
-  const { subscribers = [] } = useRiderAssignmentStore();
-  const { vehicles = [] } = useFleetStore();
+  const { subscribers = [], fetchSubscribers } = useRiderAssignmentStore();
+  const { vehicles = [], fetchVehicles } = useFleetStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState({
     range: 'Last 7 Days',
     metrics: {}
   });
+
+  useEffect(() => {
+    fetchSubscribers();
+    fetchVehicles();
+  }, [fetchSubscribers, fetchVehicles]);
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
@@ -44,16 +49,18 @@ export default function SubscriberConsole() {
       return (
         (s.name?.toLowerCase() || '').includes(q) || 
         (s.phone || '').includes(q) ||
-        (s.id?.toLowerCase() || '').includes(q) ||
+        (s._id?.toLowerCase() || s.id?.toLowerCase() || '').includes(q) ||
         (s.licenseNo?.toLowerCase() || '').includes(q) ||
         (s.vehicleId?.toLowerCase() || '').includes(q)
       );
     });
   }, [subscribers, searchQuery]);
 
+  const utilization = vehicles.length > 0 ? ((subscribers.filter(s => s.status === 'active').length / vehicles.length) * 100).toFixed(1) : '0.0';
+
   return (
     <div className="space-y-3 pb-8">
-      {/* Page Header */}
+      {/* Page Header omitted for brevity */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="space-y-0.5">
           <div className="flex items-center gap-2">
@@ -92,9 +99,10 @@ export default function SubscriberConsole() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
          {[
            { label: 'ACTIVE_PERSONNEL', val: subscribers.filter(s => s.status === 'active').length.toString().padStart(2, '0'), icon: Users, color: 'emerald' },
-           { label: 'NETWORK_UTILIZATION', val: '88.4%', icon: Zap, color: 'blue' },
+           { label: 'NETWORK_UTILIZATION', val: `${utilization}%`, icon: Zap, color: 'blue' },
            { label: 'REGISTRY_QUEUE', val: subscribers.filter(s => s.status === 'pending').length.toString().padStart(2, '0'), icon: Calendar, color: 'amber' }
          ].map((m, i) => (
+
            <motion.div 
              key={m.label}
              initial={{ opacity: 0, y: 5 }}
@@ -138,14 +146,14 @@ export default function SubscriberConsole() {
              header: 'NODE_ALLOCATION',
              accessor: 'vehicleId',
              render: (row) => {
-               const vehicle = vehicles.find(v => v.id === row.vehicleId);
+               const vehicle = vehicles.find(v => (v._id || v.id) === row.vehicleId);
                return vehicle ? (
                  <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] flex items-center justify-center text-emerald-500 shadow-inner">
                        <Truck size={14} strokeWidth={2.5} />
                     </div>
                     <div className="flex flex-col">
-                       <span className="text-emerald-500 text-[9.5px] font-black tracking-tighter italic leading-none">{vehicle.plate}</span>
+                       <span className="text-emerald-500 text-[9.5px] font-black tracking-tighter italic leading-none">{vehicle.plate || vehicle.licensePlate}</span>
                        <span className="text-[6.5px] font-black text-[var(--text-tertiary)] uppercase italic tracking-[0.2em] mt-1.5 leading-none opacity-80">{vehicle.model}</span>
                     </div>
                  </div>

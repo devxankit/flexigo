@@ -25,7 +25,7 @@ import { useFranchiseAuthStore } from '../store/franchiseAuthStore';
 
 export default function StaffManagement() {
   const { staff, fetchStaff, addStaff, deleteStaff, updateStaffStatus } = useStaffStore();
-  const { franchise } = useFranchiseAuthStore();
+  const { user: franchise } = useFranchiseAuthStore();
   const [isAddStaffOpen, setAddStaffOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',

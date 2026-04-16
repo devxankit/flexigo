@@ -14,12 +14,26 @@ import {
   Lock
 } from 'lucide-react';
 import AdminStatCard from '../components/AdminStatCard';
+import LiveFleetMap from '../components/LiveFleetMap';
 import { motion } from 'framer-motion';
-import { adminDataStore } from '../store/adminDataStore';
+import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function GpsControlPage() {
-  const { vehicles, networkStats } = adminDataStore;
-  const [selectedVehicle, setSelectedVehicle] = useState(vehicles[0]);
+  const { vehicles, networkStats, fetchAllVehicles, fetchDashboardStats } = useAdminDataStore();
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
+  
+  React.useEffect(() => {
+    if (vehicles.length === 0) fetchAllVehicles();
+    if (networkStats.totalHubs === 0) fetchDashboardStats();
+  }, []);
+
+  React.useEffect(() => {
+    if (vehicles.length > 0 && !selectedVehicle) {
+      setSelectedVehicle(vehicles[0]);
+    }
+  }, [vehicles]);
+
+  const activeVehicle = selectedVehicle || { id: 'SYNC', rider: 'N/A', location: 'N/A', battery: 0, lastPing: 'N/A' };
 
   return (
     <div className="space-y-6 pb-12">
@@ -80,12 +94,12 @@ export default function GpsControlPage() {
                      <tbody className="divide-y divide-[var(--border-subtle)]">
                         {vehicles.map((vehicle) => (
                            <tr 
-                             key={vehicle.id} 
+                             key={vehicle._id || vehicle.id} 
                              onClick={() => setSelectedVehicle(vehicle)}
-                             className={`group/row transition-all duration-200 cursor-pointer text-[10px] ${selectedVehicle.id === vehicle.id ? 'bg-emerald-600/5' : 'hover:bg-[var(--bg-tertiary)]/20'}`}
+                             className={`group/row transition-all duration-200 cursor-pointer text-[10px] ${(activeVehicle._id || activeVehicle.id) === (vehicle._id || vehicle.id) ? 'bg-emerald-600/5' : 'hover:bg-[var(--bg-tertiary)]/20'}`}
                            >
                               <td className="py-2.5 px-6">
-                                 <span className={`font-black uppercase tracking-tight transition-colors leading-none italic ${selectedVehicle.id === vehicle.id ? 'text-emerald-500' : 'text-[var(--text-primary)]'}`}>{vehicle.id}</span>
+                                 <span className={`font-black uppercase tracking-tight transition-colors leading-none italic ${(activeVehicle._id || activeVehicle.id) === (vehicle._id || vehicle.id) ? 'text-emerald-500' : 'text-[var(--text-primary)]'}`}>{vehicle._id || vehicle.id}</span>
                               </td>
                               <td className="py-2.5 px-6">
                                  <div className="flex flex-col">
@@ -116,14 +130,14 @@ export default function GpsControlPage() {
             </div>
 
             {/* Tactical Grid Map View */}
-            <div className="h-64 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl relative overflow-hidden group shadow-sm bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] cursor-crosshair border-l-4 border-l-emerald-600">
-               <div className="absolute inset-0 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
+            <div className="h-64 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl relative overflow-hidden group shadow-sm border-l-4 border-l-emerald-600">
+               <LiveFleetMap vehicles={vehicles} />
                
-               <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-[var(--bg-secondary)] to-transparent">
+               <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-[var(--bg-secondary)] to-transparent pointer-events-none">
                   <div className="flex items-center justify-between">
                      <div className="space-y-0.5">
-                        <p className="text-[8px] font-black text-[var(--text-primary)] uppercase tracking-widest italic">Projection: Mercator_Alpha_4</p>
-                        <p className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic">Grid Integration Active</p>
+                        <p className="text-[8px] font-black text-[var(--text-primary)] uppercase tracking-widest italic">Live GPS Vector Feed</p>
+                        <p className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic">Satellite Connectivity Active</p>
                      </div>
                      <div className="flex items-center gap-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]" />
@@ -131,14 +145,6 @@ export default function GpsControlPage() {
                      </div>
                   </div>
                </div>
-
-               <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute top-1/4 left-1/3 p-1.5 bg-emerald-600 rounded-lg shadow-lg border border-white/20">
-                  <MapPin size={12} className="text-white" />
-               </motion.div>
-
-               <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.1 }} className="absolute top-1/2 right-1/4 p-1.5 bg-rose-600 rounded-lg shadow-lg border border-white/20">
-                  <MapPin size={12} className="text-white" />
-               </motion.div>
             </div>
          </div>
 
@@ -150,7 +156,7 @@ export default function GpsControlPage() {
                      <ShieldCheck size={24} />
                   </div>
                   <div className="space-y-1">
-                     <h3 className="text-base font-black text-[var(--text-primary)] uppercase italic tracking-tighter leading-none">{selectedVehicle.id} <span className="text-emerald-500">Core</span></h3>
+                     <h3 className="text-base font-black text-[var(--text-primary)] uppercase italic tracking-tighter leading-none">{activeVehicle._id || activeVehicle.id} <span className="text-emerald-500">Core</span></h3>
                      <div className="flex items-center gap-1.5 leading-none">
                         <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
                         <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest italic">Authenticated Host</p>

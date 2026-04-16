@@ -22,28 +22,31 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
-
-const initialFranchisePlans = [
-  { id: "FRAN-025", name: "Tier 1: 25 Vehicles", type: "Franchise", price: 15000, deposit: 10000, features: ["Up to 25 Vehicles", "Priority Maintenance", "Basic Hub Dashboard"], status: "active" },
-  { id: "FRAN-050", name: "Tier 2: 50 Vehicles", type: "Franchise", price: 28000, deposit: 20000, features: ["Up to 50 Vehicles", "Assigned Fleet Manager", "Advanced Analytics"], status: "active" },
-  { id: "FRAN-100", name: "Tier 3: 100 Vehicles", type: "Franchise", price: 52000, deposit: 40000, features: ["Up to 100 Vehicles", "Regional Support Hub", "Full Operation Control"], status: "active" },
-  { id: "FRAN-150", name: "Tier 4: 150 Vehicles", type: "Franchise", price: 75000, deposit: 60000, features: ["Up to 150 Vehicles", "Dedicated Ops Lead", "Custom Billing Solutions"], status: "active" },
-  { id: "FRAN-200", name: "Tier 5: 200 Vehicles", type: "Franchise", price: 95000, deposit: 80000, features: ["Up to 200 Vehicles", "Strategic Growth Partner", "Enterprise API Access"], status: "active" },
-];
-
-const initialPlans = [
-  { id: 'PLAN-001', name: 'Daily Quick', type: 'Daily', price: 250, deposit: 500, features: ['24h Access', 'Basic Support', 'Standard Hub Pickups'], status: 'active' },
-  { id: 'PLAN-002', name: 'Weekly Professional', type: 'Weekly', price: 1450, deposit: 2000, features: ['Priority Support', 'Unlimited Swaps', 'Roadside Assist'], status: 'active' },
-  { id: 'PLAN-003', name: 'Monthly Delivery Pro', type: 'Monthly', price: 4200, deposit: 3500, features: ['Premium Dashboard', 'Fleet Management Tool', 'Insurance Cover'], status: 'active' },
-];
+import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function SubscriptionPlansPage() {
-  const [activeTab, setActiveTab] = useState('Rider');
-  const [riderPlans, setRiderPlans] = useState(initialPlans);
-  const [franchisePlans, setFranchisePlans] = useState(initialFranchisePlans);
+  const { 
+    plans: allPlans, 
+    networkStats,
+    fetchPlans, 
+    fetchDashboardStats,
+    addPlan, 
+    updatePlan, 
+    deletePlan 
+  } = useAdminDataStore();
   
-  const plans = activeTab === 'Rider' ? riderPlans : franchisePlans;
-  const setPlans = activeTab === 'Rider' ? setRiderPlans : setFranchisePlans;
+  const [activeTab, setActiveTab] = useState('Rider');
+  
+  React.useEffect(() => {
+    fetchPlans();
+    fetchDashboardStats();
+  }, []);
+
+  const filteredPlans = allPlans.filter(p => p.target === activeTab);
+  
+  const avgTicket = filteredPlans.length > 0 
+    ? Math.round(filteredPlans.reduce((acc, p) => acc + p.price, 0) / filteredPlans.length) 
+    : 0;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
@@ -61,33 +64,34 @@ export default function SubscriptionPlansPage() {
       });
     } else {
       setEditingPlan(null);
-      setFormData({ name: '', type: 'Daily', price: '', deposit: '', features: '' });
+      setFormData({ name: '', type: activeTab === 'Rider' ? 'Daily' : 'Franchise', price: '', deposit: '', features: '' });
     }
     setIsModalOpen(true);
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    const newPlan = {
-      id: editingPlan ? editingPlan.id : `PLAN-${Math.floor(100 + Math.random() * 900)}`,
+    const planPayload = {
       name: formData.name,
       type: formData.type,
       price: parseInt(formData.price),
       deposit: parseInt(formData.deposit),
       features: formData.features.split(',').map(f => f.trim()),
-      status: editingPlan ? editingPlan.status : 'active'
+      target: activeTab
     };
 
     if (editingPlan) {
-      setPlans(prev => prev.map(p => p.id === editingPlan.id ? newPlan : p));
+      await updatePlan(editingPlan._id, planPayload);
     } else {
-      setPlans(prev => [newPlan, ...prev]);
+      await addPlan(planPayload);
     }
     setIsModalOpen(false);
   };
 
-  const handleDelete = (id) => {
-    setPlans(prev => prev.filter(p => p.id !== id));
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this plan?')) {
+        await deletePlan(id);
+    }
   };
 
   return (
@@ -116,10 +120,10 @@ export default function SubscriptionPlansPage() {
 
       {/* KPI Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <AdminStatCard title="Active Plans" value={plans.length} icon={Layers} color="emerald" subtitle="Market Offerings" />
-         <AdminStatCard title="Avg. Ticket" value="₹1,840" icon={IndianRupee} color="blue" subtitle="Revenue Per User" />
-         <AdminStatCard title="Churn Rate" value="1.2%" icon={ZapOff} color="rose" subtitle="Plan Delta" />
-         <AdminStatCard title="Growth Tier" value="24%" icon={TrendingUp} color="emerald" subtitle="Monthly Expansion" />
+         <AdminStatCard title="Active Plans" value={filteredPlans.length} icon={Layers} color="emerald" subtitle="Market Offerings" />
+         <AdminStatCard title="Avg. Ticket" value={`₹${avgTicket.toLocaleString()}`} icon={IndianRupee} color="blue" subtitle="Revenue Per User" />
+         <AdminStatCard title="Churn Rate" value={networkStats.churnRate} icon={ZapOff} color="rose" subtitle="Plan Delta" />
+         <AdminStatCard title="Growth Tier" value={networkStats.growthTier} icon={TrendingUp} color="emerald" subtitle="Monthly Expansion" />
       </div>
 
       {/* Tab Selector */}
@@ -142,13 +146,13 @@ export default function SubscriptionPlansPage() {
       {/* Plans Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
          <AnimatePresence mode="popLayout">
-            {plans.map((plan) => (
+            {filteredPlans.map((plan) => (
                <motion.div 
                  layout
                  initial={{ opacity: 0, scale: 0.95 }}
                  animate={{ opacity: 1, scale: 1 }}
                  exit={{ opacity: 0, scale: 0.95 }}
-                 key={plan.id} 
+                 key={plan._id || plan.id} 
                  className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-6 shadow-sm hover:border-emerald-500/30 transition-all group relative overflow-hidden"
                >
                   <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:scale-110 transition-transform pointer-events-none">
@@ -159,13 +163,13 @@ export default function SubscriptionPlansPage() {
                      <div className="space-y-1">
                         <span className="text-[7px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/10 italic leading-none">{plan.type} CYCLE</span>
                         <h3 className="text-base font-black text-[var(--text-primary)] uppercase italic tracking-tighter pt-1 leading-none">{plan.name}</h3>
-                        <p className="text-[7.5px] font-black text-[var(--text-tertiary)]/50 tracking-widest leading-none mt-1 uppercase italic">{plan.id}</p>
+                        <p className="text-[7.5px] font-black text-[var(--text-tertiary)]/50 tracking-widest leading-none mt-1 uppercase italic">{plan._id || plan.id}</p>
                      </div>
                      <div className="flex gap-1.5">
                         <button onClick={() => handleOpenModal(plan)} className="p-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-emerald-500 transition-all shadow-inner">
                            <Edit3 size={12} />
                         </button>
-                        <button onClick={() => handleDelete(plan.id)} className="p-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-rose-500 transition-all shadow-inner">
+                        <button onClick={() => handleDelete(plan._id || plan.id)} className="p-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-rose-500 transition-all shadow-inner">
                            <Trash2 size={12} />
                         </button>
                      </div>
@@ -195,7 +199,7 @@ export default function SubscriptionPlansPage() {
                   </div>
 
                    <button 
-                      onClick={() => alert(`METRICS_STREAM: ${plan.id}`)}
+                      onClick={() => alert(`METRICS_STREAM: ${plan._id || plan.id}`)}
                       className="w-full py-2.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[8px] font-black uppercase tracking-[0.2em] text-[var(--text-primary)] hover:border-emerald-500/30 transition-all flex items-center justify-center gap-2 group/btn active:scale-95 italic"
                    >
                       Performance Metrics <ChevronRight size={12} className="group-hover/btn:translate-x-0.5 transition-transform" />

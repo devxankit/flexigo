@@ -9,6 +9,7 @@ import riderRoutes from './modules/rider/riderRoutes.js';
 import franchiseRoutes from './modules/franchise/franchiseRoutes.js';
 import fleetRoutes from './modules/fleet/vehicleRoutes.js';
 import staffRoutes from './modules/staff/staffRoutes.js';
+import adminRoutes from './modules/admin/adminRoutes.js';
 
 // Load env vars
 dotenv.config();
@@ -46,6 +47,7 @@ app.use('/api/v1/rider', riderRoutes);
 app.use('/api/v1/franchise', franchiseRoutes);
 app.use('/api/v1/fleet', fleetRoutes);
 app.use('/api/v1/staff', staffRoutes);
+app.use('/api/v1/admin', adminRoutes);
 
 const PORT = process.env.PORT || 5000;
 

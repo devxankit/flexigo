@@ -3,10 +3,31 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { RiderHeader } from '../components/RiderHeader';
 import { BottomNav } from '../components/BottomNav';
 import { useThemeStore } from '../store/themeStore';
+import { useRideStore } from '../store/rideStore';
+import { reverseGeocode } from '../../../lib/googleMaps';
 
 export function RiderLayout() {
   const { pathname } = useLocation();
   const { theme } = useThemeStore();
+  const { setCurrentAddress } = useRideStore();
+
+  useEffect(() => {
+    // Live Location Fetcher
+    if ("geolocation" in navigator) {
+      const watchId = navigator.geolocation.watchPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          const address = await reverseGeocode(latitude, longitude);
+          if (address) {
+            setCurrentAddress(address);
+          }
+        },
+        (error) => console.error("Location Error:", error),
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      );
+      return () => navigator.geolocation.clearWatch(watchId);
+    }
+  }, []);
 
   useEffect(() => {
     // Reset scroll position immediately

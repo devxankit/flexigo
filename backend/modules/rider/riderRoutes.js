@@ -6,7 +6,9 @@ import {
   getRiderProfile,
   addMoney,
   getWalletData,
+  getSubscribersByFranchise,
 } from './riderController.js';
+import { protectFranchise } from '../../shared/middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -16,5 +18,6 @@ router.post('/kyc/update', updateKYC);
 router.get('/profile/:phone', getRiderProfile);
 router.post('/wallet/add', addMoney);
 router.get('/wallet/:phone', getWalletData);
+router.get('/subscribers', protectFranchise, getSubscribersByFranchise);
 
 export default router;

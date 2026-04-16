@@ -15,19 +15,51 @@ import {
   ArrowRight,
   TrendingDown
 } from 'lucide-react';
+import api from '../../../lib/axios';
 import DataCard from '../components/DataCard';
 import ActivityFeed from '../components/ActivityFeed';
 import { useFleetStore } from '../store/fleetStore';
 import { useRiderAssignmentStore } from '../store/riderAssignmentStore'; // provides subscribers
 import { useFranchiseWalletStore } from '../store/walletStore';
+import { useFranchiseAuthStore } from '../store/franchiseAuthStore';
 
 export default function HubDashboard() {
-  const { vehicles } = useFleetStore();
-  const { subscribers } = useRiderAssignmentStore();
-  const { balance } = useFranchiseWalletStore();
+  const { vehicles, fetchVehicles } = useFleetStore();
+  const { subscribers, fetchSubscribers } = useRiderAssignmentStore();
+  const { balance, fetchWallet } = useFranchiseWalletStore();
+  const { user: franchise } = useFranchiseAuthStore();
+  const [metrics, setMetrics] = useState({
+    totalVehicles: 0,
+    activeSubscribers: 0,
+    availableVehicles: 0,
+    issuesVehicles: 0,
+    utilization: 0,
+    avgPlanValue: 0
+  });
+  
   const dashboardRef = useRef(null);
 
   useEffect(() => {
+    const fId = franchise?._id || franchise?.id;
+    if (fId) {
+        fetchVehicles(fId);
+        fetchSubscribers(fId);
+        fetchWallet();
+    }
+    
+    // Fetch metrics from protected endpoint
+    const fetchMetrics = async () => {
+      try {
+        const res = await api.get('/franchise/dashboard-metrics');
+        if (res.data.success) {
+          setMetrics(res.data.metrics);
+        }
+      } catch (err) {
+        console.error('Failed to fetch metrics:', err);
+      }
+    };
+    fetchMetrics();
+
     const ctx = gsap.context(() => {
       gsap.from('.gsap-card', {
         y: 30,
@@ -40,10 +72,11 @@ export default function HubDashboard() {
     return () => ctx.revert();
   }, []);
 
-  const totalVehicles = vehicles.length;
-  const activeSubscribers = (subscribers || []).filter(s => s.status === 'active').length;
-  const availableVehicles = vehicles.filter(v => v.status === 'available').length;
-  const issuesVehicles = vehicles.filter(v => v.status === 'in-service' || v.status === 'quarantined').length;
+  const totalVehicles = metrics.totalVehicles || vehicles.length;
+  const activeSubscribers = metrics.activeSubscribers || (subscribers || []).filter(s => s.status === 'active').length;
+  const availableVehicles = metrics.availableVehicles || vehicles.filter(v => v.status === 'available').length;
+  const issuesVehicles = metrics.issuesVehicles || vehicles.filter(v => v.status === 'in-service' || v.status === 'quarantined').length;
+
 
   return (
     <div ref={dashboardRef} className="space-y-6 pb-10">
@@ -152,11 +185,11 @@ export default function HubDashboard() {
                  </div>
                  <div className="space-y-0.5">
                     <p className="text-[6.5px] font-black uppercase tracking-[0.2em] italic text-[var(--text-tertiary)] opacity-40 leading-none">FLEET_UTILIZATION</p>
-                    <p className="text-lg font-black text-blue-500 italic tracking-tighter leading-none">94.2%</p>
+                    <p className="text-lg font-black text-blue-500 italic tracking-tighter leading-none">{metrics.utilization}%</p>
                  </div>
                  <div className="space-y-0.5">
                     <p className="text-[6.5px] font-black uppercase tracking-[0.2em] italic text-[var(--text-tertiary)] opacity-40 leading-none">AVG_PLAN_VALUE</p>
-                    <p className="text-lg font-black text-emerald-500 italic tracking-tighter leading-none">₹850</p>
+                    <p className="text-lg font-black text-emerald-500 italic tracking-tighter leading-none">₹{metrics.avgPlanValue}</p>
                  </div>
              </div>
           </div>

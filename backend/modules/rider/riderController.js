@@ -191,3 +191,19 @@ export const getWalletData = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+// @desc    Get All Subscribers for a Franchise
+// @route   GET /api/v1/rider/subscribers
+export const getSubscribersByFranchise = async (req, res) => {
+  try {
+    const franchiseId = req.franchise ? req.franchise._id : req.query.franchiseId;
+    if (!franchiseId) {
+      return res.status(400).json({ success: false, message: 'Franchise ID required' });
+    }
+    const subscribers = await Rider.find({ franchise: franchiseId });
+    res.status(200).json({ success: true, subscribers });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+

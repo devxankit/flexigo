@@ -19,20 +19,24 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import AdminStatCard from '../components/AdminStatCard';
-import { adminDataStore } from '../store/adminDataStore';
+import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function HubManagementPage() {
   const navigate = useNavigate();
-  const [hubList, setHubList] = useState(adminDataStore.hubs);
-  const { networkStats } = adminDataStore;
+  const { hubs, networkStats, fetchHubs, fetchDashboardStats } = useAdminDataStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newHub, setNewHub] = useState({ name: '', city: '', fleet: '' });
   const [searchQuery, setSearchQuery] = useState('');
 
-  const filteredHubs = hubList.filter(h => 
-    h.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    h.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    h.id.toLowerCase().includes(searchQuery.toLowerCase())
+  React.useEffect(() => {
+    fetchHubs();
+    if (networkStats.totalHubs === 0) fetchDashboardStats();
+  }, []);
+
+  const filteredHubs = hubs.filter(h => 
+    (h.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) || 
+    (h.city?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+    ((h._id || h.id)?.toString().toLowerCase() || '').includes(searchQuery.toLowerCase())
   );
 
   const handleAddHub = (e) => {
@@ -93,7 +97,7 @@ export default function HubManagementPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <AdminStatCard title="Total Hubs" value={hubList.length} icon={Warehouse} color="emerald" subtitle="Active nodes" />
+         <AdminStatCard title="Total Hubs" value={hubs.length} icon={Warehouse} color="emerald" subtitle="Active nodes" />
          <AdminStatCard title="Utilization" value={networkStats.hubUtilization} icon={TrendingUp} color="blue" subtitle="Avg space" />
          <AdminStatCard title="Connectivity" value="98.2%" icon={Signal} color="emerald" subtitle="Uptime" />
          <AdminStatCard title="System Health" value="94%" icon={Activity} color="emerald" subtitle="Registry sync" />
@@ -105,12 +109,12 @@ export default function HubManagementPage() {
                <motion.div 
                   layout
                   initial={{ opacity: 0, scale: 0.98 }}
-                  animate={{ opacity: 1, scale: 0.95 }} // Wait, I should not scale it down permanently
-                  whileHover={{ scale: 1, y: -2 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  whileHover={{ scale: 1.02, y: -2 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: idx * 0.03 }}
-                  key={hub.id} 
-                  onClick={() => navigate(`/admin/hubs/${hub.id}`)}
+                  key={hub._id || hub.id} 
+                  onClick={() => navigate(`/admin/hubs/${hub._id || hub.id}`)}
                   className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl p-5 shadow-sm hover:border-emerald-500/30 transition-all group cursor-pointer active:scale-[0.98]"
                >
                   <div className="flex items-start justify-between mb-5">
@@ -121,7 +125,7 @@ export default function HubManagementPage() {
                         <div className="space-y-0.5">
                            <h3 className="text-sm font-black text-[var(--text-primary)] uppercase italic tracking-tighter leading-none">{hub.name}</h3>
                            <div className="flex items-center gap-1.5 text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">
-                              <MapPin size={8} className="text-emerald-500" /> {hub.city} • <span className="text-emerald-500">{hub.id}</span>
+                              <MapPin size={8} className="text-emerald-500" /> {hub.city} • <span className="text-emerald-500">{hub._id || hub.id}</span>
                            </div>
                         </div>
                      </div>

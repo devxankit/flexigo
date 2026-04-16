@@ -22,7 +22,7 @@ const chargingHubs = [
 
 export default function HomeDashboard() {
   const navigate = useNavigate();
-  const { vehicle, isDiagnosticsOpen, setDiagnosticsOpen } = useRideStore();
+  const { vehicle, isDiagnosticsOpen, setDiagnosticsOpen, currentAddress } = useRideStore();
   const [searchQuery, setSearchQuery] = useState('');
   const { theme } = useThemeStore();
   const { user } = useAuthStore();
@@ -155,7 +155,7 @@ export default function HomeDashboard() {
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
             <h2 className={`text-xl font-heading font-black tracking-tight transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>Nearest Hubs</h2>
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Based on your live location</p>
+            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5 truncate max-w-[200px]">Near: {currentAddress}</p>
           </div>
         </div>
 

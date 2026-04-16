@@ -25,10 +25,10 @@ import {
   CartesianGrid 
 } from 'recharts';
 import AdminStatCard from '../components/AdminStatCard';
-import { adminDataStore } from '../store/adminDataStore';
+import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function FinancialCenterPage() {
-  const { networkStats, revenueData } = adminDataStore;
+  const { networkStats, revenueData } = useAdminDataStore();
 
   return (
     <div className="space-y-6 pb-12">

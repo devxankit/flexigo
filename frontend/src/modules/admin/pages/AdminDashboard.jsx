@@ -25,17 +25,32 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { adminDataStore } from '../store/adminDataStore';
+import { useAdminDataStore } from '../store/adminDataStore';
 
 const COLORS = ['#10b981', '#0ea5e9', '#f59e0b', '#ef4444'];
 
 export default function AdminDashboard() {
-  const { networkStats, hubs, revenueData, fleetDistribution } = adminDataStore;
+  const { 
+    networkStats, 
+    hubs, 
+    revenueData, 
+    fleetDistribution,
+    fetchDashboardStats,
+    fetchHubs,
+    fetchDistribution
+  } = useAdminDataStore();
+
   const [activeView, setActiveView] = React.useState('live');
   const [activeFilters, setActiveFilters] = React.useState({
     range: 'Last 7 Days',
     metrics: {}
   });
+
+  React.useEffect(() => {
+    fetchDashboardStats();
+    fetchHubs();
+    fetchDistribution();
+  }, []);
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);

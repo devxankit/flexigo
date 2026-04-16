@@ -11,7 +11,10 @@ export const useFleetStore = create((set, get) => ({
   fetchVehicles: async (franchiseId) => {
     set({ isLoading: true });
     try {
-      const res = await api.get('/fleet', { params: { franchiseId } });
+      const params = {};
+      if (franchiseId) params.franchiseId = franchiseId;
+      
+      const res = await api.get('/fleet', { params });
       if (res.data.success) {
         set({ vehicles: res.data.vehicles });
       }

@@ -26,12 +26,17 @@ import { useRiderAssignmentStore } from '../store/riderAssignmentStore';
 import { useFleetStore } from '../store/fleetStore';
 
 export default function HandoverModule() {
-  const { activeStep, setStep, mode, setMode, handoverData, updateHandoverData, resetHandover } = useHandoverStore();
-  const { subscribers, dispatchVehicle } = useRiderAssignmentStore();
-  const { vehicles, updateVehicleStatus } = useFleetStore();
+  const { activeStep, setStep, mode, setMode, handoverData, updateHandoverData, resetHandover, submitHandover } = useHandoverStore();
+  const { subscribers, fetchSubscribers, dispatchVehicle } = useRiderAssignmentStore();
+  const { vehicles, fetchVehicles, updateVehicleStatus } = useFleetStore();
 
   const [selectedSubscriber, setSelectedSubscriber] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+
+  useEffect(() => {
+    fetchSubscribers();
+    fetchVehicles();
+  }, [fetchSubscribers, fetchVehicles]);
 
   // Derived lists
   const intakeSubscribers = useMemo(() => (subscribers || []).filter(s => s.status === 'active' || s.status === 'paused'), [subscribers]);
@@ -40,16 +45,19 @@ export default function HandoverModule() {
 
   useEffect(() => {
     if (mode === 'intake' && selectedSubscriber) {
-      const vehicle = vehicles.find(v => v.id === selectedSubscriber.vehicleId);
+      const vehicle = vehicles.find(v => (v._id || v.id) === selectedSubscriber.vehicleId);
       setSelectedVehicle(vehicle);
-      updateHandoverData({ subscriberId: selectedSubscriber.id, vehicleId: vehicle?.id });
+      updateHandoverData({ subscriberId: selectedSubscriber._id || selectedSubscriber.id, vehicleId: vehicle?._id || vehicle?.id });
     }
   }, [selectedSubscriber, vehicles, updateHandoverData, mode]);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const maxSteps = mode === 'dispatch' ? 4 : 3;
     if (activeStep < maxSteps) setStep(activeStep + 1);
     else {
+      // Record handover to DB
+      await submitHandover();
+
       // Finalize based on mode
       if (mode === 'dispatch') {
         dispatchVehicle(handoverData.subscriberId, handoverData.vehicleId, handoverData.returnDate);
@@ -67,6 +75,7 @@ export default function HandoverModule() {
     }
   };
 
+
   const handleModeChange = (newMode) => {
     setMode(newMode);
     setSelectedSubscriber(null);
@@ -82,13 +91,13 @@ export default function HandoverModule() {
            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto pr-1 no-scrollbar">
               {availableVehicles.map((v) => (
                 <button
-                  key={v.id}
+                  key={v._id || v.id}
                   onClick={() => {
                     setSelectedVehicle(v);
-                    updateHandoverData({ vehicleId: v.id });
+                    updateHandoverData({ vehicleId: v._id || v.id });
                   }}
                   className={`p-4 rounded-xl border text-left transition-all duration-300 ${
-                    selectedVehicle?.id === v.id 
+                    (selectedVehicle?._id || selectedVehicle?.id) === (v._id || v.id) 
                     ? 'bg-emerald-500/10 border-emerald-500/30 ring-1 ring-emerald-500/20' 
                     : 'bg-[var(--bg-tertiary)]/10 border-[var(--border-subtle)] hover:bg-[var(--bg-tertiary)]/20'
                   }`}
@@ -100,7 +109,7 @@ export default function HandoverModule() {
                   <h4 className="text-sm font-bold text-[var(--text-primary)]">{v.model}</h4>
                   <div className="mt-2 flex items-center justify-between">
                      <span className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">Range: {v.range}km</span>
-                     {selectedVehicle?.id === v.id && <CheckCircle2 size={16} className="text-emerald-500" />}
+                     {(selectedVehicle?._id || selectedVehicle?.id) === (v._id || v.id) && <CheckCircle2 size={16} className="text-emerald-500" />}
                   </div>
                 </button>
               ))}
@@ -115,21 +124,21 @@ export default function HandoverModule() {
            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto pr-1 no-scrollbar">
               {unassignedSubscribers.map((s) => (
                 <button
-                  key={s.id}
+                  key={s._id || s.id}
                   onClick={() => {
                     setSelectedSubscriber(s);
                     // Auto-fill return date based on plan - dummy logic
-                    const days = s.subscriptionPlan.includes('Weekly') ? 7 : s.subscriptionPlan.includes('Monthly') ? 30 : 1;
+                    const days = (s.subscriptionPlan || '').includes('Weekly') ? 7 : (s.subscriptionPlan || '').includes('Monthly') ? 30 : 1;
                     const date = new Date();
                     date.setDate(date.getDate() + days);
                     
                     updateHandoverData({ 
-                        subscriberId: s.id,
+                        subscriberId: s._id || s.id,
                         returnDate: date.toISOString().split('T')[0]
                     });
                   }}
                   className={`p-4 rounded-xl border text-left transition-all duration-300 ${
-                    selectedSubscriber?.id === s.id 
+                    (selectedSubscriber?._id || selectedSubscriber?.id) === (s._id || s.id) 
                     ? 'bg-emerald-500/10 border-emerald-500/30 ring-1 ring-emerald-500/20' 
                     : 'bg-[var(--bg-tertiary)]/10 border-[var(--border-subtle)] hover:bg-[var(--bg-tertiary)]/20'
                   }`}
@@ -141,7 +150,7 @@ export default function HandoverModule() {
                   <h4 className="text-sm font-bold text-[var(--text-primary)]">{s.name}</h4>
                   <div className="mt-2 flex items-center justify-between">
                      <span className="text-[9px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">{s.phone}</span>
-                     {selectedSubscriber?.id === s.id && <CheckCircle2 size={16} className="text-emerald-500" />}
+                     {(selectedSubscriber?._id || selectedSubscriber?.id) === (s._id || s.id) && <CheckCircle2 size={16} className="text-emerald-500" />}
                   </div>
                 </button>
               ))}
@@ -406,19 +415,19 @@ export default function HandoverModule() {
                  {mode === 'dispatch' ? (
                    availableVehicles.map((v) => (
                       <motion.div
-                        key={v.id}
+                        key={v._id || v.id}
                         onClick={() => {
                           setSelectedVehicle(v);
-                          updateHandoverData({ vehicleId: v.id });
+                          updateHandoverData({ vehicleId: v._id || v.id });
                         }}
                         animate={{ 
-                          borderColor: selectedVehicle?.id === v.id ? 'rgba(16, 185, 129, 0.3)' : 'var(--border-subtle)',
-                          backgroundColor: selectedVehicle?.id === v.id ? 'rgba(16, 185, 129, 0.05)' : 'transparent'
+                          borderColor: (selectedVehicle?._id || selectedVehicle?.id) === (v._id || v.id) ? 'rgba(16, 185, 129, 0.3)' : 'var(--border-subtle)',
+                          backgroundColor: (selectedVehicle?._id || selectedVehicle?.id) === (v._id || v.id) ? 'rgba(16, 185, 129, 0.05)' : 'transparent'
                         }}
                         className="p-4 rounded-lg border cursor-pointer hover:bg-[var(--bg-tertiary)] transition-all group shrink-0"
                       >
                          <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${selectedVehicle?.id === v.id ? 'bg-emerald-600/10 border-emerald-500/30 text-emerald-600' : 'bg-[var(--bg-tertiary)] border-[var(--border-subtle)] text-slate-400'}`}>
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${(selectedVehicle?._id || selectedVehicle?.id) === (v._id || v.id) ? 'bg-emerald-600/10 border-emerald-500/30 text-emerald-600' : 'bg-[var(--bg-tertiary)] border-[var(--border-subtle)] text-slate-400'}`}>
                                <Truck size={14} />
                             </div>
                             <div className="flex-1">
@@ -434,19 +443,19 @@ export default function HandoverModule() {
                  ) : (
                    intakeSubscribers.map((s) => (
                      <motion.div
-                       key={s.id}
+                       key={s._id || s.id}
                        onClick={() => {
                          setSelectedSubscriber(s);
                          resetHandover();
                        }}
                        animate={{ 
-                         borderColor: selectedSubscriber?.id === s.id ? 'rgba(16, 185, 129, 0.3)' : 'var(--border-subtle)',
-                         backgroundColor: selectedSubscriber?.id === s.id ? 'rgba(16, 185, 129, 0.05)' : 'transparent'
+                         borderColor: (selectedSubscriber?._id || selectedSubscriber?.id) === (s._id || s.id) ? 'rgba(16, 185, 129, 0.3)' : 'var(--border-subtle)',
+                         backgroundColor: (selectedSubscriber?._id || selectedSubscriber?.id) === (s._id || s.id) ? 'rgba(16, 185, 129, 0.05)' : 'transparent'
                        }}
                        className="p-4 rounded-lg border cursor-pointer hover:bg-[var(--bg-tertiary)] transition-all shrink-0"
                      >
                         <div className="flex items-center gap-3">
-                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${selectedSubscriber?.id === s.id ? 'bg-emerald-600/10 border-emerald-500/30 text-emerald-600' : 'bg-[var(--bg-tertiary)] border-[var(--border-subtle)] text-slate-400'}`}>
+                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${(selectedSubscriber?._id || selectedSubscriber?.id) === (s._id || s.id) ? 'bg-emerald-600/10 border-emerald-500/30 text-emerald-600' : 'bg-[var(--bg-tertiary)] border-[var(--border-subtle)] text-slate-400'}`}>
                               <User size={20} />
                            </div>
                            <div className="flex-1">

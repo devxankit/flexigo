@@ -1,44 +1,67 @@
 import { create } from 'zustand';
+import api from '../../../lib/axios';
 
-const initialSubscribers = [
-  { id: 'S-1', name: 'Naveen Kumar', phone: '+91 91234 56789', status: 'active', vehicleId: 'V-002', subscriptionPlan: 'Weekly Pro', subscriptionStart: '2026-03-01T10:00:00Z', subscriptionEnd: '2026-04-01T10:00:00Z' },
-  { id: 'S-2', name: 'Sandeep R.', phone: '+91 99887 76655', status: 'paused', vehicleId: 'V-005', subscriptionPlan: 'Daily Flex', subscriptionStart: '2026-03-15T08:30:00Z', subscriptionEnd: '2026-04-15T08:30:00Z' },
-  { id: 'S-3', name: 'Ankita Singh', phone: '+91 77665 54433', status: 'pending', vehicleId: 'V-001', subscriptionPlan: 'Monthly Enterprise', subscriptionStart: null, subscriptionEnd: null },
-];
+export const useSubscriberStore = create((set, get) => ({
+  subscribers: [],
+  isLoading: false,
 
-export const useSubscriberStore = create((set) => ({
-  subscribers: initialSubscribers,
+  fetchSubscribers: async () => {
+    set({ isLoading: true });
+    try {
+      const res = await api.get('/rider/subscribers');
+      if (res.data.success) {
+        set({ subscribers: res.data.subscribers });
+      }
+    } catch (error) {
+      console.error('Failed to fetch subscribers:', error);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
 
-  assignVehicle: (subscriberId, vehicleId) => set((state) => ({
-    subscribers: state.subscribers.map(s => 
-      s.id === subscriberId 
-        ? { ...s, vehicleId, status: 'active', subscriptionStart: new Date().toISOString() } 
-        : s
-    )
-  })),
+  assignVehicle: async (subscriberId, vehicleId) => {
+    try {
+      // Logic would be linked to backend: api.post('/rider/assign', { subscriberId, vehicleId })
+      set((state) => ({
+        subscribers: state.subscribers.map(s => 
+          (s._id || s.id) === subscriberId 
+            ? { ...s, vehicleId, status: 'active', subscriptionStart: new Date().toISOString() } 
+            : s
+        )
+      }));
+      return { success: true };
+    } catch (error) {
+      return { success: false };
+    }
+  },
 
-  dispatchVehicle: (subscriberId, vehicleId, returnDate) => set((state) => ({
-    subscribers: state.subscribers.map(s => 
-      s.id === subscriberId 
-        ? { 
-            ...s, 
-            vehicleId, 
-            status: 'active', 
-            subscriptionStart: new Date().toISOString(),
-            subscriptionEnd: returnDate
-          } 
-        : s
-    )
-  })),
+  dispatchVehicle: async (subscriberId, vehicleId, returnDate) => {
+    // Similarly linked to backend
+    set((state) => ({
+      subscribers: state.subscribers.map(s => 
+        (s._id || s.id) === subscriberId 
+          ? { 
+              ...s, 
+              vehicleId, 
+              status: 'active', 
+              subscriptionStart: new Date().toISOString(),
+              subscriptionEnd: returnDate
+            } 
+          : s
+      )
+    }));
+  },
 
-  returnVehicle: (subscriberId) => set((state) => ({
-    subscribers: state.subscribers.map(s => 
-      s.id === subscriberId 
-        ? { ...s, vehicleId: null, status: 'completed', subscriptionStart: null } 
-        : s
-    )
-  }))
+  returnVehicle: async (subscriberId) => {
+    set((state) => ({
+      subscribers: state.subscribers.map(s => 
+        (s._id || s.id) === subscriberId 
+          ? { ...s, vehicleId: null, status: 'completed', subscriptionStart: null } 
+          : s
+      )
+    }));
+  }
 }));
 
-// Backward compat alias (for pages still using old store name)
 export const useRiderAssignmentStore = useSubscriberStore;
+

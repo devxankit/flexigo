@@ -38,6 +38,26 @@ const RiderSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  status: {
+    type: String,
+    enum: ['active', 'paused', 'pending', 'completed'],
+    default: 'pending',
+  },
+  subscriptionPlan: {
+    type: String,
+    enum: ['Weekly Pro', 'Daily Flex', 'Monthly Enterprise', 'Standard', 'Premium', 'Enterprise', null],
+    default: null,
+  },
+  subscriptionStart: Date,
+  subscriptionEnd: Date,
+  vehicleId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Vehicle',
+  },
+  franchise: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Franchise',
+  },
   createdAt: {
     type: Date,
     default: Date.now,

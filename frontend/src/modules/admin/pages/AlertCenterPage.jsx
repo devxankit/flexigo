@@ -17,10 +17,10 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
-import { adminDataStore } from '../store/adminDataStore';
+import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function AlertCenterPage() {
-  const { networkStats } = adminDataStore;
+  const { networkStats } = useAdminDataStore();
 
   return (
     <div className="space-y-6 pb-12">

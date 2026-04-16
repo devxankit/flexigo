@@ -23,24 +23,28 @@ import {
   Activity
 } from 'lucide-react';
 import AdminStatCard from '../components/AdminStatCard';
-import { adminDataStore } from '../store/adminDataStore';
+import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function KycOnboardingPage() {
-  const [kycRecords, setKycRecords] = useState(adminDataStore.kycRecords);
+  const { kycRecords, fetchKycRecords, updateKycStatus } = useAdminDataStore();
   const [activeTab, setActiveTab] = useState('all');
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  React.useEffect(() => {
+    fetchKycRecords();
+  }, []);
+
   const filteredRecords = kycRecords.filter(r => {
     const matchesTab = activeTab === 'all' || r.role.toLowerCase() === activeTab.slice(0, -1);
     const matchesSearch = r.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         r.id.toLowerCase().includes(searchQuery.toLowerCase());
+                         r.id.toString().toLowerCase().includes(searchQuery.toLowerCase());
     return matchesTab && matchesSearch;
   });
 
-  const handleAction = (id, newStatus) => {
-    setKycRecords(prev => prev.map(r => r.id === id ? { ...r, status: newStatus } : r));
+  const handleAction = async (id, newStatus) => {
+    await updateKycStatus(id, newStatus);
     if (selectedRecord && selectedRecord.id === id) {
       setSelectedRecord(prev => ({ ...prev, status: newStatus }));
     }
@@ -129,14 +133,14 @@ export default function KycOnboardingPage() {
                          initial={{ opacity: 0 }}
                          animate={{ opacity: 1 }}
                          exit={{ opacity: 0 }}
-                         key={record.id} 
-                         className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]"
-                         onClick={() => openDetails(record)}
+                          key={record._id || record.id} 
+                          className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]"
+                          onClick={() => openDetails(record)}
                        >
                           <td className="py-2.5 px-6 whitespace-nowrap">
                              <div className="flex flex-col">
                                 <span className="font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic leading-none">{record.name}</span>
-                                <span className="text-[7px] font-bold text-[var(--text-tertiary)]/50 tracking-widest uppercase mt-1 leading-none italic">{record.id}</span>
+                                <span className="text-[7px] font-bold text-[var(--text-tertiary)]/50 tracking-widest uppercase mt-1 leading-none italic">{record._id || record.id}</span>
                              </div>
                           </td>
                           <td className="py-2.5 px-6 font-black text-[var(--text-tertiary)] uppercase tracking-widest leading-none italic">{record.role}</td>
@@ -166,7 +170,7 @@ export default function KycOnboardingPage() {
                                 </button>
                                 {record.status === 'pending' && (
                                    <button 
-                                      onClick={() => handleAction(record.id, 'approved')}
+                                      onClick={() => handleAction(record._id || record.id, 'approved')}
                                       className="p-1.5 bg-emerald-600 text-white rounded-lg shadow-md hover:bg-emerald-700 transition-all active:scale-95"
                                    >
                                       <CheckCircle size={12} />
@@ -204,7 +208,7 @@ export default function KycOnboardingPage() {
                         <div className="space-y-0.5">
                            <h2 className="text-base font-black text-[var(--text-primary)] uppercase tracking-tighter italic leading-none">{selectedRecord.name}</h2>
                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-[7.5px] font-black text-emerald-500 uppercase tracking-widest leading-none">ID: {selectedRecord.id}</span>
+                              <span className="text-[7.5px] font-black text-emerald-500 uppercase tracking-widest leading-none">ID: {selectedRecord._id || selectedRecord.id}</span>
                               <div className={`px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border border-[var(--border-subtle)] leading-none`}>
                                  {selectedRecord.role}
                               </div>
@@ -255,13 +259,13 @@ export default function KycOnboardingPage() {
                      {selectedRecord.status === 'pending' ? (
                         <>
                            <button 
-                              onClick={() => { handleAction(selectedRecord.id, 'approved'); setIsDetailModalOpen(false); }}
+                              onClick={() => { handleAction(selectedRecord._id || selectedRecord.id, 'approved'); setIsDetailModalOpen(false); }}
                               className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-950/20 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2"
                            >
                               <Zap size={14} fill="currentColor" /> Authorize Subscriber
                            </button>
                            <button 
-                              onClick={() => { handleAction(selectedRecord.id, 'rejected'); setIsDetailModalOpen(false); }}
+                              onClick={() => { handleAction(selectedRecord._id || selectedRecord.id, 'rejected'); setIsDetailModalOpen(false); }}
                               className="px-5 py-3 bg-rose-600/10 text-rose-500 border border-rose-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-600/20 transition-all active:scale-95 italic"
                            >
                               Decline Node

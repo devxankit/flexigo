@@ -16,10 +16,20 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
-import { adminDataStore } from '../store/adminDataStore';
+import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function FleetOversightPage() {
-  const { vehicles, networkStats } = adminDataStore;
+  const { 
+    vehicles, 
+    networkStats, 
+    fetchAllVehicles, 
+    fetchDashboardStats 
+  } = useAdminDataStore();
+
+  React.useEffect(() => {
+    fetchAllVehicles();
+    if (networkStats.activeFleet === 0) fetchDashboardStats();
+  }, []);
 
   return (
     <div className="space-y-6 pb-12">

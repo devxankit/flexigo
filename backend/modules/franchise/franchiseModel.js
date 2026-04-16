@@ -65,6 +65,10 @@ const FranchiseSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  walletBalance: {
+    type: Number,
+    default: 0,
+  },
   otp: String,
   otpExpire: Date,
   createdAt: {

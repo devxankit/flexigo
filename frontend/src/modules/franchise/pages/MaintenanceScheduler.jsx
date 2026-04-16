@@ -19,18 +19,33 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useFleetStore } from '../store/fleetStore';
+import { useFranchiseAuthStore } from '../store/franchiseAuthStore';
 import { useNavigate } from 'react-router-dom';
 
 export default function MaintenanceScheduler() {
   const navigate = useNavigate();
-  const { vehicles, addMaintenanceLog, updateVehicleStatus } = useFleetStore();
+  const { vehicles, fetchVehicles, addMaintenanceLog, updateVehicleStatus } = useFleetStore();
+  const { user } = useFranchiseAuthStore();
   const [selectedVehicleId, setSelectedVehicleId] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('upcoming');
+
+  React.useEffect(() => {
+    if (user?._id || user?.id) {
+      fetchVehicles(user._id || user.id);
+    }
+  }, [user, fetchVehicles]);
   
   const maintenanceHistory = vehicles.flatMap(v => 
     (v.maintenanceLogs || []).map(log => ({ ...log, vehicleId: v._id || v.id, plate: v.plate }))
   ).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  const stats = {
+    operational: vehicles.length > 0 ? ((vehicles.filter(v => v.status === 'available' || v.status === 'assigned').length / vehicles.length) * 100).toFixed(1) : '0.0',
+    alerts: vehicles.filter(v => v.status === 'in-service').length,
+    quarantined: vehicles.filter(v => v.status === 'quarantined').length,
+    turnaround: '3.4h' // Hardcoded as placeholder for avg calculation
+  };
 
   const [formData, setFormData] = useState({
     type: 'Regular Inspection',
@@ -62,6 +77,7 @@ export default function MaintenanceScheduler() {
     }
   };
 
+
   return (
     <div className="space-y-8 pb-20">
       {/* Header */}
@@ -91,28 +107,28 @@ export default function MaintenanceScheduler() {
          <div className="p-4 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl flex flex-col justify-between shadow-inner border-l-4 border-l-emerald-500">
             <span className="text-[6.5px] font-black text-emerald-500 uppercase tracking-[0.3em] italic leading-none mb-4">SYSTEM_ONLINE</span>
             <div>
-               <h3 className="text-2xl font-black text-[var(--text-primary)] tracking-tighter italic leading-none">98.2%</h3>
+               <h3 className="text-2xl font-black text-[var(--text-primary)] tracking-tighter italic leading-none">{stats.operational}%</h3>
                <p className="text-[6.5px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] italic opacity-60 mt-1 leading-none">FLEET_OPERATIONAL</p>
             </div>
          </div>
          <div className="p-4 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl flex flex-col justify-between shadow-inner border-l-4 border-l-amber-500">
             <span className="text-[6.5px] font-black text-amber-500 uppercase tracking-[0.3em] italic leading-none mb-4">REQUIRES_CHECK</span>
             <div>
-               <h3 className="text-2xl font-black text-[var(--text-primary)] tracking-tighter italic leading-none">04</h3>
+               <h3 className="text-2xl font-black text-[var(--text-primary)] tracking-tighter italic leading-none">{stats.alerts}</h3>
                <p className="text-[6.5px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] italic opacity-60 mt-1 leading-none">MAINTENANCE_ALERTS</p>
             </div>
          </div>
          <div className="p-4 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl flex flex-col justify-between shadow-inner border-l-4 border-l-rose-500">
             <span className="text-[6.5px] font-black text-rose-500 uppercase tracking-[0.3em] italic leading-none mb-4">GROUND_STATUS</span>
             <div>
-               <h3 className="text-2xl font-black text-[var(--text-primary)] tracking-tighter italic leading-none">02</h3>
+               <h3 className="text-2xl font-black text-[var(--text-primary)] tracking-tighter italic leading-none">{stats.quarantined}</h3>
                <p className="text-[6.5px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] italic opacity-60 mt-1 leading-none">ASSET_QUARANTINED</p>
             </div>
          </div>
          <div className="p-4 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl flex flex-col justify-between shadow-inner border-l-4 border-l-blue-500">
             <span className="text-[6.5px] font-black text-blue-500 uppercase tracking-[0.3em] italic leading-none mb-4">AVG_REPAIR</span>
             <div>
-               <h3 className="text-2xl font-black text-[var(--text-primary)] tracking-tighter italic leading-none">3.4h</h3>
+               <h3 className="text-2xl font-black text-[var(--text-primary)] tracking-tighter italic leading-none">{stats.turnaround}</h3>
                <p className="text-[6.5px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] italic opacity-60 mt-1 leading-none">TURNAROUND_TIME</p>
             </div>
          </div>

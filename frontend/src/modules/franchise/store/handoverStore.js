@@ -1,10 +1,11 @@
 import { create } from 'zustand';
+import api from '../../../lib/axios';
 
-export const useHandoverStore = create((set) => ({
+export const useHandoverStore = create((set, get) => ({
   activeStep: 0,
   mode: 'intake', // intake | dispatch
   handoverData: {
-    riderId: null,
+    subscriberId: null,
     vehicleId: null,
     photos: { front: null, back: null, left: null, right: null },
     inspection: { body: false, tires: false, mirrors: false, lights: false, batteryCable: false },
@@ -21,10 +22,24 @@ export const useHandoverStore = create((set) => ({
     handoverData: { ...state.handoverData, ...data }
   })),
 
+  submitHandover: async () => {
+    const { mode, handoverData } = get();
+    try {
+      const res = await api.post('/franchise/handover', {
+        mode,
+        ...handoverData
+      });
+      return res.data;
+    } catch (error) {
+      console.error('Handover submission failed:', error);
+      return { success: false, message: error.message };
+    }
+  },
+
   resetHandover: () => set((state) => ({
     activeStep: 0,
     handoverData: {
-      riderId: null,
+      subscriberId: null,
       vehicleId: null,
       photos: { front: null, back: null, left: null, right: null },
       inspection: { body: false, tires: false, mirrors: false, lights: false, batteryCable: false },
@@ -35,3 +50,4 @@ export const useHandoverStore = create((set) => ({
     }
   }))
 }));
+

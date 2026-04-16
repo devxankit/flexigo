@@ -9,7 +9,7 @@ export function RiderHeader() {
   const { pathname } = useLocation();
   const { user } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
-  const { setDiagnosticsOpen } = useRideStore();
+  const { setDiagnosticsOpen, currentAddress } = useRideStore();
 
   // Don't show header on splash, auth, or onboarding screens
   const isAuth = pathname.includes('/rider/auth') || pathname.includes('/rider/onboarding') || pathname === '/rider' || pathname === '/rider/';
@@ -35,7 +35,12 @@ export function RiderHeader() {
           }`}>
             Flexi<span className="text-flexigo-teal">Go</span>
           </span>
-          <span className="text-[8px] text-gray-500 font-bold uppercase tracking-[0.2em] mt-0.5">Rider App</span>
+          <div className="flex items-center gap-1 mt-0.5">
+             <div className="w-1 h-1 rounded-full bg-flexigo-teal animate-pulse" />
+             <span className="text-[7.5px] text-gray-400 font-black uppercase tracking-widest truncate max-w-[120px] italic">
+                {currentAddress}
+             </span>
+          </div>
         </div>
       </div>
 

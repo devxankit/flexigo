@@ -1,4 +1,7 @@
 import Franchise from './franchiseModel.js';
+import FranchiseTransaction from './franchiseTransactionModel.js';
+import Vehicle from '../fleet/vehicleModel.js';
+import Rider from '../rider/riderModel.js';
 import generateToken from '../../shared/utils/generateToken.js';
 import cloudinary from '../../config/cloudinary.js';
 
@@ -129,6 +132,81 @@ export const updateRegistration = async (req, res) => {
       message: 'Registration updated',
       franchise,
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get Franchise Wallet Data
+// @route   GET /api/v1/franchise/wallet
+export const getWalletData = async (req, res) => {
+  try {
+    const franchise = await Franchise.findById(req.franchise._id);
+    const transactions = await FranchiseTransaction.find({ franchiseId: req.franchise._id }).sort({ date: -1 });
+
+    res.status(200).json({
+      success: true,
+      balance: franchise.walletBalance || 0,
+      ledger: transactions,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get Franchise Dashboard Metrics
+// @route   GET /api/v1/franchise/dashboard-metrics
+export const getDashboardMetrics = async (req, res) => {
+  try {
+    const franchiseId = req.franchise._id;
+    
+    // Use dynamic calculations
+    const vehicles = await Vehicle.find({ franchise: franchiseId });
+    const totalVehicles = vehicles.length;
+    const availableVehicles = vehicles.filter(v => v.status === 'available').length;
+    const issuesVehicles = vehicles.filter(v => v.status === 'in-service' || v.status === 'quarantined').length;
+    
+    const subscribers = await Rider.find({ franchise: franchiseId, status: 'active' });
+    const activeSubscribers = subscribers.length;
+    
+    // Utilization: Active Subs / Total Vehicles (if > 0)
+    const utilization = totalVehicles > 0 ? ((activeSubscribers / totalVehicles) * 100).toFixed(1) : 0;
+
+    res.status(200).json({
+      success: true,
+      metrics: {
+        totalVehicles,
+        availableVehicles,
+        activeSubscribers,
+        issuesVehicles,
+        utilization,
+        avgPlanValue: 850, // Still placeholder or can calculate from transactions
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Record a handover (Dispatch/Intake)
+// @route   POST /api/v1/franchise/handover
+export const createHandover = async (req, res) => {
+  try {
+    const { mode, subscriberId, vehicleId, photos, inspection, batteryLevel, returnDate, finalStatus } = req.body;
+    
+    const handover = await Handover.create({
+      franchiseId: req.franchise._id,
+      mode,
+      subscriberId,
+      vehicleId,
+      photos,
+      inspection,
+      batteryLevel,
+      returnDate,
+      finalStatus
+    });
+
+    res.status(201).json({ success: true, handover });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

@@ -27,12 +27,12 @@ import {
   Cell
 } from 'recharts';
 import AdminStatCard from '../components/AdminStatCard';
-import { adminDataStore } from '../store/adminDataStore';
+import { useAdminDataStore } from '../store/adminDataStore';
 
 const COLORS = ['#10b981', '#0ea5e9', '#f59e0b', '#ef4444'];
 
 export default function DeepAnalyticsPage() {
-  const { networkStats, revenueData } = adminDataStore;
+  const { networkStats, revenueData } = useAdminDataStore();
   const [activeSegment, setActiveSegment] = useState('predictive');
 
   return (

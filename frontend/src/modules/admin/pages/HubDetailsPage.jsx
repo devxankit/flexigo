@@ -24,22 +24,23 @@ import {
   Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { adminDataStore } from '../store/adminDataStore';
+import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function HubDetailsPage() {
   const { hubId } = useParams();
   const navigate = useNavigate();
+  const { hubs } = useAdminDataStore();
   const [hub, setHub] = useState(null);
   const [activeMenu, setActiveMenu] = useState(null);
 
   useEffect(() => {
-    const foundHub = adminDataStore.hubs.find(h => h.id === hubId);
+    const foundHub = hubs.find(h => (h._id || h.id).toString() === hubId);
     if (foundHub) setHub(foundHub);
 
     const handleClickOutside = () => setActiveMenu(null);
     window.addEventListener('click', handleClickOutside);
     return () => window.removeEventListener('click', handleClickOutside);
-  }, [hubId]);
+  }, [hubId, hubs]);
 
   if (!hub) {
     return (
