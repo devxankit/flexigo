@@ -9,7 +9,10 @@ export function RiderHeader() {
   const { pathname } = useLocation();
   const { user } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
-  const { setDiagnosticsOpen, currentAddress } = useRideStore();
+  const { setDiagnosticsOpen, currentAddress, vehicle } = useRideStore();
+
+  const isVehicleAssigned = vehicle?.id && vehicle.id !== 'FLX-PENDING';
+  const hasLowBattery = vehicle?.battery < 20 && isVehicleAssigned;
 
   // Don't show header on splash, auth, or onboarding screens
   const isAuth = pathname.includes('/rider/auth') || pathname.includes('/rider/onboarding') || pathname === '/rider' || pathname === '/rider/';
@@ -90,8 +93,12 @@ export function RiderHeader() {
              <path d="M8 7v-2" />
              <path d="M16 7v-2" />
            </svg>
-           <div className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-flexigo-teal rounded-full border-2 border-slate-900 flex items-center justify-center shadow-lg">
-             <div className="w-1 h-1 rounded-full bg-white animate-pulse" />
+           <div className={`absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full border-2 flex items-center justify-center shadow-lg transition-colors ${
+              theme === 'dark' ? 'border-[#0A0A0F]' : 'border-white'
+           } ${
+              !isVehicleAssigned ? 'bg-slate-500' : hasLowBattery ? 'bg-red-500' : 'bg-flexigo-teal'
+           }`}>
+             <div className={`w-1 h-1 rounded-full bg-white ${isVehicleAssigned ? 'animate-pulse' : ''}`} />
            </div>
         </button>
       </div>

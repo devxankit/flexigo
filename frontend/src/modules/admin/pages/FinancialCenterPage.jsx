@@ -28,7 +28,12 @@ import AdminStatCard from '../components/AdminStatCard';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function FinancialCenterPage() {
-  const { networkStats, revenueData } = useAdminDataStore();
+  const { networkStats, revenueData, financeStats, financeTransactions, fetchFinanceData, fetchDashboardStats } = useAdminDataStore();
+
+  React.useEffect(() => {
+    fetchFinanceData();
+    fetchDashboardStats(); // For gross revenue
+  }, []);
 
   return (
     <div className="space-y-6 pb-12">
@@ -64,9 +69,9 @@ export default function FinancialCenterPage() {
       {/* Financial KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
          <AdminStatCard title="Total Rev" value={`₹${(networkStats.grossRevenue / 100000).toFixed(1)}L`} icon={TrendingUp} color="emerald" subtitle="Gross Delta" />
-         <AdminStatCard title="Settled" value="₹12.4L" icon={ArrowDownLeft} color="blue" subtitle="Hub Pipeline" />
-         <AdminStatCard title="Liability" value="₹4.8L" icon={Activity} color="amber" subtitle="Pending Sync" />
-         <AdminStatCard title="Unit Yield" value="₹12.4k" icon={Layers} color="emerald" subtitle="/ Asset Avg" />
+         <AdminStatCard title="Settled" value={financeStats.settled} icon={ArrowDownLeft} color="blue" subtitle="Hub Pipeline" />
+         <AdminStatCard title="Liability" value={financeStats.liability} icon={Activity} color="amber" subtitle="Pending Sync" />
+         <AdminStatCard title="Unit Yield" value={financeStats.unitYield} icon={Layers} color="emerald" subtitle="/ Asset Avg" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -176,12 +181,7 @@ export default function FinancialCenterPage() {
                   </tr>
                </thead>
                <tbody className="divide-y divide-[var(--border-subtle)]">
-                  {[
-                    { id: 'TXN-9021', hub: 'MAH_IND_01', val: '₹12,400', method: 'UPI_COLLECT', status: 'success', date: '2m ago' },
-                    { id: 'TXN-4412', hub: 'MAH_KOR_02', val: '₹1,24,000', method: 'NET_BANK', status: 'pending', date: '15m ago' },
-                    { id: 'TXN-7721', hub: 'MAH_HSR_03', val: '₹8,350', method: 'RAZOR_PAY', status: 'success', date: '1h ago' },
-                    { id: 'TXN-1029', hub: 'MAH_WHI_04', val: '₹4,200', method: 'CORP_WALLET', status: 'failed', date: '2h ago' }
-                  ].map((txn) => (
+                  {financeTransactions.map((txn) => (
                      <tr key={txn.id} className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]">
                         <td className="py-2.5 px-6">
                            <div className="flex flex-col">
@@ -201,7 +201,9 @@ export default function FinancialCenterPage() {
                               {txn.status}
                            </div>
                         </td>
-                        <td className="py-2.5 px-6 text-[7.5px] font-black text-[var(--text-tertiary)] uppercase italic tracking-widest leading-none">{txn.date}</td>
+                        <td className="py-2.5 px-6 text-[7.5px] font-black text-[var(--text-tertiary)] uppercase italic tracking-widest leading-none">
+                           {new Date(txn.date).toLocaleDateString()}
+                        </td>
                      </tr>
                   ))}
                </tbody>

@@ -24,6 +24,7 @@ import {
   Tooltip, 
   CartesianGrid 
 } from 'recharts';
+import { useAdminDataStore } from '../store/adminDataStore';
 
 const mockHealthData = [
   { id: 'EV-9021', health: 98, temp: '32°C', cycles: 420, voltage: '72.4V', status: 'optimal' },
@@ -41,7 +42,12 @@ const perfSeries = [
 ];
 
 export default function VehicleAnalyticsPage() {
+  const { vehicleStats, fetchVehicleStats } = useAdminDataStore();
   const [activeView, setActiveView] = useState('real-time');
+
+  React.useEffect(() => {
+    fetchVehicleStats();
+  }, []);
 
   return (
     <div className="space-y-6 pb-12">
@@ -81,10 +87,10 @@ export default function VehicleAnalyticsPage() {
 
       {/* KPI Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <AdminStatCard title="Fleet Health" value="94%" icon={ShieldCheck} color="emerald" subtitle="Avg Battery SOH" />
-         <AdminStatCard title="BMS Tags" value="24.2k" icon={Activity} color="blue" subtitle="Data Points / Sec" />
-         <AdminStatCard title="Thermals" value="03" icon={Thermometer} color="rose" subtitle="Critical Overheat" />
-         <AdminStatCard title="Grid Efficiency" value="92.1%" icon={Zap} color="emerald" subtitle="Energy Capture" />
+         <AdminStatCard title="Fleet Health" value={vehicleStats.fleetHealth} icon={ShieldCheck} color="emerald" subtitle="Avg Battery SOH" />
+         <AdminStatCard title="BMS Tags" value={vehicleStats.bmsTags} icon={Activity} color="blue" subtitle="Data Points / Sec" />
+         <AdminStatCard title="Thermals" value={vehicleStats.thermals} icon={Thermometer} color="rose" subtitle="Critical Overheat" />
+         <AdminStatCard title="Grid Efficiency" value={vehicleStats.gridEfficiency} icon={Zap} color="emerald" subtitle="Energy Capture" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -101,7 +107,7 @@ export default function VehicleAnalyticsPage() {
             </div>
             <div className="h-48 w-full">
                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={perfSeries}>
+                  <AreaChart data={vehicleStats.perfSeries || []}>
                      <defs>
                         <linearGradient id="colorLoad" x1="0" y1="0" x2="0" y2="1">
                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
@@ -180,7 +186,7 @@ export default function VehicleAnalyticsPage() {
                   </tr>
                </thead>
                <tbody className="divide-y divide-[var(--border-subtle)]">
-                  {mockHealthData.map((asset) => (
+                  {(vehicleStats.assetRegistry || []).map((asset) => (
                      <tr key={asset.id} className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors text-[10px] cursor-pointer">
                         <td className="py-2.5 px-6 font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic leading-none">{asset.id}</td>
                         <td className="py-2.5 px-6">

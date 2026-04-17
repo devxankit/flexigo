@@ -22,12 +22,15 @@ import AdminStatCard from '../components/AdminStatCard';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function AssignmentPage() {
-  const [assignments, setAssignments] = useState([
-    { id: 'ASGN-7721', vehicle: 'EV-9021', rider: 'Rajesh Koothrappali', hub: 'HSR Hub', type: 'QR Scan', startTime: '10:15 AM', status: 'active' },
-    { id: 'ASGN-7720', vehicle: 'EV-4412', rider: 'Penny Wolowitz', hub: 'Indiranagar Hub', type: 'Manual', startTime: '09:30 AM', status: 'completed' },
-    { id: 'ASGN-7719', vehicle: 'EV-1029', rider: 'Leonard Hofstadter', hub: 'Koramangala Hub', type: 'QR Scan', startTime: '08:45 AM', status: 'active' },
-    { id: 'ASGN-7718', vehicle: 'EV-5541', rider: 'Bernadette R.', hub: 'Whitefield Hub', type: 'Manual', startTime: 'Yesterday', status: 'completed' },
-  ]);
+  const { 
+    assignments, 
+    fetchAssignments, 
+    assignVehicle 
+  } = useAdminDataStore();
+
+  React.useEffect(() => {
+    fetchAssignments();
+  }, []);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('qr'); // qr or manual
@@ -37,23 +40,30 @@ export default function AssignmentPage() {
     hub: 'Main Gateway'
   });
 
-  const handleAssign = (e) => {
+  const handleAssign = async (e) => {
     e.preventDefault();
     if (!assignmentData.vehicleId || !assignmentData.riderName) return;
 
-    const newAsgn = {
-      id: `ASGN-${Math.floor(7000 + Math.random() * 900)}`,
-      vehicle: assignmentData.vehicleId,
-      rider: assignmentData.riderName,
-      hub: assignmentData.hub,
+    // Mobile Number Validation (Exactly 10 digits)
+    if (!/^\d{10}$/.test(assignmentData.riderName)) {
+      alert("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    const payload = {
+      vehiclePlate: assignmentData.vehicleId,
+      riderPhone: assignmentData.riderName,
       type: activeTab === 'qr' ? 'QR Scan' : 'Manual',
-      startTime: 'Just Now',
-      status: 'active'
+      hubName: assignmentData.hub
     };
 
-    setAssignments([newAsgn, ...assignments]);
-    setAssignmentData({ vehicleId: '', riderName: '', hub: 'Main Gateway' });
-    setIsModalOpen(false);
+    const res = await assignVehicle(payload);
+    if (res.success) {
+      setAssignmentData({ vehicleId: '', riderName: '', hub: 'Main Gateway' });
+      setIsModalOpen(false);
+    } else {
+      alert(res.message);
+    }
   };
 
   return (
@@ -127,40 +137,40 @@ export default function AssignmentPage() {
                   <tbody className="divide-y divide-[var(--border-subtle)]">
                      <AnimatePresence mode='popLayout'>
                         {assignments.map((asgn) => (
-                           <motion.tr 
-                              layout
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              key={asgn.id} 
-                              className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]"
-                           >
-                              <td className="py-2.5 px-6 font-black text-[7.5px] text-[var(--text-tertiary)] uppercase tracking-widest leading-none">{asgn.id}</td>
-                              <td className="py-2.5 px-6 font-black text-[var(--text-primary)] uppercase tracking-tight italic leading-none">{asgn.vehicle}</td>
-                              <td className="py-2.5 px-6">
-                                 <div className="flex flex-col">
-                                    <span className="font-black text-[var(--text-primary)] uppercase tracking-wider leading-tight italic">{asgn.rider}</span>
-                                    <span className="text-[7px] font-black text-[var(--text-tertiary)] uppercase italic mt-0.5 leading-none">{asgn.hub}</span>
-                                 </div>
-                              </td>
-                              <td className="py-2.5 px-6">
-                                 <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border ${
-                                    asgn.type === 'QR Scan' ? 'bg-blue-500/10 text-blue-500 border-blue-500/10' : 'bg-amber-500/10 text-amber-500 border-amber-500/10'
-                                 }`}>
-                                    {asgn.type === 'QR Scan' ? <Scan size={8} /> : <UserPlus size={8} />}
-                                    {asgn.type}
-                                 </div>
-                              </td>
-                              <td className="py-2.5 px-6 text-[7.5px] font-black text-[var(--text-tertiary)] uppercase italic leading-none">{asgn.startTime}</td>
-                              <td className="py-2.5 px-6">
-                                 <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border ${
-                                    asgn.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-slate-500/10 text-slate-500 border-slate-500/10'
-                                 }`}>
-                                    {asgn.status === 'active' && <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse mr-1" />}
-                                    {asgn.status}
-                                 </div>
-                              </td>
-                           </motion.tr>
+                            <motion.tr 
+                               layout
+                               initial={{ opacity: 0 }}
+                               animate={{ opacity: 1 }}
+                               exit={{ opacity: 0 }}
+                               key={asgn._id} 
+                               className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]"
+                            >
+                               <td className="py-2.5 px-6 font-black text-[7.5px] text-[var(--text-tertiary)] uppercase tracking-widest leading-none">{(asgn._id || asgn.id).slice(-8).toUpperCase()}</td>
+                               <td className="py-2.5 px-6 font-black text-[var(--text-primary)] uppercase tracking-tight italic leading-none">{asgn.vehicle?.plate}</td>
+                               <td className="py-2.5 px-6">
+                                  <div className="flex flex-col">
+                                     <span className="font-black text-[var(--text-primary)] uppercase tracking-wider leading-tight italic">{asgn.rider?.name || asgn.rider?.phone}</span>
+                                     <span className="text-[7px] font-black text-[var(--text-tertiary)] uppercase italic mt-0.5 leading-none">{asgn.hubName || asgn.hub}</span>
+                                  </div>
+                               </td>
+                               <td className="py-2.5 px-6">
+                                  <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border ${
+                                     asgn.type === 'QR Scan' ? 'bg-blue-500/10 text-blue-500 border-blue-500/10' : 'bg-amber-500/10 text-amber-500 border-amber-500/10'
+                                  }`}>
+                                     {asgn.type === 'QR Scan' ? <Scan size={8} /> : <UserPlus size={8} />}
+                                     {asgn.type}
+                                  </div>
+                               </td>
+                               <td className="py-2.5 px-6 text-[7.5px] font-black text-[var(--text-tertiary)] uppercase italic leading-none">{new Date(asgn.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                               <td className="py-2.5 px-6">
+                                  <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border ${
+                                     asgn.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-slate-500/10 text-slate-500 border-slate-500/10'
+                                  }`}>
+                                     {asgn.status === 'active' && <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse mr-1" />}
+                                     {asgn.status}
+                                  </div>
+                               </td>
+                            </motion.tr>
                         ))}
                      </AnimatePresence>
                   </tbody>
@@ -258,22 +268,28 @@ export default function AssignmentPage() {
                   <form onSubmit={handleAssign} className="space-y-6">
                      <div className="space-y-4">
                         <div className="space-y-1.5">
-                           <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Asset Cipher (Vehicle ID)</label>
+                           <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Asset Cipher (Vehicle Plate No.)</label>
                            <input 
                               autoFocus
                               value={assignmentData.vehicleId}
                               onChange={(e) => setAssignmentData({...assignmentData, vehicleId: e.target.value})}
-                              placeholder="e.g. EV-9021"
+                              placeholder="e.g. DL 01 AB 1234"
                               className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
                            />
                         </div>
 
                         <div className="space-y-1.5">
-                           <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Host Entity (Rider Name)</label>
+                           <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Host Entity (Rider Phone No.)</label>
                            <input 
                               value={assignmentData.riderName}
-                              onChange={(e) => setAssignmentData({...assignmentData, riderName: e.target.value})}
-                              placeholder="e.g. Rahul Sharma"
+                              onChange={(e) => {
+                                 const val = e.target.value.replace(/\D/g, '');
+                                 if (val.length <= 10) {
+                                   setAssignmentData({...assignmentData, riderName: val});
+                                 }
+                              }}
+                              maxLength={10}
+                              placeholder="e.g. 9876543210"
                               className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
                            />
                         </div>

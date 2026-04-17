@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import api from '../../../lib/axios';
 
 export const useRideStore = create((set, get) => ({
   rideStatus: 'idle', // idle | unlocking | active | ending | completed
@@ -13,6 +14,7 @@ export const useRideStore = create((set, get) => ({
   currentAddress: 'Detecting Location...',
   activeRide: null,
   rideHistory: [],
+  hubs: [],
 
   setCurrentAddress: (address) => set({ currentAddress: address }),
 
@@ -54,4 +56,26 @@ export const useRideStore = create((set, get) => ({
   setUnlocking: () => set({ rideStatus: 'unlocking' }),
   isDiagnosticsOpen: false,
   setDiagnosticsOpen: (isOpen) => set({ isDiagnosticsOpen: isOpen }),
+  
+  fetchHubs: async () => {
+    try {
+      const res = await api.get('/rider/hubs');
+      if (res.data.success) {
+        set({ hubs: res.data.hubs });
+      }
+    } catch (err) {
+      console.error("Failed to fetch hubs:", err);
+    }
+  },
+
+  fetchMyVehicle: async (phone) => {
+    try {
+      const res = await api.get(`/rider/my-vehicle/${phone}`);
+      if (res.data.success) {
+        set({ vehicle: res.data.vehicle });
+      }
+    } catch (err) {
+      console.error("Failed to fetch vehicle:", err);
+    }
+  },
 }));

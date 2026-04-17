@@ -103,11 +103,11 @@ export default function FleetOversightPage() {
                </thead>
                <tbody className="divide-y divide-[var(--border-subtle)]">
                   {vehicles.map((vehicle, vIdx) => (
-                     <tr key={vehicle.id} className="group/row hover:bg-[var(--bg-tertiary)]/30 transition-colors">
+                     <tr key={vehicle._id} className="group/row hover:bg-[var(--bg-tertiary)]/30 transition-colors">
                         <td className="py-2.5 px-6 whitespace-nowrap">
                            <div className="flex flex-col gap-0">
-                              <span className="text-[10px] font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight">{vehicle.id}</span>
-                              <span className="text-[7px] font-bold text-[var(--text-tertiary)] tracking-widest leading-none">NODE:{vIdx + 100}</span>
+                              <span className="text-[11px] font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight">{vehicle.plate}</span>
+                              <span className="text-[7px] font-bold text-[var(--text-tertiary)] tracking-widest leading-none uppercase">{vehicle.model || 'Flexigo Pro v2'}</span>
                            </div>
                         </td>
                         <td className="py-2.5 px-6">

@@ -22,37 +22,40 @@ import AdminStatCard from '../components/AdminStatCard';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function GeoFencingPage() {
-  const [geofences, setGeofences] = useState([
-    { id: 'GF-101', name: 'Koramangala Restricted', radius: '1.2km', status: 'active', alerts: 14, type: 'exclusion' },
-    { id: 'GF-102', name: 'HSR Delivery Zone', radius: '2.5km', status: 'active', alerts: 0, type: 'inclusion' },
-    { id: 'GF-103', name: 'Indiranagar Hub Outer', radius: '0.8km', status: 'inactive', alerts: 2, type: 'exclusion' },
-    { id: 'GF-104', name: 'Airport Corridor', radius: '5.0km', status: 'active', alerts: 5, type: 'speed-cap' },
-  ]);
+  const { 
+    geofences, 
+    fetchGeofences, 
+    createGeofence, 
+    removeGeofence 
+  } = useAdminDataStore();
+
+  React.useEffect(() => {
+    fetchGeofences();
+  }, []);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newZoneName, setNewZoneName] = useState('');
   const [newZoneType, setNewZoneType] = useState('inclusion');
 
-  const handleCreateZone = (e) => {
+  const handleCreateZone = async (e) => {
     e.preventDefault();
     if (!newZoneName) return;
     
-    const newZone = {
-      id: `GF-${Math.floor(100 + Math.random() * 900)}`,
+    const payload = {
       name: newZoneName,
-      radius: '1.0km',
-      status: 'active',
-      alerts: 0,
-      type: newZoneType
+      type: newZoneType,
+      radius: '1.0km'
     };
 
-    setGeofences([newZone, ...geofences]);
+    await createGeofence(payload);
     setNewZoneName('');
     setIsModalOpen(false);
   };
 
   const deleteZone = (id) => {
-    setGeofences(geofences.filter(gf => gf.id !== id));
+    if (window.confirm('Are you sure you want to delete this zone?')) {
+        removeGeofence(id);
+    }
   };
 
   return (
@@ -131,7 +134,7 @@ export default function GeoFencingPage() {
                              <td className="py-2.5 px-6 whitespace-nowrap">
                                 <div className="flex flex-col">
                                    <span className="font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic leading-none">{gf.name}</span>
-                                   <span className="text-[7px] font-bold text-[var(--text-tertiary)] tracking-widest uppercase mt-1 leading-none italic">{gf.id} Target</span>
+                                   <span className="text-[7px] font-bold text-[var(--text-tertiary)] tracking-widest uppercase mt-1 leading-none italic">{gf._id || gf.id} Target</span>
                                 </div>
                              </td>
                              <td className="py-2.5 px-6">
@@ -157,7 +160,7 @@ export default function GeoFencingPage() {
                              </td>
                              <td className="py-2.5 px-6">
                                 <button 
-                                   onClick={() => deleteZone(gf.id)}
+                                   onClick={() => deleteZone(gf._id || gf.id)}
                                    className="p-1.5 text-[var(--text-tertiary)] hover:text-rose-500 hover:bg-rose-600/5 rounded-lg transition-all"
                                 >
                                    <X size={14} />
@@ -260,7 +263,7 @@ export default function GeoFencingPage() {
                               value={newZoneName}
                               onChange={(e) => setNewZoneName(e.target.value)}
                               placeholder="e.g. SOUTH CLUSTER RESTRICTED"
-                              className="w-full px-4 py-3 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500/40 outline-none transition-all placeholder:text-[var(--text-tertiary)]/50 italic"
+                              className="w-full px-4 py-3 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-black tracking-widest focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500/40 outline-none transition-all placeholder:text-[var(--text-tertiary)]/50 italic"
                            />
                         </div>
 

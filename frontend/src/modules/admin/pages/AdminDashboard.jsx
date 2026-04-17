@@ -129,10 +129,10 @@ export default function AdminDashboard() {
 
       {/* Primary KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-         <AdminStatCard title="Revenue" value={`₹${(networkStats.grossRevenue / 100000).toFixed(1)}L`} trend="up" trendValue="+12%" icon={Zap} color="emerald" subtitle="Monthly Earnings" />
-         <AdminStatCard title="On Road" value={networkStats.activeFleet} trend="up" trendValue="+5%" icon={Activity} color="blue" subtitle="Active Vehicles" />
-         <AdminStatCard title="Total Hubs" value={networkStats.totalHubs} icon={Warehouse} color="emerald" subtitle="Operational" />
-         <AdminStatCard title="Uptime" value={networkStats.avgUptime} icon={ShieldCheck} color="emerald" subtitle="Live Performance" />
+         <AdminStatCard title="Revenue" value={`₹${((networkStats.grossRevenue || 0) / 100000).toFixed(1)}L`} trend="up" trendValue={networkStats.revenueTrend || "+0%"} icon={Zap} color="emerald" subtitle="Monthly Earnings" />
+         <AdminStatCard title="On Road" value={networkStats.activeFleet || 0} trend="up" trendValue="+0%" icon={Activity} color="blue" subtitle="Active Vehicles" />
+         <AdminStatCard title="Total Hubs" value={networkStats.totalHubs || 0} icon={Warehouse} color="emerald" subtitle="Operational" />
+         <AdminStatCard title="Uptime" value={networkStats.avgUptime || "0%"} icon={ShieldCheck} color="emerald" subtitle="Live Performance" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -249,7 +249,7 @@ export default function AdminDashboard() {
             <table className="w-full">
                <thead>
                   <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
-                     {['Hub Name', 'Location', 'Assets', 'Earnings', 'Health', 'Status'].map((header) => (
+                     {['Hub Name', 'Location', 'Distance', 'Assets', 'Earnings', 'Health', 'Status'].map((header) => (
                         <th key={header} className="text-left py-3 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">
                            {header}
                         </th>
@@ -257,8 +257,8 @@ export default function AdminDashboard() {
                   </tr>
                </thead>
                <tbody className="divide-y divide-[var(--border-subtle)]">
-                  {hubs.map((hub) => (
-                     <tr key={hub.id} className="group/row hover:bg-[var(--bg-tertiary)]/30 transition-colors">
+                  {hubs.map((hub, idx) => (
+                     <tr key={hub.id} className={`group/row hover:bg-[var(--bg-tertiary)]/30 transition-colors ${idx === 0 && hub.distanceKm !== null ? 'bg-emerald-500/[0.03]' : ''}`}>
                         <td className="py-3 px-6">
                            <div className="flex flex-col gap-0">
                               <span className="text-[10px] font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic">{hub.name}</span>
@@ -266,6 +266,16 @@ export default function AdminDashboard() {
                            </div>
                         </td>
                         <td className="py-3 px-6 text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic">{hub.city}</td>
+                        <td className="py-3 px-6">
+                           {hub.distanceKm !== null ? (
+                              <div className="flex items-center gap-1">
+                                 <span className={`text-[9px] font-black ${idx === 0 ? 'text-emerald-500' : 'text-[var(--text-primary)]'}`}>{hub.distanceKm} km</span>
+                                 {idx === 0 && <span className="text-[7px] font-black text-emerald-500 uppercase tracking-wider">Nearest</span>}
+                              </div>
+                           ) : (
+                              <span className="text-[8px] font-bold text-[var(--text-tertiary)]">—</span>
+                           )}
+                        </td>
                         <td className="py-3 px-6">
                            <div className="flex flex-col gap-1.5">
                               <div className="flex justify-between items-baseline">

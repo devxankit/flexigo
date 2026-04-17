@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import AdminStatCard from '../components/AdminStatCard';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAdminDataStore } from '../store/adminDataStore';
 
 const mockTransactions = [
   { id: 'TXN-001', amount: '₹12,400', method: 'UPI (RazorPay)', status: 'success', date: '2m ago', user: 'Rahul @ Franchise' },
@@ -33,6 +34,12 @@ const Gateways = [
 ];
 
 export default function PaymentGatewayPage() {
+  const { financeTransactions, financeStats, fetchFinanceData } = useAdminDataStore();
+
+  React.useEffect(() => {
+    fetchFinanceData();
+  }, []);
+
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
@@ -50,7 +57,10 @@ export default function PaymentGatewayPage() {
          </div>
          
          <div className="flex items-center gap-2">
-            <button className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95 flex items-center gap-1.5">
+            <button 
+               onClick={fetchFinanceData}
+               className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95 flex items-center gap-1.5"
+            >
                <RefreshCcw size={12} /> Settlement Sync
             </button>
             <button className="p-1.5 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-emerald-500 transition-all">
@@ -61,9 +71,9 @@ export default function PaymentGatewayPage() {
 
       {/* KPI Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <AdminStatCard title="Daily Volume" value="₹12.4L" icon={Zap} color="emerald" subtitle="Gross Transacted" />
-         <AdminStatCard title="Success Rate" value="98.2%" icon={CheckCircle2} color="blue" subtitle="Fleet Conversions" />
-         <AdminStatCard title="Pending" value="₹45.2K" icon={Clock} color="amber" subtitle="Awaiting Bank" />
+         <AdminStatCard title="Daily Volume" value={financeStats.dailyVolume} icon={Zap} color="emerald" subtitle="Gross Transacted" />
+         <AdminStatCard title="Success Rate" value={financeStats.successRate} icon={CheckCircle2} color="blue" subtitle="Fleet Conversions" />
+         <AdminStatCard title="Pending" value={financeStats.pending} icon={Clock} color="amber" subtitle="Awaiting Bank" />
          <AdminStatCard title="Fraud Guard" value="Secure" icon={Lock} color="emerald" subtitle="Secure Tunnel" />
       </div>
 
@@ -91,7 +101,7 @@ export default function PaymentGatewayPage() {
                      </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border-subtle)]">
-                     {mockTransactions.map((txn) => (
+                     {financeTransactions.map((txn) => (
                         <tr key={txn.id} className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors text-[10px]">
                            <td className="py-2.5 px-6 font-black text-[7px] text-[var(--text-tertiary)] uppercase tracking-widest leading-none italic">{txn.id}</td>
                            <td className="py-2.5 px-6">
@@ -103,7 +113,7 @@ export default function PaymentGatewayPage() {
                                  <span className="text-[9px] font-black text-[var(--text-tertiary)] uppercase leading-none italic">{txn.method}</span>
                               </div>
                            </td>
-                           <td className="py-2.5 px-6 font-black text-[var(--text-primary)] italic leading-none">{txn.amount}</td>
+                           <td className="py-2.5 px-6 font-black text-[var(--text-primary)] italic leading-none">{txn.val}</td>
                            <td className="py-2.5 px-6">
                               <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border leading-none ${
                                  txn.status === 'success' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 
@@ -113,7 +123,7 @@ export default function PaymentGatewayPage() {
                                  {txn.status}
                               </div>
                            </td>
-                           <td className="py-2.5 px-6 text-[7px] font-black text-[var(--text-tertiary)] uppercase italic tracking-widest leading-none whitespace-nowrap">{txn.date}</td>
+                           <td className="py-2.5 px-6 text-[7px] font-black text-[var(--text-tertiary)] uppercase italic tracking-widest leading-none whitespace-nowrap">{new Date(txn.date).toLocaleTimeString()}</td>
                         </tr>
                      ))}
                   </tbody>

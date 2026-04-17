@@ -18,15 +18,14 @@ import {
 import AdminStatCard from '../components/AdminStatCard';
 import { motion } from 'framer-motion';
 
-const mockBehaviorAlerts = [
-  { id: 'AL-1092', rider: 'Vikram Mehta', type: 'Low Balance', severity: 'critical', due: 'Today', status: 'pending' },
-  { id: 'AL-1091', rider: 'Sanya Gupta', type: 'Insurance Expiry', severity: 'medium', due: '2 Days', status: 'notified' },
-  { id: 'AL-1090', rider: 'Raj Malhotra', type: 'Pending Payment', severity: 'high', due: 'Yesterday', status: 'pending' },
-  { id: 'AL-1089', rider: 'Amit Shah', type: 'Low Balance', severity: 'critical', due: 'Just now', status: 'notified' },
-  { id: 'AL-1088', rider: 'Priya Verma', type: 'PUC Expiry', severity: 'low', due: '5 Days', status: 'resolved' },
-];
+import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function RiderBehaviourPage() {
+  const { riderBehaviour, fetchRiderBehaviour } = useAdminDataStore();
+
+  React.useEffect(() => {
+    fetchRiderBehaviour();
+  }, []);
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
@@ -55,10 +54,10 @@ export default function RiderBehaviourPage() {
 
       {/* KPI Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <AdminStatCard title="Active Alerts" value="142" icon={Bell} color="rose" subtitle="Requires Dispatch" />
-         <AdminStatCard title="Low Balance" value="28" icon={Zap} color="amber" subtitle="Wallet Threshold" />
-         <AdminStatCard title="Doc Expiry" value="12" icon={FileWarning} color="blue" subtitle="Insurance Delta" />
-         <AdminStatCard title="Cleanup" value="92%" icon={Activity} color="emerald" subtitle="User Response" />
+         <AdminStatCard title="Active Alerts" value={riderBehaviour.activeAlerts} icon={Bell} color="rose" subtitle="Requires Dispatch" />
+         <AdminStatCard title="Low Balance" value={riderBehaviour.lowBalance} icon={Zap} color="amber" subtitle="Wallet Threshold" />
+         <AdminStatCard title="Doc Expiry" value={riderBehaviour.docExpiry} icon={FileWarning} color="blue" subtitle="Insurance Delta" />
+         <AdminStatCard title="Cleanup" value={riderBehaviour.cleanup} icon={Activity} color="emerald" subtitle="User Response" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -78,7 +77,7 @@ export default function RiderBehaviourPage() {
                      </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border-subtle)]">
-                     {mockBehaviorAlerts.map((alert) => (
+                     {(riderBehaviour.behaviourAlerts || []).map((alert) => (
                         <tr key={alert.id} className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors text-[10px]">
                            <td className="py-2.5 px-6 font-black text-[7px] text-[var(--text-tertiary)] uppercase tracking-widest leading-none italic">{alert.id}</td>
                            <td className="py-2.5 px-6">

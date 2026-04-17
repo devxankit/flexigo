@@ -21,21 +21,19 @@ import AdminStatCard from '../components/AdminStatCard';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function SubscriberRegistryPage() {
-  const { subscribers, fetchSubscribers, networkStats, fetchDashboardStats } = useAdminDataStore();
+  const { subscribers, subscriberStats, fetchSubscriberData } = useAdminDataStore();
   const [searchQuery, setSearchQuery] = React.useState('');
 
   React.useEffect(() => {
-    fetchSubscribers();
-    if (networkStats.totalSubscribers === 0) fetchDashboardStats();
+    fetchSubscriberData();
   }, []);
 
   const filteredSubscribers = subscribers.filter(s => {
     const q = searchQuery.toLowerCase();
     return (
       (s.name?.toLowerCase() || '').includes(q) || 
-      ((s._id || s.id)?.toString().toLowerCase() || '').includes(q) ||
-      (s.email?.toLowerCase() || '').includes(q) ||
-      (s.phone || '').includes(q)
+      (s.phone || '').includes(q) ||
+      (s.email?.toLowerCase() || '').includes(q)
     );
   });
 
@@ -74,10 +72,10 @@ export default function SubscriberRegistryPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <AdminStatCard title="Total Users" value={networkStats.totalSubscribers} icon={Users} color="emerald" subtitle="Active nodes" />
-         <AdminStatCard title="Daily Riders" value="12,140" icon={Activity} color="blue" subtitle="Active today" />
-         <AdminStatCard title="KYC Verified" value="98.2%" icon={UserCheck} color="emerald" subtitle="Identity sync" />
-         <AdminStatCard title="Flagged" value="142" icon={ShieldAlert} color="rose" subtitle="Risk alert" />
+         <AdminStatCard title="Total Users" value={subscriberStats.totalUsers} icon={Users} color="emerald" subtitle="Active nodes" />
+         <AdminStatCard title="Daily Riders" value={subscriberStats.dailyRiders} icon={Activity} color="blue" subtitle="Active today" />
+         <AdminStatCard title="KYC Verified" value={subscriberStats.kycVerified} icon={ShieldCheck} color="emerald" subtitle="Identity sync" />
+         <AdminStatCard title="Flagged" value={subscriberStats.flagged} icon={ShieldAlert} color="rose" subtitle="Risk alert" />
       </div>
 
       {/* Main Registry Table */}
@@ -101,7 +99,7 @@ export default function SubscriberRegistryPage() {
                      <tr key={user.id} className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors text-[10px] cursor-pointer">
                         <td className="py-2.5 px-6 whitespace-nowrap">
                            <div className="flex flex-col">
-                              <span className="font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic leading-none">{user.name}</span>
+                              <span className="font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic leading-none">{user.phone}</span>
                               <span className="text-[7.5px] font-black text-[var(--text-tertiary)]/50 tracking-widest uppercase mt-1 leading-none italic">{user.id} Node</span>
                            </div>
                         </td>
@@ -112,10 +110,12 @@ export default function SubscriberRegistryPage() {
                            </div>
                         </td>
                         <td className="py-2.5 px-6 font-black text-[var(--text-primary)] uppercase italic leading-none">{user.persona}</td>
-                        <td className="py-2.5 px-6 text-[8px] font-black text-[var(--text-tertiary)] uppercase italic leading-none whitespace-nowrap">{user.location}</td>
+                        <td className="py-2.5 px-6 text-[8px] font-black text-[var(--text-tertiary)] uppercase italic leading-none whitespace-nowrap">{user.locale}</td>
                         <td className="py-2.5 px-6">
                            <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border leading-none ${
-                              user.status === 'verified' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-amber-500/10 text-amber-500 border-amber-500/10'
+                              user.status === 'verified' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 
+                              user.status === 'active' ? 'bg-blue-500/10 text-blue-500 border-blue-500/10' :
+                              'bg-amber-500/10 text-amber-500 border-amber-500/10'
                            }`}>
                               {user.status}
                            </div>

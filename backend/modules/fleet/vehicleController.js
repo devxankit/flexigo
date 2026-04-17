@@ -1,4 +1,6 @@
 import Vehicle from './vehicleModel.js';
+import Rider from '../rider/riderModel.js';
+import Assignment from './assignmentModel.js';
 import cloudinary from '../../config/cloudinary.js';
 
 // @desc    Add new vehicle
@@ -98,6 +100,68 @@ export const addMaintenanceLog = async (req, res) => {
       message: 'Maintenance log added',
       vehicle,
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Assign vehicle to rider
+// @route   POST /api/v1/fleet/assignments
+export const createAssignment = async (req, res) => {
+  try {
+    const { vehiclePlate, riderPhone, type, hubName } = req.body;
+
+    const vPlate = vehiclePlate.trim();
+    const rPhone = riderPhone.trim();
+
+    const vehicle = await Vehicle.findOne({ plate: vPlate });
+    const rider = await Rider.findOne({ phone: rPhone });
+
+    if (!vehicle) {
+      return res.status(404).json({ success: false, message: `Vehicle with plate ${vPlate} not found` });
+    }
+    if (!rider) {
+      return res.status(404).json({ success: false, message: `Rider with phone ${rPhone} not found` });
+    }
+
+    if (vehicle.status !== 'available') {
+      return res.status(400).json({ success: false, message: `Vehicle ${vPlate} is currently ${vehicle.status}` });
+    }
+
+    const assignment = await Assignment.create({
+      vehicle: vehicle._id,
+      rider: rider._id,
+      type,
+      hubName
+    });
+
+    // Update statuses
+    vehicle.status = 'assigned';
+    await vehicle.save();
+
+    rider.vehicleId = vehicle._id;
+    await rider.save();
+
+    res.status(201).json({ success: true, assignment: {
+      ...assignment._doc,
+      vehicle: { _id: vehicle._id, plate: vehicle.plate, model: vehicle.model },
+      rider: { _id: rider._id, name: rider.name, phone: rider.phone }
+    }});
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get all assignments
+// @route   GET /api/v1/fleet/assignments
+export const getAssignments = async (req, res) => {
+  try {
+    const assignments = await Assignment.find()
+      .populate('vehicle', 'plate model')
+      .populate('rider', 'name phone')
+      .sort('-startTime');
+
+    res.status(200).json({ success: true, assignments });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

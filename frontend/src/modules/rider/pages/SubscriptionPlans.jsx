@@ -1,13 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PageWrapper } from '../components/PageWrapper';
 import { GlassCard } from '../components/GlassCard';
 import { NeonButton } from '../components/NeonButton';
 import { useSubscriptionStore } from '../store/subscriptionStore';
 import { useThemeStore } from '../store/themeStore';
+import { useAuthStore } from '../store/authStore';
+import api from '../../../lib/axios';
 
 export default function SubscriptionPlans() {
-  const { plans, selectedPlan, selectPlan, activePlan, activatePlan } = useSubscriptionStore();
+  const { plans, selectedPlan, selectPlan, activePlan, activatePlan, fetchPlans } = useSubscriptionStore();
+  const { user } = useAuthStore();
+
+  useEffect(() => {
+    fetchPlans();
+  }, []);
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
 
@@ -16,24 +23,72 @@ export default function SubscriptionPlans() {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState('UPI');
 
-  const handleUpdatePlan = () => {
-    if (selectedPlan) {
-      setIsPaying(true);
+  const handleUpdatePlan = async () => {
+    if (!selectedPlan || !user) return;
+    
+    setIsPaying(true);
+    try {
+      // 1. Create Order on Backend
+      const orderRes = await api.post('/rider/payments/create-order', {
+        planId: selectedPlan.id,
+        phone: user.phone
+      });
+
+      if (!orderRes.data.success) throw new Error("Order creation failed");
+
+      const orderData = orderRes.data.order;
+
+      // 2. Open Razorpay Interface
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "Flexigo Mobility",
+        description: `Upgrade to ${selectedPlan.label}`,
+        order_id: orderData.id,
+        handler: async (response) => {
+          // 3. Verify Payment on Backend
+          try {
+            const verifyRes = await api.post('/rider/payments/verify', {
+              ...response,
+              planId: selectedPlan.id,
+              phone: user.phone
+            });
+
+            if (verifyRes.data.success) {
+              setPaymentSuccess(true);
+              setTimeout(() => {
+                activatePlan(selectedPlan);
+                setIsPaying(false);
+                setPaymentSuccess(false);
+                selectPlan(null);
+                window.location.reload(); // Redirect/refresh safely on the same page
+              }, 2000);
+            }
+          } catch (err) {
+            alert("Payment Verification Failed!");
+            setIsPaying(false);
+          }
+        },
+        prefill: {
+          name: user.name,
+          contact: user.phone
+        },
+        theme: {
+          color: "#39FF14"
+        },
+        modal: {
+          ondismiss: () => setIsPaying(false)
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      console.error(err);
+      alert("Payment Initiation Failed!");
+      setIsPaying(false);
     }
-  };
-
-  const handleOpenRazorpay = () => {
-    setShowRazorpay(true);
-  };
-
-  const handleFinalPayment = async () => {
-    setPaymentSuccess(true);
-    await new Promise(r => setTimeout(r, 1500));
-    activatePlan(selectedPlan);
-    setIsPaying(false);
-    setShowRazorpay(false);
-    setPaymentSuccess(false);
-    selectPlan(null);
   };
 
   const paymentMethods = [
@@ -89,7 +144,7 @@ export default function SubscriptionPlans() {
             isDark ? 'text-gray-500' : 'text-slate-950 font-black'
           }`}>{activePlan ? 'Upgrade Options' : 'Available Plans'}</h3>
           
-          {plans.filter(p => p.id !== activePlan?.id).map((plan) => (
+          {(Array.isArray(plans) ? plans : []).filter(p => p.id !== activePlan?.id).map((plan) => (
             <motion.div
               key={plan.id}
               whileTap={{ scale: 0.98 }}

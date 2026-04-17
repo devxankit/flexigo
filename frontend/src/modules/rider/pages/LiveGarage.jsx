@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PageWrapper } from '../components/PageWrapper';
 import { GlassCard } from '../components/GlassCard';
@@ -14,10 +14,25 @@ import scooterRender from '../../../assets/scooter_render.png';
 
 export default function LiveGarage() {
   const navigate = useNavigate();
-  const { vehicle, rideStatus, setUnlocking } = useRideStore();
+  const { vehicle, rideStatus, setUnlocking, currentAddress } = useRideStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
   const [showScanner, setShowScanner] = useState(false);
+  const { setCurrentAddress } = useRideStore();
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        const { latitude, longitude } = position.coords;
+        const geocoder = new window.google.maps.Geocoder();
+        geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (results, status) => {
+          if (status === 'OK' && results[0]) {
+            setCurrentAddress(results[0].formatted_address);
+          }
+        });
+      });
+    }
+  }, []);
 
   const handleUnlockVehicle = () => {
     setUnlocking();
@@ -82,7 +97,7 @@ export default function LiveGarage() {
           />
           <StatCard 
             label="Active Duty" 
-            value="142" 
+            value={vehicle.activeDuty || "0"} 
             unit="MINS"
             color="#00D4FF"
             icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
@@ -96,9 +111,9 @@ export default function LiveGarage() {
                     <span className={`text-[10px] uppercase font-black tracking-widest mb-1 transition-colors duration-500 ${
                       isDark ? 'text-gray-500' : 'text-slate-500'
                     }`}>Current Hub</span>
-                    <span className={`font-black text-sm transition-colors duration-500 ${
+                    <span className={`font-black text-xs transition-colors duration-500 truncate max-w-[200px] ${
                       isDark ? 'text-white' : 'text-slate-900'
-                    }`}>{vehicle.location}</span>
+                    }`}>{currentAddress || vehicle.location}</span>
                  </div>
                  <button className={`p-2.5 rounded-xl border transition-all duration-500 ${
                    isDark 

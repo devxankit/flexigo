@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   Layers, 
   Store, 
@@ -14,15 +14,15 @@ import {
   Users
 } from 'lucide-react';
 import AdminStatCard from '../components/AdminStatCard';
-
-const mockFranchises = [
-  { id: 'FR-101', name: 'Nexus Hubs Bangalore', city: 'Bangalore', hubs: 3, payout: '₹4,20,000', status: 'settled' },
-  { id: 'FR-102', name: 'Urban Green Fleet', city: 'Mumbai', hubs: 1, payout: '₹1,15,000', status: 'pending' },
-  { id: 'FR-103', name: 'Elite 3PL Logistics', city: 'Pune', hubs: 5, payout: '₹12,40,000', status: 'processing' },
-  { id: 'FR-104', name: 'Metro Mobility', city: 'Delhi', hubs: 2, payout: '₹3,80,000', status: 'settled' },
-];
+import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function FranchiseOpsPage() {
+  const { franchiseOps, franchiseOpsStats, fetchFranchiseOpsData } = useAdminDataStore();
+
+  useEffect(() => {
+    fetchFranchiseOpsData();
+  }, []);
+
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
@@ -51,10 +51,10 @@ export default function FranchiseOpsPage() {
 
       {/* KPI Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <AdminStatCard title="Total Partners" value="124" icon={Users} color="emerald" subtitle="Network Scope" />
-         <AdminStatCard title="Gross Payout" value="₹84.2L" icon={Wallet} color="blue" subtitle="MTD Settled" />
-         <AdminStatCard title="Active Nodes" value="312" icon={Building2} color="emerald" subtitle="Operating Hubs" />
-         <AdminStatCard title="Growth" value="+12%" icon={TrendingUp} color="emerald" subtitle="Quarterly" />
+         <AdminStatCard title="Total Partners" value={franchiseOpsStats.totalPartners} icon={Users} color="emerald" subtitle="Network Scope" />
+         <AdminStatCard title="Gross Payout" value={franchiseOpsStats.grossPayout} icon={Wallet} color="blue" subtitle="MTD Settled" />
+         <AdminStatCard title="Active Nodes" value={franchiseOpsStats.activeNodes} icon={Building2} color="emerald" subtitle="Operating Hubs" />
+         <AdminStatCard title="Growth" value={franchiseOpsStats.growth} icon={TrendingUp} color="emerald" subtitle="Quarterly" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -76,7 +76,7 @@ export default function FranchiseOpsPage() {
                      </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border-subtle)]">
-                     {mockFranchises.map((fr) => (
+                     {franchiseOps.map((fr) => (
                         <tr key={fr.id} className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]">
                            <td className="py-3 px-6">
                               <div className="flex flex-col">

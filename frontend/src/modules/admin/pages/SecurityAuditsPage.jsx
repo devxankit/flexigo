@@ -1,30 +1,21 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   Lock, 
   ShieldCheck, 
   UserCircle, 
-  Eye, 
-  Clock, 
   ShieldAlert, 
   Key, 
   Search, 
-  Filter, 
   History,
-  MoreVertical,
   Terminal,
-  Zap,
   Globe,
   ChevronRight,
-  Activity
+  Activity,
+  Plus,
+  Users
 } from 'lucide-react';
 import AdminStatCard from '../components/AdminStatCard';
-
-const mockAuditLogs = [
-  { id: 'LOG-8812', user: 'admin_rahul', action: 'Vehicle Cutoff', target: 'EV-9021', time: '2m ago', ip: '192.168.1.1' },
-  { id: 'LOG-8811', user: 'ops_zeba', action: 'Role Update', target: 'Fleet Manager', time: '14m ago', ip: '10.0.0.42' },
-  { id: 'LOG-8810', user: 'root_admin', action: 'Auth Token Reset', target: 'System Core', time: '1h ago', ip: '172.16.254.1' },
-  { id: 'LOG-8809', user: 'admin_rahul', action: 'Export Report', target: 'Financials MTD', time: '3h ago', ip: '192.168.1.1' },
-];
+import { useAdminDataStore } from '../store/adminDataStore';
 
 const mockRoles = [
   { id: 'R-01', name: 'Super Admin', permissions: 'Full Access', users: 2 },
@@ -34,6 +25,12 @@ const mockRoles = [
 ];
 
 export default function SecurityAuditsPage() {
+  const { auditLogs, securityStats, fetchSecurityData } = useAdminDataStore();
+
+  useEffect(() => {
+    fetchSecurityData();
+  }, []);
+
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
@@ -42,7 +39,7 @@ export default function SecurityAuditsPage() {
             <div className="flex items-center gap-2">
                <div className="w-1 h-5 bg-emerald-600 rounded-full" />
                <h1 className="text-xl font-black tracking-tighter text-[var(--text-primary)] uppercase italic">
-                  Security & <span className="text-emerald-500">Audits</span>
+                  Security <span className="text-emerald-500">& Audits</span>
                </h1>
             </div>
             <p className="text-[8px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] ml-3">
@@ -52,20 +49,20 @@ export default function SecurityAuditsPage() {
          
          <div className="flex items-center gap-2">
             <button className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95 flex items-center gap-1.5">
-               <Key size={12} /> New Role
+               <Plus size={12} /> New Role
             </button>
             <button className="px-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-primary)] text-[9px] font-black uppercase tracking-widest hover:bg-[var(--bg-tertiary)] transition-all flex items-center gap-1.5 shadow-sm">
-               <Terminal size={12} /> System Logs
+               <Activity size={12} /> System Logs
             </button>
          </div>
       </div>
 
       {/* KPI Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <AdminStatCard title="Active Sessions" value="21" icon={UserCircle} color="emerald" subtitle="Auth Hosts" />
-         <AdminStatCard title="Auth Failures" value="0" icon={ShieldAlert} color="rose" subtitle="Last 24 Delta" />
-         <AdminStatCard title="Integrity" value="Pass" icon={ShieldCheck} color="emerald" subtitle="System Consistency" />
-         <AdminStatCard title="Global Nodes" value="08" icon={Globe} color="blue" subtitle="Whitelisted IP" />
+         <AdminStatCard title="Active Sessions" value={securityStats.activeSessions} icon={Users} color="emerald" subtitle="Auth Hosts" />
+         <AdminStatCard title="Auth Failures" value={securityStats.authFailures} icon={ShieldAlert} color="rose" subtitle="Last 24 Delta" />
+         <AdminStatCard title="Integrity" value={securityStats.integrity} icon={ShieldCheck} color="emerald" subtitle="System Consistency" />
+         <AdminStatCard title="Global Nodes" value={securityStats.globalNodes} icon={Globe} color="blue" subtitle="Whitelisted IP" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -83,22 +80,22 @@ export default function SecurityAuditsPage() {
                </div>
             </div>
             <div className="overflow-x-auto no-scrollbar">
-               <table className="w-full">
+               <table className="w-full text-left">
                   <thead>
                      <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
                         {['Identity', 'Action Profile', 'Object Target', 'Sync', 'Origin IP'].map((header) => (
-                           <th key={header} className="text-left py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
+                           <th key={header} className="py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
                         ))}
                      </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border-subtle)]">
-                     {mockAuditLogs.map((log) => (
-                        <tr key={log.id} className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors text-[10px]">
-                           <td className="py-2.5 px-6 font-black text-[var(--text-primary)] uppercase tracking-widest italic leading-none">{log.user}</td>
-                           <td className="py-2.5 px-6 font-black text-[var(--text-tertiary)] uppercase tracking-widest leading-none italic">{log.action}</td>
-                           <td className="py-2.5 px-6 font-black text-emerald-500 tracking-tight leading-none italic">{log.target}</td>
-                           <td className="py-2.5 px-6 text-[8px] font-black text-[var(--text-tertiary)] uppercase italic leading-none whitespace-nowrap">{log.time}</td>
-                           <td className="py-2.5 px-6 text-[8px] font-black text-[var(--text-tertiary)]/50 font-mono leading-none">{log.ip}</td>
+                     {auditLogs.map((log) => (
+                        <tr key={log.id} className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]">
+                           <td className="py-3 px-6 font-black text-[var(--text-primary)] uppercase tracking-tight italic leading-none">{log.identity}</td>
+                           <td className="py-3 px-6 font-black text-[var(--text-tertiary)] uppercase tracking-widest leading-none italic">{log.action}</td>
+                           <td className="py-3 px-6 font-black text-emerald-500 uppercase italic leading-none">{log.target}</td>
+                           <td className="py-3 px-6 text-[7.5px] font-black text-[var(--text-tertiary)] uppercase leading-none">{new Date(log.time).toLocaleDateString()}</td>
+                           <td className="py-3 px-6 text-[8px] font-black text-[var(--text-tertiary)] leading-none italic opacity-50">{log.ip}</td>
                         </tr>
                      ))}
                   </tbody>

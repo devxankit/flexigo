@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   ClipboardCheck, 
   ShieldCheck, 
@@ -15,15 +15,15 @@ import {
   ChevronRight
 } from 'lucide-react';
 import AdminStatCard from '../components/AdminStatCard';
-
-const mockChallans = [
-  { id: 'CHL-4491', vehicle: 'EV-9021', type: 'Over Speeding', amount: '₹1,000', rto: 'KA-01 (BLR)', date: '2d ago', status: 'auto-paid' },
-  { id: 'CHL-4490', vehicle: 'EV-1029', type: 'Wrong Side', amount: '₹500', rto: 'KA-05 (BLR)', date: '5d ago', status: 'pending' },
-  { id: 'CHL-4489', vehicle: 'EV-4412', type: 'No Helmet', amount: '₹1,000', rto: 'KA-03 (BLR)', date: '1w ago', status: 'disputed' },
-  { id: 'CHL-4488', vehicle: 'EV-5541', type: 'Signal Jump', amount: '₹500', rto: 'KA-51 (BLR)', date: '12d ago', status: 'auto-paid' },
-];
+import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function CompliancePage() {
+  const { complianceRecords, complianceStats, fetchComplianceData } = useAdminDataStore();
+
+  useEffect(() => {
+    fetchComplianceData();
+  }, []);
+
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
@@ -41,7 +41,10 @@ export default function CompliancePage() {
          </div>
          
          <div className="flex items-center gap-2">
-            <button className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95 flex items-center gap-1.5">
+            <button 
+               onClick={fetchComplianceData}
+               className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95 flex items-center gap-1.5"
+            >
                <RefreshCcw size={12} /> Sync Vahan
             </button>
             <button className="px-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-primary)] text-[9px] font-black uppercase tracking-widest hover:bg-[var(--bg-tertiary)] transition-all flex items-center gap-1.5 shadow-sm">
@@ -52,10 +55,10 @@ export default function CompliancePage() {
 
       {/* KPI Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <AdminStatCard title="Active Fines" value="24" icon={Gavel} color="rose" subtitle="Unpaid" />
-         <AdminStatCard title="Auto Settled" value="₹12.4K" icon={IndianRupee} color="emerald" subtitle="MTD Pay" />
-         <AdminStatCard title="Compliance" value="98.2%" icon={ShieldCheck} color="blue" subtitle="Asset Health" />
-         <AdminStatCard title="API Guard" value="Live" icon={RefreshCcw} color="emerald" subtitle="Vahan Node" />
+         <AdminStatCard title="Active Fines" value={complianceStats.activeFines} icon={Gavel} color="rose" subtitle="Unpaid" />
+         <AdminStatCard title="Auto Settled" value={complianceStats.autoSettled} icon={IndianRupee} color="emerald" subtitle="MTD Pay" />
+         <AdminStatCard title="Compliance" value={complianceStats.complianceRate} icon={ShieldCheck} color="blue" subtitle="Asset Health" />
+         <AdminStatCard title="API Guard" value={complianceStats.apiStatus} icon={RefreshCcw} color="emerald" subtitle="Vahan Node" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -87,14 +90,14 @@ export default function CompliancePage() {
                      </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border-subtle)]">
-                     {mockChallans.map((chl) => (
+                     {complianceRecords.map((chl) => (
                         <tr key={chl.id} className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors text-[10px]">
                            <td className="py-2.5 px-6 font-black text-[7.5px] text-[var(--text-tertiary)] uppercase tracking-widest leading-none">{chl.id}</td>
                            <td className="py-2.5 px-6 font-black text-[var(--text-primary)] uppercase tracking-tight italic leading-none">{chl.vehicle}</td>
                            <td className="py-2.5 px-6">
                               <div className="flex flex-col">
                                  <span className="font-black text-[var(--text-primary)] uppercase tracking-wider leading-tight italic">{chl.type}</span>
-                                 <span className="text-[7px] font-black text-[var(--text-tertiary)] uppercase italic mt-0.5 leading-none">{chl.date}</span>
+                                 <span className="text-[7px] font-black text-[var(--text-tertiary)] uppercase italic mt-0.5 leading-none">{new Date(chl.date).toLocaleDateString()}</span>
                               </div>
                            </td>
                            <td className="py-2.5 px-6 font-black text-rose-500 tracking-tight leading-none">{chl.amount}</td>

@@ -6,33 +6,51 @@ import { NeonButton } from '../components/NeonButton';
 import { useThemeStore } from '../store/themeStore';
 import logo from '../../../assets/logo.png';
 
-const chargingHubs = [
-  { 
-    id: 1, 
-    name: 'FlexiHub Koramangala', 
-    distance: '0.8 km', 
-    batteries: 14, 
-    status: 'Open', 
-    color: '#39FF14',
-    address: '4th Block, Koramangala, Opposite BDA Complex, Bengaluru, 560034',
-    hours: '24/7 Operations',
-    contact: '+91 80881 23456',
-    availableSlots: 6
-  },
-  { id: 2, name: 'HSR Layout Power Station', distance: '1.2 km', batteries: 8, status: 'Open', color: '#39FF14', address: 'Sector 2, HSR Layout, Bengaluru', hours: '24/7', contact: '+91 80881 11222', availableSlots: 10 },
-  { id: 3, name: 'Indiranagar Swap Point', distance: '2.5 km', batteries: 3, status: 'Limited', color: '#EAB308', address: '100 Feet Rd, Indiranagar, Bengaluru', hours: '06:00 - 23:00', contact: '+91 80881 33445', availableSlots: 2 },
-  { id: 4, name: 'MG Road Battery Bank', distance: '3.1 km', batteries: 22, status: 'Open', color: '#39FF14', address: 'Brigade Road Junction, MG Road, Bengaluru', hours: '24/7', contact: '+91 80881 55667', availableSlots: 12 },
-  { id: 5, name: 'Whitefield Energy Hub', distance: '4.8 km', batteries: 0, status: 'Empty', color: '#EF4444', address: 'ITPL Main Road, Whitefield, Bengaluru', hours: '24/7', contact: '+91 80881 77889', availableSlots: 15 },
-  { id: 6, name: 'Jayanagar Hub', distance: '5.2 km', batteries: 11, status: 'Open', color: '#39FF14', address: '9th Block, Jayanagar, Bengaluru', hours: '08:00 - 22:00', contact: '+91 80881 99001', availableSlots: 4 },
-];
+// Removed hardcoded chargingHubs mock
+import { useRideStore } from '../store/rideStore';
+import { useState, useEffect } from 'react';
+
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+  const R = 6371; // km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+};
 
 export default function HubDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { theme } = useThemeStore();
+  const { hubs, fetchHubs } = useRideStore();
   const isDark = theme === 'dark';
+  const [coords, setCoords] = useState(null);
 
-  const hub = chargingHubs.find(h => h.id === parseInt(id)) || chargingHubs[0];
+  useEffect(() => {
+    if (hubs.length === 0) fetchHubs();
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        setCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+      });
+    }
+  }, []);
+
+  const rawHub = hubs.find(h => h.id === id || h._id === id);
+  if (!rawHub) return null; // Or show loading
+
+  const dist = coords ? calculateDistance(coords.latitude, coords.longitude, rawHub.latitude, rawHub.longitude) : null;
+  const hub = {
+    ...rawHub,
+    distanceStr: dist ? (dist < 1 ? Math.round(dist * 1000) + ' m' : dist.toFixed(1) + ' km') : 'calculating...',
+    hours: '24/7 Operations', // Default as not in model yet
+    availableSlots: Math.floor(Math.random() * 15) // Dynamic mock for slots
+  };
 
   const handleDirections = () => {
     const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hub.address)}`;
@@ -89,7 +107,7 @@ export default function HubDetails() {
                    <h2 className={`text-2xl font-heading font-black transition-colors ${
                      isDark ? 'text-white' : 'text-slate-900'
                    }`}>{hub.name}</h2>
-                   <p className="text-gray-500 font-bold text-xs mt-1">{hub.distance} away from you</p>
+                   <p className="text-gray-500 font-bold text-xs mt-1">{hub.distanceStr} away from you</p>
                 </div>
              </div>
 

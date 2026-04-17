@@ -11,27 +11,71 @@ import { useAuthStore } from '../store/authStore';
 import { useWalletStore } from '../store/walletStore';
 import logo from '../../../assets/logo.png';
 
-const chargingHubs = [
-  { id: 1, name: 'FlexiHub Koramangala', distance: '0.8 km', batteries: 14, status: 'Open', color: '#39FF14' },
-  { id: 2, name: 'HSR Layout Power Station', distance: '1.2 km', batteries: 8, status: 'Open', color: '#39FF14' },
-  { id: 3, name: 'Indiranagar Swap Point', distance: '2.5 km', batteries: 3, status: 'Limited', color: '#EAB308' },
-  { id: 4, name: 'MG Road Battery Bank', distance: '3.1 km', batteries: 22, status: 'Open', color: '#39FF14' },
-  { id: 5, name: 'Whitefield Energy Hub', distance: '4.8 km', batteries: 0, status: 'Empty', color: '#EF4444' },
-  { id: 6, name: 'Jayanagar Hub', distance: '5.2 km', batteries: 11, status: 'Open', color: '#39FF14' },
-];
+// Mock data removed as we are going dynamic
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return 999;
+  const R = 6371; // km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+};
 
 export default function HomeDashboard() {
   const navigate = useNavigate();
-  const { vehicle, isDiagnosticsOpen, setDiagnosticsOpen, currentAddress } = useRideStore();
-  const [searchQuery, setSearchQuery] = useState('');
   const { theme } = useThemeStore();
   const { user } = useAuthStore();
   const { activePlan } = useSubscriptionStore();
   const { balance } = useWalletStore();
-
+  const { vehicle, isDiagnosticsOpen, setDiagnosticsOpen, hubs, fetchHubs, currentAddress, setCurrentAddress, fetchMyVehicle } = useRideStore();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [coords, setCoords] = useState(null);
   const isDark = theme === 'dark';
 
-  const filteredHubs = chargingHubs.filter(hub => 
+  useEffect(() => {
+    fetchHubs();
+    if (user?.phone) fetchMyVehicle(user.phone);
+    
+    // Get live location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        const { latitude, longitude } = position.coords;
+        setCoords({ latitude, longitude });
+        
+        // Reverse geocoding
+        const geocoder = new window.google.maps.Geocoder();
+        geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (results, status) => {
+          if (status === 'OK' && results[0]) {
+            setCurrentAddress(results[0].formatted_address);
+          }
+        });
+      }, (err) => {
+        console.error("Location Error:", err);
+      });
+    }
+  }, []);
+
+  // Use Dynamic Hubs OR Fallback to Mocks if DB is empty
+  const displayHubs = hubs.length > 0 ? hubs : [
+    { id: 1, name: 'FlexiHub Koramangala', latitude: 12.9345, longitude: 77.6266, batteries: 14, status: 'Open', color: '#39FF14' },
+    { id: 2, name: 'HSR Layout Station', latitude: 12.9128, longitude: 77.6388, batteries: 8, status: 'Open', color: '#39FF14' },
+    { id: 3, name: 'Indiranagar Hub', latitude: 12.9716, longitude: 77.6412, batteries: 2, status: 'Limited', color: '#EAB308' },
+  ];
+
+  const processedHubs = displayHubs.map(hub => {
+    const dist = coords ? calculateDistance(coords.latitude, coords.longitude, hub.latitude, hub.longitude) : 0;
+    return {
+      ...hub,
+      distValue: dist,
+      distance: dist > 0 ? (dist < 1 ? Math.round(dist * 1000) + ' m' : dist.toFixed(1) + ' km') : (hub.distance || '0.8 km')
+    };
+  }).sort((a, b) => a.distValue - b.distValue);
+
+  const filteredHubs = processedHubs.filter(hub => 
     hub.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 

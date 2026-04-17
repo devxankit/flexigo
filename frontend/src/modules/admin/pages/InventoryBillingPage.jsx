@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   Boxes, 
   Warehouse, 
@@ -17,20 +17,15 @@ import {
   Activity
 } from 'lucide-react';
 import AdminStatCard from '../components/AdminStatCard';
-
-const mockInventory = [
-  { id: 'SKU-001', name: '72V Lithium Cell Pack', category: 'Battery', stock: 12, minLevel: 10, supplier: 'GreenCell Tech', status: 'optimal' },
-  { id: 'SKU-042', name: 'Brembo Brake Pads', category: 'Brakes', stock: 4, minLevel: 15, supplier: 'Brembo India', status: 'low-stock' },
-  { id: 'SKU-108', name: 'Apollo H1 Tyres', category: 'Wheels', stock: 24, minLevel: 20, supplier: 'Apollo Tyres', status: 'optimal' },
-  { id: 'SKU-056', name: 'Hub Motor (3kW)', category: 'Motor', stock: 2, minLevel: 5, supplier: 'Bosch Mobility', status: 'low-stock' },
-];
-
-const mockBilling = [
-  { id: 'INV-9901', supplier: 'GreenCell Tech', amount: '₹1,45,000', status: 'paid', date: '2d ago' },
-  { id: 'INV-9902', supplier: 'Brembo India', amount: '₹12,400', status: 'pending', date: '5h ago' },
-];
+import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function InventoryBillingPage() {
+  const { inventory, billing, inventoryStats, fetchInventoryData } = useAdminDataStore();
+
+  useEffect(() => {
+    fetchInventoryData();
+  }, []);
+
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
@@ -59,10 +54,10 @@ export default function InventoryBillingPage() {
 
       {/* KPI Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <AdminStatCard title="Spare Items" value="1,240" icon={Boxes} color="emerald" subtitle="On Grid Alpha" />
-         <AdminStatCard title="Restock Soon" value="06" icon={AlertTriangle} color="amber" subtitle="Threshold Risk" />
-         <AdminStatCard title="Stock Value" value="₹24.8L" icon={PackageCheck} color="blue" subtitle="Asset Corpus" />
-         <AdminStatCard title="Unpaid Bills" value="₹4.2L" icon={FileText} color="emerald" subtitle="Supplier Delta" />
+         <AdminStatCard title="Spare Items" value={inventoryStats.totalItems} icon={Boxes} color="emerald" subtitle="On Grid Alpha" />
+         <AdminStatCard title="Restock Soon" value={inventoryStats.restockCount} icon={AlertTriangle} color="amber" subtitle="Threshold Risk" />
+         <AdminStatCard title="Stock Value" value={inventoryStats.stockValue} icon={PackageCheck} color="blue" subtitle="Asset Corpus" />
+         <AdminStatCard title="Unpaid Bills" value={inventoryStats.unpaidAmount} icon={FileText} color="emerald" subtitle="Supplier Delta" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -89,7 +84,7 @@ export default function InventoryBillingPage() {
                      </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border-subtle)]">
-                     {mockInventory.map((item) => (
+                     {inventory.map((item) => (
                         <tr key={item.id} className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]">
                            <td className="py-2.5 px-6 whitespace-nowrap">
                               <div className="flex flex-col">
@@ -124,7 +119,7 @@ export default function InventoryBillingPage() {
                </div>
 
                <div className="space-y-3">
-                  {mockBilling.map((bill) => (
+                  {billing.map((bill) => (
                      <div key={bill.id} className="p-3 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl group hover:border-emerald-500/30 transition-all cursor-pointer">
                         <div className="flex items-center justify-between mb-1.5">
                            <span className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-tight italic leading-none">{bill.id}</span>
@@ -134,7 +129,7 @@ export default function InventoryBillingPage() {
                         </div>
                         <div className="flex items-center justify-between text-[11px] font-black italic">
                            <span className="text-emerald-500">{bill.amount}</span>
-                           <span className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase leading-none">{bill.date}</span>
+                           <span className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase leading-none">{new Date(bill.date).toLocaleDateString()}</span>
                         </div>
                      </div>
                   ))}

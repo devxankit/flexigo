@@ -18,41 +18,61 @@ import {
   Zap,
   CreditCard,
   UserCheck,
-  ShieldCheck
+  ShieldCheck,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function HrManagementPage() {
-  const [employees, setEmployees] = useState([
-    { id: 'EMP-001', name: 'Kabir Vats', role: 'Fleet Lead', dept: 'Operations', status: 'active', shift: 'Morning' },
-    { id: 'EMP-002', name: 'Sara Qureshi', role: 'Compliance Officer', dept: 'Legal', status: 'active', shift: 'Regular' },
-    { id: 'EMP-003', name: 'Nikhil Verma', role: 'BMS Engineer', dept: 'Engineering', status: 'on-leave', shift: 'Night' },
-    { id: 'EMP-004', name: 'Tanvi Jain', role: 'Support Agent', dept: 'CRM', status: 'active', shift: 'Evening' },
-  ]);
+  const { 
+    staff, 
+    staffStats,
+    fetchStaff, 
+    addStaff,
+    updateStaff,
+    removeStaff
+  } = useAdminDataStore();
+
+  React.useEffect(() => {
+    fetchStaff();
+  }, []);
 
   const [activeTab, setActiveTab] = useState('employees');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState('add'); // 'add' or 'payouts'
+  const [modalType, setModalType] = useState('add'); // 'add', 'edit', or 'payouts'
+  const [selectedStaff, setSelectedStaff] = useState(null);
   const [newEmployee, setNewEmployee] = useState({ name: '', role: '', dept: 'Operations' });
 
-  const handleAddEmployee = (e) => {
+  const handleEditOpen = (emp) => {
+    setSelectedStaff(emp);
+    setNewEmployee({ name: emp.name, role: emp.role, dept: emp.dept });
+    setModalType('edit');
+    setIsModalOpen(true);
+  };
+
+  const handleAddEmployee = async (e) => {
     e.preventDefault();
     if (!newEmployee.name || !newEmployee.role) return;
 
-    const emp = {
-      id: `EMP-${Math.floor(100 + Math.random() * 900)}`,
+    const payload = {
       name: newEmployee.name,
       role: newEmployee.role,
       dept: newEmployee.dept,
-      status: 'active',
       shift: 'Regular'
     };
 
-    setEmployees([emp, ...employees]);
+    if (modalType === 'edit' && selectedStaff) {
+      await updateStaff(selectedStaff._id, payload);
+    } else {
+      await addStaff(payload);
+    }
+
     setNewEmployee({ name: '', role: '', dept: 'Operations' });
     setIsModalOpen(false);
+    setSelectedStaff(null);
   };
 
   return (
@@ -89,10 +109,10 @@ export default function HrManagementPage() {
 
       {/* KPI Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <AdminStatCard title="Total Staff" value={employees.length} icon={Users} color="emerald" subtitle="Active Team" />
-         <AdminStatCard title="On Duty" value="38" icon={CheckCircle2} color="blue" subtitle="Present Now" />
-         <AdminStatCard title="Performance" value="98.8%" icon={Activity} color="emerald" subtitle="Efficiency Rating" />
-         <AdminStatCard title="Leaves" value="03" icon={Clock} color="rose" subtitle="Pending Alpha" />
+         <AdminStatCard title="Total Staff" value={staffStats.totalStaff} icon={Users} color="emerald" subtitle="Active Team" />
+         <AdminStatCard title="On Duty" value={staffStats.onDuty} icon={CheckCircle2} color="blue" subtitle="Present Now" />
+         <AdminStatCard title="Performance" value={staffStats.performance} icon={Activity} color="emerald" subtitle="Efficiency Rating" />
+         <AdminStatCard title="Leaves" value={staffStats.leaves} icon={Clock} color="rose" subtitle="Pending Alpha" />
       </div>
 
       {/* Tabbed Navigation */}
@@ -139,23 +159,23 @@ export default function HrManagementPage() {
                <table className="w-full text-left">
                   <thead>
                      <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
-                        {['Staff ID', 'Name & Role', 'Dept', 'Shift', 'Access', 'Status'].map((header) => (
+                        {['Staff ID', 'Name & Role', 'Dept', 'Shift', 'Access', 'Status', 'Actions'].map((header) => (
                            <th key={header} className="py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
                         ))}
                      </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border-subtle)]">
                      <AnimatePresence mode='popLayout'>
-                        {employees.map((emp) => (
+                        {staff.map((emp, idx) => (
                            <motion.tr 
                               layout
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
                               exit={{ opacity: 0 }}
-                              key={emp.id} 
+                              key={emp._id || emp.id || idx} 
                               className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]"
                            >
-                              <td className="py-3 px-6 font-black text-[7.5px] text-[var(--text-tertiary)] uppercase tracking-widest leading-none">{emp.id}</td>
+                              <td className="py-3 px-6 font-black text-[7.5px] text-[var(--text-tertiary)] uppercase tracking-widest leading-none">{(emp._id || emp.id).slice(-8).toUpperCase()}</td>
                               <td className="py-3 px-6 whitespace-nowrap">
                                  <div className="flex flex-col">
                                     <span className="font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic">{emp.name}</span>
@@ -172,6 +192,22 @@ export default function HrManagementPage() {
                                     emp.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-slate-500/10 text-slate-500 border-slate-500/10'
                                  }`}>
                                     {emp.status}
+                                 </div>
+                              </td>
+                              <td className="py-3 px-6">
+                                 <div className="flex items-center gap-2">
+                                    <button 
+                                       onClick={(e) => { e.stopPropagation(); handleEditOpen(emp); }}
+                                       className="p-1 text-[var(--text-tertiary)] hover:text-emerald-500 hover:bg-emerald-500/10 rounded transition-all"
+                                    >
+                                       <Edit size={12} />
+                                    </button>
+                                    <button 
+                                       onClick={(e) => { e.stopPropagation(); if(window.confirm('Delete staff?')) removeStaff(emp._id); }}
+                                       className="p-1 text-[var(--text-tertiary)] hover:text-rose-500 hover:bg-rose-500/10 rounded transition-all"
+                                    >
+                                       <Trash2 size={12} />
+                                    </button>
                                  </div>
                               </td>
                            </motion.tr>
@@ -247,9 +283,9 @@ export default function HrManagementPage() {
                >
                   <div className="flex items-center justify-between">
                      <div className="space-y-0.5">
-                        <h2 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-tighter italic leading-none">
-                           {modalType === 'add' ? 'Staff' : 'Payroll'} <span className="text-emerald-500">Initiator</span>
-                        </h2>
+                         <h2 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-tighter italic leading-none">
+                            {modalType === 'add' ? 'Staff' : modalType === 'edit' ? 'Update' : 'Payroll'} <span className="text-emerald-500">Initiator</span>
+                         </h2>
                         <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">SECTION: HUB_STAFF_V2</p>
                      </div>
                      <button onClick={() => setIsModalOpen(false)} className="p-1.5 hover:bg-rose-600/10 hover:text-rose-500 transition-all rounded-lg">
@@ -257,7 +293,7 @@ export default function HrManagementPage() {
                      </button>
                   </div>
 
-                  {modalType === 'add' ? (
+                  {modalType !== 'payouts' ? (
                      <form onSubmit={handleAddEmployee} className="space-y-6">
                         <div className="space-y-4">
                            <div className="space-y-1.5">
@@ -267,7 +303,7 @@ export default function HrManagementPage() {
                                  value={newEmployee.name}
                                  onChange={(e) => setNewEmployee({...newEmployee, name: e.target.value})}
                                  placeholder="Full Name"
-                                 className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic"
+                                 className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic"
                               />
                            </div>
                            <div className="space-y-1.5">
@@ -276,7 +312,7 @@ export default function HrManagementPage() {
                                  value={newEmployee.role}
                                  onChange={(e) => setNewEmployee({...newEmployee, role: e.target.value})}
                                  placeholder="Role"
-                                 className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic"
+                                 className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic"
                               />
                            </div>
                         </div>
@@ -284,7 +320,7 @@ export default function HrManagementPage() {
                            type="submit"
                            className="w-full py-3 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-emerald-950/20 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2"
                         >
-                           <Zap size={14} fill="white" /> Execute Staff Sync
+                           <Zap size={14} fill="white" /> {modalType === 'edit' ? 'Update Staff Member' : 'Execute Staff Sync'}
                         </button>
                      </form>
                   ) : (

@@ -73,10 +73,10 @@ export default function DeepAnalyticsPage() {
 
       {/* Intelligence KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <AdminStatCard title="Yield Projection" value="₹42.8L" icon={TrendingUp} color="emerald" subtitle="Predictive MTD" />
-         <AdminStatCard title="Churn Delta" value="-2.4%" icon={Zap} color="blue" subtitle="Retention Index" />
-         <AdminStatCard title="Node Load" value="96.2%" icon={Signal} color="emerald" subtitle="Cluster Sync" />
-         <AdminStatCard title="Risk Scoring" value="84/100" icon={Activity} color="emerald" subtitle="Grid Stability" />
+         <AdminStatCard title="Yield Projection" value={networkStats.yieldProjection || "₹0L"} icon={TrendingUp} color="emerald" subtitle="Predictive MTD" />
+         <AdminStatCard title="Churn Delta" value={networkStats.churnDelta || "0%"} icon={Zap} color="blue" subtitle="Retention Index" />
+         <AdminStatCard title="Node Load" value={networkStats.nodeLoad || "0%"} icon={Signal} color="emerald" subtitle="Cluster Sync" />
+         <AdminStatCard title="Risk Scoring" value={networkStats.riskScoring || "0/100"} icon={Activity} color="emerald" subtitle="Grid Stability" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -148,15 +148,18 @@ export default function DeepAnalyticsPage() {
             </div>
 
             <div className="space-y-1.5 flex-1">
-               {['Maharashtra_Alpha', 'Pune_Cluster', 'Karn_Delta'].map((loc) => (
-                  <div key={loc} className="flex justify-between items-center bg-[var(--bg-tertiary)]/30 p-2 px-3 rounded-lg border border-[var(--border-subtle)] group hover:border-emerald-500/20 transition-all cursor-pointer">
-                     <span className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic">{loc}</span>
+               {(networkStats.regionalYield || []).map((loc) => (
+                  <div key={loc.name} className="flex justify-between items-center bg-[var(--bg-tertiary)]/30 p-2 px-3 rounded-lg border border-[var(--border-subtle)] group hover:border-emerald-500/20 transition-all cursor-pointer">
+                     <span className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic">{loc.name}</span>
                      <div className="flex items-center gap-1.5">
-                        <span className="text-[9px] font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors italic">₹{(Math.random() * 20).toFixed(1)}L</span>
+                        <span className="text-[9px] font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors italic">₹{loc.value}L</span>
                         <div className="w-1 h-1 rounded-full bg-emerald-500" />
                      </div>
                   </div>
                ))}
+               {(!networkStats.regionalYield || networkStats.regionalYield.length === 0) && (
+                  <p className="text-[8px] font-black text-[var(--text-tertiary)] uppercase text-center py-4">No regional data available</p>
+               )}
             </div>
 
             <button className="w-full mt-6 py-2 bg-blue-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-blue-900/20 hover:bg-blue-700 transition-all active:scale-95 group flex items-center justify-center gap-2">

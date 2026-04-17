@@ -23,21 +23,25 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
 
-const initialFranchiseKyc = [
-  { id: 'FKYC-101', name: 'Nexus Hubs Bangalore', city: 'Bangalore', type: 'Pvt Ltd', hubs: 3, date: '04 Apr 2026', status: 'pending' },
-  { id: 'FKYC-102', name: 'Urban Green Fleet', city: 'Mumbai', type: 'Proprietorship', hubs: 1, date: '02 Apr 2026', status: 'approved' },
-  { id: 'FKYC-103', name: 'Elite 3PL Logistics', city: 'Pune', type: 'Partnership', hubs: 5, date: '01 Apr 2026', status: 'pending' },
-];
+import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function FranchiseKycQueue() {
-  const [records, setRecords] = useState(initialFranchiseKyc);
+  const { kycRecords, kycStats, fetchKycRecords, updateKycStatus } = useAdminDataStore();
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleAction = (id, newStatus) => {
-    setRecords(prev => prev.map(r => r.id === id ? { ...r, status: newStatus } : r));
+  React.useEffect(() => {
+    fetchKycRecords();
+  }, []);
+
+  // Filter records to only show Franchises
+  const records = kycRecords.filter(r => r.role === 'Franchise');
+
+  const handleAction = async (id, newStatus) => {
+    await updateKycStatus(id, newStatus);
+    await fetchKycRecords(); // Fresh stats
     if (selectedRecord && selectedRecord.id === id) {
-      setSelectedRecord(prev => ({ ...prev, status: newStatus }));
+       setSelectedRecord({ ...selectedRecord, status: newStatus });
     }
   };
 
@@ -77,9 +81,9 @@ export default function FranchiseKycQueue() {
       {/* KPI Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
          <AdminStatCard title="Queued" value={records.length} icon={Building2} color="emerald" subtitle="Waitlist Nodes" />
-         <AdminStatCard title="GST Sync" value="100%" icon={ShieldCheck} color="blue" subtitle="Verified Alpha" />
-         <AdminStatCard title="Markets" value="14" icon={MapPin} color="emerald" subtitle="Active Cities" />
-         <AdminStatCard title="Integrity" value="99.2%" icon={Activity} color="emerald" subtitle="Doc Score" />
+         <AdminStatCard title="GST Sync" value={kycStats.gstSync} icon={ShieldCheck} color="blue" subtitle="Verified Alpha" />
+         <AdminStatCard title="Markets" value={kycStats.markets} icon={MapPin} color="emerald" subtitle="Active Cities" />
+         <AdminStatCard title="Integrity" value={kycStats.integrity} icon={Activity} color="emerald" subtitle="Doc Score" />
       </div>
 
       {/* Registry */}

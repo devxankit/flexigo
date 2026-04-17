@@ -29,18 +29,30 @@ import { useAdminDataStore } from '../store/adminDataStore';
 export default function HubDetailsPage() {
   const { hubId } = useParams();
   const navigate = useNavigate();
-  const { hubs } = useAdminDataStore();
+  const { hubs, fetchHubVehicles } = useAdminDataStore();
   const [hub, setHub] = useState(null);
   const [activeMenu, setActiveMenu] = useState(null);
+  const [vehicles, setVehicles] = useState([]);
+  const [loadingVehicles, setLoadingVehicles] = useState(true);
 
   useEffect(() => {
     const foundHub = hubs.find(h => (h._id || h.id).toString() === hubId);
-    if (foundHub) setHub(foundHub);
+    if (foundHub) {
+      setHub(foundHub);
+      loadVehicles();
+    }
 
     const handleClickOutside = () => setActiveMenu(null);
     window.addEventListener('click', handleClickOutside);
     return () => window.removeEventListener('click', handleClickOutside);
   }, [hubId, hubs]);
+
+  const loadVehicles = async () => {
+    setLoadingVehicles(true);
+    const data = await fetchHubVehicles(hubId);
+    setVehicles(data);
+    setLoadingVehicles(false);
+  };
 
   if (!hub) {
     return (
@@ -232,41 +244,49 @@ export default function HubDetailsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border-subtle)]">
-                  {[1, 2, 3, 4, 5, 6].map((_, idx) => (
-                    <tr key={idx} className="group hover:bg-[var(--bg-tertiary)]/30 transition-colors">
+                  {loadingVehicles ? (
+                    <tr>
+                      <td colSpan={5} className="py-12 text-center text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] italic">Streaming Neural Grid...</td>
+                    </tr>
+                  ) : vehicles.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-12 text-center text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] italic">No assets detected at this hub</td>
+                    </tr>
+                  ) : vehicles.map((v, idx) => (
+                    <tr key={v._id} className="group hover:bg-[var(--bg-tertiary)]/30 transition-colors">
                       <td className="px-6 py-2.5">
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded bg-[var(--bg-tertiary)] flex items-center justify-center text-emerald-500 font-black text-[9px]">
                             EV
                           </div>
-                          <span className="text-[10px] font-black text-[var(--text-primary)]">FLEX-90{idx}A</span>
+                          <span className="text-[10px] font-black text-[var(--text-primary)]">{v.plate}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-2.5 text-[10px] font-bold text-[var(--text-tertiary)]">{idx % 2 === 0 ? 'Siddharth M.' : 'Pooja Hegde'}</td>
+                      <td className="px-6 py-2.5 text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-tight">{v.model}</td>
                       <td className="px-6 py-2.5">
                         <div className="flex items-center gap-2">
-                          <Battery size={12} className={idx === 3 ? 'text-rose-500' : 'text-emerald-500'} />
-                          <span className={`text-[10px] font-black ${idx === 3 ? 'text-rose-500' : 'text-[var(--text-primary)]'}`}>{90 - (idx * 15)}%</span>
+                          <Battery size={12} className={v.battery < 20 ? 'text-rose-500' : 'text-emerald-500'} />
+                          <span className={`text-[10px] font-black ${v.battery < 20 ? 'text-rose-500' : 'text-[var(--text-primary)]'}`}>{v.battery}%</span>
                         </div>
                       </td>
                       <td className="px-6 py-2.5">
-                        <span className={`px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest border ${idx % 3 === 0 ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'}`}>
-                          {idx % 3 === 0 ? 'Moving' : 'Idle'}
+                        <span className={`px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest border ${v.status === 'assigned' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'}`}>
+                          {v.status}
                         </span>
                       </td>
                       <td className="px-6 py-2.5 relative">
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
-                            setActiveMenu(activeMenu === idx ? null : idx);
+                            setActiveMenu(activeMenu === v._id ? null : v._id);
                           }}
-                          className={`p-1 hover:bg-emerald-600/10 hover:text-emerald-500 rounded transition-all ${activeMenu === idx ? 'text-emerald-500 bg-emerald-600/10' : 'text-[var(--text-tertiary)]'}`}
+                          className={`p-1 hover:bg-emerald-600/10 hover:text-emerald-500 rounded transition-all ${activeMenu === v._id ? 'text-emerald-500 bg-emerald-600/10' : 'text-[var(--text-tertiary)]'}`}
                         >
                           <MoreHorizontal size={14} />
                         </button>
 
                         <AnimatePresence>
-                          {activeMenu === idx && (
+                          {activeMenu === v._id && (
                             <motion.div 
                               initial={{ opacity: 0, scale: 0.95, y: -10 }}
                               animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -282,7 +302,7 @@ export default function HubDetailsPage() {
                                 ].map((item) => (
                                   <button 
                                     key={item.label}
-                                    onClick={(e) => handleAction(e, `FLEX-90${idx}A`, item.label)}
+                                    onClick={(e) => handleAction(e, v.plate, item.label)}
                                     className="flex items-center gap-2.5 px-3 py-2 text-[8px] font-black uppercase tracking-wider text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-colors w-full text-left"
                                   >
                                     <item.icon size={12} className={`text-${item.color}-500`} />

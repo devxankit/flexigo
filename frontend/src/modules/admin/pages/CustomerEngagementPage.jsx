@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Ticket, 
   MessageSquare, 
@@ -17,21 +17,21 @@ import {
 } from 'lucide-react';
 import AdminStatCard from '../components/AdminStatCard';
 import { motion } from 'framer-motion';
-
-const mockTickets = [
-  { id: 'TCK-201', user: 'Raj Malhotra', category: 'Wallet', priority: 'high', time: '12m ago', status: 'open' },
-  { id: 'TCK-202', user: 'Sanya Gupta', category: 'Vehicle', priority: 'medium', time: '1h ago', status: 'in-progress' },
-  { id: 'TCK-203', user: 'Amit Shah', category: 'Account', priority: 'low', time: '3h ago', status: 'resolved' },
-];
-
-const mockCoupons = [
-  { code: 'FLEX50', discount: '50%', usage: '1,240', expiry: '12 Apr', status: 'active' },
-  { code: 'FIRSTEV', discount: '₹100', usage: '842', expiry: '20 Apr', status: 'active' },
-  { code: 'CORP25', discount: '25%', usage: '12', expiry: 'Expired', status: 'inactive' },
-];
+import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function CustomerEngagementPage() {
+  const { 
+    tickets: allTickets, 
+    promos: allPromos,
+    engagementStats, 
+    fetchEngagementData 
+  } = useAdminDataStore();
+
   const [activeTab, setActiveTab] = useState('tickets');
+  
+  useEffect(() => {
+    fetchEngagementData();
+  }, []);
 
   return (
     <div className="space-y-6 pb-12">
@@ -61,10 +61,10 @@ export default function CustomerEngagementPage() {
 
       {/* KPI Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <AdminStatCard title="Open Tickets" value="12" icon={MessageSquare} color="amber" subtitle="Pending Alpha" />
-         <AdminStatCard title="Live Promo" value="08" icon={Ticket} color="emerald" subtitle="Active Nodes" />
-         <AdminStatCard title="CSAT Score" value="94.2%" icon={Star} color="blue" subtitle="Satisfaction Index" />
-         <AdminStatCard title="SLA Ready" value="14m" icon={Clock} color="emerald" subtitle="Avg Respond" />
+         <AdminStatCard title="Open Tickets" value={engagementStats.openTickets} icon={MessageSquare} color="amber" subtitle="Pending Alpha" />
+         <AdminStatCard title="Live Promo" value={engagementStats.livePromos} icon={Ticket} color="emerald" subtitle="Active Nodes" />
+         <AdminStatCard title="CSAT Score" value={engagementStats.csatScore} icon={Star} color="blue" subtitle="Satisfaction Index" />
+         <AdminStatCard title="SLA Ready" value={engagementStats.slaReady} icon={Clock} color="emerald" subtitle="Avg Respond" />
       </div>
 
       {/* Tabbed Navigation */}
@@ -119,11 +119,11 @@ export default function CustomerEngagementPage() {
                   </thead>
                   <tbody className="divide-y divide-[var(--border-subtle)]">
                      {activeTab === 'tickets' ? (
-                        mockTickets.map((tck) => (
+                        allTickets.map((tck) => (
                            <tr key={tck.id} className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]">
                               <td className="py-2.5 px-6 font-black text-[7.5px] text-[var(--text-tertiary)] uppercase tracking-widest leading-none">{tck.id}</td>
                               <td className="py-2.5 px-6 whitespace-nowrap">
-                                 <span className="font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic leading-none">{tck.user}</span>
+                                 <span className="font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic leading-none">{tck.entity}</span>
                               </td>
                               <td className="py-2.5 px-6 text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-wider leading-none">{tck.category}</td>
                               <td className="py-2.5 px-6">
@@ -135,7 +135,7 @@ export default function CustomerEngagementPage() {
                                     {tck.priority}
                                  </span>
                               </td>
-                              <td className="py-2.5 px-6 text-[7.5px] font-black text-[var(--text-tertiary)] uppercase italic leading-none">{tck.time}</td>
+                              <td className="py-2.5 px-6 text-[7.5px] font-black text-[var(--text-tertiary)] uppercase italic leading-none">{new Date(tck.sla).toLocaleDateString()}</td>
                               <td className="py-2.5 px-6">
                                  <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border leading-none ${
                                     tck.status === 'resolved' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 
@@ -147,8 +147,8 @@ export default function CustomerEngagementPage() {
                               </td>
                            </tr>
                         ))
-                     ) : (
-                        mockCoupons.map((cp) => (
+                      ) : (
+                        allPromos.map((cp) => (
                            <tr key={cp.code} className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]">
                               <td className="py-2.5 px-6 font-black text-[9px] text-emerald-500 uppercase tracking-widest italic leading-none">{cp.code}</td>
                               <td className="py-2.5 px-6 text-[9px] font-black text-[var(--text-primary)] uppercase leading-none">{cp.discount}</td>

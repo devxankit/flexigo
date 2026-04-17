@@ -7,6 +7,11 @@ import {
   addMoney,
   getWalletData,
   getSubscribersByFranchise,
+  getActiveHubs,
+  getMyVehicle,
+  getRiderPlans,
+  createPaymentOrder,
+  verifyPayment,
 } from './riderController.js';
 import { protectFranchise } from '../../shared/middleware/authMiddleware.js';
 
@@ -19,5 +24,10 @@ router.get('/profile/:phone', getRiderProfile);
 router.post('/wallet/add', addMoney);
 router.get('/wallet/:phone', getWalletData);
 router.get('/subscribers', protectFranchise, getSubscribersByFranchise);
+router.get('/hubs', getActiveHubs);
+router.get('/my-vehicle/:phone', getMyVehicle);
+router.get('/plans', getRiderPlans);
+router.post('/payments/create-order', createPaymentOrder);
+router.post('/payments/verify', verifyPayment);
 
 export default router;

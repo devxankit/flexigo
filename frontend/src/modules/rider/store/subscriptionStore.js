@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import api from '../../../lib/axios';
 
 export const useSubscriptionStore = create(
   persist(
@@ -41,6 +42,17 @@ export const useSubscriptionStore = create(
 
       selectPlan: (plan) => set({ selectedPlan: plan }),
       activatePlan: (plan) => set({ activePlan: { ...plan, activatedAt: Date.now(), expiresAt: Date.now() + plan.durationMs } }),
+      
+      fetchPlans: async () => {
+        try {
+          const res = await api.get('/rider/plans');
+          if (res.data.success) {
+            set({ plans: res.data.plans });
+          }
+        } catch (err) {
+          console.error("Failed to fetch plans:", err);
+        }
+      }
     }),
     { name: 'rider-subscription' }
   )
