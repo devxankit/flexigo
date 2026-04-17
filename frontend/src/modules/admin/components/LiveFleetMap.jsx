@@ -7,8 +7,11 @@ export default function LiveFleetMap({ vehicles }) {
 
   useEffect(() => {
     if (window.google && mapRef.current && !googleMap.current) {
+      // Default to Indore coordindates as fallback
+      const defaultPos = { lat: 22.7196, lng: 75.8577 };
+      
       googleMap.current = new window.google.maps.Map(mapRef.current, {
-        center: { lat: 12.9716, lng: 77.5946 }, // Bangalore
+        center: defaultPos, 
         zoom: 12,
         styles: [
           { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
@@ -92,6 +95,17 @@ export default function LiveFleetMap({ vehicles }) {
         ],
         disableDefaultUI: true,
       });
+
+      // Try to get current location
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          const pos = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+          googleMap.current.setCenter(pos);
+        });
+      }
     }
   }, []);
 
@@ -104,10 +118,10 @@ export default function LiveFleetMap({ vehicles }) {
       const bounds = new window.google.maps.LatLngBounds();
 
       vehicles.forEach(vehicle => {
-        // Since we don't have real lat/lng in DB yet, I'll mock some around Bangalore center
-        // In a real app, vehicle.location would be { lat: number, lng: number }
-        const mockLat = 12.9716 + (Math.random() - 0.5) * 0.1;
-        const mockLng = 77.5946 + (Math.random() - 0.5) * 0.1;
+        // Since we don't have real lat/lng in DB yet, I'll mock some around current map center
+        const center = googleMap.current.getCenter();
+        const mockLat = center.lat() + (Math.random() - 0.5) * 0.05;
+        const mockLng = center.lng() + (Math.random() - 0.5) * 0.05;
         const position = { lat: mockLat, lng: mockLng };
 
         const marker = new window.google.maps.Marker({
