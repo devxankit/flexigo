@@ -15,6 +15,7 @@ export const useRideStore = create((set, get) => ({
   activeRide: null,
   rideHistory: [],
   hubs: [],
+  hubLoading: true,
 
   setCurrentAddress: (address) => set({ currentAddress: address }),
 
@@ -57,14 +58,17 @@ export const useRideStore = create((set, get) => ({
   isDiagnosticsOpen: false,
   setDiagnosticsOpen: (isOpen) => set({ isDiagnosticsOpen: isOpen }),
   
-  fetchHubs: async () => {
+  fetchHubs: async (lat, lng) => {
     try {
-      const res = await api.get('/rider/hubs');
+      set({ hubLoading: true });
+      const url = lat && lng ? `/rider/hubs?lat=${lat}&lng=${lng}` : '/rider/hubs';
+      const res = await api.get(url);
       if (res.data.success) {
-        set({ hubs: res.data.hubs });
+        set({ hubs: res.data.hubs, hubLoading: false });
       }
     } catch (err) {
       console.error("Failed to fetch hubs:", err);
+      set({ hubLoading: false });
     }
   },
 

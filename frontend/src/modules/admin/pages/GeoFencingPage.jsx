@@ -224,7 +224,7 @@ export default function GeoFencingPage() {
                   <div className="w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_10px_#10b981]" />
                </div>
                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/80 text-[7px] font-black text-white uppercase tracking-widest rounded-full border border-white/10 backdrop-blur-md italic">
-                  Grid Monitor: MAH_ZONE_04
+                  Grid Monitor: {geofences[0]?.name || 'SCAN_IDLE'}
                </div>
             </div>
          </div>

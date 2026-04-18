@@ -227,11 +227,11 @@ export default function HrManagementPage() {
                </div>
 
                <div className="space-y-3">
-                  {[
+                  {(staffStats.efficiencyMatrix || [
                     { label: 'Handover Rate', rate: '99.2%', val: 92 },
                     { label: 'SLA Fulfillment', rate: '14min', val: 84 },
                     { label: 'Attendance', rate: '94%', val: 94 },
-                  ].map((stat) => (
+                  ]).map((stat) => (
                     <div key={stat.label} className="p-3 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl group hover:border-emerald-500/30 transition-all cursor-pointer shadow-sm">
                        <div className="flex justify-between items-center mb-1.5">
                           <span className="text-[9px] font-black text-[var(--text-primary)] uppercase leading-none italic">{stat.label}</span>
@@ -263,7 +263,9 @@ export default function HrManagementPage() {
                   </div>
                   <div>
                      <p className="text-[10px] font-black text-[var(--text-primary)] uppercase leading-none">Leave Requests</p>
-                     <p className="text-[8px] font-black text-rose-500 uppercase mt-1 italic animate-pulse tracking-widest leading-none">03 Pending Sync</p>
+                     <p className="text-[8px] font-black text-rose-500 uppercase mt-1 italic animate-pulse tracking-widest leading-none">
+                        {staffStats.leaves} Pending Sync
+                     </p>
                   </div>
                </div>
                <ChevronRight size={16} className="text-[var(--text-tertiary)]/50 group-hover:text-rose-500 group-hover:translate-x-0.5 transition-all" />
@@ -328,9 +330,18 @@ export default function HrManagementPage() {
                         <div className="w-16 h-16 bg-emerald-600/10 rounded-full flex items-center justify-center mx-auto border border-emerald-500/10 shadow-inner">
                            <CreditCard size={32} className="text-emerald-500" />
                         </div>
-                        <p className="text-[10px] font-black text-[var(--text-primary)] uppercase italic leading-relaxed tracking-widest">Verification Node Pending</p>
-                        <p className="text-[8px] text-[var(--text-tertiary)] font-bold uppercase tracking-wider leading-relaxed">Payroll module requires 04:00 verification sync.</p>
-                        <button onClick={() => setIsModalOpen(false)} className="w-full py-2.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[9px] font-black uppercase tracking-widest">Exit Module</button>
+                        {staff.length > 0 ? (
+                           <>
+                              <p className="text-[10px] font-black text-[var(--text-primary)] uppercase italic leading-relaxed tracking-widest">Active Payroll Protocol</p>
+                              <p className="text-[8px] text-[var(--text-tertiary)] font-bold uppercase tracking-wider leading-relaxed">Processing batch for {staff.length} staff members.</p>
+                           </>
+                        ) : (
+                           <>
+                              <p className="text-[10px] font-black text-[var(--text-primary)] uppercase italic leading-relaxed tracking-widest">Verification Node Pending</p>
+                              <p className="text-[8px] text-[var(--text-tertiary)] font-bold uppercase tracking-wider leading-relaxed">Payroll module requires active staff records.</p>
+                           </>
+                        )}
+                        <button onClick={() => setIsModalOpen(false)} className="w-full py-2.5 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest">Initialize Settlement</button>
                      </div>
                   )}
                </motion.div>

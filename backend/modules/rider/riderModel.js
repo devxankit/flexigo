@@ -45,7 +45,6 @@ const RiderSchema = new mongoose.Schema({
   },
   subscriptionPlan: {
     type: String,
-    enum: ['Weekly Pro', 'Daily Flex', 'Monthly Enterprise', 'Standard', 'Premium', 'Enterprise', null],
     default: null,
   },
   subscriptionStart: Date,

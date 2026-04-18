@@ -13,7 +13,7 @@ import logo from '../../../assets/logo.png';
 
 // Mock data removed as we are going dynamic
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  if (!lat1 || !lon1 || !lat2 || !lon2) return 999;
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
   const R = 6371; // km
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
@@ -31,12 +31,13 @@ export default function HomeDashboard() {
   const { user } = useAuthStore();
   const { activePlan } = useSubscriptionStore();
   const { balance } = useWalletStore();
-  const { vehicle, isDiagnosticsOpen, setDiagnosticsOpen, hubs, fetchHubs, currentAddress, setCurrentAddress, fetchMyVehicle } = useRideStore();
+  const { vehicle, isDiagnosticsOpen, setDiagnosticsOpen, hubs, hubLoading, fetchHubs, currentAddress, setCurrentAddress, fetchMyVehicle } = useRideStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [coords, setCoords] = useState(null);
   const isDark = theme === 'dark';
 
   useEffect(() => {
+    // Initial fetch
     fetchHubs();
     if (user?.phone) fetchMyVehicle(user.phone);
     
@@ -45,6 +46,9 @@ export default function HomeDashboard() {
       navigator.geolocation.getCurrentPosition((position) => {
         const { latitude, longitude } = position.coords;
         setCoords({ latitude, longitude });
+        
+        // Fetch hubs again with coordinates for backend sorting
+        fetchHubs(latitude, longitude);
         
         // Reverse geocoding
         const geocoder = new window.google.maps.Geocoder();
@@ -55,23 +59,23 @@ export default function HomeDashboard() {
         });
       }, (err) => {
         console.error("Location Error:", err);
-      });
+      }, { enableHighAccuracy: true });
     }
   }, []);
 
-  // Use Dynamic Hubs OR Fallback to Mocks if DB is empty
-  const displayHubs = hubs.length > 0 ? hubs : [
+  // Use Dynamic Hubs OR Fallback to Mocks if DB is empty after loading
+  const displayHubs = hubLoading ? [] : (hubs.length > 0 ? hubs : [
     { id: 1, name: 'FlexiHub Koramangala', latitude: 12.9345, longitude: 77.6266, batteries: 14, status: 'Open', color: '#39FF14' },
     { id: 2, name: 'HSR Layout Station', latitude: 12.9128, longitude: 77.6388, batteries: 8, status: 'Open', color: '#39FF14' },
     { id: 3, name: 'Indiranagar Hub', latitude: 12.9716, longitude: 77.6412, batteries: 2, status: 'Limited', color: '#EAB308' },
-  ];
+  ]);
 
   const processedHubs = displayHubs.map(hub => {
-    const dist = coords ? calculateDistance(coords.latitude, coords.longitude, hub.latitude, hub.longitude) : 0;
+    const dist = coords ? calculateDistance(coords.latitude, coords.longitude, hub.latitude, hub.longitude) : null;
     return {
       ...hub,
-      distValue: dist,
-      distance: dist > 0 ? (dist < 1 ? Math.round(dist * 1000) + ' m' : dist.toFixed(1) + ' km') : (hub.distance || '0.8 km')
+      distValue: dist === null ? 9999 : dist,
+      distance: dist !== null ? (dist < 1 ? Math.round(dist * 1000) + ' m' : dist.toFixed(1) + ' km') : (hub.distance || 'Dist. Pending')
     };
   }).sort((a, b) => a.distValue - b.distValue);
 

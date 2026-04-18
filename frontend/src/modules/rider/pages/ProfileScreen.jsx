@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { PageWrapper } from '../components/PageWrapper';
 import { GlassCard } from '../components/GlassCard';
@@ -7,11 +8,15 @@ import { useSubscriptionStore } from '../store/subscriptionStore';
 import { useNavigate } from 'react-router-dom';
 
 export default function ProfileScreen() {
-  const { user, logout, kycStatus } = useAuthStore();
+  const { user, logout, kycStatus, fetchProfile } = useAuthStore();
   const { theme } = useThemeStore();
   const navigate = useNavigate();
   const { activePlan } = useSubscriptionStore();
   const isDark = theme === 'dark';
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -19,23 +24,39 @@ export default function ProfileScreen() {
   };
 
   const handleViewDocument = (label) => {
-    // In a real app, this would open a modal with the document image
-    alert(`Viewing verified ${label} document...`);
+    const docUrl = label === 'Driving License' ? user?.kycDetails?.drivingLicense : null;
+    if (docUrl) {
+      window.open(docUrl, '_blank');
+    } else {
+      alert(`Viewing verified ${label} document...`);
+    }
   };
 
   const sections = [
     ...(activePlan ? [{
       title: 'Current Subscription',
       items: [
-        { label: 'My Plan', value: activePlan.name, color: '#39FF14' },
+        { label: 'My Plan', value: activePlan.label || activePlan.name || 'Standard', color: '#39FF14' },
         { label: 'Usage Status', value: 'Active' }
       ]
     }] : []),
     {
       title: 'Verified Documents',
       items: [
-        { label: 'KYC Status', value: kycStatus.toUpperCase(), color: '#39FF14', canView: true },
-        { label: 'Driving License', value: 'Verified', color: '#39FF14', canView: true }
+        { 
+            label: 'KYC Status', 
+            value: kycStatus.toUpperCase(), 
+            color: kycStatus === 'rejected' ? '#EF4444' : '#39FF14', 
+            canView: false 
+        },
+        { 
+            label: 'Driving License', 
+            value: user?.kycDetails?.drivingLicense 
+                ? (kycStatus === 'approved' ? 'Verified' : 'Pending') 
+                : 'Not Uploaded', 
+            color: user?.kycDetails?.drivingLicense ? '#39FF14' : (isDark ? '#4b5563' : '#94a3b8'), 
+            canView: !!user?.kycDetails?.drivingLicense 
+        }
       ]
     }
   ];

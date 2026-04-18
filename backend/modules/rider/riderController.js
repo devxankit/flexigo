@@ -216,23 +216,56 @@ export const getSubscribersByFranchise = async (req, res) => {
 // @route   GET /api/v1/rider/hubs
 export const getActiveHubs = async (req, res) => {
   try {
+    const { lat, lng } = req.query;
+    const userLat = parseFloat(lat);
+    const userLng = parseFloat(lng);
+    const hasLocation = !isNaN(userLat) && !isNaN(userLng);
+
+    const getDistanceKm = (lat1, lon1, lat2, lon2) => {
+      if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+      const R = 6371;
+      const dLat = ((lat2 - lat1) * Math.PI) / 180;
+      const dLon = ((lon2 - lon1) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+          Math.cos((lat2 * Math.PI) / 180) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    };
+
     const franchises = await Franchise.find().select('businessDetails hubName status walletBalance');
     
     const hubs = await Promise.all(franchises.map(async (f) => {
       const fleetCount = await Vehicle.countDocuments({ franchise: f._id });
       const availableBatteries = await Vehicle.countDocuments({ franchise: f._id, status: 'available' });
       
+      const hubLat = f.businessDetails?.latitude;
+      const hubLng = f.businessDetails?.longitude;
+      const distanceKm = hasLocation ? getDistanceKm(userLat, userLng, hubLat, hubLng) : null;
+
       return {
         id: f._id,
         name: f.businessDetails?.name || f.hubName || 'Flexigo Hub',
         address: f.businessDetails?.address || f.businessDetails?.location || 'Location Pending',
-        latitude: f.businessDetails?.latitude || 0,
-        longitude: f.businessDetails?.longitude || 0,
+        latitude: hubLat || 0,
+        longitude: hubLng || 0,
+        distanceKm,
         batteries: availableBatteries || 0,
-        status: availableBatteries > 10 ? 'Open' : availableBatteries > 0 ? 'Limited' : 'Empty',
-        color: availableBatteries > 10 ? '#39FF14' : availableBatteries > 0 ? '#EAB308' : '#EF4444'
+        status: availableBatteries > 10 ? 'Open' : availableBatteries > 0 ? 'Limited' : 'Open',
+        color: availableBatteries > 10 ? '#39FF14' : availableBatteries > 0 ? '#EAB308' : '#39FF14'
       };
     }));
+
+    // Sort by proximity if coordinates provided
+    if (hasLocation) {
+      hubs.sort((a, b) => {
+        if (a.distanceKm === null) return 1;
+        if (b.distanceKm === null) return -1;
+        return a.distanceKm - b.distanceKm;
+      });
+    }
 
     res.status(200).json({ success: true, hubs });
   } catch (error) {

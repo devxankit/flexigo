@@ -57,6 +57,18 @@ export const useAuthStore = create(
         }
       },
 
+      fetchProfile: async () => {
+        try {
+          const { user } = get();
+          if (!user) return;
+          const res = await api.get(`/rider/profile/${user.phone}`);
+          if (res.data.success) {
+            set({ user: res.data.rider, kycStatus: res.data.rider.kycStatus });
+          }
+        } catch (error) {
+          console.error("Failed to fetch profile:", error);
+        }
+      },
       logout: () => {
         set({ 
             isAuthenticated: false, 
