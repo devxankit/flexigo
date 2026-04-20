@@ -2,8 +2,10 @@ import Franchise from './franchiseModel.js';
 import FranchiseTransaction from './franchiseTransactionModel.js';
 import Vehicle from '../fleet/vehicleModel.js';
 import Rider from '../rider/riderModel.js';
+import SubscriptionPlan from '../admin/subscriptionPlanModel.js';
 import generateToken from '../../shared/utils/generateToken.js';
 import cloudinary from '../../config/cloudinary.js';
+import axios from 'axios';
 
 // @desc    Send OTP to Franchise
 // @route   POST /api/v1/franchise/auth/send-otp
@@ -188,6 +190,24 @@ export const getDashboardMetrics = async (req, res) => {
   }
 };
 
+// @desc    Get active franchise plans
+// @route   GET /api/v1/franchise/plans
+export const getFranchisePlans = async (req, res) => {
+  try {
+    console.log('Fetching Franchise Plans from DB...');
+    const plans = await SubscriptionPlan.find({ 
+      target: 'Franchise',
+      status: 'active' 
+    }).sort({ price: 1 });
+    
+    console.log('Total Franchise Plans found in Registry:', plans.length);
+    res.status(200).json({ success: true, plans });
+  } catch (error) {
+    console.log('Registry Fetch Error:', error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @desc    Record a handover (Dispatch/Intake)
 // @route   POST /api/v1/franchise/handover
 export const createHandover = async (req, res) => {
@@ -210,4 +230,88 @@ export const createHandover = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
+};
+
+// @desc    Generate Aadhaar OTP for Franchise eKYC (QuickeKYC)
+export const generateAadhaarOTP = async (req, res) => {
+  console.log('--- FRANCHISE QUICKEKYC: GENERATE OTP START ---');
+  try {
+    const { aadhaarNumber } = req.body;
+    console.log('FRANCHISE QUICKEKYC: Aadhaar Number:', aadhaarNumber);
+
+    const config = {
+      method: 'post',
+      url: 'https://api.quickekyc.com/api/v1/aadhaar-v2/generate-otp',
+      headers: { 'Content-Type': 'application/json' },
+      data: { 
+        key: process.env.SUREPASS_API_KEY, 
+        id_number: aadhaarNumber 
+      }
+    };
+
+    const response = await axios(config);
+    console.log('FRANCHISE QUICKEKYC: Response:', JSON.stringify(response.data));
+
+    if (response.data.success) {
+      res.status(200).json({
+        success: true,
+        client_id: response.data.data.request_id,
+        message: response.data.message || 'OTP sent to mobile'
+      });
+    } else {
+      res.status(400).json({ success: false, message: response.data.message || 'Failed to send OTP' });
+    }
+  } catch (error) {
+    console.log('FRANCHISE QUICKEKYC Error:', error.message);
+    res.status(500).json({ success: false, message: error.response?.data?.message || error.message });
+  }
+  console.log('--- FRANCHISE QUICKEKYC: GENERATE OTP END ---');
+};
+
+// @desc    Verify Aadhaar OTP for Franchise eKYC
+export const verifyAadhaarOTP = async (req, res) => {
+  console.log('--- FRANCHISE QUICKEKYC: VERIFY OTP START ---');
+  try {
+    const { client_id, otp, phone } = req.body;
+    console.log('FRANCHISE QUICKEKYC: Verify Params:', { client_id, otp, phone });
+
+    const config = {
+      method: 'post',
+      url: 'https://api.quickekyc.com/api/v1/aadhaar-v2/submit-otp',
+      headers: { 'Content-Type': 'application/json' },
+      data: { 
+        key: process.env.SUREPASS_API_KEY,
+        request_id: client_id,
+        otp 
+      }
+    };
+
+    const response = await axios(config);
+    console.log('FRANCHISE QUICKEKYC: Verification Body:', JSON.stringify(response.data));
+
+    if (response.data.success) {
+      const kycData = response.data.data;
+      
+      const franchise = await Franchise.findOne({ phone });
+      if (franchise) {
+        console.log('FRANCHISE QUICKEKYC: Updating Franchise DB');
+        franchise.kycDetails.ekycVerified = true;
+        franchise.kycDetails.ekycData = kycData;
+        franchise.ownerName = kycData.full_name;
+        await franchise.save();
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Aadhaar Verified Successfully',
+        data: kycData
+      });
+    } else {
+      res.status(400).json({ success: false, message: response.data.message || 'OTP verification failed' });
+    }
+  } catch (error) {
+    console.log('FRANCHISE QUICKEKYC Error:', error.message);
+    res.status(500).json({ success: false, message: error.response?.data?.message || error.message });
+  }
+  console.log('--- FRANCHISE QUICKEKYC: VERIFY OTP END ---');
 };

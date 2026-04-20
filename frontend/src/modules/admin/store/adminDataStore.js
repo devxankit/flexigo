@@ -203,7 +203,9 @@ export const useAdminDataStore = create((set, get) => ({
     try {
       const res = await api.delete(`/admin/plans/${id}`);
       if (res.data.success) {
-        set(state => ({ plans: state.plans.filter(p => p._id !== id) }));
+        set(state => ({ 
+          plans: state.plans.filter(p => p._id !== id && p.id !== id) 
+        }));
         return res.data;
       }
     } catch (err) {

@@ -27,6 +27,8 @@ const RiderSchema = new mongoose.Schema({
     aadhaarFront: String,
     aadhaarBack: String,
     drivingLicense: String,
+    ekycVerified: { type: Boolean, default: false },
+    ekycData: Object,
   },
   name: String,
   email: String,

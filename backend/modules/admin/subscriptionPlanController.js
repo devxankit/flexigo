@@ -37,9 +37,19 @@ export const updatePlan = async (req, res) => {
 // @route   DELETE /api/v1/admin/plans/:id
 export const deletePlan = async (req, res) => {
   try {
-    await SubscriptionPlan.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+    console.log(`ATTEMPTING DELETE: Plan ID ${id}`);
+    const plan = await SubscriptionPlan.findByIdAndDelete(id);
+    
+    if (!plan) {
+      console.log(`DELETE FAILED: Plan ${id} not found`);
+      return res.status(404).json({ success: false, message: 'Plan not found' });
+    }
+
+    console.log(`DELETE SUCCESS: Plan ${id} removed from Registry`);
     res.status(200).json({ success: true, message: 'Plan deleted' });
   } catch (error) {
+    console.log(`DELETE ERROR: ${error.message}`);
     res.status(500).json({ success: false, message: error.message });
   }
 };

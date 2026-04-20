@@ -14,8 +14,15 @@ import adminRoutes from './modules/admin/adminRoutes.js';
 // Load env vars
 dotenv.config();
 
-// DNS Servers setup
-dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+// DNS Servers setup (Commented out to fix ENOTFOUND issues)
+// dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+
+// Check Surepass Config
+if (process.env.SUREPASS_API_KEY) {
+  console.log('✅ Surepass eKYC Configured');
+} else {
+  console.log('❌ Surepass eKYC Not Configured');
+}
 
 // Connect to database
 connectDB();

@@ -48,6 +48,8 @@ const FranchiseSchema = new mongoose.Schema({
     aadhaarBack: { type: String },
     panCard: { type: String },
     businessLicense: { type: String },
+    ekycVerified: { type: Boolean, default: false },
+    ekycData: Object,
   },
 
   kycStatus: {

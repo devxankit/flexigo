@@ -258,6 +258,7 @@ export default function SubscriptionPlansPage() {
                               <option value="Daily">Daily</option>
                               <option value="Weekly">Weekly</option>
                               <option value="Monthly">Monthly</option>
+                              <option value="Franchise">Franchise</option>
                            </select>
                         </div>
                         <div className="space-y-2">

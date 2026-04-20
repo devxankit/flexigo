@@ -13,10 +13,22 @@ export const useFranchiseAuthStore = create(
       currentStep: 1,
       isVerified: false,
       token: null,
+      plans: [],
 
       setStep: (step) => set({ currentStep: step }),
       setIsVerified: (status) => set({ isVerified: status }),
       setPhone: (phone) => set({ phone }),
+
+      fetchPlans: async () => {
+        try {
+          const res = await api.get('/franchise/plans');
+          if (res.data.success) {
+            set({ plans: res.data.plans });
+          }
+        } catch (error) {
+          console.error('Failed to fetch plans:', error);
+        }
+      },
 
       sendOTP: async (phone) => {
         try {
@@ -70,6 +82,25 @@ export const useFranchiseAuthStore = create(
         } catch (error) {
           console.error('Update Error:', error);
           return { success: false, message: 'Failed to update' };
+        }
+      },
+
+      generateAadhaarOTP: async (aadhaarNumber) => {
+        try {
+          const res = await api.post('/franchise/kyc/aadhaar/generate-otp', { aadhaarNumber });
+          return res.data;
+        } catch (error) {
+          return { success: false, message: error.response?.data?.message || 'Failed to send Aadhaar OTP' };
+        }
+      },
+
+      verifyAadhaarOTP: async (client_id, otp) => {
+        try {
+          const { phone } = get();
+          const res = await api.post('/franchise/kyc/aadhaar/verify-otp', { client_id, otp, phone });
+          return res.data;
+        } catch (error) {
+          return { success: false, message: error.response?.data?.message || 'Aadhaar Verification Failed' };
         }
       },
 

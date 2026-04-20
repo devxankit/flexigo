@@ -12,6 +12,8 @@ import {
   getRiderPlans,
   createPaymentOrder,
   verifyPayment,
+  generateAadhaarOTP,
+  verifyAadhaarOTP
 } from './riderController.js';
 import { protectFranchise } from '../../shared/middleware/authMiddleware.js';
 
@@ -20,6 +22,8 @@ const router = express.Router();
 router.post('/auth/send-otp', sendOTP);
 router.post('/auth/verify-otp', verifyOTP);
 router.post('/kyc/update', updateKYC);
+router.post('/kyc/aadhaar/generate-otp', generateAadhaarOTP);
+router.post('/kyc/aadhaar/verify-otp', verifyAadhaarOTP);
 router.get('/profile/:phone', getRiderProfile);
 router.post('/wallet/add', addMoney);
 router.get('/wallet/:phone', getWalletData);

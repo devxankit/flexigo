@@ -57,6 +57,28 @@ export const useAuthStore = create(
         }
       },
 
+      generateAadhaarOTP: async (aadhaarNumber) => {
+        try {
+          const res = await api.post('/rider/kyc/aadhaar/generate-otp', { aadhaarNumber });
+          return res.data;
+        } catch (error) {
+          return { success: false, message: error.response?.data?.message || 'Failed to send Aadhaar OTP' };
+        }
+      },
+
+      verifyAadhaarOTP: async (clientId, otp) => {
+        try {
+          const { phone } = get();
+          const res = await api.post('/rider/kyc/aadhaar/verify-otp', { client_id: clientId, otp, phone });
+          if (res.data.success) {
+             // Profile will be auto-updated by fetchProfile later or we can set it here if we want
+             return { success: true, data: res.data.data };
+          }
+        } catch (error) {
+          return { success: false, message: error.response?.data?.message || 'Verification failed' };
+        }
+      },
+
       fetchProfile: async () => {
         try {
           const { user } = get();

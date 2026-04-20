@@ -51,15 +51,33 @@ export const useSubscriberStore = create((set, get) => ({
       )
     }));
   },
-
-  returnVehicle: async (subscriberId) => {
+  returnVehicle: async (subscriberId, status) => {
     set((state) => ({
-      subscribers: state.subscribers.map(s => 
-        (s._id || s.id) === subscriberId 
-          ? { ...s, vehicleId: null, status: 'completed', subscriptionStart: null } 
-          : s
-      )
+      subscribers: state.subscribers.map(s => {
+        const id = s._id || s.id;
+        return id === subscriberId 
+          ? { ...s, vehicleId: null, status: status || 'completed', subscriptionStart: null } 
+          : s;
+      })
     }));
+  },
+
+  generateAadhaarOTP: async (aadhaarNumber) => {
+    try {
+      const res = await api.post('/rider/kyc/aadhaar/generate-otp', { aadhaarNumber });
+      return res.data;
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Failed' };
+    }
+  },
+
+  verifyAadhaarOTP: async (client_id, otp, phone) => {
+    try {
+      const res = await api.post('/rider/kyc/aadhaar/verify-otp', { client_id, otp, phone });
+      return res.data;
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Failed' };
+    }
   }
 }));
 

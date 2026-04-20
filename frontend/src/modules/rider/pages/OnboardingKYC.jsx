@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PageWrapper } from '../components/PageWrapper';
@@ -25,17 +25,34 @@ export default function OnboardingKYC() {
     license: null
   });
 
+  // eKYC States
+  const [aadhaarNumber, setAadhaarNumber] = useState('');
+  const [aadhaarOtp, setAadhaarOtp] = useState('');
+  const [clientId, setClientId] = useState(null);
+  const [isAadhaarVerified, setIsAadhaarVerified] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [ekycLoading, setEkycLoading] = useState(false);
+
   // Refs for file inputs
   const selfieRef = useRef(null);
   const adhaarFrontRef = useRef(null);
   const adhaarBackRef = useRef(null);
   const licenseRef = useRef(null);
 
-  const { updateKYC, phone } = useAuthStore();
+  const { updateKYC, phone, generateAadhaarOTP, verifyAadhaarOTP, user } = useAuthStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
 
+  useEffect(() => {
+    console.log('INIT: Checking existing KYC status');
+    if (user?.kycDetails?.ekycVerified) {
+      console.log('INIT: Aadhaar already verified in profile');
+      setIsAadhaarVerified(true);
+    }
+  }, [user]);
+
   const fileToBase64 = (file) => {
+    console.log(`UTIL: Converting file to base64: ${file?.name}`);
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
@@ -45,18 +62,87 @@ export default function OnboardingKYC() {
   };
 
   const handleFileChange = (type, e) => {
+    console.log(`FILE_CHANGE: Handling file upload for [${type}]`);
     const file = e.target.files[0];
+    console.log(`FILE_CHANGE: Selected file name: ${file?.name}`);
     if (file) {
       setUploads(prev => ({ ...prev, [type]: file }));
+      console.log(`FILE_CHANGE: State updated for [${type}]`);
+    }
+  };
+
+  const handleSendAadhaarOTP = async () => {
+    console.log('EKYC_UI: Initiating Aadhaar OTP Request');
+    console.log('EKYC_UI: Aadhaar Number:', aadhaarNumber);
+    if (aadhaarNumber.length !== 12) {
+      console.log('EKYC_UI: Error - Aadhaar must be 12 digits');
+      alert('Please enter valid 12-digit Aadhaar number');
+      return;
+    }
+    setEkycLoading(true);
+    console.log('EKYC_UI: Calling generateAadhaarOTP from store');
+    try {
+      const res = await generateAadhaarOTP(aadhaarNumber);
+      console.log('EKYC_UI: Received response from store:', JSON.stringify(res));
+      if (res.success) {
+        console.log('EKYC_UI: OTP request success. ClientID:', res.client_id);
+        setClientId(res.client_id);
+        setOtpSent(true);
+        alert('OTP sent successfully');
+      } else {
+        console.log('EKYC_UI: OTP request failed:', res.message);
+        alert(res.message);
+      }
+    } catch (err) {
+      console.log('EKYC_UI: Catch Block error:', err.message);
+      alert('Error sending OTP');
+    } finally {
+      console.log('EKYC_UI: Setting EkycLoading to false');
+      setEkycLoading(false);
+    }
+  };
+
+  const handleVerifyAadhaarOTP = async () => {
+    console.log('EKYC_UI: Initiating OTP Verification');
+    console.log('EKYC_UI: OTP entered:', aadhaarOtp);
+    if (aadhaarOtp.length < 6) {
+      console.log('EKYC_UI: Error - OTP too short');
+      alert('Please enter valid OTP');
+      return;
+    }
+    setEkycLoading(true);
+    console.log('EKYC_UI: Calling verifyAadhaarOTP with ClientID:', clientId);
+    try {
+      const res = await verifyAadhaarOTP(clientId, aadhaarOtp);
+      console.log('EKYC_UI: Verification result:', JSON.stringify(res));
+      if (res.success) {
+        console.log('EKYC_UI: Verification TRUE');
+        setIsAadhaarVerified(true);
+        alert('Aadhaar Verified Successfully!');
+      } else {
+        console.log('EKYC_UI: Verification FALSE:', res.message);
+        alert(res.message);
+      }
+    } catch (err) {
+      console.log('EKYC_UI: Catch block error:', err.message);
+      alert('Error verifying OTP');
+    } finally {
+      console.log('EKYC_UI: Setting EkycLoading to false');
+      setEkycLoading(false);
     }
   };
 
   const handleNext = async () => {
+    console.log('ONBOARDING: handleNext triggered');
+    console.log('ONBOARDING: Current step:', currentStep);
     if (currentStep < steps.length) {
+      console.log('ONBOARDING: Moving to next step');
       setCurrentStep(prev => prev + 1);
     } else {
+      console.log('ONBOARDING: Final step reached. Starting KYC update.');
       setLoading(true);
       try {
+          console.log('ONBOARDING: Preparing kycData object');
           const kycData = {
               phone,
               selfie: await fileToBase64(uploads.selfie),
@@ -64,25 +150,44 @@ export default function OnboardingKYC() {
               aadhaarBack: await fileToBase64(uploads.aadhaarBack),
               drivingLicense: await fileToBase64(uploads.license)
           };
-
+          console.log('ONBOARDING: kycData prepared. Files converted to Base64');
+          console.log('ONBOARDING: Calling updateKYC store method');
           const result = await updateKYC(kycData);
+          console.log('ONBOARDING: updateKYC result:', JSON.stringify(result));
           if (result.success) {
+              console.log('ONBOARDING: Success! Navigating to /rider/plans');
               navigate('/rider/plans');
           } else {
+              console.log('ONBOARDING: Failed result. message:', result.message);
               alert(result.message);
           }
       } catch (error) {
+          console.log('ONBOARDING: Error in final step try-catch:', error.message);
           alert('Error processing files. Please try again.');
       } finally {
+          console.log('ONBOARDING: Setting loading to false');
           setLoading(false);
       }
     }
   };
 
   const canContinue = () => {
-    if (currentStep === 1) return !!uploads.selfie;
-    if (currentStep === 2) return !!uploads.aadhaarFront && !!uploads.aadhaarBack;
-    if (currentStep === 3) return !!uploads.license;
+    console.log('VALIDATION: Checking if it can continue Step:', currentStep);
+    if (currentStep === 1) {
+      const res = !!uploads.selfie;
+      console.log('VALIDATION: Step 1 Result:', res);
+      return res;
+    }
+    if (currentStep === 2) {
+      const res = !!uploads.aadhaarFront && !!uploads.aadhaarBack && isAadhaarVerified;
+      console.log('VALIDATION: Step 2 Result:', res);
+      return res;
+    }
+    if (currentStep === 3) {
+      const res = !!uploads.license;
+      console.log('VALIDATION: Step 3 Result:', res);
+      return res;
+    }
     return false;
   };
 
@@ -177,13 +282,67 @@ export default function OnboardingKYC() {
             >
               <h2 className={`text-xl font-heading font-black transition-colors duration-500 ${
                 isDark ? 'text-white' : 'text-slate-900'
-              }`}>Upload Aadhaar Card</h2>
-              <p className={`text-sm leading-relaxed transition-colors duration-500 ${
-                isDark ? 'text-gray-400' : 'text-slate-500'
-              }`}>
-                We need to verify your identity to enable subscriptions. Your data is encrypted and secure.
-              </p>
+              }`}>Aadhaar e-KYC</h2>
               
+              {!isAadhaarVerified ? (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-[#39FF14] italic ml-1">Aadhaar Number</label>
+                    <input 
+                      type="text"
+                      maxLength="12"
+                      placeholder="XXXX XXXX XXXX"
+                      value={aadhaarNumber}
+                      onChange={(e) => setAadhaarNumber(e.target.value.replace(/\D/g, ''))}
+                      disabled={otpSent}
+                      className={`w-full bg-white/5 border-2 border-white/10 rounded-xl px-4 py-4 text-white font-black tracking-[0.2em] focus:border-[#39FF14] outline-none transition-all ${
+                        otpSent ? 'opacity-50' : ''
+                      }`}
+                    />
+                  </div>
+
+                  {otpSent && (
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-[#39FF14] italic ml-1">Enter OTP</label>
+                      <input 
+                        type="text"
+                        maxLength="6"
+                        placeholder="XXXXXX"
+                        value={aadhaarOtp}
+                        onChange={(e) => setAadhaarOtp(e.target.value.replace(/\D/g, ''))}
+                        className="w-full bg-white/5 border-2 border-white/10 rounded-xl px-4 py-4 text-white font-black tracking-[0.5em] focus:border-[#39FF14] outline-none transition-all"
+                      />
+                    </div>
+                  )}
+
+                  <NeonButton 
+                    size="full" 
+                    variant="green"
+                    onClick={otpSent ? handleVerifyAadhaarOTP : handleSendAadhaarOTP}
+                    disabled={ekycLoading || (otpSent ? !aadhaarOtp : !aadhaarNumber)}
+                  >
+                    {ekycLoading ? 'Wait...' : otpSent ? 'Verify OTP' : 'Send OTP'}
+                  </NeonButton>
+                </div>
+              ) : (
+                <div className="bg-[#39FF14]/10 border-2 border-[#39FF14] rounded-xl p-4 flex items-center gap-4">
+                  <div className="w-10 h-10 bg-[#39FF14] rounded-full flex items-center justify-center shadow-neon-sm">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" className="w-6 h-6">
+                      <path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-[#39FF14]">Verification Status</div>
+                    <div className="text-white font-heading font-black italic">AADHAAR_VERIFIED</div>
+                  </div>
+                </div>
+              )}
+
+              <div className="relative py-4">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
+                <div className="relative flex justify-center text-[8px] uppercase font-black tracking-[0.2em] text-white/20 px-2 bg-transparent">And Upload Documents</div>
+              </div>
+
               <div className="grid grid-cols-1 gap-4">
                 <input 
                   type="file" 

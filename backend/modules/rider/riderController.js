@@ -1,3 +1,4 @@
+import axios from 'axios';
 import Rider from './riderModel.js';
 import Transaction from './transactionModel.js';
 import Franchise from '../franchise/franchiseModel.js';
@@ -122,6 +123,115 @@ export const updateKYC = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
+};
+
+// @desc    Generate Aadhaar OTP for eKYC (QuickeKYC)
+// @route   POST /api/v1/rider/kyc/aadhaar/generate-otp
+export const generateAadhaarOTP = async (req, res) => {
+  console.log('--- QUICKEKYC: GENERATE OTP START ---');
+  try {
+    const { aadhaarNumber } = req.body;
+    console.log('QUICKEKYC: Aadhaar Number:', aadhaarNumber);
+
+    if (!aadhaarNumber || aadhaarNumber.length !== 12) {
+      console.log('QUICKEKYC: Error - Aadhaar Invalid');
+      return res.status(400).json({ success: false, message: 'Invalid Aadhaar Number' });
+    }
+
+    const config = {
+      method: 'post',
+      url: 'https://api.quickekyc.com/api/v1/aadhaar-v2/generate-otp',
+      headers: { 'Content-Type': 'application/json' },
+      data: { 
+        key: process.env.SUREPASS_API_KEY, 
+        id_number: aadhaarNumber 
+      }
+    };
+    console.log('QUICKEKYC: Request Data:', JSON.stringify(config.data));
+    console.log('QUICKEKYC: Calling QuickeKYC V2 API...');
+
+    const response = await axios(config);
+    console.log('QUICKEKYC: Response Status:', response.status);
+    console.log('QUICKEKYC: Response Body:', JSON.stringify(response.data));
+
+    if (response.data.success) {
+      console.log('QUICKEKYC: OTP Sequence Success');
+      res.status(200).json({
+        success: true,
+        client_id: response.data.data.request_id, // Map request_id to client_id for frontend compatibility
+        message: response.data.message || 'OTP sent to mobile'
+      });
+    } else {
+      console.log('QUICKEKYC: API Error:', response.data.message);
+      res.status(400).json({ success: false, message: response.data.message || 'Failed to send OTP' });
+    }
+  } catch (error) {
+    console.log('QUICKEKYC: Catch block error:', error.message);
+    if (error.response) console.log('QUICKEKYC: Error Data:', JSON.stringify(error.response.data));
+    res.status(500).json({ success: false, message: error.response?.data?.message || error.message });
+  }
+  console.log('--- QUICKEKYC: GENERATE OTP END ---');
+};
+
+// @desc    Verify Aadhaar OTP for eKYC (QuickeKYC)
+// @route   POST /api/v1/rider/kyc/aadhaar/verify-otp
+export const verifyAadhaarOTP = async (req, res) => {
+  console.log('--- QUICKEKYC: VERIFY OTP START ---');
+  try {
+    const { client_id, otp, phone } = req.body;
+    console.log('QUICKEKYC: Verify Params -> clientId:', client_id, '| otp:', otp, '| phone:', phone);
+
+    if (!client_id || !otp) {
+      console.log('QUICKEKYC: Missing client_id or otp');
+      return res.status(400).json({ success: false, message: 'Client ID and OTP required' });
+    }
+
+    const config = {
+      method: 'post',
+      url: 'https://api.quickekyc.com/api/v1/aadhaar-v2/submit-otp',
+      headers: { 'Content-Type': 'application/json' },
+      data: { 
+        key: process.env.SUREPASS_API_KEY,
+        request_id: client_id, // Using the ID stored in frontend client_id
+        otp 
+      }
+    };
+    console.log('QUICKEKYC: Request Data:', JSON.stringify(config.data));
+    console.log('QUICKEKYC: Verifying with QuickeKYC V2...');
+
+    const response = await axios(config);
+    console.log('QUICKEKYC: Response Status:', response.status);
+    console.log('QUICKEKYC: Verification Data:', JSON.stringify(response.data));
+
+    if (response.data.success) {
+      console.log('QUICKEKYC: Verification SUCCESS');
+      const kycData = response.data.data;
+      
+      const rider = await Rider.findOne({ phone });
+      if (rider) {
+        console.log('QUICKEKYC: Updating Rider Info in DB');
+        rider.kycDetails.ekycVerified = true;
+        rider.kycDetails.ekycData = kycData;
+        rider.name = kycData.full_name;
+        await rider.save();
+        console.log('QUICKEKYC: DB Updated for Rider:', rider.phone);
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Aadhaar Verified Successfully',
+        data: kycData
+      });
+    } else {
+      console.log('QUICKEKYC: Verification FAIL:', response.data.message);
+      res.status(400).json({ success: false, message: response.data.message || 'OTP verification failed' });
+    }
+  } catch (error) {
+    console.log('QUICKEKYC: Catch Block Error:', error.message);
+    if (error.response) console.log('QUICKEKYC: Error Response:', JSON.stringify(error.response.data));
+    res.status(500).json({ success: false, message: error.response?.data?.message || error.message });
+  }
+  console.log('--- QUICKEKYC: VERIFY OTP END ---');
 };
 
 // @desc    Get Rider Profile

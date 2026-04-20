@@ -39,14 +39,31 @@ export default function FranchiseOnboarding() {
     currentStep: persistedStep,
     setStep: setPersistedStep,
     isVerified: persistedVerified,
-    setIsVerified: setPersistedVerified
+    setIsVerified: setPersistedVerified,
+    generateAadhaarOTP,
+    verifyAadhaarOTP,
+    plans,
+    fetchPlans
   } = useFranchiseAuthStore();
 
   const [step, setStep] = useState(persistedStep || 1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   
-  // OTP States
+  useEffect(() => {
+    if (step === 3) {
+      fetchPlans();
+    }
+  }, [step]);
+  
+  // Aadhaar OTP States
+  const [ekycLoading, setEkycLoading] = useState(false);
+  const [ekycOtpSent, setEkycOtpSent] = useState(false);
+  const [ekycClientId, setEkycClientId] = useState('');
+  const [ekycOtp, setEkycOtp] = useState('');
+  const [isAadhaarVerified, setIsAadhaarVerified] = useState(registrationData.ekycVerified || false);
+  
+  // Phone OTP States
   const [phone, setPhone] = useState(storePhone || '');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -107,6 +124,33 @@ export default function FranchiseOnboarding() {
     setIsSubmitting(false);
     if (res.success) setOtpSent(true);
     else setOtpError(res.message);
+  };
+
+  const handleEkycGenerateOTP = async () => {
+    if (formData.aadhaarNumber.length !== 12) return;
+    setEkycLoading(true);
+    const res = await generateAadhaarOTP(formData.aadhaarNumber);
+    setEkycLoading(false);
+    if (res.success) {
+      setEkycOtpSent(true);
+      setEkycClientId(res.client_id);
+    } else {
+      alert(res.message);
+    }
+  };
+
+  const handleEkycVerifyOTP = async () => {
+    if (ekycOtp.length !== 6) return;
+    setEkycLoading(true);
+    const res = await verifyAadhaarOTP(ekycClientId, ekycOtp);
+    setEkycLoading(false);
+    if (res.success) {
+      setIsAadhaarVerified(true);
+      setEkycOtpSent(false);
+      setFormData(prev => ({ ...prev, ownerName: res.data.full_name }));
+    } else {
+      alert(res.message);
+    }
   };
 
   const handleVerifyOTP = async () => {
@@ -313,21 +357,61 @@ export default function FranchiseOnboarding() {
                                 <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Full Legal Name</label>
                                 <input 
                                    required 
+                                   disabled={isAadhaarVerified}
                                    value={formData.ownerName}
                                    onChange={(e) => setFormData({...formData, ownerName: e.target.value})}
-                                   className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" 
+                                   className={`w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20 ${isAadhaarVerified ? 'opacity-70' : ''}`} 
                                    placeholder="ENTER FULL NAME..." 
                                 />
                              </div>
-                             <div className="space-y-1.5">
-                                <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Aadhaar Number</label>
-                                <input 
-                                   required 
-                                   value={formData.aadhaarNumber}
-                                   onChange={(e) => setFormData({...formData, aadhaarNumber: e.target.value})}
-                                   className="w-full px-4 py-2.5 bg-black/20 border border-[var(--border-subtle)] rounded-xl text-[9px] font-black text-[var(--text-primary)] tracking-widest outline-none transition-all placeholder:text-slate-800 italic shadow-inner focus:border-emerald-500/20" 
-                                   placeholder="XXXX XXXX XXXX" 
-                                />
+                             <div className="col-span-2 space-y-1.5">
+                                <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">Aadhaar Number (eKYC)</label>
+                                <div className="flex gap-2">
+                                  <div className={`flex-1 flex items-center gap-3 px-4 py-2.5 bg-black/20 border ${isAadhaarVerified ? 'border-emerald-500' : 'border-[var(--border-subtle)]'} rounded-xl transition-all shadow-inner`}>
+                                     <Fingerprint size={14} className={isAadhaarVerified ? 'text-emerald-500' : 'text-slate-700'} />
+                                     <input 
+                                       required 
+                                       disabled={isAadhaarVerified}
+                                       value={formData.aadhaarNumber}
+                                       onChange={(e) => setFormData({...formData, aadhaarNumber: e.target.value.replace(/\D/g, '').slice(0, 12)})}
+                                       className="bg-transparent border-none outline-none text-[9px] font-black text-[var(--text-primary)] tracking-widest w-full placeholder:text-slate-800 italic" 
+                                       placeholder="12 DIGIT AADHAAR" 
+                                    />
+                                    {isAadhaarVerified && <CheckCircle size={14} className="text-emerald-500" />}
+                                  </div>
+                                  {!isAadhaarVerified && !ekycOtpSent && (
+                                    <button 
+                                      type="button"
+                                      onClick={handleEkycGenerateOTP}
+                                      disabled={formData.aadhaarNumber.length !== 12 || ekycLoading}
+                                      className="px-4 bg-emerald-600 hover:bg-emerald-500 text-white text-[7px] font-black uppercase rounded-xl transition-all disabled:opacity-30 italic shadow-xl"
+                                    >
+                                      {ekycLoading ? '...' : 'VERIFY'}
+                                    </button>
+                                  )}
+                                </div>
+
+                                {ekycOtpSent && !isAadhaarVerified && (
+                                  <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex gap-2 mt-2">
+                                     <div className="flex-1 flex items-center gap-3 px-4 py-2.5 bg-black/40 border border-emerald-500/30 rounded-xl shadow-inner">
+                                        <ShieldCheck size={14} className="text-emerald-500" />
+                                        <input 
+                                          value={ekycOtp}
+                                          onChange={(e) => setEkycOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                          className="bg-transparent border-none outline-none text-lg font-black text-emerald-500 tracking-[0.5em] w-full placeholder:text-slate-800 italic" 
+                                          placeholder="OTP" 
+                                       />
+                                     </div>
+                                     <button 
+                                       type="button"
+                                       onClick={handleEkycVerifyOTP}
+                                       disabled={ekycOtp.length !== 6 || ekycLoading}
+                                       className="px-4 bg-emerald-600 hover:bg-emerald-500 text-white text-[7px] font-black uppercase rounded-xl transition-all disabled:opacity-30 italic shadow-xl"
+                                     >
+                                       {ekycLoading ? '...' : 'CONFIRM'}
+                                     </button>
+                                  </motion.div>
+                                )}
                              </div>
                              <div className="space-y-1.5">
                                 <label className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic opacity-40">PAN Card Number</label>
@@ -426,39 +510,40 @@ export default function FranchiseOnboarding() {
                        <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-60">Choose your hub scale</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                       {[
-                         { id: 'T1', name: 'Tier 1', fee: '15K', price: 15000, vehicles: '25', color: '#64748b' },
-                         { id: 'T2', name: 'Tier 2', fee: '28K', price: 28000, vehicles: '50', color: '#10b981' },
-                         { id: 'T3', name: 'Tier 3', fee: '52K', price: 52000, vehicles: '100', color: '#3b82f6' },
-                         { id: 'T4', name: 'Tier 4', fee: '75K', price: 75000, vehicles: '150', color: '#a855f7' },
-                         { id: 'T5', name: 'Tier 5', fee: '95K', price: 95000, vehicles: '200', color: '#f43f5e' }
-                       ].map((tier) => (
+                       {plans && plans.length > 0 ? plans.map((tier) => (
                          <div 
-                            key={tier.id} 
+                            key={tier._id || tier.id} 
                              onClick={() => {
-                                 const planData = { id: tier.id, name: tier.name, price: tier.price };
+                                 const planId = tier._id || tier.id;
+                                 const planData = { id: planId, name: tier.name, price: tier.price };
                                  setFormData({...formData, hubPlan: planData });
                                  updateRegistration({ hubPlan: planData, phone });
                              }}
                             className={`p-4 bg-black/20 border rounded-2xl transition-all cursor-pointer group relative overflow-hidden shadow-inner ${
-                                formData.hubPlan.id === tier.id ? 'border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'border-[var(--border-subtle)] hover:border-emerald-500/20'
+                                formData.hubPlan.id === (tier._id || tier.id) ? 'border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'border-[var(--border-subtle)] hover:border-emerald-500/20'
                             }`}
                          >
-                            <div className="text-[6px] font-black uppercase tracking-[0.3em] mb-3 italic" style={{ color: tier.color }}>{tier.name}</div>
-                            <div className="text-xl font-black text-[var(--text-primary)] uppercase italic mb-1 leading-none">₹{tier.fee}</div>
+                            <div className="text-[6px] font-black uppercase tracking-[0.3em] mb-3 italic text-emerald-500">{tier.name}</div>
+                            <div className="text-xl font-black text-[var(--text-primary)] uppercase italic mb-1 leading-none">₹{(tier.price / 1000).toFixed(0)}K</div>
                             <div className="text-[7.5px] font-black text-slate-600 uppercase tracking-widest italic leading-none">Monthly Plan Fee</div>
                             <div className="mt-4 pt-3 border-t border-[var(--border-subtle)] flex items-center justify-between">
-                               <span className="text-[7px] font-black text-[var(--text-tertiary)] italic uppercase">Fleet: {tier.vehicles} Vehicles</span>
+                               <span className="text-[7px] font-black text-[var(--text-tertiary)] italic uppercase">
+                                  {tier.features && tier.features[0] ? tier.features[0] : 'Standard Fleet'}
+                               </span>
                                <div className={`w-4 h-4 rounded-lg border flex items-center justify-center transition-all ${
-                                   formData.hubPlan.id === tier.id ? 'border-emerald-500' : 'border-[var(--border-subtle)] group-hover:border-emerald-500'
+                                   formData.hubPlan.id === (tier._id || tier.id) ? 'border-emerald-500' : 'border-[var(--border-subtle)] group-hover:border-emerald-500'
                                }`}>
                                   <div className={`w-1.5 h-1.5 rounded transition-all ${
-                                      formData.hubPlan.id === tier.id ? 'bg-emerald-500 opacity-100 shadow-[0_0_8px_#10b981]' : 'bg-emerald-500 opacity-0 group-hover:opacity-10'
+                                      formData.hubPlan.id === (tier._id || tier.id) ? 'bg-emerald-500 opacity-100 shadow-[0_0_8px_#10b981]' : 'bg-emerald-500 opacity-0 group-hover:opacity-10'
                                   }`} />
                                </div>
                             </div>
                          </div>
-                       ))}
+                       )) : (
+                          <div className="col-span-full py-12 text-center text-[var(--text-tertiary)] opacity-40">
+                             <div className="text-[8px] font-black uppercase tracking-[0.3em] italic animate-pulse">Syncing with Plan Registry...</div>
+                          </div>
+                       )}
                     </div>
                  </motion.div>
                )}

@@ -21,10 +21,16 @@ import { useRiderAssignmentStore } from '../store/riderAssignmentStore';
 export default function AddRiderPage() {
   const navigate = useNavigate();
   const { vehicles = [] } = useFleetStore();
-  const { addSubscriber } = useRiderAssignmentStore();
+  const { addSubscriber, generateAadhaarOTP, verifyAadhaarOTP } = useRiderAssignmentStore();
   
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [ekycLoading, setEkycLoading] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [clientId, setClientId] = useState('');
+  const [otp, setOtp] = useState('');
+  const [isAadhaarVerified, setIsAadhaarVerified] = useState(false);
+
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -37,8 +43,35 @@ export default function AddRiderPage() {
     vehicleId: ''
   });
 
+  const handleGenerateOTP = async () => {
+    if (formData.aadhaar.length !== 12) return;
+    setEkycLoading(true);
+    const res = await generateAadhaarOTP(formData.aadhaar);
+    setEkycLoading(false);
+    if (res.success) {
+      setOtpSent(true);
+      setClientId(res.client_id);
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    if (otp.length !== 6) return;
+    setEkycLoading(true);
+    const res = await verifyAadhaarOTP(clientId, otp, formData.phone);
+    setEkycLoading(false);
+    if (res.success) {
+      setIsAadhaarVerified(true);
+      setOtpSent(false);
+      setFormData(prev => ({ ...prev, name: res.data.full_name }));
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!isAadhaarVerified) {
+        alert('Please verify Aadhaar first');
+        return;
+    }
     setLoading(true);
     
     // Simulate API call
@@ -167,19 +200,56 @@ export default function AddRiderPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                     <label className="text-[7px] font-black text-slate-500 uppercase tracking-widest italic ml-1 leading-none">UNIQUE_ENTITY_PIN</label>
-                     <div className="p-2 bg-black/40 border border-white/5 rounded-xl flex items-center gap-2 focus-within:border-emerald-500/30 transition-all shadow-inner group">
-                        <ShieldCheck size={12} strokeWidth={3} className="text-slate-700 group-focus-within:text-emerald-500 transition-colors" />
-                        <input 
-                          required 
-                          placeholder="AADHAAR_XXXX" 
-                          maxLength={4}
-                          className="bg-transparent border-none outline-none text-[8.5px] font-black uppercase italic text-white w-full placeholder:text-slate-800 tracking-widest"
-                          value={formData.aadhaar}
-                          onChange={(e) => setFormData({...formData, aadhaar: e.target.value.replace(/\D/g, '')})}
-                        />
-                     </div>
-                  </div>
+                      <label className="text-[7px] font-black text-slate-500 uppercase tracking-widest italic ml-1 leading-none">UNIQUE_ENTITY_PIN (AADHAAR)</label>
+                      <div className="flex gap-2">
+                        <div className={`flex-1 p-2 bg-black/40 border ${isAadhaarVerified ? 'border-emerald-500/50' : 'border-white/5'} rounded-xl flex items-center gap-2 transition-all shadow-inner group`}>
+                           <ShieldCheck size={12} strokeWidth={3} className={isAadhaarVerified ? 'text-emerald-500' : 'text-slate-700'} />
+                           <input 
+                             required 
+                             disabled={isAadhaarVerified}
+                             placeholder="12_DIGIT_AADHAAR" 
+                             maxLength={12}
+                             className="bg-transparent border-none outline-none text-[8.5px] font-black uppercase italic text-white w-full placeholder:text-slate-800 tracking-widest"
+                             value={formData.aadhaar}
+                             onChange={(e) => setFormData({...formData, aadhaar: e.target.value.replace(/\D/g, '')})}
+                           />
+                           {isAadhaarVerified && <CheckCircle2 size={12} className="text-emerald-500" />}
+                        </div>
+                        {!isAadhaarVerified && !otpSent && (
+                          <button 
+                            type="button"
+                            onClick={handleGenerateOTP}
+                            disabled={formData.aadhaar.length !== 12 || ekycLoading}
+                            className="px-4 bg-emerald-600 rounded-xl text-[7px] font-black uppercase tracking-widest disabled:opacity-50"
+                          >
+                            {ekycLoading ? '...' : 'VERIFY'}
+                          </button>
+                        )}
+                      </div>
+
+                      {otpSent && !isAadhaarVerified && (
+                        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex gap-2 mt-2">
+                           <div className="flex-1 p-2 bg-black/40 border border-emerald-500/30 rounded-xl flex items-center gap-2 transition-all shadow-inner">
+                              <Fingerprint size={12} strokeWidth={3} className="text-emerald-500" />
+                              <input 
+                                placeholder="ENTER_6_DIGIT_OTP" 
+                                maxLength={6}
+                                className="bg-transparent border-none outline-none text-[8.5px] font-black uppercase italic text-white w-full placeholder:text-slate-800 tracking-widest"
+                                value={otp}
+                                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                              />
+                           </div>
+                           <button 
+                             type="button"
+                             onClick={handleVerifyOTP}
+                             disabled={otp.length !== 6 || ekycLoading}
+                             className="px-4 bg-emerald-600 rounded-xl text-[7px] font-black uppercase tracking-widest disabled:opacity-50"
+                           >
+                             {ekycLoading ? '...' : 'CONFIRM'}
+                           </button>
+                        </motion.div>
+                      )}
+                   </div>
 
                   <div className="space-y-1.5">
                      <label className="text-[7px] font-black text-slate-500 uppercase tracking-widest italic ml-1 leading-none">OPERATIONAL_ID</label>
