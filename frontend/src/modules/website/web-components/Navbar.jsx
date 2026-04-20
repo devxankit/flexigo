@@ -29,38 +29,39 @@ const Navbar = () => {
       className={cn(
         'fixed top-0 w-full z-50 transition-all duration-300 pointer-events-auto',
         scrolled
-          ? 'bg-flexigo-bg/80 backdrop-blur-md shadow-sm py-2'
-          : 'bg-transparent py-3'
+          ? 'bg-white/70 backdrop-blur-xl border-b border-slate-100 shadow-sm py-2'
+          : 'bg-transparent py-4'
       )}
     >
-      <div className="w-full max-w-7xl mx-auto px-4 flex justify-between items-center">
-        {/* Logo */}
+      <div className="w-full max-w-7xl mx-auto px-6 flex justify-between items-center">
+        {/* Logo & Branding */}
         <Link to="/" className="flex items-center group relative">
-          <img 
-            src={logo} 
-            alt="FlexiGo Logo" 
-            className="w-24 h-24 md:w-36 md:h-36 absolute top-1/2 -translate-y-1/2 -left-2 object-contain transition-transform duration-300 group-hover:scale-105 z-10" 
-          />
-          <div className="w-18 md:w-30 h-10 md:h-12" />
+          <div className="relative w-20 h-20 md:w-28 md:h-28 flex items-center justify-center">
+            <img 
+              src={logo} 
+              alt="FlexiGo Logo" 
+              className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110 z-10" 
+            />
+          </div>
           <span className={cn(
-            "text-2xl font-heading font-black tracking-tighter transition-colors mt-0.5 whitespace-nowrap uppercase",
-            scrolled ? "text-flexigo-primary" : "text-black"
+            "text-xl md:text-2xl font-heading font-black tracking-tighter transition-colors ml-1 whitespace-nowrap uppercase",
+            scrolled ? "text-flexigo-primary" : "text-slate-900"
           )}>
             Flex<span className="text-flexigo-teal">igo E-Mobility</span>
           </span>
         </Link>
 
         {/* Desktop Links */}
-        <div className="hidden lg:flex items-center gap-8">
+        <div className="hidden lg:flex items-center gap-10">
           {navLinks.map((link) => (
             <a
               key={link.name}
               href={link.href}
               className={cn(
-                "text-sm font-medium transition-colors",
+                "text-[13px] font-bold uppercase tracking-widest transition-all hover:scale-105",
                 scrolled 
-                  ? "text-flexigo-teal hover:text-flexigo-primary" 
-                  : "text-black hover:text-flexigo-teal"
+                  ? "text-slate-600 hover:text-flexigo-primary" 
+                  : "text-slate-900 hover:text-flexigo-teal"
               )}
             >
               {link.name}
@@ -69,18 +70,18 @@ const Navbar = () => {
         </div>
 
         {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-4">
+        <div className="hidden md:flex items-center gap-6">
           <button 
             className={cn(
-              "text-sm font-medium transition-colors",
+              "text-xs font-black uppercase tracking-widest transition-colors",
               scrolled 
-                ? "text-flexigo-teal hover:text-flexigo-primary" 
-                : "text-black hover:text-flexigo-teal"
+                ? "text-slate-600 hover:text-flexigo-primary" 
+                : "text-slate-900 hover:text-flexigo-teal"
             )}
           >
             Log In
           </button>
-          <button className="bg-flexigo-primary hover:bg-flexigo-teal text-white px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 hover:shadow-lg hover:shadow-flexigo-teal/20 active:scale-95">
+          <button className="bg-flexigo-primary hover:bg-flexigo-teal text-white px-7 py-3 rounded-full text-xs font-black uppercase tracking-widest shadow-xl shadow-flexigo-primary/20 transition-all duration-300 hover:-translate-y-0.5 active:scale-95">
             Get Started
           </button>
         </div>
