@@ -23,9 +23,9 @@ export const useSubscriberStore = create((set, get) => ({
     try {
       // Logic would be linked to backend: api.post('/rider/assign', { subscriberId, vehicleId })
       set((state) => ({
-        subscribers: state.subscribers.map(s => 
-          (s._id || s.id) === subscriberId 
-            ? { ...s, vehicleId, status: 'active', subscriptionStart: new Date().toISOString() } 
+        subscribers: state.subscribers.map(s =>
+          (s._id || s.id) === subscriberId
+            ? { ...s, vehicleId, status: 'active', subscriptionStart: new Date().toISOString() }
             : s
         )
       }));
@@ -38,15 +38,15 @@ export const useSubscriberStore = create((set, get) => ({
   dispatchVehicle: async (subscriberId, vehicleId, returnDate) => {
     // Similarly linked to backend
     set((state) => ({
-      subscribers: state.subscribers.map(s => 
-        (s._id || s.id) === subscriberId 
-          ? { 
-              ...s, 
-              vehicleId, 
-              status: 'active', 
-              subscriptionStart: new Date().toISOString(),
-              subscriptionEnd: returnDate
-            } 
+      subscribers: state.subscribers.map(s =>
+        (s._id || s.id) === subscriberId
+          ? {
+            ...s,
+            vehicleId,
+            status: 'active',
+            subscriptionStart: new Date().toISOString(),
+            subscriptionEnd: returnDate
+          }
           : s
       )
     }));
@@ -55,8 +55,8 @@ export const useSubscriberStore = create((set, get) => ({
     set((state) => ({
       subscribers: state.subscribers.map(s => {
         const id = s._id || s.id;
-        return id === subscriberId 
-          ? { ...s, vehicleId: null, status: status || 'completed', subscriptionStart: null } 
+        return id === subscriberId
+          ? { ...s, vehicleId: null, status: status || 'completed', subscriptionStart: null }
           : s;
       })
     }));

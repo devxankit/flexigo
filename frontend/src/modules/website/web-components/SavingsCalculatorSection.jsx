@@ -45,9 +45,23 @@ const SavingsCalculatorSection = () => {
           
           {/* Left Side: Compact Controls */}
           <div className="w-full lg:w-1/2">
-            <h2 className="text-4xl md:text-5xl font-black font-heading text-slate-900 tracking-tighter mb-4">
+            <h2 className="text-4xl md:text-5xl font-black font-heading text-slate-900 tracking-tighter mb-2">
                Keep More <span className="text-flexigo-teal italic">Profit.</span>
             </h2>
+            <div className="flex flex-wrap items-center gap-3 mb-8 text-flexigo-primary font-bold text-xs uppercase tracking-widest">
+               <span className="flex items-center gap-1.5 bg-flexigo-teal text-white px-2.5 py-1 rounded-lg shadow-lg shadow-flexigo-teal/20">
+                 <Zap className="w-3.5 h-3.5" /> Switch to EV
+               </span>
+               <span className="text-slate-300 hidden sm:inline">|</span>
+               <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1.5 bg-orange-50 text-orange-600 px-2 py-1 rounded-md border border-orange-100">
+                    <Fuel className="w-3.5 h-3.5" /> Zero Fuel
+                  </span>
+                  <span className="flex items-center gap-1.5 bg-blue-50 text-blue-600 px-2 py-1 rounded-md border border-blue-100">
+                    <ShieldCheck className="w-3.5 h-3.5" /> Low Maintenance
+                  </span>
+               </div>
+            </div>
             <p className="text-slate-500 mb-12 font-medium">Slide to calculate your extra take-home pay.</p>
 
             <div className="space-y-12 bg-slate-50/50 p-8 rounded-[3rem] border border-slate-100 shadow-sm relative overflow-hidden group">

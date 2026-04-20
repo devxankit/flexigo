@@ -20,7 +20,11 @@ import AdminStatCard from '../components/AdminStatCard';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function AlertCenterPage() {
-  const { networkStats } = useAdminDataStore();
+  const { networkStats, securityStats, fetchSecurityData } = useAdminDataStore();
+  
+  React.useEffect(() => {
+    fetchSecurityData();
+  }, [fetchSecurityData]);
 
   return (
     <div className="space-y-6 pb-12">
