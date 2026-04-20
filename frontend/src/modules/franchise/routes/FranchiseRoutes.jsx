@@ -13,6 +13,7 @@ import VehicleDetail from '../pages/VehicleDetail';
 import AddVehiclePage from '../pages/AddVehiclePage';
 import FranchiseOnboarding from '../pages/FranchiseOnboarding';
 import MaintenanceScheduler from '../pages/MaintenanceScheduler';
+import AddRiderPage from '../pages/AddRiderPage';
 
 export default function FranchiseRoutes() {
   const { isAuthenticated } = useFranchiseAuthStore();
@@ -31,6 +32,7 @@ export default function FranchiseRoutes() {
         <Route path="/fleet/:vehicleId" element={<VehicleDetail />} />
         <Route path="/handover" element={<HandoverModule />} />
         <Route path="/tracking" element={<RiderTracking />} />
+        <Route path="/subscribers/add" element={<AddRiderPage />} />
         <Route path="/wallet" element={<WalletFinancials />} />
         <Route path="/staff" element={<StaffManagement />} />
         <Route path="/notifications" element={<NotificationsPage />} />

@@ -60,6 +60,12 @@ export const useSubscriberStore = create((set, get) => ({
           : s
       )
     }));
+  },
+
+  addSubscriber: (subscriberData) => {
+    set((state) => ({
+      subscribers: [subscriberData, ...state.subscribers]
+    }));
   }
 }));
 

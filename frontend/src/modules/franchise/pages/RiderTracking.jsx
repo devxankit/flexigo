@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import gsap from 'gsap';
 import { 
@@ -15,7 +16,8 @@ import {
   Truck,
   User as UserIcon,
   CreditCard,
-  CheckCircle2
+  CheckCircle2,
+  UserPlus
 } from 'lucide-react';
 import { useRiderAssignmentStore } from '../store/riderAssignmentStore';
 import { useFleetStore } from '../store/fleetStore';
@@ -24,6 +26,7 @@ import StatusBadge from '../components/StatusBadge';
 import OpsFilter from '../components/OpsFilter';
 
 export default function SubscriberConsole() {
+  const navigate = useNavigate();
   const { subscribers = [], fetchSubscribers } = useRiderAssignmentStore();
   const { vehicles = [], fetchVehicles } = useFleetStore();
   const [searchQuery, setSearchQuery] = useState('');
@@ -85,14 +88,22 @@ export default function SubscriberConsole() {
               />
            </div>
            
-           <OpsFilter 
-             onFilterChange={handleFilterChange}
-             filters={[
-               { id: 'status', label: 'PERSONNEL_STATUS', options: ['Active', 'Pending', 'Suspended'] },
-               { id: 'plan', label: 'SUB_TIER', options: ['Standard', 'Premium', 'Enterprise'] }
-             ]}
-           />
-        </div>
+            <OpsFilter 
+              onFilterChange={handleFilterChange}
+              filters={[
+                { id: 'status', label: 'PERSONNEL_STATUS', options: ['Active', 'Pending', 'Suspended'] },
+                { id: 'plan', label: 'SUB_TIER', options: ['Standard', 'Premium', 'Enterprise'] }
+              ]}
+            />
+
+            <button 
+              onClick={() => navigate('/franchise/subscribers/add')}
+              className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-[7.5px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95 flex items-center gap-2 italic leading-none"
+            >
+              <UserPlus size={10} strokeWidth={3} />
+              ADD_RIDER
+            </button>
+         </div>
       </div>
 
       {/* Metrics Row */}
