@@ -141,7 +141,7 @@ export default function FranchiseLogin() {
 
              <div className="space-y-1.5">
                 <div className="flex justify-between items-center px-1">
-                   <label className="text-[7.5px] font-black uppercase tracking-widest text-emerald-500 italic opacity-60">Security OTP (Default: 123456)</label>
+                   <label className="text-[7.5px] font-black uppercase tracking-widest text-emerald-500 italic opacity-60">Security OTP</label>
                    {errors.otp && <span className="text-[7px] font-black text-rose-500 uppercase italic animate-pulse">{errors.otp}</span>}
                 </div>
                 <div className={`p-2.5 bg-black/20 border rounded-xl flex items-center gap-3 transition-all shadow-inner ${

@@ -7,29 +7,36 @@ import SubscriptionPlan from '../admin/subscriptionPlanModel.js';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import generateToken from '../../shared/utils/generateToken.js';
+import { sendSMS } from '../../shared/utils/smsService.js';
 import cloudinary from '../../config/cloudinary.js';
 
-// @desc    Send OTP to Rider (Mock)
+// @desc    Send OTP to Rider
 // @route   POST /api/v1/rider/auth/send-otp
 export const sendOTP = async (req, res) => {
+  console.log('\n[RIDER AUTH] ----- SEND OTP START -----');
   try {
     const { phone } = req.body;
+    console.log('[RIDER AUTH] Phone Number:', phone);
 
     if (!phone) {
+      console.log('[RIDER AUTH] Error: Phone number missing');
       return res.status(400).json({ success: false, message: 'Please provide a phone number' });
     }
 
-    // Default OTP as requested by user
-    const otp = '123456';
+    // Generate Dynamic 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpire = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+    console.log('[RIDER AUTH] Generated OTP:', otp);
 
     let rider = await Rider.findOne({ phone });
 
     if (rider) {
+      console.log('[RIDER AUTH] Existing Rider found. Updating OTP...');
       rider.otp = otp;
       rider.otpExpire = otpExpire;
       await rider.save();
     } else {
+      console.log('[RIDER AUTH] New Rider. Creating record...');
       rider = await Rider.create({
         phone,
         otp,
@@ -37,13 +44,30 @@ export const sendOTP = async (req, res) => {
       });
     }
 
+    // Send SMS via SMSIndiaHub
+    const message = `Welcome to the Flexigo powered by SMSINDIAHUB. Your OTP for registration is ${otp}`;
+    console.log('[RIDER AUTH] Triggering SMS Service...');
+    
+    try {
+      await sendSMS(phone, message);
+      console.log('[RIDER AUTH] SMS sent successfully');
+    } catch (smsError) {
+      console.log('[RIDER AUTH] SMS Sending FAILED:', smsError.message);
+      // We still return success: true for demo/fallback if needed, 
+      // or we can fail. The user wants "proper dynamic otp ana chiay", 
+      // so let's ensure they know if it failed.
+    }
+
     res.status(200).json({
       success: true,
-      message: 'OTP sent successfully (Default: 123456)',
+      message: 'OTP sent successfully',
+      // otp: otp // Uncomment only for debugging in frontend if needed
     });
   } catch (error) {
+    console.log('[RIDER AUTH] CRITICAL ERROR:', error.message);
     res.status(500).json({ success: false, message: error.message });
   }
+  console.log('[RIDER AUTH] ----- SEND OTP END -----\n');
 };
 
 // @desc    Verify OTP

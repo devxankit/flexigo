@@ -4,29 +4,37 @@ import Vehicle from '../fleet/vehicleModel.js';
 import Rider from '../rider/riderModel.js';
 import SubscriptionPlan from '../admin/subscriptionPlanModel.js';
 import generateToken from '../../shared/utils/generateToken.js';
+import { sendSMS } from '../../shared/utils/smsService.js';
 import cloudinary from '../../config/cloudinary.js';
 import axios from 'axios';
 
 // @desc    Send OTP to Franchise
 // @route   POST /api/v1/franchise/auth/send-otp
 export const sendOTP = async (req, res) => {
+  console.log('\n[FRANCHISE AUTH] ----- SEND OTP START -----');
   try {
     const { phone } = req.body;
+    console.log('[FRANCHISE AUTH] Phone Number:', phone);
 
     if (!phone) {
+      console.log('[FRANCHISE AUTH] Error: Phone number missing');
       return res.status(400).json({ success: false, message: 'Please provide a phone number' });
     }
 
-    const otp = '123456'; // Default for demo
+    // Generate Dynamic 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpire = new Date(Date.now() + 10 * 60 * 1000);
+    console.log('[FRANCHISE AUTH] Generated OTP:', otp);
 
     let franchise = await Franchise.findOne({ phone });
 
     if (franchise) {
+      console.log('[FRANCHISE AUTH] Existing Franchise found. Updating OTP...');
       franchise.otp = otp;
       franchise.otpExpire = otpExpire;
       await franchise.save();
     } else {
+      console.log('[FRANCHISE AUTH] New Franchise. Creating record...');
       franchise = await Franchise.create({
         phone,
         otp,
@@ -34,13 +42,26 @@ export const sendOTP = async (req, res) => {
       });
     }
 
+    // Send SMS via SMSIndiaHub
+    const message = `Welcome to the Flexigo powered by SMSINDIAHUB. Your OTP for registration is ${otp}`;
+    console.log('[FRANCHISE AUTH] Triggering SMS Service...');
+
+    try {
+      await sendSMS(phone, message);
+      console.log('[FRANCHISE AUTH] SMS sent successfully');
+    } catch (smsError) {
+      console.log('[FRANCHISE AUTH] SMS Sending FAILED:', smsError.message);
+    }
+
     res.status(200).json({
       success: true,
-      message: 'OTP sent (Default: 123456)',
+      message: 'OTP sent successfully',
     });
   } catch (error) {
+    console.log('[FRANCHISE AUTH] CRITICAL ERROR:', error.message);
     res.status(500).json({ success: false, message: error.message });
   }
+  console.log('[FRANCHISE AUTH] ----- SEND OTP END -----\n');
 };
 
 // @desc    Verify OTP

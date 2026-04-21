@@ -317,7 +317,7 @@ export default function FranchiseOnboarding() {
                              {otpSent && (
                                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
                                    <div className="space-y-1.5">
-                                      <label className="text-[7px] font-black text-blue-500/60 uppercase tracking-widest ml-1 italic">Validation Key (Default: 123456)</label>
+                                      <label className="text-[7px] font-black text-blue-500/60 uppercase tracking-widest ml-1 italic">Validation Key</label>
                                       <input 
                                          value={otp}
                                          onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}

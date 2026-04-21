@@ -24,6 +24,13 @@ if (process.env.SUREPASS_API_KEY) {
   console.log('❌ Surepass eKYC Not Configured');
 }
 
+// Check SMS Hub Config
+if (process.env.SMSINDIAHUB_API_KEY) {
+  console.log('✅ SMS Hub India Configured');
+} else {
+  console.log('❌ SMS Hub India Not Configured');
+}
+
 // Connect to database
 connectDB();
 

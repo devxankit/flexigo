@@ -133,16 +133,7 @@ export default function AuthOTP() {
           </motion.p>
         )}
 
-        {/* Dev hint */}
-        <div
-          className={`rounded-xl px-4 py-3 mb-8 text-center border transition-all duration-500 ${
-            isDark 
-              ? 'bg-flexigo-teal/5 border-flexigo-teal/15' 
-              : 'bg-flexigo-teal/5 border-flexigo-teal/10 shadow-sm'
-          }`}
-        >
-          <p className="text-flexigo-teal text-[10px] font-black uppercase tracking-[0.2em]">Default OTP: 123456</p>
-        </div>
+        {/* Dev hint removed as dynamic OTP is active */}
 
         <NeonButton
           variant={isValid ? 'solid' : 'green'}
