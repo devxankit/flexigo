@@ -83,10 +83,19 @@ export default function OnboardingKYC() {
     console.log('EKYC_UI: Calling generateAadhaarOTP from store');
     try {
       const res = await generateAadhaarOTP(aadhaarNumber);
-      console.log('EKYC_UI: Received response from store:', JSON.stringify(res));
-      if (res.success) {
-        console.log('EKYC_UI: OTP request success. ClientID:', res.client_id);
-        setClientId(res.client_id);
+      console.log('EKYC_UI: Received response:', JSON.stringify(res));
+      
+      // Robust success check: either success flag is true OR message indicates success
+      const isSuccess = res.success || 
+                        res.message === 'OTP Sent.' || 
+                        res.message?.toLowerCase().includes('success') || 
+                        res.message?.toLowerCase().includes('sent');
+
+      if (isSuccess) {
+        console.log('EKYC_UI: OTP request success confirmed');
+        // Capture client_id or any variant of request ID
+        const requestId = res.client_id || res.request_id || res.data?.request_id || res.data?.client_id;
+        setClientId(requestId);
         setOtpSent(true);
         alert(res.message || 'OTP sent successfully');
       } else {
@@ -94,10 +103,10 @@ export default function OnboardingKYC() {
         alert(res.message || 'Failed to send OTP');
       }
     } catch (err) {
-      console.log('EKYC_UI: Catch Block error:', err.message);
-      alert('Error sending OTP');
+      console.log('EKYC_UI: Unexpected error:', err.message);
+      alert('Error sending OTP: ' + err.message);
     } finally {
-      console.log('EKYC_UI: Setting EkycLoading to false');
+      console.log('EKYC_UI: Resetting loading state');
       setEkycLoading(false);
     }
   };
@@ -115,19 +124,24 @@ export default function OnboardingKYC() {
     try {
       const res = await verifyAadhaarOTP(clientId, aadhaarOtp);
       console.log('EKYC_UI: Verification result:', JSON.stringify(res));
-      if (res.success) {
+      
+      const isSuccess = res.success || 
+                        res.message?.toLowerCase().includes('success') || 
+                        res.message?.toLowerCase().includes('verified');
+
+      if (isSuccess) {
         console.log('EKYC_UI: Verification TRUE');
         setIsAadhaarVerified(true);
-        alert('Aadhaar Verified Successfully!');
+        alert(res.message || 'Aadhaar Verified Successfully!');
       } else {
         console.log('EKYC_UI: Verification FALSE:', res.message);
-        alert(res.message);
+        alert(res.message || 'Verification failed');
       }
     } catch (err) {
-      console.log('EKYC_UI: Catch block error:', err.message);
-      alert('Error verifying OTP');
+      console.log('EKYC_UI: Unexpected verification error:', err.message);
+      alert('Error verifying OTP: ' + err.message);
     } finally {
-      console.log('EKYC_UI: Setting EkycLoading to false');
+      console.log('EKYC_UI: Resetting loading state');
       setEkycLoading(false);
     }
   };
