@@ -287,7 +287,9 @@ export default function OnboardingKYC() {
               {!isAadhaarVerified ? (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-[#39FF14] italic ml-1">Aadhaar Number</label>
+                    <label className={`text-[10px] font-black uppercase tracking-widest italic ml-1 transition-colors duration-500 ${
+                      isDark ? 'text-[#39FF14]' : 'text-emerald-600'
+                    }`}>Aadhaar Number</label>
                     <input 
                       type="text"
                       maxLength="12"
@@ -295,22 +297,30 @@ export default function OnboardingKYC() {
                       value={aadhaarNumber}
                       onChange={(e) => setAadhaarNumber(e.target.value.replace(/\D/g, ''))}
                       disabled={otpSent}
-                      className={`w-full bg-white/5 border-2 border-white/10 rounded-xl px-4 py-4 text-white font-black tracking-[0.2em] focus:border-[#39FF14] outline-none transition-all ${
-                        otpSent ? 'opacity-50' : ''
-                      }`}
+                      className={`w-full rounded-xl px-4 py-4 font-black tracking-[0.2em] outline-none transition-all border-2 ${
+                        isDark 
+                          ? 'bg-white/5 border-white/10 text-white focus:border-[#39FF14]' 
+                          : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 shadow-sm'
+                      } ${otpSent ? 'opacity-50' : ''}`}
                     />
                   </div>
 
                   {otpSent && (
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-[#39FF14] italic ml-1">Enter OTP</label>
+                      <label className={`text-[10px] font-black uppercase tracking-widest italic ml-1 transition-colors duration-500 ${
+                        isDark ? 'text-[#39FF14]' : 'text-emerald-600'
+                      }`}>Enter OTP</label>
                       <input 
                         type="text"
                         maxLength="6"
                         placeholder="XXXXXX"
                         value={aadhaarOtp}
                         onChange={(e) => setAadhaarOtp(e.target.value.replace(/\D/g, ''))}
-                        className="w-full bg-white/5 border-2 border-white/10 rounded-xl px-4 py-4 text-white font-black tracking-[0.5em] focus:border-[#39FF14] outline-none transition-all"
+                        className={`w-full rounded-xl px-4 py-4 font-black tracking-[0.5em] outline-none transition-all border-2 ${
+                          isDark 
+                            ? 'bg-white/5 border-white/10 text-white focus:border-[#39FF14]' 
+                            : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 shadow-sm'
+                        }`}
                       />
                     </div>
                   )}
@@ -332,15 +342,17 @@ export default function OnboardingKYC() {
                     </svg>
                   </div>
                   <div>
-                    <div className="text-[10px] font-black uppercase tracking-widest text-[#39FF14]">Verification Status</div>
-                    <div className="text-white font-heading font-black italic">AADHAAR_VERIFIED</div>
+                    <div className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-[#39FF14]' : 'text-emerald-700'}`}>Verification Status</div>
+                    <div className={`font-heading font-black italic ${isDark ? 'text-white' : 'text-slate-900'}`}>AADHAAR_VERIFIED</div>
                   </div>
                 </div>
               )}
 
               <div className="relative py-4">
                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
-                <div className="relative flex justify-center text-[8px] uppercase font-black tracking-[0.2em] text-white/20 px-2 bg-transparent">And Upload Documents</div>
+                <div className={`relative flex justify-center text-[8px] uppercase font-black tracking-[0.2em] px-2 bg-transparent transition-colors duration-500 ${
+                  isDark ? 'text-white/20' : 'text-slate-400'
+                }`}>And Upload Documents</div>
               </div>
 
               <div className="grid grid-cols-1 gap-4">
