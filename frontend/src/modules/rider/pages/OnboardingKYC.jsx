@@ -88,10 +88,10 @@ export default function OnboardingKYC() {
         console.log('EKYC_UI: OTP request success. ClientID:', res.client_id);
         setClientId(res.client_id);
         setOtpSent(true);
-        alert('OTP sent successfully');
+        alert(res.message || 'OTP sent successfully');
       } else {
         console.log('EKYC_UI: OTP request failed:', res.message);
-        alert(res.message);
+        alert(res.message || 'Failed to send OTP');
       }
     } catch (err) {
       console.log('EKYC_UI: Catch Block error:', err.message);

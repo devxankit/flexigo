@@ -178,11 +178,12 @@ export const generateAadhaarOTP = async (req, res) => {
     console.log('QUICKEKYC: Response Status:', response.status);
     console.log('QUICKEKYC: Response Body:', JSON.stringify(response.data));
 
-    if (response.data.success) {
+    if (response.data.success || response.data.status === 'success' || response.data.message === 'OTP Sent.') {
       console.log('QUICKEKYC: OTP Sequence Success');
+      const requestId = response.data.data?.request_id || response.data.request_id || response.data.data?.client_id;
       res.status(200).json({
         success: true,
-        client_id: response.data.data.request_id, // Map request_id to client_id for frontend compatibility
+        client_id: requestId,
         message: response.data.message || 'OTP sent to mobile'
       });
     } else {
@@ -227,16 +228,16 @@ export const verifyAadhaarOTP = async (req, res) => {
     console.log('QUICKEKYC: Response Status:', response.status);
     console.log('QUICKEKYC: Verification Data:', JSON.stringify(response.data));
 
-    if (response.data.success) {
+    if (response.data.success || response.data.status === 'success') {
       console.log('QUICKEKYC: Verification SUCCESS');
-      const kycData = response.data.data;
+      const kycData = response.data.data || response.data;
       
       const rider = await Rider.findOne({ phone });
       if (rider) {
         console.log('QUICKEKYC: Updating Rider Info in DB');
         rider.kycDetails.ekycVerified = true;
         rider.kycDetails.ekycData = kycData;
-        rider.name = kycData.full_name;
+        rider.name = kycData.full_name || kycData.name;
         await rider.save();
         console.log('QUICKEKYC: DB Updated for Rider:', rider.phone);
       }

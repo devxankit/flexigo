@@ -273,10 +273,11 @@ export const generateAadhaarOTP = async (req, res) => {
     const response = await axios(config);
     console.log('FRANCHISE QUICKEKYC: Response:', JSON.stringify(response.data));
 
-    if (response.data.success) {
+    if (response.data.success || response.data.status === 'success' || response.data.message === 'OTP Sent.') {
+      const requestId = response.data.data?.request_id || response.data.request_id || response.data.data?.client_id;
       res.status(200).json({
         success: true,
-        client_id: response.data.data.request_id,
+        client_id: requestId,
         message: response.data.message || 'OTP sent to mobile'
       });
     } else {
@@ -310,15 +311,15 @@ export const verifyAadhaarOTP = async (req, res) => {
     const response = await axios(config);
     console.log('FRANCHISE QUICKEKYC: Verification Body:', JSON.stringify(response.data));
 
-    if (response.data.success) {
-      const kycData = response.data.data;
+    if (response.data.success || response.data.status === 'success') {
+      const kycData = response.data.data || response.data;
       
       const franchise = await Franchise.findOne({ phone });
       if (franchise) {
         console.log('FRANCHISE QUICKEKYC: Updating Franchise DB');
         franchise.kycDetails.ekycVerified = true;
         franchise.kycDetails.ekycData = kycData;
-        franchise.ownerName = kycData.full_name;
+        franchise.ownerName = kycData.full_name || kycData.name;
         await franchise.save();
       }
 
