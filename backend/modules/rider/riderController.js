@@ -178,8 +178,13 @@ export const generateAadhaarOTP = async (req, res) => {
     console.log('QUICKEKYC: Response Status:', response.status);
     console.log('QUICKEKYC: Response Body:', JSON.stringify(response.data));
 
-    if (response.data.success || response.data.status === 'success' || response.data.message === 'OTP Sent.') {
-      console.log('QUICKEKYC: OTP Sequence Success');
+    const isActuallySuccess = response.data.success === true || 
+                               response.data.status === 'success' || 
+                               response.data.message?.toLowerCase().includes('sent') ||
+                               response.data.message?.toLowerCase().includes('success');
+
+    if (isActuallySuccess) {
+      console.log('QUICKEKYC: OTP Sequence Success confirmed');
       const requestId = response.data.data?.request_id || 
                         response.data.request_id || 
                         response.data.data?.client_id || 
