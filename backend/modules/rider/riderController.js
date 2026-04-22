@@ -203,12 +203,14 @@ export const generateAadhaarOTP = async (req, res) => {
 export const verifyAadhaarOTP = async (req, res) => {
   console.log('--- QUICKEKYC: VERIFY OTP START ---');
   try {
-    const { client_id, otp, phone } = req.body;
-    console.log('QUICKEKYC: Verify Params -> clientId:', client_id, '| otp:', otp, '| phone:', phone);
+    const { client_id, clientId, requestId, otp, phone } = req.body;
+    const finalClientId = client_id || clientId || requestId;
+    
+    console.log('QUICKEKYC: Verify Params -> finalClientId:', finalClientId, '| otp:', otp, '| phone:', phone);
 
-    if (!client_id || !otp) {
+    if (!finalClientId || !otp) {
       console.log('QUICKEKYC: Missing client_id or otp');
-      return res.status(400).json({ success: false, message: 'Client ID and OTP required' });
+      return res.status(400).json({ success: false, message: 'Verification ID (Client ID) and OTP required' });
     }
 
     const config = {
@@ -217,7 +219,7 @@ export const verifyAadhaarOTP = async (req, res) => {
       headers: { 'Content-Type': 'application/json' },
       data: { 
         key: process.env.SUREPASS_API_KEY,
-        request_id: client_id, // Using the ID stored in frontend client_id
+        request_id: finalClientId, 
         otp 
       }
     };

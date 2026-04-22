@@ -94,7 +94,13 @@ export default function OnboardingKYC() {
       if (isSuccess) {
         console.log('EKYC_UI: OTP request success confirmed');
         // Capture client_id or any variant of request ID
-        const requestId = res.client_id || res.request_id || res.data?.request_id || res.data?.client_id;
+        const requestId = res.client_id || res.request_id || res.requestId || res.data?.request_id || res.data?.client_id;
+        
+        if (!requestId) {
+          console.log('EKYC_UI: WARNING - No RequestID found in success response');
+          alert('OTP sent, but no Verification ID received. Please contact support or try again.');
+        }
+
         setClientId(requestId);
         setOtpSent(true);
         alert(res.message || 'OTP sent successfully');
