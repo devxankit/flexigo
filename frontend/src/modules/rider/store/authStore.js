@@ -100,7 +100,13 @@ export const useAuthStore = create(
             token: null, 
             otpSent: false 
         });
+        // Clear all persistent storage keys for the rider module
         localStorage.removeItem('rider-auth');
+        localStorage.removeItem('rider-subscription');
+        localStorage.removeItem('rider-wallet');
+        
+        // Use window.location to ensure memory stores (Zustand) are also wiped for the next user
+        window.location.href = '/rider/auth/phone';
       },
     }),
     { name: 'rider-auth' }

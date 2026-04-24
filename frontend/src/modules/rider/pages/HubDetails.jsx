@@ -49,7 +49,7 @@ export default function HubDetails() {
     ...rawHub,
     distanceStr: dist ? (dist < 1 ? Math.round(dist * 1000) + ' m' : dist.toFixed(1) + ' km') : 'calculating...',
     hours: '24/7 Operations', // Default as not in model yet
-    availableSlots: Math.floor(Math.random() * 15) // Dynamic mock for slots
+    availableSlots: rawHub.availableSlots || 0
   };
 
   const handleDirections = () => {
@@ -74,7 +74,7 @@ export default function HubDetails() {
           <div>
             <h1 className={`text-2xl font-heading font-black transition-colors ${
               isDark ? 'text-white' : 'text-slate-900'
-            }`}>Hub Details</h1>
+            }`}>Franchise Details</h1>
             <p className="text-[10px] font-black uppercase text-flexigo-teal tracking-widest mt-0.5">Tactical View</p>
           </div>
        </div>

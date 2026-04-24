@@ -17,14 +17,21 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
+import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function AlertCenterPage() {
   const { networkStats, securityStats, fetchSecurityData } = useAdminDataStore();
+  const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
   
   React.useEffect(() => {
     fetchSecurityData();
   }, [fetchSecurityData]);
+
+  const handleFilterChange = (newFilters) => {
+    setActiveFilters(newFilters);
+    console.log('Alert Center Sync:', newFilters);
+  };
 
   return (
     <div className="space-y-6 pb-12">
@@ -43,6 +50,7 @@ export default function AlertCenterPage() {
          </div>
          
          <div className="flex items-center gap-2">
+            <OpsFilter onFilterChange={handleFilterChange} />
             <div className="relative group">
                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--text-tertiary)] group-focus-within:text-rose-500 transition-colors" />
                <input 

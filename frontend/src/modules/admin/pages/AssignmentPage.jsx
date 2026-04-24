@@ -19,20 +19,31 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
+import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function AssignmentPage() {
   const { 
     assignments, 
     fetchAssignments, 
-    assignVehicle 
+    assignVehicle,
+    fetchSubscribers
   } = useAdminDataStore();
+
+  const [activeFilters, setActiveFilters] = useState({ range: 'Last 7 Days' });
 
   React.useEffect(() => {
     fetchAssignments();
+    fetchSubscribers();
   }, []);
 
+  const handleFilterChange = (newFilters) => {
+    setActiveFilters(newFilters);
+    console.log('Assignment Sync:', newFilters);
+  };
+
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeTab, setActiveTab] = useState('qr'); // qr or manual
   const [assignmentData, setAssignmentData] = useState({
     vehicleId: '',
@@ -83,6 +94,7 @@ export default function AssignmentPage() {
          </div>
          
          <div className="flex items-center gap-2">
+            <OpsFilter onFilterChange={handleFilterChange} />
             <button 
                onClick={() => { setActiveTab('qr'); setIsModalOpen(true); }}
                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95"
@@ -278,7 +290,7 @@ export default function AssignmentPage() {
                            />
                         </div>
 
-                        <div className="space-y-1.5">
+                        <div className="space-y-1.5 relative">
                            <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Host Entity (Rider Phone No.)</label>
                            <input 
                               value={assignmentData.riderName}
@@ -286,12 +298,59 @@ export default function AssignmentPage() {
                                  const val = e.target.value.replace(/\D/g, '');
                                  if (val.length <= 10) {
                                    setAssignmentData({...assignmentData, riderName: val});
+                                   setShowSuggestions(true);
                                  }
                               }}
+                              onFocus={() => setShowSuggestions(true)}
+                              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                               maxLength={10}
                               placeholder="e.g. 9876543210"
                               className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
                            />
+                           
+                           {/* Previous User Suggestions */}
+                           <AnimatePresence>
+                              {showSuggestions && assignmentData.riderName.length > 2 && (
+                                 <motion.div 
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="absolute left-0 right-0 top-full mt-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl shadow-xl z-[110] overflow-hidden"
+                                 >
+                                    <div className="p-2 border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/50">
+                                       <span className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic">Previous Suggestions</span>
+                                    </div>
+                                    <div className="max-h-32 overflow-y-auto no-scrollbar">
+                                       {(useAdminDataStore.getState().subscribers || [])
+                                          .filter(s => s.phone.includes(assignmentData.riderName))
+                                          .map(s => (
+                                             <button
+                                                key={s.id}
+                                                type="button"
+                                                onClick={() => {
+                                                   setAssignmentData({...assignmentData, riderName: s.phone});
+                                                   setShowSuggestions(false);
+                                                }}
+                                                className="w-full px-4 py-2 text-left hover:bg-emerald-600/5 flex items-center justify-between group transition-colors"
+                                             >
+                                                <div className="flex flex-col">
+                                                   <span className="text-[9px] font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{s.phone}</span>
+                                                   <span className="text-[7px] font-bold text-[var(--text-tertiary)] uppercase">{s.name || 'Anonymous'}</span>
+                                                </div>
+                                                <div className={`px-1 py-0.5 rounded text-[6px] font-black uppercase border ${s.status === 'verified' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-amber-500/10 text-amber-500 border-amber-500/10'}`}>
+                                                   {s.status}
+                                                </div>
+                                             </button>
+                                          ))}
+                                       {!(useAdminDataStore.getState().subscribers || []).some(s => s.phone.includes(assignmentData.riderName)) && (
+                                          <div className="p-4 text-center">
+                                             <span className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic">No matches found</span>
+                                          </div>
+                                       )}
+                                    </div>
+                                 </motion.div>
+                              )}
+                           </AnimatePresence>
                         </div>
                      </div>
 

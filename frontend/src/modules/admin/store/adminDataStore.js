@@ -30,16 +30,21 @@ export const useAdminDataStore = create((set, get) => ({
   plans: [],
   kycRecords: [],
   subscribers: [],
+  roles: [],
+  campaigns: [],
   isLoading: false,
 
-  fetchDashboardStats: async () => {
+  fetchDashboardStats: async (filters = {}) => {
     set({ isLoading: true });
     try {
-      const res = await api.get('/admin/dashboard-stats');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/dashboard-stats?${params.toString()}`);
       if (res.data.success) {
-        set({ 
+        set({
           networkStats: res.data.stats,
-          revenueData: res.data.stats.revenueData || get().revenueData 
+          revenueData: res.data.stats.revenueData || get().revenueData
         });
       }
     } catch (err) {
@@ -113,7 +118,7 @@ export const useAdminDataStore = create((set, get) => ({
     try {
       const res = await api.get('/admin/kyc');
       if (res.data.success) {
-        set({ 
+        set({
           kycRecords: res.data.records,
           kycStats: res.data.stats || get().kycStats
         });
@@ -157,7 +162,7 @@ export const useAdminDataStore = create((set, get) => ({
       console.error("Failed to fetch all vehicles:", err);
     }
   },
-  
+
   fetchHubVehicles: async (hubId) => {
     try {
       const res = await api.get(`/fleet?franchiseId=${hubId}`);
@@ -203,8 +208,8 @@ export const useAdminDataStore = create((set, get) => ({
     try {
       const res = await api.delete(`/admin/plans/${id}`);
       if (res.data.success) {
-        set(state => ({ 
-          plans: state.plans.filter(p => p._id !== id && p.id !== id) 
+        set(state => ({
+          plans: state.plans.filter(p => p._id !== id && p.id !== id)
         }));
         return res.data;
       }
@@ -281,7 +286,7 @@ export const useAdminDataStore = create((set, get) => ({
     try {
       const res = await api.get('/admin/finance');
       if (res.data.success) {
-        set({ 
+        set({
           financeTransactions: res.data.transactions,
           financeStats: res.data.stats || get().financeStats
         });
@@ -298,7 +303,7 @@ export const useAdminDataStore = create((set, get) => ({
     try {
       const res = await api.get('/admin/inventory');
       if (res.data.success) {
-        set({ 
+        set({
           inventory: res.data.inventory,
           billing: res.data.billing,
           inventoryStats: res.data.stats || get().inventoryStats
@@ -315,7 +320,7 @@ export const useAdminDataStore = create((set, get) => ({
     try {
       const res = await api.get('/admin/franchise-ops');
       if (res.data.success) {
-        set({ 
+        set({
           franchiseOps: res.data.franchises,
           franchiseOpsStats: res.data.stats || get().franchiseOpsStats
         });
@@ -331,7 +336,7 @@ export const useAdminDataStore = create((set, get) => ({
     try {
       const res = await api.get('/admin/compliance');
       if (res.data.success) {
-        set({ 
+        set({
           complianceRecords: res.data.challans,
           complianceStats: res.data.stats || get().complianceStats
         });
@@ -344,11 +349,14 @@ export const useAdminDataStore = create((set, get) => ({
   tickets: [],
   promos: [],
   engagementStats: { openTickets: 0, livePromos: '0', csatScore: '0%', slaReady: '0m' },
-  fetchEngagementData: async () => {
+  fetchEngagementData: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/engagement');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/engagement?${params.toString()}`);
       if (res.data.success) {
-        set({ 
+        set({
           tickets: res.data.tickets,
           promos: res.data.promos || [],
           engagementStats: res.data.stats || get().engagementStats
@@ -361,11 +369,14 @@ export const useAdminDataStore = create((set, get) => ({
 
   auditLogs: [],
   securityStats: { activeSessions: 0, authFailures: 0, integrity: 'N/A', globalNodes: '0' },
-  fetchSecurityData: async () => {
+  fetchSecurityData: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/security');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/security?${params.toString()}`);
       if (res.data.success) {
-        set({ 
+        set({
           auditLogs: res.data.logs,
           securityStats: res.data.stats || get().securityStats
         });
@@ -381,7 +392,7 @@ export const useAdminDataStore = create((set, get) => ({
     try {
       const res = await api.get('/admin/subscribers');
       if (res.data.success) {
-        set({ 
+        set({
           subscribers: res.data.subscribers,
           subscriberStats: res.data.stats || get().subscriberStats
         });
@@ -397,7 +408,7 @@ export const useAdminDataStore = create((set, get) => ({
     try {
       const res = await api.get('/admin/staff');
       if (res.data.success) {
-        set({ 
+        set({
           staff: res.data.staff,
           staffStats: res.data.stats || get().staffStats
         });
@@ -482,6 +493,54 @@ export const useAdminDataStore = create((set, get) => ({
       }
     } catch (err) {
       console.error("Failed to fetch rider behaviour:", err);
+    }
+  },
+
+  fetchRoles: async () => {
+    try {
+      const res = await api.get('/admin/roles');
+      if (res.data.success) {
+        set({ roles: res.data.roles });
+      }
+    } catch (err) {
+      console.error("Failed to fetch roles:", err);
+    }
+  },
+
+  addRole: async (roleData) => {
+    try {
+      const res = await api.post('/admin/roles', roleData);
+      if (res.data.success) {
+        set(state => ({ roles: [res.data.role, ...state.roles] }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to add role:", err);
+      return { success: false, message: err.response?.data?.message || err.message };
+    }
+  },
+
+  fetchCampaigns: async () => {
+    try {
+      const res = await api.get('/admin/campaigns');
+      if (res.data.success) {
+        set({ campaigns: res.data.campaigns });
+      }
+    } catch (err) {
+      console.error("Failed to fetch campaigns:", err);
+    }
+  },
+
+  addCampaign: async (campaignData) => {
+    try {
+      const res = await api.post('/admin/campaigns', campaignData);
+      if (res.data.success) {
+        set(state => ({ campaigns: [res.data.campaign, ...state.campaigns] }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to add campaign:", err);
+      return { success: false, message: err.response?.data?.message || err.message };
     }
   }
 }));

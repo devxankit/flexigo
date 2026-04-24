@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
+import OpsFilter from '../components/OpsFilter';
 
 import { useAdminDataStore } from '../store/adminDataStore';
 
@@ -29,10 +30,16 @@ export default function FranchiseKycQueue() {
   const { kycRecords, kycStats, fetchKycRecords, updateKycStatus } = useAdminDataStore();
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState({ range: 'Last 7 Days' });
 
   React.useEffect(() => {
     fetchKycRecords();
   }, []);
+
+  const handleFilterChange = (newFilters) => {
+    setActiveFilters(newFilters);
+    console.log('Franchise KYC Sync:', newFilters);
+  };
 
   // Filter records to only show Franchises
   const records = kycRecords.filter(r => r.role === 'Franchise');
@@ -67,6 +74,7 @@ export default function FranchiseKycQueue() {
          </div>
          
          <div className="flex items-center gap-2">
+            <OpsFilter onFilterChange={handleFilterChange} />
             <div className="relative group">
                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--text-tertiary)] group-focus-within:text-emerald-500 transition-colors" />
                <input 
@@ -149,14 +157,7 @@ export default function FranchiseKycQueue() {
                                 >
                                    <Eye size={12} />
                                 </button>
-                                {record.status === 'pending' && (
-                                   <button 
-                                      onClick={() => handleAction(record.id, 'approved')}
-                                      className="p-1.5 bg-emerald-600 text-white rounded-lg shadow-md hover:bg-emerald-700 transition-all active:scale-95"
-                                   >
-                                      <CheckCircle size={12} />
-                                   </button>
-                                )}
+                                {/* Removed Quick Approve button as per request */}
                              </div>
                           </td>
                        </motion.tr>
@@ -202,12 +203,31 @@ export default function FranchiseKycQueue() {
                            <FileText size={10} className="text-emerald-500" /> Documents
                         </h4>
                         <div className="space-y-1.5">
-                           {['GST_Certificate', 'Registration', 'Bank_KYC', 'Partner_PAN'].map(doc => (
-                              <div key={doc} className="p-2.5 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl flex items-center justify-between group hover:border-emerald-500/30 transition-all cursor-pointer">
-                                 <span className="text-[9px] font-black text-[var(--text-primary)] uppercase tracking-tight italic leading-none">{doc}</span>
-                                 <Download size={10} className="text-[var(--text-tertiary)]/50 group-hover:text-emerald-500 transition-all" />
-                              </div>
-                           ))}
+                           {[
+                              { label: 'Aadhaar Card', key: 'aadhaarFront', verified: selectedRecord.details?.ekycVerified },
+                              { label: 'PAN Card', key: 'panCard' },
+                              { label: 'Registration', key: 'businessLicense' },
+                              { label: 'Bank_KYC', key: 'bankDetails' }
+                           ].map(doc => {
+                              const hasDoc = selectedRecord.details?.[doc.key];
+                              return (
+                                 <div 
+                                    key={doc.label} 
+                                    onClick={() => hasDoc && window.open(hasDoc, '_blank')}
+                                    className={`p-2.5 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl flex items-center justify-between group transition-all ${hasDoc ? 'cursor-pointer hover:border-emerald-500/30' : 'opacity-50 cursor-not-allowed'}`}
+                                 >
+                                    <div className="flex items-center gap-2">
+                                       <span className="text-[9px] font-black text-[var(--text-primary)] uppercase tracking-tight italic leading-none">{doc.label}</span>
+                                       {doc.verified && <Check size={10} className="text-emerald-500" />}
+                                    </div>
+                                    {hasDoc ? (
+                                       <Download size={10} className="text-[var(--text-tertiary)]/50 group-hover:text-emerald-500 transition-all" />
+                                    ) : (
+                                       <AlertCircle size={10} className="text-rose-500/50" />
+                                    )}
+                                 </div>
+                              );
+                           })}
                         </div>
                      </div>
 

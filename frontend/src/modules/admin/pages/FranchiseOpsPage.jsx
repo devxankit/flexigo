@@ -14,14 +14,21 @@ import {
   Users
 } from 'lucide-react';
 import AdminStatCard from '../components/AdminStatCard';
+import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function FranchiseOpsPage() {
   const { franchiseOps, franchiseOpsStats, fetchFranchiseOpsData } = useAdminDataStore();
+  const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
 
   useEffect(() => {
     fetchFranchiseOpsData();
   }, []);
+
+  const handleFilterChange = (newFilters) => {
+    setActiveFilters(newFilters);
+    console.log('Franchise Ops Sync:', newFilters);
+  };
 
   return (
     <div className="space-y-6 pb-12">
@@ -40,12 +47,7 @@ export default function FranchiseOpsPage() {
          </div>
          
          <div className="flex items-center gap-2">
-            <button className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95 flex items-center gap-1.5">
-               <Store size={12} /> Onboard Partner
-            </button>
-            <button className="px-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-primary)] text-[9px] font-black uppercase tracking-widest hover:bg-[var(--bg-tertiary)] transition-all flex items-center gap-1.5 shadow-sm">
-               <Truck size={12} /> 3PL Link
-            </button>
+            <OpsFilter onFilterChange={handleFilterChange} />
          </div>
       </div>
 
@@ -151,20 +153,6 @@ export default function FranchiseOpsPage() {
                      Net payout tracking includes RTO & Commission splits.
                   </p>
                </div>
-            </div>
-
-            {/* Quick Audit Strip */}
-            <div className="p-3 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl flex items-center justify-between group cursor-pointer hover:border-emerald-500/30 transition-all border-l-4 border-l-emerald-600">
-               <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-600/10 text-emerald-500 rounded-lg group-hover:rotate-12 transition-transform">
-                     <Clock size={16} />
-                  </div>
-                  <div>
-                     <p className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-wider leading-none">History Audit</p>
-                     <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest mt-1 italic">Registry Log v2.0</p>
-                  </div>
-               </div>
-               <ArrowUpRight size={14} className="text-[var(--text-tertiary)]/50 group-hover:translate-x-1 transition-transform" />
             </div>
          </div>
       </div>

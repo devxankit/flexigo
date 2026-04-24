@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
+import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function HrManagementPage() {
@@ -36,9 +37,16 @@ export default function HrManagementPage() {
     removeStaff
   } = useAdminDataStore();
 
+  const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
+
   React.useEffect(() => {
     fetchStaff();
   }, []);
+
+  const handleFilterChange = (newFilters) => {
+    setActiveFilters(newFilters);
+    console.log('HR Management Sync:', newFilters);
+  };
 
   const [activeTab, setActiveTab] = useState('employees');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -92,17 +100,12 @@ export default function HrManagementPage() {
          </div>
          
          <div className="flex items-center gap-2">
+            <OpsFilter onFilterChange={handleFilterChange} />
             <button 
                onClick={() => { setModalType('add'); setIsModalOpen(true); }}
                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95"
             >
                <UserPlus size={12} strokeWidth={3} /> Add Staff
-            </button>
-            <button 
-               onClick={() => { setModalType('payouts'); setIsModalOpen(true); }}
-               className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-primary)] text-[9px] font-black uppercase tracking-widest hover:border-emerald-500/30 transition-all active:scale-95 shadow-sm"
-            >
-               <CreditCard size={12} /> Payouts
             </button>
          </div>
       </div>
@@ -133,143 +136,86 @@ export default function HrManagementPage() {
          ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-         {/* Main Staff Registry */}
-         <div className="lg:col-span-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-sm">
-            <div className="px-6 py-3 border-b border-[var(--border-subtle)] flex items-center justify-between bg-[var(--bg-tertiary)]/10">
-               <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-inner">
-                     <Users size={16} />
-                  </div>
-                  <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-wider leading-none italic">
-                     {activeTab === 'employees' ? 'Registry Payload' : activeTab.toUpperCase() + ' STREAM'}
-                  </h3>
+      <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-sm">
+         <div className="px-6 py-3 border-b border-[var(--border-subtle)] flex items-center justify-between bg-[var(--bg-tertiary)]/10">
+            <div className="flex items-center gap-3">
+               <div className="w-8 h-8 rounded-lg bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-inner">
+                  <Users size={16} />
                </div>
-               <div className="relative group">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--text-tertiary)] group-focus-within:text-emerald-500 transition-colors" />
-                  <input 
-                    type="text" 
-                    placeholder="Search personnel..." 
-                    className="pl-8 pr-3 py-1.5 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-lg text-[9px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none w-32 transition-all text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50"
-                  />
-               </div>
+               <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-wider leading-none italic">
+                  {activeTab === 'employees' ? 'Registry Payload' : activeTab.toUpperCase() + ' STREAM'}
+               </h3>
             </div>
-            
-            <div className="overflow-x-auto no-scrollbar">
-               <table className="w-full text-left">
-                  <thead>
-                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
-                        {['Staff ID', 'Name & Role', 'Dept', 'Shift', 'Access', 'Status', 'Actions'].map((header) => (
-                           <th key={header} className="py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
-                        ))}
-                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--border-subtle)]">
-                     <AnimatePresence mode='popLayout'>
-                        {staff.map((emp, idx) => (
-                           <motion.tr 
-                              layout
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              key={emp._id || emp.id || idx} 
-                              className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]"
-                           >
-                              <td className="py-3 px-6 font-black text-[7.5px] text-[var(--text-tertiary)] uppercase tracking-widest leading-none">{(emp._id || emp.id).slice(-8).toUpperCase()}</td>
-                              <td className="py-3 px-6 whitespace-nowrap">
-                                 <div className="flex flex-col">
-                                    <span className="font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic">{emp.name}</span>
-                                    <span className="text-[7.5px] font-bold text-[var(--text-tertiary)] uppercase mt-1 italic tracking-widest leading-none">{emp.role}</span>
-                                 </div>
-                              </td>
-                              <td className="py-3 px-6 text-[9px] font-black text-[var(--text-tertiary)] uppercase italic leading-none">{emp.dept}</td>
-                              <td className="py-3 px-6 text-[9px] font-black text-[var(--text-primary)] uppercase leading-none">{emp.shift}</td>
-                              <td className="py-3 px-6 text-[9px] font-black text-[var(--text-primary)] uppercase leading-none italic">
-                                 {emp.role.includes('Lead') ? 'Level_4' : 'Level_2'}
-                              </td>
-                              <td className="py-3 px-6">
-                                 <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border ${
-                                    emp.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-slate-500/10 text-slate-500 border-slate-500/10'
-                                 }`}>
-                                    {emp.status}
-                                 </div>
-                              </td>
-                              <td className="py-3 px-6">
-                                 <div className="flex items-center gap-2">
-                                    <button 
-                                       onClick={(e) => { e.stopPropagation(); handleEditOpen(emp); }}
-                                       className="p-1 text-[var(--text-tertiary)] hover:text-emerald-500 hover:bg-emerald-500/10 rounded transition-all"
-                                    >
-                                       <Edit size={12} />
-                                    </button>
-                                    <button 
-                                       onClick={(e) => { e.stopPropagation(); if(window.confirm('Delete staff?')) removeStaff(emp._id); }}
-                                       className="p-1 text-[var(--text-tertiary)] hover:text-rose-500 hover:bg-rose-500/10 rounded transition-all"
-                                    >
-                                       <Trash2 size={12} />
-                                    </button>
-                                 </div>
-                              </td>
-                           </motion.tr>
-                        ))}
-                     </AnimatePresence>
-                  </tbody>
-               </table>
+            <div className="relative group">
+               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--text-tertiary)] group-focus-within:text-emerald-500 transition-colors" />
+               <input 
+                 type="text" 
+                 placeholder="Search personnel..." 
+                 className="pl-8 pr-3 py-1.5 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-lg text-[9px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none w-32 transition-all text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50"
+               />
             </div>
          </div>
-
-         {/* Right Sidebar Assets */}
-         <div className="space-y-6">
-            <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-5 shadow-sm border-t-4 border-t-emerald-600">
-               <div className="flex items-center justify-between mb-6 pb-2 border-b border-[var(--border-subtle)]">
-                  <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-widest italic">Efficiency Matrix</h3>
-                  <div className="px-2 py-0.5 bg-emerald-500/10 rounded-full text-[7px] font-black text-emerald-500 uppercase tracking-widest animate-pulse italic">Live Sync</div>
-               </div>
-
-               <div className="space-y-3">
-                  {(staffStats.efficiencyMatrix || [
-                    { label: 'Handover Rate', rate: '99.2%', val: 92 },
-                    { label: 'SLA Fulfillment', rate: '14min', val: 84 },
-                    { label: 'Attendance', rate: '94%', val: 94 },
-                  ]).map((stat) => (
-                    <div key={stat.label} className="p-3 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl group hover:border-emerald-500/30 transition-all cursor-pointer shadow-sm">
-                       <div className="flex justify-between items-center mb-1.5">
-                          <span className="text-[9px] font-black text-[var(--text-primary)] uppercase leading-none italic">{stat.label}</span>
-                          <span className="text-[10px] font-black text-emerald-500 italic tracking-tight">{stat.rate}</span>
-                       </div>
-                       <div className="w-full h-1 bg-[var(--bg-secondary)] rounded-full overflow-hidden shadow-inner">
-                          <div className="h-full bg-emerald-600 transition-all duration-1000" style={{ width: `${stat.val}%` }} />
-                       </div>
-                    </div>
-                  ))}
-               </div>
-
-               <div className="mt-8 p-3 bg-emerald-600/5 border border-emerald-500/10 rounded-xl space-y-2">
-                  <div className="flex items-center gap-1.5">
-                     <History size={12} className="text-emerald-600" />
-                     <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Rotations</p>
-                  </div>
-                  <p className="text-[8px] text-[var(--text-tertiary)] font-bold italic uppercase tracking-widest leading-relaxed">
-                     Automated shift balancing every 24h via Alpha Engine.
-                  </p>
-               </div>
-            </div>
-
-            {/* Leave Approval Strip */}
-            <div className="p-3 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl flex items-center justify-between group cursor-pointer hover:border-rose-500/30 transition-all shadow-sm border-l-4 border-l-rose-600">
-               <div className="flex items-center gap-3">
-                  <div className="p-2 bg-rose-500/10 text-rose-500 rounded-lg group-hover:rotate-6 transition-transform shadow-inner">
-                     <Calendar size={18} />
-                  </div>
-                  <div>
-                     <p className="text-[10px] font-black text-[var(--text-primary)] uppercase leading-none">Leave Requests</p>
-                     <p className="text-[8px] font-black text-rose-500 uppercase mt-1 italic animate-pulse tracking-widest leading-none">
-                        {staffStats.leaves} Pending Sync
-                     </p>
-                  </div>
-               </div>
-               <ChevronRight size={16} className="text-[var(--text-tertiary)]/50 group-hover:text-rose-500 group-hover:translate-x-0.5 transition-all" />
-            </div>
+         
+         <div className="overflow-x-auto no-scrollbar">
+            <table className="w-full text-left">
+               <thead>
+                  <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
+                     {['Staff ID', 'Name & Role', 'Dept', 'Shift', 'Access', 'Status', 'Actions'].map((header) => (
+                        <th key={header} className="py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
+                     ))}
+                  </tr>
+               </thead>
+               <tbody className="divide-y divide-[var(--border-subtle)]">
+                  <AnimatePresence mode='popLayout'>
+                     {staff.map((emp, idx) => (
+                        <motion.tr 
+                           layout
+                           initial={{ opacity: 0 }}
+                           animate={{ opacity: 1 }}
+                           exit={{ opacity: 0 }}
+                           key={emp._id || emp.id || idx} 
+                           className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]"
+                        >
+                           <td className="py-3 px-6 font-black text-[7.5px] text-[var(--text-tertiary)] uppercase tracking-widest leading-none">{(emp._id || emp.id).slice(-8).toUpperCase()}</td>
+                           <td className="py-3 px-6 whitespace-nowrap">
+                              <div className="flex flex-col">
+                                 <span className="font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic">{emp.name}</span>
+                                 <span className="text-[7.5px] font-bold text-[var(--text-tertiary)] uppercase mt-1 italic tracking-widest leading-none">{emp.role}</span>
+                              </div>
+                           </td>
+                           <td className="py-3 px-6 text-[9px] font-black text-[var(--text-tertiary)] uppercase italic leading-none">{emp.dept}</td>
+                           <td className="py-3 px-6 text-[9px] font-black text-[var(--text-primary)] uppercase leading-none">{emp.shift}</td>
+                           <td className="py-3 px-6 text-[9px] font-black text-[var(--text-primary)] uppercase leading-none italic">
+                              {emp.role.includes('Lead') ? 'Level_4' : 'Level_2'}
+                           </td>
+                           <td className="py-3 px-6">
+                              <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border ${
+                                 emp.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-slate-500/10 text-slate-500 border-slate-500/10'
+                              }`}>
+                                 {emp.status}
+                              </div>
+                           </td>
+                           <td className="py-3 px-6">
+                              <div className="flex items-center gap-2">
+                                 <button 
+                                    onClick={(e) => { e.stopPropagation(); handleEditOpen(emp); }}
+                                    className="p-1 text-[var(--text-tertiary)] hover:text-emerald-500 hover:bg-emerald-500/10 rounded transition-all"
+                                 >
+                                    <Edit size={12} />
+                                 </button>
+                                 <button 
+                                    onClick={(e) => { e.stopPropagation(); if(window.confirm('Delete staff?')) removeStaff(emp._id); }}
+                                    className="p-1 text-[var(--text-tertiary)] hover:text-rose-500 hover:bg-rose-500/10 rounded transition-all"
+                                 >
+                                    <Trash2 size={12} />
+                                 </button>
+                              </div>
+                           </td>
+                        </motion.tr>
+                     ))}
+                  </AnimatePresence>
+               </tbody>
+            </table>
          </div>
       </div>
 

@@ -24,6 +24,8 @@ import {
   Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import AdminStatCard from '../components/AdminStatCard';
+import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function HubDetailsPage() {
@@ -34,6 +36,7 @@ export default function HubDetailsPage() {
   const [activeMenu, setActiveMenu] = useState(null);
   const [vehicles, setVehicles] = useState([]);
   const [loadingVehicles, setLoadingVehicles] = useState(true);
+  const [activeFilters, setActiveFilters] = useState({ range: 'Last 7 Days' });
 
   useEffect(() => {
     const foundHub = hubs.find(h => (h._id || h.id).toString() === hubId);
@@ -46,6 +49,11 @@ export default function HubDetailsPage() {
     window.addEventListener('click', handleClickOutside);
     return () => window.removeEventListener('click', handleClickOutside);
   }, [hubId, hubs]);
+
+  const handleFilterChange = (newFilters) => {
+    setActiveFilters(newFilters);
+    console.log('Hub Details Sync:', newFilters);
+  };
 
   const loadVehicles = async () => {
     setLoadingVehicles(true);
@@ -91,6 +99,7 @@ export default function HubDetailsPage() {
         </button>
 
         <div className="flex items-center gap-2">
+          <OpsFilter onFilterChange={handleFilterChange} />
           <button className="p-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-emerald-500 transition-colors">
             <Settings size={16} />
           </button>

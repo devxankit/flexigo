@@ -34,6 +34,8 @@ export default function FranchiseLogin() {
     document.documentElement.style.backgroundColor = '#020617';
   }, []);
 
+
+
   const handleSendOTP = async (e) => {
     if (e) e.preventDefault();
     if (phone.length !== 10) {
@@ -52,6 +54,12 @@ export default function FranchiseLogin() {
       setTimeout(() => setIsErrorShake(false), 500);
     }
   };
+
+  useEffect(() => {
+    if (phone.length === 10 && !otpSent) {
+      handleSendOTP();
+    }
+  }, [phone, otpSent]);
 
   const handleVerifyOTP = async (e) => {
     if (e) e.preventDefault();

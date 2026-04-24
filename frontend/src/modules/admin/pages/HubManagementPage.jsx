@@ -19,19 +19,26 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import AdminStatCard from '../components/AdminStatCard';
+import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function HubManagementPage() {
   const navigate = useNavigate();
-  const { hubs, networkStats, fetchHubs, fetchDashboardStats } = useAdminDataStore();
+  const { hubs, networkStats, fetchHubs, fetchDashboardStats, addHub } = useAdminDataStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newHub, setNewHub] = useState({ name: '', city: '', fleet: '' });
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilters, setActiveFilters] = useState({ range: 'Last 7 Days' });
 
   React.useEffect(() => {
     fetchHubs();
     if (networkStats.totalHubs === 0) fetchDashboardStats();
   }, []);
+
+  const handleFilterChange = (newFilters) => {
+    setActiveFilters(newFilters);
+    console.log('Hub Management Sync:', newFilters);
+  };
 
   const filteredHubs = hubs.filter(h => 
     (h.name?.toLowerCase() || '').includes(searchQuery.toLowerCase()) || 
@@ -39,24 +46,26 @@ export default function HubManagementPage() {
     ((h._id || h.id)?.toString().toLowerCase() || '').includes(searchQuery.toLowerCase())
   );
 
-  const handleAddHub = (e) => {
+  const handleAddHub = async (e) => {
     e.preventDefault();
     if (!newHub.name || !newHub.city) return;
 
-    const hub = {
-      id: `HUB-${Math.floor(100 + Math.random() * 900)}`,
+    const hubData = {
       name: newHub.name,
       city: newHub.city,
       fleet: parseInt(newHub.fleet) || 0,
-      subs: 0,
-      revenue: 0,
-      health: '100%',
-      status: 'active'
+      email: `${newHub.name.toLowerCase().replace(/\s+/g, '')}@flexigo.com`,
+      phone: `9${Math.floor(100000000 + Math.random() * 900000000)}`,
+      password: 'password123'
     };
 
-    setHubList([hub, ...hubList]);
-    setNewHub({ name: '', city: '', fleet: '' });
-    setIsModalOpen(false);
+    const result = await addHub(hubData);
+    if (result?.success) {
+      setNewHub({ name: '', city: '', fleet: '' });
+      setIsModalOpen(false);
+    } else {
+      alert("Failed to add hub: " + (result?.message || "Unknown error"));
+    }
   };
 
   return (
@@ -67,7 +76,7 @@ export default function HubManagementPage() {
             <div className="flex items-center gap-2">
                <div className="w-1 h-5 bg-emerald-600 rounded-full" />
                <h1 className="text-xl font-black tracking-tighter text-[var(--text-primary)] uppercase italic">
-                  Hub <span className="text-emerald-500">Directory</span>
+                  Franchise <span className="text-emerald-500">Directory</span>
                </h1>
             </div>
             <p className="text-[8px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] ml-3">
@@ -76,28 +85,29 @@ export default function HubManagementPage() {
          </div>
          
          <div className="flex items-center gap-2">
+            <OpsFilter onFilterChange={handleFilterChange} />
             <div className="relative group">
                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--text-tertiary)] group-focus-within:text-emerald-500 transition-colors" />
                <input 
                  type="text" 
                  value={searchQuery}
                  onChange={(e) => setSearchQuery(e.target.value)}
-                 placeholder="Search Nodes..." 
-                 className="pl-8 pr-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all w-48 text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50"
+                 placeholder="Search Node..." 
+                 className="pl-8 pr-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all w-32 text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50"
                />
             </div>
             <button 
                onClick={() => setIsModalOpen(true)}
-               className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-emerald-700 transition-all shadow-md active:scale-95"
+               className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95"
             >
-               <Plus size={12} strokeWidth={3} /> Add Node
+               <Plus size={12} strokeWidth={3} /> Launch Hub
             </button>
          </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <AdminStatCard title="Total Hubs" value={hubs.length} icon={Warehouse} color="emerald" subtitle="Active nodes" />
+         <AdminStatCard title="Total Franchises" value={hubs.length} icon={Warehouse} color="emerald" subtitle="Active nodes" />
          <AdminStatCard title="Utilization" value={networkStats.hubUtilization} icon={TrendingUp} color="blue" subtitle="Avg space" />
          <AdminStatCard title="Connectivity" value="98.2%" icon={Signal} color="emerald" subtitle="Uptime" />
          <AdminStatCard title="System Health" value="94%" icon={Activity} color="emerald" subtitle="Registry sync" />
@@ -196,7 +206,7 @@ export default function HubManagementPage() {
                >
                   <div className="flex items-center justify-between">
                      <div className="space-y-1">
-                        <h2 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tighter italic">Register <span className="text-emerald-500">New Hub</span></h2>
+                        <h2 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tighter italic">Register <span className="text-emerald-500">New Franchise</span></h2>
                         <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">Operational Expansion Wizard</p>
                      </div>
                      <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[8px] font-black text-emerald-500 uppercase tracking-widest leading-none">
@@ -216,7 +226,7 @@ export default function HubManagementPage() {
                   <form onSubmit={handleAddHub} className="space-y-8">
                      <div className="space-y-6">
                         <div className="space-y-3">
-                           <label className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Hub Name</label>
+                           <label className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Franchise Name</label>
                            <input 
                               autoFocus
                               value={newHub.name}
@@ -252,7 +262,7 @@ export default function HubManagementPage() {
                         type="submit"
                         className="w-full py-5 bg-emerald-600 text-white rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl shadow-emerald-950/40 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-3"
                      >
-                        <Zap size={16} fill="white" /> Initialize Hub Protocol
+                        <Zap size={16} fill="white" /> Initialize Franchise Protocol
                      </button>
                   </form>
                </motion.div>

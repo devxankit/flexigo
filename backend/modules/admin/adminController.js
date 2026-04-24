@@ -11,6 +11,53 @@ import SupportTicket from './ticketModel.js';
 import PromoCampaign from './promoModel.js';
 import AuditLog from './auditLogModel.js';
 import Handover from '../franchise/handoverModel.js';
+import Role from './roleModel.js';
+
+const getDateFilter = (range) => {
+  if (!range) return {};
+  
+  // Handle JSON stringified custom range from frontend
+  let rangeVal = range;
+  try {
+    if (range.startsWith('{')) {
+      rangeVal = JSON.parse(range);
+    }
+  } catch (e) {}
+
+  const now = new Date();
+  let start = new Date();
+  start.setHours(0, 0, 0, 0);
+
+  if (rangeVal === 'Today') {
+    return { timestamp: { $gte: start } };
+  } else if (rangeVal === 'Yesterday') {
+    start.setDate(start.getDate() - 1);
+    const end = new Date(start);
+    end.setHours(23, 59, 59, 999);
+    return { timestamp: { $gte: start, $lte: end } };
+  } else if (rangeVal === 'Last 7 Days') {
+    start.setDate(start.getDate() - 7);
+    return { timestamp: { $gte: start } };
+  } else if (rangeVal === 'Last 30 Days') {
+    start.setDate(start.getDate() - 30);
+    return { timestamp: { $gte: start } };
+  } else if (rangeVal === 'This Month') {
+    start.setDate(1);
+    return { timestamp: { $gte: start } };
+  } else if (rangeVal === 'Last Month') {
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+    return { timestamp: { $gte: lastMonthStart, $lte: lastMonthEnd } };
+  } else if (typeof rangeVal === 'object' && rangeVal.start && rangeVal.end) {
+    return { 
+      timestamp: { 
+        $gte: new Date(rangeVal.start + 'T00:00:00Z'), 
+        $lte: new Date(rangeVal.end + 'T23:59:59Z') 
+      } 
+    };
+  }
+  return {};
+};
 
 // @desc    Get dashboard metrics for admin
 // @route   GET /api/v1/admin/dashboard-stats
@@ -175,6 +222,7 @@ export const getAllHubs = async (req, res) => {
         distanceKm,
         lat: hubLat || null,
         lng: hubLng || null,
+        capacity: f.businessDetails?.capacity || 0,
       };
     }));
 
@@ -227,27 +275,42 @@ export const getKycRecords = async (req, res) => {
     ]);
 
     const records = [
-      ...riders.map(r => ({
-        id: r._id,
-        name: r.name || r.phone,
-        role: r.role || 'Rider',
-        type: 'Individual',
-        city: r.city || 'N/A',
-        status: r.kycStatus,
-        date: r.createdAt,
-        details: r.kycDetails
-      })),
-      ...franchises.map(f => ({
-        id: f._id,
-        name: f.hubName || f.ownerName,
-        role: 'Franchise',
-        type: f.businessDetails?.type || 'Pvt Ltd',
-        city: f.city || f.businessDetails?.location || 'N/A',
-        status: f.kycStatus,
-        date: f.createdAt,
-        details: f.kycDetails,
-        hubs: 1
-      }))
+      ...riders.map(r => {
+        const hasAllDocs = r.kycDetails?.selfie && 
+                           r.kycDetails?.aadhaarFront && 
+                           r.kycDetails?.aadhaarBack && 
+                           r.kycDetails?.drivingLicense;
+        
+        return {
+          id: r._id,
+          name: r.name || r.phone,
+          role: r.role || 'Rider',
+          type: 'Individual',
+          city: r.city || 'N/A',
+          status: hasAllDocs ? 'approved' : 'pending',
+          date: r.createdAt,
+          details: r.kycDetails
+        };
+      }),
+      ...franchises.map(f => {
+        const hasAllDocs = f.kycDetails?.selfie && 
+                           f.kycDetails?.aadhaarFront && 
+                           f.kycDetails?.aadhaarBack && 
+                           f.kycDetails?.panCard && 
+                           f.kycDetails?.businessLicense;
+
+        return {
+          id: f._id,
+          name: f.hubName || f.ownerName,
+          role: 'Franchise',
+          type: f.businessDetails?.type || 'Pvt Ltd',
+          city: f.city || f.businessDetails?.location || 'N/A',
+          status: hasAllDocs ? 'approved' : 'pending',
+          date: f.createdAt,
+          details: f.kycDetails,
+          hubs: 1
+        };
+      })
     ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
     // Dynamic Stats Logic
@@ -302,7 +365,7 @@ export const updateKycStatus = async (req, res) => {
 // @route   POST /api/v1/admin/hubs
 export const createHub = async (req, res) => {
   try {
-    const { name, city, email, phone, password } = req.body;
+    const { name, city, email, phone, password, fleet } = req.body;
 
     // Register as franchise
     const franchise = await Franchise.create({
@@ -315,7 +378,8 @@ export const createHub = async (req, res) => {
         name,
         address: city,
         latitude: req.body.latitude || 0,
-        longitude: req.body.longitude || 0
+        longitude: req.body.longitude || 0,
+        capacity: parseInt(fleet) || 0
       }
     });
 
@@ -338,15 +402,22 @@ export const createHub = async (req, res) => {
 export const getSubscribers = async (req, res) => {
   try {
     const riders = await Rider.find().sort('-createdAt');
-    const subscribers = riders.map(r => ({
-      id: r._id,
-      name: r.name || r.phone,
-      email: r.email || 'N/A',
-      phone: r.phone,
-      persona: r.role || 'Rider',
-      location: 'N/A',
-      status: r.kycStatus === 'approved' ? 'verified' : 'pending'
-    }));
+    const subscribers = riders.map(r => {
+      const hasAllDocs = r.kycDetails?.selfie && 
+                         r.kycDetails?.aadhaarFront && 
+                         r.kycDetails?.aadhaarBack && 
+                         r.kycDetails?.drivingLicense;
+      
+      return {
+        id: r._id,
+        name: r.name || r.phone,
+        email: r.email || 'N/A',
+        phone: r.phone,
+        persona: r.role || 'Rider',
+        location: 'N/A',
+        status: hasAllDocs ? 'approved' : 'pending'
+      };
+    });
 
     res.status(200).json({ success: true, subscribers });
   } catch (error) {
@@ -744,13 +815,31 @@ export const getComplianceData = async (req, res) => {
 
 export const getEngagementData = async (req, res) => {
   try {
+    const { range } = req.query;
+    const dateFilter = getDateFilter(range);
+
     const [tickets, promos] = await Promise.all([
-      SupportTicket.find().sort('-createdAt').limit(20),
+      SupportTicket.find(dateFilter).sort('-createdAt').limit(20),
       PromoCampaign.find({ status: 'active' })
     ]);
 
-    const openTicketsCount = await SupportTicket.countDocuments({ status: { $ne: 'resolved' } });
-    const livePromosCount = promos.length;
+    const totalTickets = await SupportTicket.countDocuments(dateFilter);
+    const resolvedTickets = await SupportTicket.countDocuments({ ...dateFilter, status: 'resolved' });
+    const openTicketsCount = await SupportTicket.countDocuments({ ...dateFilter, status: { $ne: 'resolved' } });
+    
+    // CSAT Score based on resolution rate (proxy)
+    const csat = totalTickets > 0 ? ((resolvedTickets / totalTickets) * 100).toFixed(1) : "95.0";
+    
+    // SLA Ready: Average resolution time for resolved tickets (in minutes)
+    const resolvedSamples = await SupportTicket.find({ ...dateFilter, status: 'resolved' }).limit(10);
+    let avgSla = 12; // default
+    if (resolvedSamples.length > 0) {
+      const totalMin = resolvedSamples.reduce((acc, t) => {
+        const diff = new Date(t.updatedAt) - new Date(t.createdAt);
+        return acc + (diff / (1000 * 60));
+      }, 0);
+      avgSla = Math.round(totalMin / resolvedSamples.length);
+    }
 
     const formattedTickets = tickets.map(t => ({
       id: t.ticketId,
@@ -775,9 +864,9 @@ export const getEngagementData = async (req, res) => {
       promos: formattedPromos,
       stats: {
         openTickets: openTicketsCount,
-        livePromos: livePromosCount < 10 ? `0${livePromosCount}` : livePromosCount,
-        csatScore: "94.2%",
-        slaReady: "14m"
+        livePromos: promos.length < 10 ? `0${promos.length}` : promos.length,
+        csatScore: `${csat}%`,
+        slaReady: `${avgSla}m`
       }
     });
   } catch (error) {
@@ -787,10 +876,13 @@ export const getEngagementData = async (req, res) => {
 
 export const getSecurityData = async (req, res) => {
   try {
-    const logs = await AuditLog.find().sort('-timestamp').limit(20);
+    const { range } = req.query;
+    const dateFilter = getDateFilter(range);
+
+    const logs = await AuditLog.find(dateFilter).sort('-timestamp').limit(50);
     const failures = await AuditLog.countDocuments({
-      status: 'failure',
-      timestamp: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+      ...dateFilter,
+      status: 'failure'
     });
 
     const formattedLogs = logs.map(l => ({
@@ -802,11 +894,13 @@ export const getSecurityData = async (req, res) => {
       time: l.timestamp
     }));
 
+    const activeSessions = await Rider.countDocuments({ isRegistered: true });
+
     res.status(200).json({
       success: true,
       logs: formattedLogs,
       stats: {
-        activeSessions: 15 + (logs.length % 10),
+        activeSessions: activeSessions || 0,
         authFailures: failures,
         integrity: failures > 5 ? 'Warning' : 'Pass',
         globalNodes: (await Franchise.countDocuments()).toString().padStart(2, '0'),
@@ -846,6 +940,52 @@ export const getSubscriberData = async (req, res) => {
         flagged: flaggedUsers.toLocaleString()
       }
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get all roles
+// @route   GET /api/v1/admin/roles
+export const getRoles = async (req, res) => {
+  try {
+    const roles = await Role.find().sort({ createdAt: -1 });
+    res.status(200).json({ success: true, roles });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Create a new role
+// @route   POST /api/v1/admin/roles
+export const createRole = async (req, res) => {
+  try {
+    const { name, permissions } = req.body;
+    const newRole = await Role.create({ name, permissions });
+    res.status(201).json({ success: true, role: newRole });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get all campaigns
+// @route   GET /api/v1/admin/campaigns
+export const getCampaigns = async (req, res) => {
+  try {
+    const campaigns = await PromoCampaign.find().sort({ createdAt: -1 });
+    res.status(200).json({ success: true, campaigns });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Create a new campaign
+// @route   POST /api/v1/admin/campaigns
+export const createCampaign = async (req, res) => {
+  try {
+    const { name, campaignId } = req.body;
+    const newCampaign = await PromoCampaign.create({ name, campaignId });
+    res.status(201).json({ success: true, campaign: newCampaign });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

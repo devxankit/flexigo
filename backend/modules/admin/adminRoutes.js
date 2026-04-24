@@ -22,7 +22,11 @@ import {
   getSecurityData,
   getSubscriberData,
   getVehicleStats,
-  getRiderBehaviour
+  getRiderBehaviour,
+  getRoles,
+  createRole,
+  getCampaigns,
+  createCampaign
 } from './adminController.js';
 import {
   getAssignments,
@@ -78,5 +82,13 @@ router.get('/plans', getPlans);
 router.post('/plans', createPlan);
 router.patch('/plans/:id', updatePlan);
 router.delete('/plans/:id', deletePlan);
+
+// Role Management
+router.get('/roles', getRoles);
+router.post('/roles', createRole);
+
+// Campaign Management
+router.get('/campaigns', getCampaigns);
+router.post('/campaigns', createCampaign);
 
 export default router;

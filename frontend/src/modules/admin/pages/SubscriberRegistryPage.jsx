@@ -18,22 +18,46 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
+import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function SubscriberRegistryPage() {
   const { subscribers, subscriberStats, fetchSubscriberData } = useAdminDataStore();
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
 
   React.useEffect(() => {
     fetchSubscriberData();
   }, []);
 
-  const filteredSubscribers = subscribers.filter(s => {
+  const handleFilterChange = (newFilters) => {
+    setActiveFilters(newFilters);
+    console.log('Subscriber Registry Sync:', newFilters);
+  };
+
+  const handleExport = () => {
+    const headers = ['Phone', 'Email', 'Persona', 'Status'];
+    const csvContent = [
+      headers.join(','),
+      ...filteredSubscribers.map(s => [s.phone, s.email, s.persona, s.status].join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `subscribers_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+  };
+
+  const filteredSubscribers = (subscribers || []).filter(s => {
     const q = searchQuery.toLowerCase();
     return (
       (s.name?.toLowerCase() || '').includes(q) || 
       (s.phone || '').includes(q) ||
-      (s.email?.toLowerCase() || '').includes(q)
+      (s.email?.toLowerCase() || '').includes(q) ||
+      (s.persona?.toLowerCase() || '').includes(q) ||
+      (s.id?.toLowerCase() || '').includes(q)
     );
   });
 
@@ -54,17 +78,21 @@ export default function SubscriberRegistryPage() {
          </div>
          
          <div className="flex items-center gap-2">
+            <OpsFilter onFilterChange={handleFilterChange} />
             <div className="relative group">
                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--text-tertiary)] group-focus-within:text-emerald-500 transition-colors" />
                <input 
                  type="text" 
                  value={searchQuery}
                  onChange={(e) => setSearchQuery(e.target.value)}
-                 placeholder="Search Persona/ID..." 
-                 className="pl-8 pr-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all w-32 text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50 italic"
+                 placeholder="Search Persona/ID/Phone..." 
+                 className="pl-8 pr-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all w-48 text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50 italic"
                />
             </div>
-            <button className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95 flex items-center gap-1.5">
+            <button 
+               onClick={handleExport}
+               className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95 flex items-center gap-1.5 cursor-pointer"
+            >
                Full Export
             </button>
          </div>
@@ -75,7 +103,6 @@ export default function SubscriberRegistryPage() {
          <AdminStatCard title="Total Users" value={subscriberStats.totalUsers} icon={Users} color="emerald" subtitle="Active nodes" />
          <AdminStatCard title="Daily Riders" value={subscriberStats.dailyRiders} icon={Activity} color="blue" subtitle="Active today" />
          <AdminStatCard title="KYC Verified" value={subscriberStats.kycVerified} icon={ShieldCheck} color="emerald" subtitle="Identity sync" />
-         <AdminStatCard title="Flagged" value={subscriberStats.flagged} icon={ShieldAlert} color="rose" subtitle="Risk alert" />
       </div>
 
       {/* Main Registry Table */}
@@ -89,7 +116,7 @@ export default function SubscriberRegistryPage() {
             <table className="w-full text-left">
                <thead>
                   <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
-                     {['User identity', 'Contact Path', 'Assigned Persona', 'Network Locale', 'Status', 'Actions'].map((header) => (
+                     {['User identity', 'Contact Path', 'Assigned Persona', 'Network Locale', 'Status'].map((header) => (
                         <th key={header} className="py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
                      ))}
                   </tr>
@@ -100,7 +127,6 @@ export default function SubscriberRegistryPage() {
                         <td className="py-2.5 px-6 whitespace-nowrap">
                            <div className="flex flex-col">
                               <span className="font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic leading-none">{user.phone}</span>
-                              <span className="text-[7.5px] font-black text-[var(--text-tertiary)]/50 tracking-widest uppercase mt-1 leading-none italic">{user.id} Node</span>
                            </div>
                         </td>
                         <td className="py-2.5 px-6">
@@ -113,21 +139,11 @@ export default function SubscriberRegistryPage() {
                         <td className="py-2.5 px-6 text-[8px] font-black text-[var(--text-tertiary)] uppercase italic leading-none whitespace-nowrap">{user.locale}</td>
                         <td className="py-2.5 px-6">
                            <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border leading-none ${
-                              user.status === 'verified' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 
+                              user.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 
                               user.status === 'active' ? 'bg-blue-500/10 text-blue-500 border-blue-500/10' :
                               'bg-amber-500/10 text-amber-500 border-amber-500/10'
                            }`}>
                               {user.status}
-                           </div>
-                        </td>
-                        <td className="py-2.5 px-6">
-                           <div className="flex items-center gap-1.5">
-                              <button className="p-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-emerald-500 transition-all">
-                                 <Activity size={12} />
-                              </button>
-                              <button className="p-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-emerald-500 transition-all font-black">
-                                 <MoreVertical size={12} />
-                              </button>
                            </div>
                         </td>
                      </tr>

@@ -146,6 +146,14 @@ export const updateRegistration = async (req, res) => {
     // If it's the final review step or mark as registered
     if (updateData.markAsRegistered) {
         franchise.isRegistered = true;
+        const hasAllDocs = franchise.kycDetails?.selfie && 
+                           franchise.kycDetails?.aadhaarFront && 
+                           franchise.kycDetails?.aadhaarBack && 
+                           franchise.kycDetails?.panCard && 
+                           franchise.kycDetails?.businessLicense;
+        
+        franchise.kycStatus = hasAllDocs ? 'approved' : 'pending';
+        franchise.isVerified = hasAllDocs;
     }
 
     await franchise.save();

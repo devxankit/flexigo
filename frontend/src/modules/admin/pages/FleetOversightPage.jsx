@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
+import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function FleetOversightPage() {
@@ -26,10 +27,28 @@ export default function FleetOversightPage() {
     fetchDashboardStats 
   } = useAdminDataStore();
 
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
+  
   React.useEffect(() => {
     fetchAllVehicles();
     if (networkStats.activeFleet === 0) fetchDashboardStats();
   }, []);
+
+  const handleFilterChange = (newFilters) => {
+    setActiveFilters(newFilters);
+    console.log('Fleet Oversight Sync:', newFilters);
+  };
+
+  const filteredVehicles = (vehicles || []).filter(v => {
+    const q = searchQuery.toLowerCase();
+    return (
+      (v.plate?.toLowerCase() || '').includes(q) || 
+      (v._id?.toLowerCase() || '').includes(q) ||
+      (v.model?.toLowerCase() || '').includes(q) ||
+      (v.rider?.toLowerCase() || '').includes(q)
+    );
+  });
 
   return (
     <div className="space-y-6 pb-12">
@@ -48,26 +67,25 @@ export default function FleetOversightPage() {
          </div>
          
          <div className="flex items-center gap-2">
+            <OpsFilter onFilterChange={handleFilterChange} />
             <div className="relative group">
                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--text-tertiary)] group-focus-within:text-emerald-500 transition-colors" />
                <input 
                  type="text" 
-                 placeholder="Search Vehicle ID..." 
+                 value={searchQuery}
+                 onChange={(e) => setSearchQuery(e.target.value)}
+                 placeholder="Search Vehicle ID/Plate..." 
                  className="pl-8 pr-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all w-48 text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50"
                />
             </div>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-emerald-700 transition-all shadow-md active:scale-95">
-               <Globe size={12} /> View Map
-            </button>
          </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <AdminStatCard title="Total Units" value={networkStats.activeFleet} icon={Truck} color="emerald" subtitle="Active assets" />
-         <AdminStatCard title="In Motion" value="842" icon={Activity} color="blue" subtitle="Live tracking" />
-         <AdminStatCard title="Low Battery" value="14" icon={Zap} color="rose" subtitle="Urgent action" />
-         <AdminStatCard title="Grid Link" value={networkStats.avgUptime} icon={Signal} color="emerald" subtitle="Sync status" />
+         <AdminStatCard title="Total Units" value={filteredVehicles.length} icon={Truck} color="emerald" subtitle="Active assets" />
+         <AdminStatCard title="In Motion" value={filteredVehicles.filter(v => v.status === 'in-motion').length} icon={Activity} color="blue" subtitle="Live tracking" />
+         <AdminStatCard title="Low Battery" value={filteredVehicles.filter(v => v.battery < 20).length} icon={Zap} color="rose" subtitle="Urgent action" />
       </div>
 
       {/* Detailed Asset Registry */}
@@ -102,7 +120,7 @@ export default function FleetOversightPage() {
                   </tr>
                </thead>
                <tbody className="divide-y divide-[var(--border-subtle)]">
-                  {vehicles.map((vehicle, vIdx) => (
+                  {filteredVehicles.map((vehicle, vIdx) => (
                      <tr key={vehicle._id} className="group/row hover:bg-[var(--bg-tertiary)]/30 transition-colors">
                         <td className="py-2.5 px-6 whitespace-nowrap">
                            <div className="flex flex-col gap-0">
@@ -144,36 +162,6 @@ export default function FleetOversightPage() {
          </div>
       </div>
 
-      {/* Asset Integrity Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-         <div className="md:col-span-2 p-6 bg-emerald-600/5 border border-emerald-500/10 rounded-2xl space-y-3 relative overflow-hidden group">
-            <div className="flex items-center gap-3 mb-2">
-               <div className="w-8 h-8 rounded-lg bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
-                  <ShieldCheck size={16} />
-               </div>
-               <h4 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-wider">Security Integrity Protocol</h4>
-            </div>
-             <p className="text-[9px] text-[var(--text-tertiary)] font-bold leading-relaxed uppercase tracking-wider italic">
-                Automated diagnostics active. Standardized health checks executed for every 300 cycles ensuring fleet longevity.
-             </p>
-             <button className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-emerald-500 hover:text-emerald-400 mt-2 transition-colors">
-                Audit Reports <ArrowUpRight size={10} />
-             </button>
-         </div>
-
-         <div className="p-6 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl space-y-4 flex flex-col justify-between shadow-sm border-l-4 border-l-emerald-600">
-            <div>
-               <div className="flex items-center justify-between mb-2">
-                  <p className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Cloud Core</p>
-                  <span className="text-[9px] font-black text-emerald-600">Alpha Core</span>
-               </div>
-                <h3 className="text-sm font-black text-[var(--text-primary)] uppercase italic tracking-tighter">Global Asset Sync</h3>
-             </div>
-             <button className="w-full py-2.5 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-emerald-900/20 hover:bg-emerald-700 transition-all active:scale-95">
-                Refresh Protocol
-             </button>
-         </div>
-      </div>
     </div>
   );
 }

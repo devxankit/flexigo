@@ -68,18 +68,11 @@ export default function OpsFilter({
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl hover:border-emerald-500/30 transition-all shadow-sm group h-10"
       >
-        <div className="flex items-center gap-2 pr-2 border-r border-[var(--border-subtle)]">
+        <div className="flex items-center gap-2">
           <Calendar size={13} className="text-emerald-500" />
           <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-primary)]">
             {selectedRange === 'Custom Range' ? `${customRange.start || 'Start'} - ${customRange.end || 'End'}` : selectedRange}
           </span>
-        </div>
-        <div className="flex items-center gap-2 pl-1">
-          <Filter size={13} className="text-[var(--text-tertiary)] group-hover:text-emerald-500 transition-colors" />
-          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Filters</span>
-          {Object.keys(appliedFilters).length > 0 && (
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
-          )}
         </div>
         <ChevronDown size={13} className={`text-[var(--text-tertiary)] transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
@@ -93,36 +86,32 @@ export default function OpsFilter({
             className="absolute top-full right-0 mt-3 w-80 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] z-[100] overflow-hidden"
           >
             <div className="flex border-b border-[var(--border-subtle)]">
-              <button onClick={() => setActiveTab('date')} className={`flex-1 py-3 text-[9px] font-black uppercase tracking-[0.2em] transition-all ${activeTab === 'date' ? 'text-emerald-500 border-b-2 border-emerald-500 bg-emerald-500/5' : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'}`}>Date Range</button>
-              <button onClick={() => setActiveTab('metrics')} className={`flex-1 py-3 text-[9px] font-black uppercase tracking-[0.2em] transition-all ${activeTab === 'metrics' ? 'text-emerald-500 border-b-2 border-emerald-500 bg-emerald-500/5' : 'text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'}`}>Metrics</button>
+              <div className="flex-1 py-3 text-center text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500 border-b-2 border-emerald-500 bg-emerald-500/5">Date Range</div>
             </div>
             <div className="p-5 max-h-[350px] overflow-y-auto no-scrollbar">
-              {activeTab === 'date' ? (
-                <div className="grid grid-cols-2 gap-2">
-                  {ranges.map(range => (
-                    <button key={range} onClick={() => setSelectedRange(range)} className={`px-3 py-2 rounded-lg text-[9px] font-bold uppercase tracking-wider text-left transition-all ${selectedRange === range ? 'bg-emerald-600 text-white' : 'bg-[var(--bg-tertiary)]/50 text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)]'}`}>{range}</button>
-                  ))}
-                  {selectedRange === 'Custom Range' && (
-                    <div className="col-span-2 flex gap-2 mt-2 pt-2 border-t border-[var(--border-subtle)]">
-                      <input type="date" className="bg-[var(--bg-primary)] border border-[var(--border-subtle)] rounded p-1.5 text-[9px] text-[var(--text-primary)] w-full" value={customRange.start} onChange={(e) => setCustomRange({...customRange, start: e.target.value})} />
-                      <input type="date" className="bg-[var(--bg-primary)] border border-[var(--border-subtle)] rounded p-1.5 text-[9px] text-[var(--text-primary)] w-full" value={customRange.end} onChange={(e) => setCustomRange({...customRange, end: e.target.value})} />
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {filters.map(filter => (
-                    <div key={filter.id} className="space-y-2">
-                      <h4 className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">{filter.label}</h4>
-                      <div className="flex flex-wrap gap-1.5">
-                        {filter.options.map(option => (
-                          <button key={option} onClick={() => toggleMetric(filter.id, option)} className={`px-2.5 py-1 rounded text-[8px] font-black uppercase tracking-widest border transition-all ${appliedFilters[filter.id]?.includes(option) ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-[var(--bg-tertiary)]/30 border-[var(--border-subtle)] text-[var(--text-secondary)]'}`}>{option}</button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="grid grid-cols-2 gap-2">
+                {ranges.map(range => (
+                  <button key={range} onClick={() => setSelectedRange(range)} className={`px-3 py-2 rounded-lg text-[9px] font-bold uppercase tracking-wider text-left transition-all ${selectedRange === range ? 'bg-emerald-600 text-white' : 'bg-[var(--bg-tertiary)]/50 text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)]'}`}>{range}</button>
+                ))}
+                {selectedRange === 'Custom Range' && (
+                  <div className="col-span-2 flex gap-2 mt-2 pt-2 border-t border-[var(--border-subtle)]">
+                    <input 
+                      type="date" 
+                      onClick={(e) => e.target.showPicker?.()}
+                      className="bg-[var(--bg-primary)] border border-[var(--border-subtle)] rounded p-1.5 text-[9px] text-[var(--text-primary)] w-full appearance-none outline-none focus:border-emerald-500/50" 
+                      value={customRange.start} 
+                      onChange={(e) => setCustomRange({...customRange, start: e.target.value})} 
+                    />
+                    <input 
+                      type="date" 
+                      onClick={(e) => e.target.showPicker?.()}
+                      className="bg-[var(--bg-primary)] border border-[var(--border-subtle)] rounded p-1.5 text-[9px] text-[var(--text-primary)] w-full appearance-none outline-none focus:border-emerald-500/50" 
+                      value={customRange.end} 
+                      onChange={(e) => setCustomRange({...customRange, end: e.target.value})} 
+                    />
+                  </div>
+                )}
+              </div>
             </div>
             <div className="p-4 bg-[var(--bg-tertiary)]/20 border-t border-[var(--border-subtle)] flex justify-between gap-3">
               <button onClick={() => {setSelectedRange('Last 7 Days'); setAppliedFilters({});}} className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Reset</button>

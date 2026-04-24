@@ -33,19 +33,6 @@ export default function AdminLayout() {
         {/* Global Control Header */}
         <header className="h-16 border-b border-[var(--border-subtle)] flex items-center justify-between px-8 bg-[var(--bg-secondary)]/80 backdrop-blur-md z-40 transition-colors duration-300">
            <div className="flex items-center gap-6 flex-1">
-              {/* Tactical Search */}
-              <div className="relative group max-w-md w-full">
-                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-[var(--text-tertiary)] group-focus-within:text-emerald-500 transition-colors">
-                    <Search size={14} />
-                 </div>
-                 <input 
-                   placeholder="Search Hubs, Vehicles, or Staff... [⌘K]" 
-                   className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl pl-10 pr-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500/30 transition-all placeholder:text-[var(--text-tertiary)]/50"
-                 />
-                 <div className="absolute right-3 inset-y-0 flex items-center pointer-events-none">
-                    <span className="px-1.5 py-0.5 rounded border border-[var(--border-subtle)] bg-[var(--bg-secondary)] text-[8px] font-black text-[var(--text-tertiary)] uppercase opacity-40">⌘K</span>
-                 </div>
-              </div>
            </div>
 
            <div className="flex items-center gap-4">

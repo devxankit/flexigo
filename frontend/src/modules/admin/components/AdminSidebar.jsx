@@ -44,7 +44,7 @@ const navigationGroups = [
   {
     title: "Operations",
     items: [
-      { id: 'hubs', label: 'Hub Management', icon: Warehouse, path: '/admin/hubs' },
+      { id: 'hubs', label: 'Franchise Management', icon: Warehouse, path: '/admin/hubs' },
       { id: 'fleet', label: 'Fleet Oversight', icon: Truck, path: '/admin/fleet' },
       { id: 'gps-control', label: 'GPS & Control', icon: Navigation, path: '/admin/gps-control' },
       { id: 'geofencing', label: 'Geo Fencing', icon: Map, path: '/admin/geofencing' },

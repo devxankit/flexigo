@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
+import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function SubscriptionPlansPage() {
@@ -36,11 +37,17 @@ export default function SubscriptionPlansPage() {
   } = useAdminDataStore();
   
   const [activeTab, setActiveTab] = useState('Rider');
+  const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
   
   React.useEffect(() => {
     fetchPlans();
     fetchDashboardStats();
   }, []);
+
+  const handleFilterChange = (newFilters) => {
+    setActiveFilters(newFilters);
+    console.log('Subscription Plans Sync:', newFilters);
+  };
 
   const filteredPlans = allPlans.filter(p => p.target === activeTab);
   
@@ -110,12 +117,15 @@ export default function SubscriptionPlansPage() {
             </p>
          </div>
          
-         <button 
-           onClick={() => handleOpenModal()}
-           className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95 flex items-center gap-1.5"
-         >
-            <Plus size={12} strokeWidth={3} /> Add New Plan
-         </button>
+          <div className="flex items-center gap-2">
+            <OpsFilter onFilterChange={handleFilterChange} />
+            <button 
+              onClick={() => handleOpenModal()}
+              className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95 flex items-center gap-1.5"
+            >
+                <Plus size={12} strokeWidth={3} /> Add New Plan
+            </button>
+          </div>
       </div>
 
       {/* KPI Stats */}

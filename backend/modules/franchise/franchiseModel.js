@@ -25,6 +25,7 @@ const FranchiseSchema = new mongoose.Schema({
     address: { type: String },
     latitude: { type: Number },
     longitude: { type: Number },
+    capacity: { type: Number, default: 0 },
   },
 
   // Hub Plan

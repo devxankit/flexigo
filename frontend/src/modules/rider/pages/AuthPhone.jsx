@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PageWrapper } from '../components/PageWrapper';
@@ -21,6 +21,9 @@ export default function AuthPhone() {
   const isValid = phone.length === 10 && /^\d+$/.test(phone);
   const [error, setError] = useState('');
   const [isShake, setIsShake] = useState(false);
+  const [hasAutoSent, setHasAutoSent] = useState(false);
+
+
 
   const handleSendOTP = async () => {
     if (!isValid) {
@@ -44,6 +47,13 @@ export default function AuthPhone() {
       setTimeout(() => setIsShake(false), 500);
     }
   };
+
+  useEffect(() => {
+    if (isValid && !loading && !hasAutoSent) {
+      setHasAutoSent(true);
+      handleSendOTP();
+    }
+  }, [phone, isValid, loading, hasAutoSent]);
 
   return (
     <PageWrapper noHeader>

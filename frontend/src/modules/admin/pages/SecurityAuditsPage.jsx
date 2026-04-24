@@ -15,21 +15,36 @@ import {
   Users
 } from 'lucide-react';
 import AdminStatCard from '../components/AdminStatCard';
+import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
 
-const mockRoles = [
-  { id: 'R-01', name: 'Super Admin', permissions: 'Full Access', users: 2 },
-  { id: 'R-02', name: 'Fleet Manager', permissions: 'GPS, Control, Geo', users: 8 },
-  { id: 'R-03', name: 'Financial Auditor', permissions: 'Payments, Revenue', users: 3 },
-  { id: 'R-04', name: 'Onboarding Agent', permissions: 'KYC, Subscribers', users: 14 },
-];
+
 
 export default function SecurityAuditsPage() {
-  const { auditLogs, securityStats, fetchSecurityData } = useAdminDataStore();
+  const { auditLogs, securityStats, fetchSecurityData, roles, fetchRoles, addRole } = useAdminDataStore();
+  const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [newRole, setNewRole] = React.useState({ name: '', permissions: '' });
 
   useEffect(() => {
     fetchSecurityData();
+    fetchRoles();
   }, []);
+
+  const handleFilterChange = (newFilters) => {
+    setActiveFilters(newFilters);
+    fetchSecurityData(newFilters);
+    console.log('Security Audits Sync:', newFilters);
+  };
+
+  const handleAddRole = async (e) => {
+    e.preventDefault();
+    if (!newRole.name || !newRole.permissions) return;
+    
+    await addRole(newRole);
+    setNewRole({ name: '', permissions: '' });
+    setIsModalOpen(false);
+  };
 
   return (
     <div className="space-y-6 pb-12">
@@ -48,12 +63,14 @@ export default function SecurityAuditsPage() {
          </div>
          
          <div className="flex items-center gap-2">
-            <button className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95 flex items-center gap-1.5">
+            <OpsFilter onFilterChange={handleFilterChange} />
+            <button 
+               onClick={() => setIsModalOpen(true)}
+               className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95 flex items-center gap-1.5"
+            >
                <Plus size={12} /> New Role
             </button>
-            <button className="px-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-primary)] text-[9px] font-black uppercase tracking-widest hover:bg-[var(--bg-tertiary)] transition-all flex items-center gap-1.5 shadow-sm">
-               <Activity size={12} /> System Logs
-            </button>
+
          </div>
       </div>
 
@@ -114,8 +131,8 @@ export default function SecurityAuditsPage() {
                </div>
 
                <div className="space-y-3">
-                  {mockRoles.map((role) => (
-                     <div key={role.id} className="p-3 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl group hover:border-emerald-500/30 transition-all cursor-pointer">
+                  {roles.map((role) => (
+                     <div key={role._id || role.id} className="p-3 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl group hover:border-emerald-500/30 transition-all cursor-pointer">
                         <div className="flex items-center justify-between mb-1.5">
                            <span className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-tight italic leading-none">{role.name}</span>
                         </div>
@@ -141,21 +158,80 @@ export default function SecurityAuditsPage() {
                </div>
             </div>
 
-            {/* Quick Audit Strip */}
-            <div className="p-3 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl flex items-center justify-between group cursor-pointer hover:border-emerald-500/30 transition-all shadow-sm border-l-4 border-l-emerald-600">
-               <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-600/10 text-emerald-500 rounded-lg group-hover:rotate-12 transition-transform shadow-inner">
-                     <History size={18} />
-                  </div>
-                  <div>
-                     <p className="text-[10px] font-black text-[var(--text-primary)] uppercase leading-none italic font-black">Archival Export</p>
-                     <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase mt-1 italic tracking-widest leading-none">Governance Report</p>
-                  </div>
-               </div>
-               <ChevronRight size={14} className="text-[var(--text-tertiary)]/50 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all" />
-            </div>
+
          </div>
       </div>
+      
+      <RoleModal 
+         isOpen={isModalOpen}
+         onClose={() => setIsModalOpen(false)}
+         onSave={handleAddRole}
+         newRole={newRole}
+         setNewRole={setNewRole}
+      />
     </div>
   );
+}
+
+// Security Modal Implementation
+import { X, Zap as ZapIcon } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+
+function RoleModal({ isOpen, onClose, onSave, newRole, setNewRole }) {
+   return (
+      <AnimatePresence>
+         {isOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+               <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="w-full max-w-md bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-8 shadow-2xl space-y-6"
+               >
+                  <div className="flex items-center justify-between">
+                     <div className="space-y-0.5">
+                         <h2 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-tighter italic leading-none">
+                            New Role <span className="text-emerald-500">Initiator</span>
+                         </h2>
+                        <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">SECTION: ACCESS_GUARD_V3</p>
+                     </div>
+                     <button onClick={onClose} className="p-1.5 hover:bg-rose-600/10 hover:text-rose-500 transition-all rounded-lg">
+                        <X size={18} />
+                     </button>
+                  </div>
+
+                  <form onSubmit={onSave} className="space-y-6">
+                     <div className="space-y-4">
+                        <div className="space-y-1.5">
+                           <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Role Designation</label>
+                           <input 
+                              autoFocus
+                              value={newRole.name}
+                              onChange={(e) => setNewRole({...newRole, name: e.target.value})}
+                              placeholder="e.g. Lead Auditor"
+                              className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic"
+                           />
+                        </div>
+                        <div className="space-y-1.5">
+                           <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Permission Scope</label>
+                           <input 
+                              value={newRole.permissions}
+                              onChange={(e) => setNewRole({...newRole, permissions: e.target.value})}
+                              placeholder="e.g. Full Access, Read Only"
+                              className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic"
+                           />
+                        </div>
+                     </div>
+                     <button 
+                        type="submit"
+                        className="w-full py-3 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-emerald-950/20 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+                     >
+                        <ZapIcon size={14} fill="white" /> Execute Role Sync
+                     </button>
+                  </form>
+               </motion.div>
+            </div>
+         )}
+      </AnimatePresence>
+   );
 }

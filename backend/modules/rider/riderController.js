@@ -135,7 +135,12 @@ export const updateKYC = async (req, res) => {
     if (aadhaarBack) rider.kycDetails.aadhaarBack = await uploadToCloudinary(aadhaarBack, 'aadhaar');
     if (drivingLicense) rider.kycDetails.drivingLicense = await uploadToCloudinary(drivingLicense, 'license');
 
-    rider.kycStatus = 'pending';
+    const hasAllDocs = rider.kycDetails.selfie && 
+                       rider.kycDetails.aadhaarFront && 
+                       rider.kycDetails.aadhaarBack && 
+                       rider.kycDetails.drivingLicense;
+
+    rider.kycStatus = hasAllDocs ? 'approved' : 'pending';
     rider.isRegistered = true;
     await rider.save();
 
@@ -395,6 +400,9 @@ export const getActiveHubs = async (req, res) => {
       const hubLng = f.businessDetails?.longitude;
       const distanceKm = hasLocation ? getDistanceKm(userLat, userLng, hubLat, hubLng) : null;
 
+      const totalSlots = f.businessDetails?.capacity || 0;
+      const availableSlots = Math.max(0, totalSlots - fleetCount);
+
       return {
         id: f._id,
         name: f.businessDetails?.name || f.hubName || 'Flexigo Hub',
@@ -403,8 +411,10 @@ export const getActiveHubs = async (req, res) => {
         longitude: hubLng || 0,
         distanceKm,
         batteries: availableBatteries || 0,
-        status: availableBatteries > 10 ? 'Open' : availableBatteries > 0 ? 'Limited' : 'Open',
-        color: availableBatteries > 10 ? '#39FF14' : availableBatteries > 0 ? '#EAB308' : '#39FF14'
+        availableSlots: availableSlots,
+        totalSlots: totalSlots,
+        status: availableSlots > 5 ? 'Open' : availableSlots > 0 ? 'Limited' : 'Full',
+        color: availableSlots > 5 ? '#39FF14' : availableSlots > 0 ? '#EAB308' : '#F43F5E'
       };
     }));
 

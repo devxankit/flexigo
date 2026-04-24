@@ -86,11 +86,11 @@ export default function HubDashboard() {
            <div className="flex items-center gap-2">
              <div className="w-1 h-3 bg-emerald-500 rounded-full" />
              <h1 className="text-lg font-black tracking-tighter text-[var(--text-primary)] uppercase italic leading-none">
-               Hub <span className="text-emerald-500">Overview</span>
+               Franchise <span className="text-emerald-500">Overview</span>
              </h1>
            </div>
            <p className="text-[7px] font-black uppercase tracking-[0.3em] text-[var(--text-tertiary)] ml-3 italic opacity-40 leading-none">
-              OPERATIONAL_REALTIME_METRICS • KORAMANGALA_HUB
+              OPERATIONAL_REALTIME_METRICS • KORAMANGALA_FRANCHISE
            </p>
         </div>
 
@@ -219,7 +219,7 @@ export default function HubDashboard() {
                 </div>
                 <div className="px-2 py-1 bg-[var(--bg-secondary)]/90 border border-[var(--border-subtle)] rounded-md flex items-center gap-1.5 shadow-inner">
                    <Navigation size={8} className="text-blue-500" strokeWidth={3} />
-                   <span className="text-[6px] font-black uppercase tracking-[0.2em] italic text-blue-500 leading-none">HUB_PERIMETER</span>
+                   <span className="text-[6px] font-black uppercase tracking-[0.2em] italic text-blue-500 leading-none">FRANCHISE_PERIMETER</span>
                 </div>
              </div>
 
@@ -272,7 +272,7 @@ export default function HubDashboard() {
               </div>
               <p className="text-[var(--text-tertiary)] text-[7px] font-black uppercase tracking-widest italic opacity-60 leading-relaxed mb-4">
                  PEAK_DEMAND_WINDOW_DETECTED: <span className="text-white opacity-100">11:00 AM - 15:00 PM</span>. 
-                 OPTIMIZE_HUB_INVENTORY_FOR_HIGH_THROUGHPUT_HANDOVERS.
+                 OPTIMIZE_FRANCHISE_INVENTORY_FOR_HIGH_THROUGHPUT_HANDOVERS.
               </p>
               <div className="w-full h-1 bg-[var(--bg-secondary)] rounded-full overflow-hidden shadow-inner border border-white/5">
                  <motion.div 

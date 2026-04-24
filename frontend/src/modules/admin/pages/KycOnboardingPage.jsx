@@ -23,6 +23,7 @@ import {
   Activity
 } from 'lucide-react';
 import AdminStatCard from '../components/AdminStatCard';
+import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function KycOnboardingPage() {
@@ -31,10 +32,16 @@ export default function KycOnboardingPage() {
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeFilters, setActiveFilters] = useState({ range: 'Last 7 Days' });
 
   React.useEffect(() => {
     fetchKycRecords();
   }, []);
+
+  const handleFilterChange = (newFilters) => {
+    setActiveFilters(newFilters);
+    console.log('KYC Onboarding Sync:', newFilters);
+  };
 
   const filteredRecords = kycRecords.filter(r => {
     const matchesTab = activeTab === 'all' || r.role.toLowerCase() === activeTab.slice(0, -1);
@@ -72,6 +79,7 @@ export default function KycOnboardingPage() {
          </div>
          
          <div className="flex items-center gap-2">
+            <OpsFilter onFilterChange={handleFilterChange} />
             <div className="relative group">
                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--text-tertiary)] group-focus-within:text-emerald-500 transition-colors" />
                <input 
@@ -90,10 +98,9 @@ export default function KycOnboardingPage() {
 
       {/* KPI Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <AdminStatCard title="Requests" value={kycRecords.length + 4000} icon={UserCheck} color="emerald" subtitle="Network Applications" />
+         <AdminStatCard title="Requests" value={kycRecords.length} icon={UserCheck} color="emerald" subtitle="Network Applications" />
          <AdminStatCard title="Pending" value={kycRecords.filter(r => r.status === 'pending').length} icon={Clock} color="blue" subtitle="Awaiting Decision" />
          <AdminStatCard title="Approved" value={kycRecords.filter(r => r.status === 'approved').length} icon={CheckCircle} color="emerald" subtitle="Cleared Node" />
-         <AdminStatCard title="Risk Alert" value="3.1%" icon={AlertCircle} color="rose" subtitle="Identity Delta" />
       </div>
 
       {/* Tabbed Navigation */}
@@ -168,14 +175,7 @@ export default function KycOnboardingPage() {
                                 >
                                    <Eye size={12} />
                                 </button>
-                                {record.status === 'pending' && (
-                                   <button 
-                                      onClick={() => handleAction(record._id || record.id, 'approved')}
-                                      className="p-1.5 bg-emerald-600 text-white rounded-lg shadow-md hover:bg-emerald-700 transition-all active:scale-95"
-                                   >
-                                      <CheckCircle size={12} />
-                                   </button>
-                                )}
+                                 {/* Removed Quick Approve button as per request */}
                              </div>
                           </td>
                        </motion.tr>
@@ -226,12 +226,30 @@ export default function KycOnboardingPage() {
                            <ShieldCheck size={10} className="text-emerald-500" /> Identity Documents
                         </h4>
                         <div className="space-y-1.5">
-                           {['Aadhaar Card', 'PAN Card', 'Driving License'].map(doc => (
-                              <div key={doc} className="p-2.5 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl flex items-center justify-between group hover:border-emerald-500/30 transition-all cursor-pointer">
-                                 <span className="text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest italic leading-none">{doc}</span>
-                                 <Download size={10} className="text-[var(--text-tertiary)]/50 group-hover:text-emerald-500 transition-all" />
-                              </div>
-                           ))}
+                           {[
+                              { label: 'Aadhaar Card', key: 'aadhaarFront', verified: selectedRecord.details?.ekycVerified },
+                              { label: 'PAN Card', key: 'panCard' },
+                              { label: 'Driving License', key: 'drivingLicense' }
+                           ].map(doc => {
+                              const hasDoc = selectedRecord.details?.[doc.key];
+                              return (
+                                 <div 
+                                    key={doc.label} 
+                                    onClick={() => hasDoc && window.open(hasDoc, '_blank')}
+                                    className={`p-2.5 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl flex items-center justify-between group transition-all ${hasDoc ? 'cursor-pointer hover:border-emerald-500/30' : 'opacity-50 cursor-not-allowed'}`}
+                                 >
+                                    <div className="flex items-center gap-2">
+                                       <span className="text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest italic leading-none">{doc.label}</span>
+                                       {doc.verified && <Check size={10} className="text-emerald-500" />}
+                                    </div>
+                                    {hasDoc ? (
+                                       <Download size={10} className="text-[var(--text-tertiary)]/50 group-hover:text-emerald-500 transition-all" />
+                                    ) : (
+                                       <AlertCircle size={10} className="text-rose-500/50" />
+                                    )}
+                                 </div>
+                              );
+                           })}
                         </div>
                      </div>
 
@@ -239,9 +257,19 @@ export default function KycOnboardingPage() {
                         <h4 className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-1.5 italic leading-none">
                            <Camera size={10} className="text-emerald-500" /> Liveness Evidence
                         </h4>
-                        <div className="aspect-video bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl relative overflow-hidden flex items-center justify-center group cursor-pointer">
+                        <div 
+                           onClick={() => selectedRecord.details?.selfie && window.open(selectedRecord.details.selfie, '_blank')}
+                           className="aspect-video bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl relative overflow-hidden flex items-center justify-center group cursor-pointer"
+                        >
                            <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-emerald-600 rounded text-[6px] font-black text-white uppercase tracking-widest z-10 animate-pulse">LIVENESS_OK</div>
-                           <Camera size={20} className="text-[var(--text-tertiary)] group-hover:scale-110 transition-transform opacity-30" />
+                           {selectedRecord.details?.selfie ? (
+                              <img src={selectedRecord.details.selfie} alt="Liveness" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                           ) : (
+                              <Camera size={20} className="text-[var(--text-tertiary)] group-hover:scale-110 transition-transform opacity-30" />
+                           )}
+                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <Download size={20} className="text-white" />
+                           </div>
                         </div>
                         <div className="p-2.5 bg-emerald-600/5 border border-emerald-500/10 rounded-xl space-y-1.5">
                            <div className="flex justify-between items-center text-[7px] font-black uppercase italic leading-none">
@@ -268,7 +296,7 @@ export default function KycOnboardingPage() {
                               onClick={() => { handleAction(selectedRecord._id || selectedRecord.id, 'rejected'); setIsDetailModalOpen(false); }}
                               className="px-5 py-3 bg-rose-600/10 text-rose-500 border border-rose-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-600/20 transition-all active:scale-95 italic"
                            >
-                              Decline Node
+                              Decline
                            </button>
                         </>
                      ) : (

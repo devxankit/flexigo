@@ -137,7 +137,7 @@ export default function HomeDashboard() {
           <input 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search for a battery hub..." 
+            placeholder="Search for a battery franchise..." 
             className={`bg-transparent border-none outline-none text-sm w-full font-bold placeholder:text-slate-500 transition-colors ${
               isDark ? 'text-white' : 'text-slate-900'
             }`}
@@ -202,7 +202,7 @@ export default function HomeDashboard() {
         {/* Hub List Section */}
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
-            <h2 className={`text-xl font-heading font-black tracking-tight transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>Nearest Hubs</h2>
+            <h2 className={`text-xl font-heading font-black tracking-tight transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>Nearest Franchises</h2>
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5 truncate max-w-[200px]">Near: {currentAddress}</p>
           </div>
         </div>

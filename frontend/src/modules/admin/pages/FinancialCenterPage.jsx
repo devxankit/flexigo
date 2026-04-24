@@ -25,15 +25,22 @@ import {
   CartesianGrid 
 } from 'recharts';
 import AdminStatCard from '../components/AdminStatCard';
+import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function FinancialCenterPage() {
   const { networkStats, revenueData, financeStats, financeTransactions, fetchFinanceData, fetchDashboardStats } = useAdminDataStore();
+  const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
 
   React.useEffect(() => {
     fetchFinanceData();
     fetchDashboardStats(); // For gross revenue
   }, []);
+
+  const handleFilterChange = (newFilters) => {
+    setActiveFilters(newFilters);
+    console.log('Financial Center Sync:', newFilters);
+  };
 
   return (
     <div className="space-y-6 pb-12">
@@ -52,6 +59,7 @@ export default function FinancialCenterPage() {
          </div>
          
          <div className="flex items-center gap-2">
+            <OpsFilter onFilterChange={handleFilterChange} />
             <div className="relative group">
                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--text-tertiary)] group-focus-within:text-emerald-500 transition-colors" />
                <input 
@@ -60,100 +68,60 @@ export default function FinancialCenterPage() {
                  className="pl-8 pr-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all w-32 text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50"
                />
             </div>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95">
-               <Download size={12} /> Ledger
-            </button>
-         </div>
+            </div>
       </div>
 
       {/* Financial KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <AdminStatCard title="Total Rev" value={`₹${(networkStats.grossRevenue / 100000).toFixed(1)}L`} icon={TrendingUp} color="emerald" subtitle="Gross Delta" />
+         <AdminStatCard title="Total Rev" value={`₹${((networkStats.grossRevenue || 0) / 100000).toFixed(1)}L`} icon={TrendingUp} color="emerald" subtitle="Gross Delta" />
          <AdminStatCard title="Settled" value={financeStats.settled} icon={ArrowDownLeft} color="blue" subtitle="Hub Pipeline" />
          <AdminStatCard title="Liability" value={financeStats.liability} icon={Activity} color="amber" subtitle="Pending Sync" />
          <AdminStatCard title="Unit Yield" value={financeStats.unitYield} icon={Layers} color="emerald" subtitle="/ Asset Avg" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-         {/* Trend Matrix */}
-         <div className="lg:col-span-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-5 shadow-sm border-t-4 border-t-emerald-600">
-            <div className="flex items-center justify-between mb-6 border-b border-[var(--border-subtle)] pb-2">
-               <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-inner">
-                     <TrendingUp size={16} />
-                  </div>
-                  <div>
-                     <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-wider leading-none italic">Revenue Growth Matrix</h3>
-                     <p className="text-[7.5px] font-black text-emerald-600 uppercase mt-1 tracking-widest italic animate-pulse leading-none">Net Alpha Flux Registry</p>
-                  </div>
+      <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-5 shadow-sm border-t-4 border-t-emerald-600">
+         <div className="flex items-center justify-between mb-6 border-b border-[var(--border-subtle)] pb-2">
+            <div className="flex items-center gap-3">
+               <div className="w-8 h-8 rounded-lg bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-inner">
+                  <TrendingUp size={16} />
                </div>
-               <div className="flex bg-[var(--bg-tertiary)] p-0.5 rounded-lg border border-[var(--border-subtle)]">
-                  <button className="px-3 py-1 text-[8px] font-black uppercase tracking-widest bg-emerald-600 text-white rounded shadow-sm">Daily</button>
-                  <button className="px-3 py-1 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] hover:text-emerald-500 transition-colors">MTD</button>
+               <div>
+                  <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-wider leading-none italic">Revenue Growth Matrix</h3>
+                  <p className="text-[7.5px] font-black text-emerald-600 uppercase mt-1 tracking-widest italic animate-pulse leading-none">Net Alpha Flux Registry</p>
                </div>
             </div>
-
-            <div className="h-52 w-full">
-               <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={revenueData}>
-                     <defs>
-                        <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                           <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
-                           <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                        </linearGradient>
-                     </defs>
-                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} opacity={0.3} />
-                     <XAxis 
-                       dataKey="name" 
-                       axisLine={false} 
-                       tickLine={false} 
-                       tick={{ fill: 'var(--text-tertiary)', fontSize: 7, fontWeight: 900, textTransform: 'uppercase' }} 
-                       dy={8}
-                     />
-                     <YAxis hide />
-                     <Tooltip 
-                        contentStyle={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '12px' }}
-                        itemStyle={{ fontSize: '8px', fontWeight: 900, textTransform: 'uppercase', color: '#10b981' }}
-                        labelStyle={{ fontSize: '8px', fontWeight: 900, marginBottom: '4px', textTransform: 'uppercase' }}
-                     />
-                     <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
-                  </AreaChart>
-               </ResponsiveContainer>
+            <div className="flex bg-[var(--bg-tertiary)] p-0.5 rounded-lg border border-[var(--border-subtle)]">
+               <button className="px-3 py-1 text-[8px] font-black uppercase tracking-widest bg-emerald-600 text-white rounded shadow-sm">Daily</button>
+               <button className="px-3 py-1 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] hover:text-emerald-500 transition-colors">MTD</button>
             </div>
          </div>
 
-         {/* Distribution Summary */}
-         <div className="p-5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl flex flex-col justify-between shadow-sm border-t-4 border-t-emerald-600">
-            <div>
-               <div className="flex items-center gap-3 mb-6 border-b border-[var(--border-subtle)] pb-2">
-                  <div className="w-8 h-8 rounded-lg bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 shadow-inner">
-                     <ArrowDownLeft size={16} />
-                  </div>
-                  <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-widest leading-none italic">Corpus Allocation</h3>
-               </div>
-               
-               <div className="space-y-4">
-                  {[
-                    { label: 'Operational Costs', yield: '₹4.2L', val: 30, color: 'emerald' },
-                    { label: 'Merchant Payouts', yield: '₹12.8L', val: 55, color: 'blue' },
-                    { label: 'Network Reserves', yield: '₹4.1L', val: 15, color: 'amber' }
-                  ].map((item) => (
-                     <div key={item.label} className="space-y-1.5">
-                        <div className="flex justify-between items-end">
-                           <span className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic">{item.label}</span>
-                           <span className="text-[9px] font-black text-[var(--text-primary)] tracking-tight italic">{item.yield}</span>
-                        </div>
-                        <div className="w-full h-1 bg-[var(--bg-tertiary)] rounded-full overflow-hidden shadow-inner border border-[var(--border-subtle)]">
-                           <div className={`h-full ${item.color === 'emerald' ? 'bg-emerald-500' : item.color === 'blue' ? 'bg-blue-500' : 'bg-amber-500'} transition-all`} style={{ width: `${item.val}%` }} />
-                        </div>
-                     </div>
-                  ))}
-               </div>
-            </div>
-
-            <button className="w-full mt-8 py-2.5 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-emerald-900/20 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2">
-               Configure Payouts <ArrowRight size={14} />
-            </button>
+         <div className="h-52 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+               <AreaChart data={revenueData}>
+                  <defs>
+                     <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                     </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} opacity={0.3} />
+                  <XAxis 
+                    dataKey="name" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: 'var(--text-tertiary)', fontSize: 7, fontWeight: 900, textTransform: 'uppercase' }} 
+                    dy={8}
+                  />
+                  <YAxis hide />
+                  <Tooltip 
+                     contentStyle={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '12px' }}
+                     itemStyle={{ fontSize: '8px', fontWeight: 900, textTransform: 'uppercase', color: '#10b981' }}
+                     labelStyle={{ fontSize: '8px', fontWeight: 900, marginBottom: '4px', textTransform: 'uppercase' }}
+                  />
+                  <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
+               </AreaChart>
+            </ResponsiveContainer>
          </div>
       </div>
 

@@ -40,7 +40,7 @@ export default function AdminDashboard() {
     fetchDistribution
   } = useAdminDataStore();
 
-  const [activeView, setActiveView] = React.useState('live');
+
   const [activeFilters, setActiveFilters] = React.useState({
     range: 'Last 7 Days',
     metrics: {}
@@ -54,6 +54,7 @@ export default function AdminDashboard() {
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
+    fetchDashboardStats(newFilters);
     console.log('Syncing Filters:', newFilters);
   };
 
@@ -98,32 +99,8 @@ export default function AdminDashboard() {
          </div>
          
          <div className="flex items-center gap-2">
-            <OpsFilter 
-               onFilterChange={handleFilterChange}
-               filters={[
-                  { id: 'region', label: 'Region', options: ['North', 'West', 'South', 'Central'] },
-                  { id: 'integrity', label: 'Health', options: ['Optimal', 'Warning', 'Critical'] }
-               ]}
-            />
-            <div className="w-px h-5 bg-[var(--border-subtle)] mx-0.5" />
-            <div className="flex bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg p-0.5 shadow-sm">
-               <button 
-                  onClick={() => setActiveView('live')}
-                  className={`px-3 py-1 rounded text-[8px] font-black uppercase tracking-widest transition-all ${
-                     activeView === 'live' ? 'bg-emerald-600 text-white' : 'text-[var(--text-tertiary)] hover:text-emerald-500'
-                  }`}
-               >
-                  Live
-               </button>
-               <button 
-                  onClick={() => setActiveView('history')}
-                  className={`px-3 py-1 rounded text-[8px] font-black uppercase tracking-widest transition-all ${
-                     activeView === 'history' ? 'bg-emerald-600 text-white' : 'text-[var(--text-tertiary)] hover:text-emerald-500'
-                  }`}
-               >
-                  Hist
-               </button>
-            </div>
+            <OpsFilter onFilterChange={handleFilterChange} />
+
          </div>
       </div>
 
@@ -131,8 +108,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
          <AdminStatCard title="Revenue" value={`₹${((networkStats.grossRevenue || 0) / 100000).toFixed(1)}L`} trend="up" trendValue={networkStats.revenueTrend || "+0%"} icon={Zap} color="emerald" subtitle="Monthly Earnings" />
          <AdminStatCard title="On Road" value={networkStats.activeFleet || 0} trend="up" trendValue="+0%" icon={Activity} color="blue" subtitle="Active Vehicles" />
-         <AdminStatCard title="Total Hubs" value={networkStats.totalHubs || 0} icon={Warehouse} color="emerald" subtitle="Operational" />
-         <AdminStatCard title="Uptime" value={networkStats.avgUptime || "0%"} icon={ShieldCheck} color="emerald" subtitle="Live Performance" />
+         <AdminStatCard title="Total Franchises" value={networkStats.totalHubs || 0} icon={Warehouse} color="emerald" subtitle="Operational" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -233,23 +209,17 @@ export default function AdminDashboard() {
                   <Warehouse size={16} />
                </div>
                <div>
-                  <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-wider leading-none">Active Hub Locations</h3>
+                  <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-wider leading-none">Active Franchise Locations</h3>
                   <p className="text-[7px] font-bold text-[var(--text-tertiary)] uppercase mt-0.5 italic">Live status of all centers</p>
                </div>
             </div>
-             <button 
-                onClick={() => alert("FETCHING_GRID_ANALYTICS")}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-tertiary)] hover:bg-emerald-600/10 border border-[var(--border-subtle)] rounded-lg text-[8px] font-black uppercase tracking-wider text-[var(--text-primary)] hover:text-emerald-500 transition-all group"
-             >
-                Grid View <ChevronRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
-             </button>
          </div>
          
          <div className="overflow-x-auto no-scrollbar">
             <table className="w-full">
                <thead>
                   <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
-                     {['Hub Name', 'Location', 'Distance', 'Assets', 'Earnings', 'Health', 'Status'].map((header) => (
+                     {['Franchise Name', 'Location', 'Distance', 'Assets', 'Earnings', 'Health', 'Status'].map((header) => (
                         <th key={header} className="text-left py-3 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">
                            {header}
                         </th>
