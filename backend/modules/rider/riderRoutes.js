@@ -13,9 +13,10 @@ import {
   createPaymentOrder,
   verifyPayment,
   generateAadhaarOTP,
-  verifyAadhaarOTP
+  verifyAadhaarOTP,
+  saveFcmToken
 } from './riderController.js';
-import { protectFranchise } from '../../shared/middleware/authMiddleware.js';
+import { protectFranchise, protectRider } from '../../shared/middleware/authMiddleware.js';
 
 const router = express.Router();
 
@@ -24,6 +25,7 @@ router.post('/auth/verify-otp', verifyOTP);
 router.post('/kyc/update', updateKYC);
 router.post('/kyc/aadhaar/generate-otp', generateAadhaarOTP);
 router.post('/kyc/aadhaar/verify-otp', verifyAadhaarOTP);
+router.post('/auth/save-fcm-token', protectRider, saveFcmToken);
 router.get('/profile/:phone', getRiderProfile);
 router.post('/wallet/add', addMoney);
 router.get('/wallet/:phone', getWalletData);

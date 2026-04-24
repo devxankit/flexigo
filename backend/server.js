@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import dns from 'dns';
 import connectDB from './config/database.js';
 import './config/cloudinary.js';
+import './shared/utils/firebase.js';
 import riderRoutes from './modules/rider/riderRoutes.js';
 import franchiseRoutes from './modules/franchise/franchiseRoutes.js';
 import fleetRoutes from './modules/fleet/vehicleRoutes.js';

@@ -6,6 +6,8 @@ import { OTPInput } from '../components/AnimatedInput';
 import { NeonButton } from '../components/NeonButton';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
+import { requestForToken, onMessageListener } from '../../../lib/firebase';
+import { useEffect } from 'react';
 
 export default function AuthOTP() {
   const navigate = useNavigate();
@@ -24,7 +26,9 @@ export default function AuthOTP() {
     setLoading(true);
     setError('');
 
-    const result = await verifyOTP(otp);
+    // Fetch FCM Token
+    const fcmToken = await requestForToken();
+    const result = await verifyOTP(otp, fcmToken);
     setLoading(false);
 
     if (result.success) {
@@ -37,6 +41,12 @@ export default function AuthOTP() {
       setError(result.message);
     }
   };
+
+  useEffect(() => {
+    onMessageListener().then(payload => {
+      console.log('🔔 Rider App Notification:', payload);
+    }).catch(err => console.log('failed: ', err));
+  }, []);
 
   const handleResend = () => {
     setResent(true);

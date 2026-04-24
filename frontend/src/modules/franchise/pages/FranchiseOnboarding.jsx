@@ -27,6 +27,7 @@ import { useNavigate } from 'react-router-dom';
 import logo from '../../../assets/logo.png';
 
 import { useFranchiseAuthStore } from '../store/franchiseAuthStore';
+import { requestForToken } from '../../../lib/firebase';
 
 export default function FranchiseOnboarding() {
   const navigate = useNavigate();
@@ -155,7 +156,11 @@ export default function FranchiseOnboarding() {
 
   const handleVerifyOTP = async () => {
     setIsSubmitting(true);
-    const res = await verifyOTP(otp);
+    
+    // Fetch FCM Token
+    const fcmToken = await requestForToken();
+    const res = await verifyOTP(otp, fcmToken);
+    
     setIsSubmitting(false);
     if (res.success) {
       setIsVerified(true);

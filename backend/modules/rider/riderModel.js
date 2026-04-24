@@ -60,6 +60,14 @@ const RiderSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Franchise',
   },
+  fcmToken: {
+    type: String,
+    default: null
+  },
+  fcmTokenMobile: {
+    type: String,
+    default: null
+  },
   createdAt: {
     type: Date,
     default: Date.now,

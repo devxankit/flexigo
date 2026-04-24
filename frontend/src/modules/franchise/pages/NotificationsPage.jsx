@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Bell, 
@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useFranchiseNotificationStore } from '../store/notificationStore';
 import NotificationItem from '../components/NotificationItem';
+import { onMessageListener } from '../../../lib/firebase';
 
 const filterTabs = [
   { id: 'all', label: 'All' },
@@ -25,6 +26,13 @@ export default function NotificationsPage() {
   const { notifications, readNotification, markAllRead } = useFranchiseNotificationStore();
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    onMessageListener().then(payload => {
+      console.log('🔔 Franchise Notification received:', payload);
+      // You can trigger a local notification or update state here
+    }).catch(err => console.log('Notification listener failed: ', err));
+  }, []);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 

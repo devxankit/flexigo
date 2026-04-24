@@ -16,7 +16,7 @@ const FranchiseSchema = new mongoose.Schema({
   },
   aadhaarNumber: String,
   panNumber: String,
-  
+
   // Business Details
   businessDetails: {
     name: { type: String },
@@ -55,8 +55,32 @@ const FranchiseSchema = new mongoose.Schema({
 
   kycStatus: {
     type: String,
+    enum: ['uninitiated', 'pending', 'approved', 'rejected'],
     default: 'uninitiated',
   },
+
+  // eKYC Top-level fields (to match QuickeKYC data structure in DB)
+  ekycVerified: { type: Boolean, default: false },
+  ekycData: Object,
+  full_name: String,
+  aadhaar_number: String,
+  dob: String,
+  gender: String,
+  address: Object,
+  face_status: Boolean,
+  face_score: Number,
+  zip: String,
+  profile_image: String,
+  has_image: Boolean,
+  email_hash: String,
+  mobile_hash: String,
+  raw_xml: String,
+  zip_data: String,
+  care_of: String,
+  share_code: String,
+  mobile_verified: Boolean,
+  aadhaar_pdf: String,
+  status: String, // QuickeKYC status string like "success_aadhaar"
 
   isPhoneVerified: {
     type: Boolean,
@@ -76,10 +100,18 @@ const FranchiseSchema = new mongoose.Schema({
   },
   otp: String,
   otpExpire: Date,
+  fcmToken: {
+    type: String,
+    default: null
+  },
+  fcmTokenMobile: {
+    type: String,
+    default: null
+  },
   createdAt: {
     type: Date,
     default: Date.now,
   },
-});
+}, { strict: false });
 
 export default mongoose.model('Franchise', FranchiseSchema);

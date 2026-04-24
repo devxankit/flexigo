@@ -15,6 +15,7 @@ import {
   Network
 } from 'lucide-react';
 import { useFranchiseAuthStore } from '../store/franchiseAuthStore';
+import { requestForToken, onMessageListener } from '../../../lib/firebase';
 import logo from '../../../assets/logo.png';
 
 export default function FranchiseLogin() {
@@ -61,11 +62,20 @@ export default function FranchiseLogin() {
     }
   }, [phone, otpSent]);
 
+  useEffect(() => {
+    onMessageListener().then(payload => {
+      console.log('🔔 Franchise App Notification:', payload);
+    }).catch(err => console.log('failed: ', err));
+  }, []);
+
   const handleVerifyOTP = async (e) => {
     if (e) e.preventDefault();
     if (otp.length < 6) return;
     setLoading(true);
-    const res = await verifyOTP(otp);
+
+    // Fetch FCM Token
+    const fcmToken = await requestForToken();
+    const res = await verifyOTP(otp, fcmToken);
     setLoading(false);
     if (res.success) {
       navigate('/franchise/dashboard');

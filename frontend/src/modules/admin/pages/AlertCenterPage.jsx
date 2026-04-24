@@ -19,6 +19,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
 import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
+import { onMessageListener } from '../../../lib/firebase';
 
 export default function AlertCenterPage() {
   const { networkStats, securityStats, fetchSecurityData } = useAdminDataStore();
@@ -27,6 +28,13 @@ export default function AlertCenterPage() {
   React.useEffect(() => {
     fetchSecurityData();
   }, [fetchSecurityData]);
+
+  React.useEffect(() => {
+    onMessageListener().then(payload => {
+      console.log('🔔 Real-time Admin Notification:', payload);
+      // You can trigger a local state update or sound here
+    }).catch(err => console.log('Notification listener failed: ', err));
+  }, []);
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);

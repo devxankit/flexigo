@@ -26,10 +26,10 @@ export const useAuthStore = create(
         }
       },
 
-      verifyOTP: async (otp) => {
+      verifyOTP: async (otp, fcmToken = null) => {
         try {
           const { phone } = get();
-          const res = await api.post('/rider/auth/verify-otp', { phone, otp });
+          const res = await api.post('/rider/auth/verify-otp', { phone, otp, fcmToken });
           if (res.data.success) {
             set({ 
               isAuthenticated: true, 

@@ -8,7 +8,8 @@ import {
   createHandover,
   generateAadhaarOTP,
   verifyAadhaarOTP,
-  getFranchisePlans
+  getFranchisePlans,
+  saveFcmToken
 } from './franchiseController.js';
 import { protectFranchise } from '../../shared/middleware/authMiddleware.js';
 
@@ -16,6 +17,7 @@ const router = express.Router();
 
 router.post('/auth/send-otp', sendOTP);
 router.post('/auth/verify-otp', verifyOTP);
+router.post('/auth/save-fcm-token', protectFranchise, saveFcmToken);
 router.get('/plans', getFranchisePlans);
 router.post('/update-registration', protectFranchise, updateRegistration);
 router.get('/wallet', protectFranchise, getWalletData);

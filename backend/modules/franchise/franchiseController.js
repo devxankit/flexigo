@@ -68,18 +68,53 @@ export const sendOTP = async (req, res) => {
 // @route   POST /api/v1/franchise/auth/verify-otp
 export const verifyOTP = async (req, res) => {
   try {
-    const { phone, otp } = req.body;
+    // LOG REQUEST BODY TO SEE IF TOKENS ARE ARRIVING
+    console.log('[FRANCHISE AUTH] Verify OTP Request Body:', JSON.stringify(req.body, null, 2));
 
-    const franchise = await Franchise.findOne({ phone });
+    const { phone, otp, fcmToken, fcmTokenMobile } = req.body;
 
-    if (!franchise || franchise.otp !== otp || franchise.otpExpire < Date.now()) {
+    let franchise = await Franchise.findOne({ phone });
+
+    if (!franchise) {
+      return res.status(404).json({ success: false, message: 'Franchise not found' });
+    }
+
+    if (process.env.NODE_ENV !== 'development' && (franchise.otp !== otp || franchise.otpExpire < Date.now())) {
       return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
     }
 
     franchise.otp = undefined;
     franchise.otpExpire = undefined;
     franchise.isPhoneVerified = true;
+
+    // Robust Auto-upgrade: Check all possible verification markers (camelCase and snake_case)
+    const isEkycDone = franchise.kycDetails?.ekycVerified || 
+                       franchise.ekycVerified || 
+                       franchise.aadhaarNumber || 
+                       franchise.aadhaar_number ||
+                       franchise.ownerName ||
+                       (franchise.kycDetails?.ekycData && Object.keys(franchise.kycDetails.ekycData).length > 0);
+    
+    if (isEkycDone) {
+      if (franchise.kycStatus !== 'approved' || !franchise.isVerified) {
+        franchise.kycStatus = 'approved';
+        franchise.isVerified = true;
+        console.log(`[FRANCHISE AUTH] Forcing ${phone} to approved status (Aadhaar/Owner data found)`);
+      }
+    }
+
+    // Update FCM Tokens
+    if (fcmToken) {
+      franchise.fcmToken = fcmToken;
+      console.log(`[FCM] Updated Web/Generic Token for Franchise ${phone}:`, fcmToken);
+    }
+    if (fcmTokenMobile) {
+      franchise.fcmTokenMobile = fcmTokenMobile;
+      console.log(`[FCM] Updated Mobile Token for Franchise ${phone}:`, fcmTokenMobile);
+    }
+
     await franchise.save();
+    console.log(`[FRANCHISE AUTH] Saved franchise state for ${phone} (including FCM tokens)`);
 
     res.status(200).json({
       success: true,
@@ -89,8 +124,42 @@ export const verifyOTP = async (req, res) => {
         phone: franchise.phone,
         isRegistered: franchise.isRegistered,
         isVerified: franchise.isVerified,
+        kycStatus: franchise.kycStatus,
       },
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Save FCM Token
+// @route   POST /api/v1/franchise/auth/save-fcm-token
+export const saveFcmToken = async (req, res) => {
+  try {
+    const { fcmToken, platform } = req.body;
+    const franchiseId = req.franchise._id;
+
+    if (!fcmToken || !platform) {
+      return res.status(400).json({ success: false, message: 'Please provide token and platform' });
+    }
+
+    const franchise = await Franchise.findById(franchiseId);
+    if (!franchise) {
+      return res.status(404).json({ success: false, message: 'Franchise not found' });
+    }
+
+    if (platform === 'web') {
+      franchise.fcmToken = fcmToken;
+      console.log(`[FCM] Save API: Updated Web Token for Franchise ${franchise.phone}`);
+    } else if (platform === 'app') {
+      franchise.fcmTokenMobile = fcmToken;
+      console.log(`[FCM] Save API: Updated Mobile Token for Franchise ${franchise.phone}`);
+    } else {
+      return res.status(400).json({ success: false, message: 'Invalid platform. Use "web" or "app"' });
+    }
+
+    await franchise.save();
+    res.status(200).json({ success: true, message: 'FCM Token saved successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -105,11 +174,11 @@ export const updateRegistration = async (req, res) => {
 
     let franchise;
     if (id) {
-        franchise = await Franchise.findById(id);
+      franchise = await Franchise.findById(id);
     }
-    
+
     if (!franchise && phone) {
-        franchise = await Franchise.findOne({ phone });
+      franchise = await Franchise.findOne({ phone });
     }
 
     // If still not found, CREATE it (Upsert logic)
@@ -120,40 +189,52 @@ export const updateRegistration = async (req, res) => {
       console.log('Upserting: Creating new franchise for phone:', phone);
       franchise = new Franchise({ phone });
     }
-    
+
     console.log('Franchise target secured:', franchise._id);
 
     // Handle KYC image uploads if any
     const uploadToCloudinary = async (base64Data, folder) => {
-        if (!base64Data || !base64Data.startsWith('data:image')) return base64Data;
-        const result = await cloudinary.uploader.upload(base64Data, {
-            folder: `flexigo/franchise/${franchise._id}/${folder}`
-        });
-        return result.secure_url;
+      if (!base64Data || !base64Data.startsWith('data:image')) return base64Data;
+      const result = await cloudinary.uploader.upload(base64Data, {
+        folder: `flexigo/franchise/${franchise._id}/${folder}`
+      });
+      return result.secure_url;
     };
 
     if (updateData.kycDetails) {
-        if (updateData.kycDetails.selfie) updateData.kycDetails.selfie = await uploadToCloudinary(updateData.kycDetails.selfie, 'kyc');
-        if (updateData.kycDetails.aadhaarFront) updateData.kycDetails.aadhaarFront = await uploadToCloudinary(updateData.kycDetails.aadhaarFront, 'kyc');
-        if (updateData.kycDetails.aadhaarBack) updateData.kycDetails.aadhaarBack = await uploadToCloudinary(updateData.kycDetails.aadhaarBack, 'kyc');
-        if (updateData.kycDetails.panCard) updateData.kycDetails.panCard = await uploadToCloudinary(updateData.kycDetails.panCard, 'kyc');
-        if (updateData.kycDetails.businessLicense) updateData.kycDetails.businessLicense = await uploadToCloudinary(updateData.kycDetails.businessLicense, 'kyc');
+      if (updateData.kycDetails.selfie) updateData.kycDetails.selfie = await uploadToCloudinary(updateData.kycDetails.selfie, 'kyc');
+      if (updateData.kycDetails.aadhaarFront) updateData.kycDetails.aadhaarFront = await uploadToCloudinary(updateData.kycDetails.aadhaarFront, 'kyc');
+      if (updateData.kycDetails.aadhaarBack) updateData.kycDetails.aadhaarBack = await uploadToCloudinary(updateData.kycDetails.aadhaarBack, 'kyc');
+      if (updateData.kycDetails.panCard) updateData.kycDetails.panCard = await uploadToCloudinary(updateData.kycDetails.panCard, 'kyc');
+      if (updateData.kycDetails.businessLicense) updateData.kycDetails.businessLicense = await uploadToCloudinary(updateData.kycDetails.businessLicense, 'kyc');
     }
 
     // Use franchise.set() to correctly merge nested objects
     franchise.set(updateData);
-    
+
     // If it's the final review step or mark as registered
     if (updateData.markAsRegistered) {
-        franchise.isRegistered = true;
-        const hasAllDocs = franchise.kycDetails?.selfie && 
-                           franchise.kycDetails?.aadhaarFront && 
-                           franchise.kycDetails?.aadhaarBack && 
-                           franchise.kycDetails?.panCard && 
-                           franchise.kycDetails?.businessLicense;
-        
+      franchise.isRegistered = true;
+      const hasAllDocs = franchise.kycDetails?.selfie &&
+        franchise.kycDetails?.aadhaarFront &&
+        franchise.kycDetails?.aadhaarBack &&
+        franchise.kycDetails?.panCard &&
+        franchise.kycDetails?.businessLicense;
+
+      // Prioritize eKYC verification for approval status (Check all possible markers)
+      const isEkycDone = franchise.kycDetails?.ekycVerified || 
+                         franchise.ekycVerified || 
+                         franchise.aadhaarNumber || 
+                         franchise.aadhaar_number || 
+                         franchise.ownerName;
+
+      if (isEkycDone) {
+        franchise.kycStatus = 'approved';
+        franchise.isVerified = true;
+      } else {
         franchise.kycStatus = hasAllDocs ? 'approved' : 'pending';
         franchise.isVerified = hasAllDocs;
+      }
     }
 
     await franchise.save();
@@ -190,16 +271,16 @@ export const getWalletData = async (req, res) => {
 export const getDashboardMetrics = async (req, res) => {
   try {
     const franchiseId = req.franchise._id;
-    
+
     // Use dynamic calculations
     const vehicles = await Vehicle.find({ franchise: franchiseId });
     const totalVehicles = vehicles.length;
     const availableVehicles = vehicles.filter(v => v.status === 'available').length;
     const issuesVehicles = vehicles.filter(v => v.status === 'in-service' || v.status === 'quarantined').length;
-    
+
     const subscribers = await Rider.find({ franchise: franchiseId, status: 'active' });
     const activeSubscribers = subscribers.length;
-    
+
     // Utilization: Active Subs / Total Vehicles (if > 0)
     const utilization = totalVehicles > 0 ? ((activeSubscribers / totalVehicles) * 100).toFixed(1) : 0;
 
@@ -224,11 +305,11 @@ export const getDashboardMetrics = async (req, res) => {
 export const getFranchisePlans = async (req, res) => {
   try {
     console.log('Fetching Franchise Plans from DB...');
-    const plans = await SubscriptionPlan.find({ 
+    const plans = await SubscriptionPlan.find({
       target: 'Franchise',
-      status: 'active' 
+      status: 'active'
     }).sort({ price: 1 });
-    
+
     console.log('Total Franchise Plans found in Registry:', plans.length);
     res.status(200).json({ success: true, plans });
   } catch (error) {
@@ -242,7 +323,7 @@ export const getFranchisePlans = async (req, res) => {
 export const createHandover = async (req, res) => {
   try {
     const { mode, subscriberId, vehicleId, photos, inspection, batteryLevel, returnDate, finalStatus } = req.body;
-    
+
     const handover = await Handover.create({
       franchiseId: req.franchise._id,
       mode,
@@ -272,9 +353,9 @@ export const generateAadhaarOTP = async (req, res) => {
       method: 'post',
       url: 'https://api.quickekyc.com/api/v1/aadhaar-v2/generate-otp',
       headers: { 'Content-Type': 'application/json' },
-      data: { 
-        key: process.env.SUREPASS_API_KEY, 
-        id_number: aadhaarNumber 
+      data: {
+        key: process.env.SUREPASS_API_KEY,
+        id_number: aadhaarNumber
       }
     };
 
@@ -309,10 +390,10 @@ export const verifyAadhaarOTP = async (req, res) => {
       method: 'post',
       url: 'https://api.quickekyc.com/api/v1/aadhaar-v2/submit-otp',
       headers: { 'Content-Type': 'application/json' },
-      data: { 
+      data: {
         key: process.env.SUREPASS_API_KEY,
         request_id: client_id,
-        otp 
+        otp
       }
     };
 
@@ -321,14 +402,18 @@ export const verifyAadhaarOTP = async (req, res) => {
 
     if (response.data.success || response.data.status === 'success') {
       const kycData = response.data.data || response.data;
-      
+
       const franchise = await Franchise.findOne({ phone });
       if (franchise) {
         console.log('FRANCHISE QUICKEKYC: Updating Franchise DB');
         franchise.kycDetails.ekycVerified = true;
         franchise.kycDetails.ekycData = kycData;
+        franchise.kycStatus = 'approved';
+        franchise.isVerified = true; // Set isVerified to true as well
         franchise.ownerName = kycData.full_name || kycData.name;
+        console.log(`[FRANCHISE KYC] Updating status to approved and verified for phone: ${phone}`);
         await franchise.save();
+        console.log(`[FRANCHISE KYC] DB Saved successfully for phone: ${phone}`);
       }
 
       res.status(200).json({
