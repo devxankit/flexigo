@@ -153,33 +153,7 @@ export default function SubscriberRegistryPage() {
          </div>
       </div>
 
-      {/* Behavioral Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-         <div className="p-4 bg-emerald-600/5 border border-emerald-500/10 rounded-2xl space-y-2 relative overflow-hidden group border-l-4 border-l-emerald-600">
-            <div className="flex items-center gap-3 relative z-10">
-               <div className="w-8 h-8 rounded-lg bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
-                  <Target size={16} />
-               </div>
-               <h4 className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-widest italic leading-none">Incentive Engine</h4>
-            </div>
-            <p className="text-[8.5px] text-[var(--text-tertiary)] font-bold leading-relaxed uppercase tracking-widest relative z-10 italic">
-               Dynamic reward protocols active. Ranking based on <span className="text-emerald-500 font-black">Loyalty Coefficient 0.4p</span>.
-            </p>
-         </div>
 
-         <div className="p-4 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl flex items-center justify-between shadow-sm border-l-4 border-l-blue-600 group cursor-pointer hover:border-blue-500/30 transition-all">
-            <div className="flex items-center gap-3">
-               <div className="w-8 h-8 rounded-lg bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 shadow-inner">
-                  <ShieldCheck size={16} />
-               </div>
-               <div>
-                  <p className="text-[10px] font-black text-[var(--text-primary)] uppercase leading-none italic font-black">Audit Terminal</p>
-                  <p className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase mt-1 italic tracking-widest leading-none">Security Verification Sync</p>
-               </div>
-            </div>
-            <ChevronRight size={14} className="text-[var(--text-tertiary)]/50 group-hover:translate-x-0.5 transition-transform" />
-         </div>
-      </div>
     </div>
   );
 }

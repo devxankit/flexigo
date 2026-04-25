@@ -1,155 +1,124 @@
 import React, { useEffect, useRef } from 'react';
 
-export default function LiveFleetMap({ vehicles }) {
+export default function LiveFleetMap({ vehicles = [], franchises = [] }) {
   const mapRef = useRef(null);
   const googleMap = useRef(null);
-  const markers = useRef([]);
+  const vehicleMarkers = useRef({});
+  const franchiseMarkers = useRef({});
 
   useEffect(() => {
     if (window.google && mapRef.current && !googleMap.current) {
-      // Default to Indore coordindates as fallback
-      const defaultPos = { lat: 22.7196, lng: 75.8577 };
+      const defaultPos = { lat: 22.7196, lng: 75.8577 }; // Indore Fallback
       
       googleMap.current = new window.google.maps.Map(mapRef.current, {
         center: defaultPos, 
         zoom: 12,
         styles: [
-          { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
-          { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+          { elementType: 'geometry', stylers: [{ color: '#121212' }] },
+          { elementType: 'labels.text.stroke', stylers: [{ color: '#121212' }] },
           { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
-          {
-            featureType: 'administrative.locality',
-            elementType: 'labels.text.fill',
-            stylers: [{ color: '#d59563' }]
-          },
-          {
-            featureType: 'poi',
-            elementType: 'labels.text.fill',
-            stylers: [{ color: '#d59563' }]
-          },
-          {
-            featureType: 'poi.park',
-            elementType: 'geometry',
-            stylers: [{ color: '#263c3f' }]
-          },
-          {
-            featureType: 'poi.park',
-            elementType: 'labels.text.fill',
-            stylers: [{ color: '#6b9a76' }]
-          },
-          {
-            featureType: 'road',
-            elementType: 'geometry',
-            stylers: [{ color: '#38414e' }]
-          },
-          {
-            featureType: 'road',
-            elementType: 'geometry.stroke',
-            stylers: [{ color: '#212a37' }]
-          },
-          {
-            featureType: 'road',
-            elementType: 'labels.text.fill',
-            stylers: [{ color: '#9ca5b3' }]
-          },
-          {
-            featureType: 'road.highway',
-            elementType: 'geometry',
-            stylers: [{ color: '#746855' }]
-          },
-          {
-            featureType: 'road.highway',
-            elementType: 'geometry.stroke',
-            stylers: [{ color: '#1f2835' }]
-          },
-          {
-            featureType: 'road.highway',
-            elementType: 'labels.text.fill',
-            stylers: [{ color: '#f3d19c' }]
-          },
-          {
-            featureType: 'transit',
-            elementType: 'geometry',
-            stylers: [{ color: '#2f3948' }]
-          },
-          {
-            featureType: 'transit.station',
-            elementType: 'labels.text.fill',
-            stylers: [{ color: '#d59563' }]
-          },
-          {
-            featureType: 'water',
-            elementType: 'geometry',
-            stylers: [{ color: '#17263c' }]
-          },
-          {
-            featureType: 'water',
-            elementType: 'labels.text.fill',
-            stylers: [{ color: '#515c6d' }]
-          },
-          {
-            featureType: 'water',
-            elementType: 'labels.text.stroke',
-            stylers: [{ color: '#17263c' }]
-          }
+          { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
+          { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
+          { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#263c3f' }] },
+          { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#38414e' }] },
+          { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#746855' }] },
+          { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#17263c' }] }
         ],
         disableDefaultUI: true,
+        zoomControl: true,
       });
 
-      // Try to get current location
+      // Geolocation Sync
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition((position) => {
-          const pos = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          };
+          const pos = { lat: position.coords.latitude, lng: position.coords.longitude };
           googleMap.current.setCenter(pos);
         });
       }
     }
   }, []);
 
+  // Update Markers
   useEffect(() => {
-    if (googleMap.current && vehicles.length > 0) {
-      // Clear existing markers
-      markers.current.forEach(m => m.setMap(null));
-      markers.current = [];
+    if (!googleMap.current || !window.google) return;
 
-      const bounds = new window.google.maps.LatLngBounds();
+    const bounds = new window.google.maps.LatLngBounds();
+    let hasMarkers = false;
 
-      vehicles.forEach(vehicle => {
-        // Since we don't have real lat/lng in DB yet, I'll mock some around current map center
-        const center = googleMap.current.getCenter();
-        const mockLat = center.lat() + (Math.random() - 0.5) * 0.05;
-        const mockLng = center.lng() + (Math.random() - 0.5) * 0.05;
-        const position = { lat: mockLat, lng: mockLng };
+    // 1. Render Franchises (Blue Icons)
+    franchises.forEach(f => {
+       const id = f._id || f.id;
+       const pos = (f.businessDetails?.latitude && f.businessDetails?.longitude) 
+         ? { lat: f.businessDetails.latitude, lng: f.businessDetails.longitude }
+         : null;
 
-        const marker = new window.google.maps.Marker({
-          position,
-          map: googleMap.current,
-          title: vehicle.id,
-          icon: {
-            path: window.google.maps.SymbolPath.CIRCLE,
-            fillColor: '#10b981',
-            fillOpacity: 1,
-            strokeWeight: 2,
-            strokeColor: '#FFFFFF',
-            scale: 7,
-          },
-        });
+       if (pos) {
+          if (!franchiseMarkers.current[id]) {
+             franchiseMarkers.current[id] = new window.google.maps.Marker({
+                position: pos,
+                map: googleMap.current,
+                icon: {
+                   path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                   fillColor: '#3b82f6',
+                   fillOpacity: 1,
+                   strokeWeight: 2,
+                   strokeColor: '#FFFFFF',
+                   scale: 5,
+                },
+                title: f.businessDetails?.name || 'Franchise Hub'
+             });
+             
+             const infoWindow = new window.google.maps.InfoWindow({
+                content: `<div style="color:black; padding:5px;"><strong>${f.businessDetails?.name || 'Franchise Hub'}</strong><br/>${f.ownerName || ''}</div>`
+             });
+             
+             franchiseMarkers.current[id].addListener('click', () => {
+                infoWindow.open(googleMap.current, franchiseMarkers.current[id]);
+             });
+          }
+          bounds.extend(pos);
+          hasMarkers = true;
+       }
+    });
 
-        markers.current.push(marker);
-        bounds.extend(position);
-      });
-
-      if (vehicles.length > 1) {
-        googleMap.current.fitBounds(bounds);
-      } else if (vehicles.length === 1) {
-        googleMap.current.setCenter(markers.current[0].getPosition());
-        googleMap.current.setZoom(15);
+    // 2. Render Vehicles (Green Pulsing Icons)
+    vehicles.forEach((v, index) => {
+      const id = v._id || v.id || `v-${index}`;
+      
+      // Use real lastLocation from DB (now populated from assigned Rider)
+      const pos = v.lastLocation ? { lat: v.lastLocation.lat, lng: v.lastLocation.lng } : null;
+      
+      if (pos) {
+         if (!vehicleMarkers.current[id]) {
+           vehicleMarkers.current[id] = new window.google.maps.Marker({
+             position: pos,
+             map: googleMap.current,
+             title: v.plate || 'Vehicle',
+             icon: {
+               path: window.google.maps.SymbolPath.CIRCLE,
+               fillColor: '#10b981', // Green Icon as requested
+               fillOpacity: 1,
+               strokeWeight: 3,
+               strokeColor: '#FFFFFF',
+               scale: 8,
+             },
+           });
+         } else {
+           vehicleMarkers.current[id].setPosition(pos);
+         }
+         
+         bounds.extend(pos);
+         hasMarkers = true;
       }
+    });
+
+    if (hasMarkers && (vehicles.length + franchises.length) > 0) {
+      // Only fit bounds if we have markers far apart
+      googleMap.current.fitBounds(bounds);
+      if (googleMap.current.getZoom() > 15) googleMap.current.setZoom(13);
     }
-  }, [vehicles]);
+  }, [vehicles, franchises]);
 
   return <div ref={mapRef} className="w-full h-full rounded-2xl" />;
 }
+

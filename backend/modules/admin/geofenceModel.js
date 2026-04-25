@@ -14,6 +14,14 @@ const GeofenceSchema = new mongoose.Schema({
     type: String,
     default: '1.0km'
   },
+  center: {
+    lat: { type: Number, required: true, default: 28.6139 },
+    lng: { type: Number, required: true, default: 77.2090 }
+  },
+  riderId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Rider'
+  },
   status: {
     type: String,
     enum: ['active', 'inactive'],

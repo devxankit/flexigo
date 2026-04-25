@@ -40,7 +40,29 @@ export const getVehicles = async (req, res) => {
     const { franchiseId } = req.query;
     const query = franchiseId ? { franchise: franchiseId } : {};
     
-    const vehicles = await Vehicle.find(query).sort('-createdAt');
+    let vehicles = await Vehicle.find(query).sort('-createdAt').lean();
+
+    // Attach live location and rider name from assignments
+    for (let vehicle of vehicles) {
+       try {
+          // Look for any assignment (active preferred)
+          let assignment = await Assignment.findOne({ vehicle: vehicle._id, status: 'active' }).sort('-startTime').lean();
+          if (!assignment) {
+             assignment = await Assignment.findOne({ vehicle: vehicle._id }).sort('-startTime').lean();
+          }
+
+          if (assignment) {
+             const rider = await Rider.findById(assignment.rider).select('name phone lastLocation currentSpeed').lean();
+             if (rider) {
+                vehicle.rider = rider.name || rider.phone || 'Assigned';
+                vehicle.lastLocation = rider.lastLocation;
+                vehicle.currentSpeed = rider.currentSpeed;
+             }
+          }
+       } catch (err) {
+          console.error("Rider lookup error for vehicle:", vehicle.plate, err);
+       }
+    }
 
     res.status(200).json({
       success: true,

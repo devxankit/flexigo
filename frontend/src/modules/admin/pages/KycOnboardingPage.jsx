@@ -313,39 +313,7 @@ export default function KycOnboardingPage() {
          )}
       </AnimatePresence>
 
-      {/* Bottom Insights */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-         <div className="p-4 bg-emerald-600/5 border border-emerald-500/10 rounded-2xl space-y-2 relative overflow-hidden group">
-            <div className="absolute right-0 bottom-0 p-4 opacity-[0.05] group-hover:scale-110 transition-transform pointer-events-none">
-               <Camera size={60} />
-            </div>
-            <div className="flex items-center gap-2 relative z-10">
-               <div className="w-8 h-8 rounded-lg bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
-                  <Activity size={16} />
-               </div>
-               <h4 className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-widest italic">Biometric Match Engine</h4>
-            </div>
-            <p className="text-[8.5px] text-[var(--text-tertiary)] font-bold leading-relaxed uppercase tracking-widest relative z-10 italic">
-               Automated detection protocol at <span className="text-emerald-500 font-black">98.4% Confidence</span>. 
-               Telemetry encrypted via AES-256.
-            </p>
-         </div>
 
-         <div className="p-4 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl space-y-4 flex flex-col justify-between shadow-sm border-l-4 border-l-blue-600">
-            <div className="flex items-center justify-between">
-               <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500 shadow-inner">
-                     <Download size={16} />
-                  </div>
-                  <h4 className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-widest italic leading-none">Compliance Audit</h4>
-               </div>
-               <span className="text-[7px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/10 italic leading-none">April 2026 Registry</span>
-            </div>
-            <button className="w-full py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[8px] font-black uppercase tracking-widest text-[var(--text-primary)] hover:text-emerald-500 transition-all flex items-center justify-center gap-2 group italic">
-               Generate Audit PDF <ChevronRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
-            </button>
-         </div>
-      </div>
     </div>
   );
 }

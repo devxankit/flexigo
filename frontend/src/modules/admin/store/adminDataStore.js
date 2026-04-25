@@ -433,11 +433,9 @@ export const useAdminDataStore = create((set, get) => ({
 
   updateStaff: async (id, data) => {
     try {
-      const res = await api.patch(`/admin/staff/${id}`, data);
+      const res = await api.put(`/admin/staff/${id}`, data);
       if (res.data.success) {
-        set(state => ({
-          staff: state.staff.map(s => s._id === id ? res.data.staff : s)
-        }));
+        await get().fetchStaff();
         return res.data;
       }
     } catch (err) {

@@ -26,7 +26,9 @@ import {
   getRoles,
   createRole,
   getCampaigns,
-  createCampaign
+  createCampaign,
+  generateStaffAadhaarOTP,
+  verifyStaffAadhaarOTP
 } from './adminController.js';
 import {
   getAssignments,
@@ -59,8 +61,10 @@ router.post('/assignments', createAssignment);
 // Staff Management
 router.get('/staff', getAllStaff);
 router.post('/staff', createStaff);
-router.patch('/staff/:id', updateStaff);
+router.put('/staff/:id', updateStaff);
 router.delete('/staff/:id', deleteStaff);
+router.post('/staff/aadhaar/generate-otp', generateStaffAadhaarOTP);
+router.post('/staff/aadhaar/verify-otp', verifyStaffAadhaarOTP);
 
 // KYC Routes
 router.get('/kyc', getKycRecords);

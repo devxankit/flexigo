@@ -8,10 +8,13 @@ import Inventory from './inventoryModel.js';
 import VendorBill from './billModel.js';
 import Challan from './challanModel.js';
 import SupportTicket from './ticketModel.js';
+import axios from 'axios';
+import mongoose from 'mongoose';
 import PromoCampaign from './promoModel.js';
 import AuditLog from './auditLogModel.js';
 import Handover from '../franchise/handoverModel.js';
 import Role from './roleModel.js';
+import cloudinary from '../../config/cloudinary.js';
 
 const getDateFilter = (range) => {
   if (!range) return {};
@@ -428,7 +431,7 @@ export const getSubscribers = async (req, res) => {
 // Geofence Management
 export const getGeofences = async (req, res) => {
   try {
-    const geofences = await Geofence.find().sort('-createdAt');
+    const geofences = await Geofence.find().populate('riderId', 'name phone lastLocation currentSpeed').sort('-createdAt');
     res.status(200).json({ success: true, geofences });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -437,8 +440,8 @@ export const getGeofences = async (req, res) => {
 
 export const createGeofence = async (req, res) => {
   try {
-    const { name, type, radius } = req.body;
-    const geofence = await Geofence.create({ name, type, radius });
+    const { name, type, radius, riderId, center } = req.body;
+    const geofence = await Geofence.create({ name, type, radius, riderId, center });
     res.status(201).json({ success: true, geofence });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -498,12 +501,59 @@ export const getAllStaff = async (req, res) => {
 
 export const createStaff = async (req, res) => {
   try {
-    const { name, role, dept, shift } = req.body;
+    const { name, role, dept, shift, phone, email, reportingManager, joiningDate, cityZone, kycDetails } = req.body;
+
+    // Helper for Cloudinary
+    const uploadToCloudinary = async (base64Data, folder) => {
+      if (!base64Data || !base64Data.startsWith('data:image')) {
+        console.log("Cloudinary: Data is not a base64 image or already a URL, skipping upload.");
+        return base64Data;
+      }
+      try {
+        console.log("Cloudinary: Uploading image to folder:", folder);
+        const result = await cloudinary.uploader.upload(base64Data, {
+          folder: `flexigo/staff/${folder}`
+        });
+        console.log("Cloudinary: Upload success! URL:", result.secure_url);
+        return result.secure_url;
+      } catch (err) {
+        console.error("Cloudinary: Upload failed!", err);
+        throw new Error("Document upload failed: " + err.message);
+      }
+    };
+
+    let processedKyc = { ...kycDetails };
+    if (processedKyc?.aadhaarFront) processedKyc.aadhaarFront = await uploadToCloudinary(processedKyc.aadhaarFront, 'kyc');
+    if (processedKyc?.aadhaarBack) processedKyc.aadhaarBack = await uploadToCloudinary(processedKyc.aadhaarBack, 'kyc');
+    
+    // Dynamically set isVerified if both photos are present
+    if (processedKyc.aadhaarFront && processedKyc.aadhaarBack) {
+      processedKyc.isVerified = true;
+    } else {
+      processedKyc.isVerified = false;
+    }
+
+    // Auto-generate Employee ID
+    const lastStaff = await Staff.findOne().sort('-createdAt');
+    let nextId = 101;
+    if (lastStaff && lastStaff.employeeId && lastStaff.employeeId.startsWith('FXG-')) {
+        const lastIdNum = parseInt(lastStaff.employeeId.split('-')[1]);
+        if (!isNaN(lastIdNum)) nextId = lastIdNum + 1;
+    }
+    const employeeId = `FXG-${nextId.toString().padStart(3, '0')}`;
+
     const staff = await Staff.create({
+      employeeId,
       name: (name || '').trim(),
+      phone: phone || '',
+      email: email || '',
       role: (role || '').trim(),
       dept: dept || 'Operations',
-      shift: shift || 'Regular'
+      shift: shift || 'Regular',
+      reportingManager: reportingManager || '',
+      joiningDate: joiningDate || new Date(),
+      cityZone: cityZone || '',
+      kycDetails: processedKyc
     });
     res.status(201).json({ success: true, staff });
   } catch (error) {
@@ -517,9 +567,67 @@ export const createStaff = async (req, res) => {
 
 export const updateStaff = async (req, res) => {
   try {
-    const staff = await Staff.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const { name, role, dept, shift, phone, email, reportingManager, joiningDate, cityZone, status, kycDetails } = req.body;
+    console.log("Updating Staff ID:", req.params.id, "with payload:", req.body);
+    
+    const staff = await Staff.findById(req.params.id);
+    if (!staff) {
+      return res.status(404).json({ success: false, message: 'Staff not found' });
+    }
+
+    // Helper for Cloudinary
+    const uploadToCloudinary = async (base64Data, folder) => {
+      if (!base64Data || !base64Data.startsWith('data:image')) {
+        console.log("Cloudinary: Data is already a URL or not a base64 image, skipping.");
+        return base64Data;
+      }
+      try {
+        console.log("Cloudinary: Updating document on cloud...");
+        const result = await cloudinary.uploader.upload(base64Data, {
+          folder: `flexigo/staff/${folder}`
+        });
+        console.log("Cloudinary: Success! URL:", result.secure_url);
+        return result.secure_url;
+      } catch (err) {
+        console.error("Cloudinary: Update failed!", err);
+        throw new Error("Document sync failed: " + err.message);
+      }
+    };
+
+    // Explicitly update fields
+    if (name !== undefined) staff.name = name;
+    if (role !== undefined) staff.role = role;
+    if (dept !== undefined) staff.dept = dept;
+    if (shift !== undefined) staff.shift = shift;
+    if (phone !== undefined) staff.phone = phone;
+    if (email !== undefined) staff.email = email;
+    if (reportingManager !== undefined) staff.reportingManager = reportingManager;
+    if (joiningDate !== undefined) staff.joiningDate = joiningDate;
+    if (cityZone !== undefined) staff.cityZone = cityZone;
+    if (status !== undefined) staff.status = status;
+
+    if (kycDetails) {
+        console.log("Processing KYC Update Protocol...");
+        if (!staff.kycDetails) staff.kycDetails = {};
+
+        if (kycDetails.aadhaarFront) staff.kycDetails.aadhaarFront = await uploadToCloudinary(kycDetails.aadhaarFront, 'kyc');
+        if (kycDetails.aadhaarBack) staff.kycDetails.aadhaarBack = await uploadToCloudinary(kycDetails.aadhaarBack, 'kyc');
+        if (kycDetails.aadhaar !== undefined) staff.kycDetails.aadhaar = kycDetails.aadhaar;
+        
+        // Dynamically set isVerified based on image presence
+        if (staff.kycDetails.aadhaarFront && staff.kycDetails.aadhaarBack) {
+           staff.kycDetails.isVerified = true;
+        } else {
+           staff.kycDetails.isVerified = false;
+        }
+        
+        staff.markModified('kycDetails');
+    }
+
+    await staff.save();
     res.status(200).json({ success: true, staff });
   } catch (error) {
+    console.error("Staff Update Error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -988,5 +1096,78 @@ export const createCampaign = async (req, res) => {
     res.status(201).json({ success: true, campaign: newCampaign });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Generate Aadhaar OTP for Staff eKYC
+export const generateStaffAadhaarOTP = async (req, res) => {
+  try {
+    const { aadhaarNumber } = req.body;
+    const config = {
+      method: 'post',
+      url: 'https://api.quickekyc.com/api/v1/aadhaar-v2/generate-otp',
+      headers: { 'Content-Type': 'application/json' },
+      data: {
+        key: process.env.SUREPASS_API_KEY,
+        id_number: aadhaarNumber
+      }
+    };
+
+    const response = await axios(config);
+    if (response.data.success || response.data.status === 'success' || response.data.message === 'OTP Sent.') {
+      const requestId = response.data.data?.request_id || response.data.request_id || response.data.data?.client_id;
+      res.status(200).json({
+        success: true,
+        client_id: requestId,
+        message: response.data.message || 'OTP sent to mobile'
+      });
+    } else {
+      res.status(400).json({ success: false, message: response.data.message || 'Failed to send OTP' });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.response?.data?.message || error.message });
+  }
+};
+
+// @desc    Verify Aadhaar OTP for Staff eKYC
+export const verifyStaffAadhaarOTP = async (req, res) => {
+  try {
+    const { client_id, otp, staffId } = req.body;
+    const config = {
+      method: 'post',
+      url: 'https://api.quickekyc.com/api/v1/aadhaar-v2/submit-otp',
+      headers: { 'Content-Type': 'application/json' },
+      data: {
+        key: process.env.SUREPASS_API_KEY,
+        request_id: client_id,
+        otp
+      }
+    };
+
+    const response = await axios(config);
+    if (response.data.success || response.data.status === 'success') {
+      const kycData = response.data.data || response.data;
+      
+      // If staffId is provided (Edit mode), update DB immediately
+      if (staffId) {
+        const staff = await Staff.findById(staffId);
+        if (staff) {
+          staff.kycDetails.isVerified = true;
+          staff.kycDetails.aadhaar = kycData.aadhaar_number || staff.kycDetails.aadhaar;
+          staff.kycDetails.ekycData = kycData;
+          await staff.save();
+        }
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Aadhaar Verified Successfully',
+        data: kycData
+      });
+    } else {
+      res.status(400).json({ success: false, message: response.data.message || 'OTP verification failed' });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.response?.data?.message || error.message });
   }
 };

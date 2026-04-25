@@ -20,13 +20,14 @@ import { motion } from 'framer-motion';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function GpsControlPage() {
-  const { vehicles, networkStats, fetchAllVehicles, fetchDashboardStats } = useAdminDataStore();
+  const { vehicles, franchiseOps, networkStats, fetchAllVehicles, fetchDashboardStats, fetchFranchiseOpsData } = useAdminDataStore();
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [activeFilters, setActiveFilters] = useState({ range: 'Last 7 Days' });
   
   React.useEffect(() => {
     if (vehicles.length === 0) fetchAllVehicles();
     if (networkStats.totalHubs === 0) fetchDashboardStats();
+    fetchFranchiseOpsData();
   }, []);
 
   const handleFilterChange = (newFilters) => {
@@ -106,11 +107,11 @@ export default function GpsControlPage() {
                              className={`group/row transition-all duration-200 cursor-pointer text-[10px] ${(activeVehicle._id || activeVehicle.id) === (vehicle._id || vehicle.id) ? 'bg-emerald-600/5' : 'hover:bg-[var(--bg-tertiary)]/20'}`}
                            >
                               <td className="py-2.5 px-6">
-                                 <span className={`font-black uppercase tracking-tight transition-colors leading-none italic ${(activeVehicle._id || activeVehicle.id) === (vehicle._id || vehicle.id) ? 'text-emerald-500' : 'text-[var(--text-primary)]'}`}>{vehicle.rider || 'N/A'}</span>
+                                 <span className={`font-black uppercase tracking-tight transition-colors leading-none italic ${(activeVehicle._id || activeVehicle.id) === (vehicle._id || vehicle.id) ? 'text-emerald-500' : 'text-[var(--text-primary)]'}`}>{vehicle.plate || 'N/A'}</span>
                                </td>
                                <td className="py-2.5 px-6">
                                  <div className="flex flex-col">
-                                    <span className="font-black text-[var(--text-primary)] uppercase tracking-widest leading-none italic">{vehicle.plate || 'N/A'}</span>
+                                    <span className="font-black text-[var(--text-primary)] uppercase tracking-widest leading-none italic">{vehicle.rider || 'N/A'}</span>
                                     <span className="text-[7px] font-bold text-[var(--text-tertiary)]/50 uppercase mt-1 leading-none italic">Asset Identity</span>
                                  </div>
                               </td>
@@ -138,7 +139,7 @@ export default function GpsControlPage() {
 
             {/* Tactical Grid Map View */}
             <div className="h-96 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl relative overflow-hidden group shadow-sm border-l-4 border-l-emerald-600">
-               <LiveFleetMap vehicles={vehicles} />
+               <LiveFleetMap vehicles={vehicles} franchises={franchiseOps} />
                
                <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-[var(--bg-secondary)] to-transparent pointer-events-none">
                   <div className="flex items-center justify-between">
