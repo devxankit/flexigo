@@ -13,9 +13,33 @@ const StaffSchema = new mongoose.Schema({
     type: String,
     default: 'Operations'
   },
+  phone: {
+    type: String,
+    trim: true
+  },
   shift: {
     type: String,
     default: 'Regular'
+  },
+  joiningDate: {
+    type: Date,
+    default: Date.now
+  },
+  workingHours: {
+    type: Number,
+    default: 8
+  },
+  attendance: {
+    type: Number,
+    default: 100
+  },
+  workDaysCount: {
+    type: Number,
+    default: 5
+  },
+  weeklyAttendance: {
+    type: [String],
+    default: ['present', 'present', 'present', 'present', 'present']
   },
   status: {
     type: String,

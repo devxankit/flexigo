@@ -12,6 +12,7 @@ import PromoCampaign from './promoModel.js';
 import AuditLog from './auditLogModel.js';
 import Handover from '../franchise/handoverModel.js';
 import Role from './roleModel.js';
+import Attendance from './attendanceModel.js';
 
 const getDateFilter = (range) => {
   if (!range) return {};
@@ -498,12 +499,14 @@ export const getAllStaff = async (req, res) => {
 
 export const createStaff = async (req, res) => {
   try {
-    const { name, role, dept, shift } = req.body;
+    const { name, role, dept, shift, phone, joiningDate } = req.body;
     const staff = await Staff.create({
       name: (name || '').trim(),
       role: (role || '').trim(),
       dept: dept || 'Operations',
-      shift: shift || 'Regular'
+      shift: shift || 'Regular',
+      phone: phone || '',
+      joiningDate: joiningDate || Date.now()
     });
     res.status(201).json({ success: true, staff });
   } catch (error) {
@@ -519,6 +522,71 @@ export const updateStaff = async (req, res) => {
   try {
     const staff = await Staff.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.status(200).json({ success: true, staff });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getStaffAttendance = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { weekKey } = req.query;
+    
+    const staff = await Staff.findById(id);
+    if (!staff) return res.status(404).json({ success: false, message: 'Staff not found' });
+
+    let record = await Attendance.findOne({ staffId: id, weekKey });
+    
+    if (!record) {
+      record = {
+        staffId: id,
+        weekKey,
+        days: Array(staff.workDaysCount || 5).fill('present')
+      };
+    }
+    
+    res.status(200).json({ success: true, attendance: record });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateStaffAttendance = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { weekKey, days } = req.body;
+    
+    const record = await Attendance.findOneAndUpdate(
+      { staffId: id, weekKey },
+      { days, updatedAt: Date.now() },
+      { upsert: true, new: true }
+    );
+    
+    res.status(200).json({ success: true, attendance: record });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getMonthlyAttendanceReport = async (req, res) => {
+  try {
+    const { month } = req.query; // format: "YYYY-MM"
+    if (!month) return res.status(400).json({ success: false, message: 'Month is required' });
+
+    const staffList = await Staff.find();
+    
+    // Find all attendance records that might fall into this month
+    // We'll just search for all records where weekKey starts with the year
+    // and then filter in memory or use a more precise query.
+    // Since weekKey is YYYY-Www, we can't easily filter by month without a date mapping.
+    // However, we can search for all records and the frontend can handle the display,
+    // or we fetch records for the 4-5 weeks of that month.
+    
+    const records = await Attendance.find({
+      weekKey: { $regex: new RegExp(`^${month.split('-')[0]}`) }
+    }).populate('staffId', 'name role dept');
+
+    res.status(200).json({ success: true, records, staffList });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

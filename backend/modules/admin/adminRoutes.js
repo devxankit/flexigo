@@ -14,6 +14,9 @@ import {
   createStaff,
   updateStaff,
   deleteStaff,
+  getStaffAttendance,
+  updateStaffAttendance,
+  getMonthlyAttendanceReport,
   getFinanceData,
   getInventoryData,
   getFranchiseOpsData,
@@ -61,6 +64,9 @@ router.get('/staff', getAllStaff);
 router.post('/staff', createStaff);
 router.patch('/staff/:id', updateStaff);
 router.delete('/staff/:id', deleteStaff);
+router.get('/staff/:id/attendance', getStaffAttendance);
+router.post('/staff/:id/attendance', updateStaffAttendance);
+router.get('/staff/attendance/report', getMonthlyAttendanceReport);
 
 // KYC Routes
 router.get('/kyc', getKycRecords);
