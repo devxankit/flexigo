@@ -29,24 +29,24 @@ const Navbar = () => {
       className={cn(
         'fixed top-0 w-full z-50 transition-all duration-300 pointer-events-auto',
         scrolled
-          ? 'bg-flexigo-bg/80 backdrop-blur-md shadow-sm py-2'
-          : 'bg-transparent py-3'
+          ? 'bg-flexigo-bg/80 backdrop-blur-md shadow-sm pt-2 pb-5'
+          : 'bg-transparent pt-3 pb-8'
       )}
     >
-      <div className="w-full max-w-7xl mx-auto px-4 flex justify-between items-center">
+      <div className="w-full max-w-[1440px] mx-auto px-2 md:px-6 flex justify-between items-center">
         {/* Logo */}
         <Link to="/" className="flex items-center group relative">
           <img 
             src={logo} 
             alt="FlexiGo Logo" 
-            className="w-24 h-24 md:w-36 md:h-36 absolute top-1/2 -translate-y-1/2 -left-2 object-contain transition-transform duration-300 group-hover:scale-105 z-10" 
+            className="w-32 h-32 md:w-48 md:h-48 absolute top-1/2 -translate-y-[38%] md:-translate-y-[44%] -left-4 md:-left-6 object-contain transition-transform duration-300 group-hover:scale-105 z-10" 
           />
-          <div className="w-18 md:w-30 h-10 md:h-12" />
+          <div className="w-20 md:w-32 h-10 md:h-12" />
           <span className={cn(
             "text-2xl font-heading font-black tracking-tighter transition-colors mt-0.5 whitespace-nowrap uppercase",
             scrolled ? "text-flexigo-primary" : "text-black"
           )}>
-            Flex<span className="text-flexigo-teal">igo E-Mobility</span>
+            Flexigo <span className="text-flexigo-teal">E-Mobility</span>
           </span>
         </Link>
 
