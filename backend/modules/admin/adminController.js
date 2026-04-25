@@ -14,18 +14,19 @@ import PromoCampaign from './promoModel.js';
 import AuditLog from './auditLogModel.js';
 import Handover from '../franchise/handoverModel.js';
 import Role from './roleModel.js';
+import Attendance from './attendanceModel.js';
 import cloudinary from '../../config/cloudinary.js';
 
 const getDateFilter = (range) => {
   if (!range) return {};
-  
+
   // Handle JSON stringified custom range from frontend
   let rangeVal = range;
   try {
     if (range.startsWith('{')) {
       rangeVal = JSON.parse(range);
     }
-  } catch (e) {}
+  } catch (e) { }
 
   const now = new Date();
   let start = new Date();
@@ -52,11 +53,11 @@ const getDateFilter = (range) => {
     const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
     return { timestamp: { $gte: lastMonthStart, $lte: lastMonthEnd } };
   } else if (typeof rangeVal === 'object' && rangeVal.start && rangeVal.end) {
-    return { 
-      timestamp: { 
-        $gte: new Date(rangeVal.start + 'T00:00:00Z'), 
-        $lte: new Date(rangeVal.end + 'T23:59:59Z') 
-      } 
+    return {
+      timestamp: {
+        $gte: new Date(rangeVal.start + 'T00:00:00Z'),
+        $lte: new Date(rangeVal.end + 'T23:59:59Z')
+      }
     };
   }
   return {};
@@ -279,11 +280,11 @@ export const getKycRecords = async (req, res) => {
 
     const records = [
       ...riders.map(r => {
-        const hasAllDocs = r.kycDetails?.selfie && 
-                           r.kycDetails?.aadhaarFront && 
-                           r.kycDetails?.aadhaarBack && 
-                           r.kycDetails?.drivingLicense;
-        
+        const hasAllDocs = r.kycDetails?.selfie &&
+          r.kycDetails?.aadhaarFront &&
+          r.kycDetails?.aadhaarBack &&
+          r.kycDetails?.drivingLicense;
+
         return {
           id: r._id,
           name: r.name || r.phone,
@@ -296,11 +297,11 @@ export const getKycRecords = async (req, res) => {
         };
       }),
       ...franchises.map(f => {
-        const hasAllDocs = f.kycDetails?.selfie && 
-                           f.kycDetails?.aadhaarFront && 
-                           f.kycDetails?.aadhaarBack && 
-                           f.kycDetails?.panCard && 
-                           f.kycDetails?.businessLicense;
+        const hasAllDocs = f.kycDetails?.selfie &&
+          f.kycDetails?.aadhaarFront &&
+          f.kycDetails?.aadhaarBack &&
+          f.kycDetails?.panCard &&
+          f.kycDetails?.businessLicense;
 
         return {
           id: f._id,
@@ -406,11 +407,11 @@ export const getSubscribers = async (req, res) => {
   try {
     const riders = await Rider.find().sort('-createdAt');
     const subscribers = riders.map(r => {
-      const hasAllDocs = r.kycDetails?.selfie && 
-                         r.kycDetails?.aadhaarFront && 
-                         r.kycDetails?.aadhaarBack && 
-                         r.kycDetails?.drivingLicense;
-      
+      const hasAllDocs = r.kycDetails?.selfie &&
+        r.kycDetails?.aadhaarFront &&
+        r.kycDetails?.aadhaarBack &&
+        r.kycDetails?.drivingLicense;
+
       return {
         id: r._id,
         name: r.name || r.phone,
@@ -501,59 +502,49 @@ export const getAllStaff = async (req, res) => {
 
 export const createStaff = async (req, res) => {
   try {
-    const { name, role, dept, shift, phone, email, reportingManager, joiningDate, cityZone, kycDetails } = req.body;
+    const { name, role, dept, shift, phone, joiningDate, kycDetails } = req.body;
+    
+    const employeeId = req.body.employeeId || `STF-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
 
-    // Helper for Cloudinary
+    // Helper for Cloudinary (copying from updateStaff logic)
     const uploadToCloudinary = async (base64Data, folder) => {
       if (!base64Data || !base64Data.startsWith('data:image')) {
-        console.log("Cloudinary: Data is not a base64 image or already a URL, skipping upload.");
         return base64Data;
       }
       try {
-        console.log("Cloudinary: Uploading image to folder:", folder);
         const result = await cloudinary.uploader.upload(base64Data, {
           folder: `flexigo/staff/${folder}`
         });
-        console.log("Cloudinary: Upload success! URL:", result.secure_url);
         return result.secure_url;
       } catch (err) {
-        console.error("Cloudinary: Upload failed!", err);
-        throw new Error("Document upload failed: " + err.message);
+        console.error("Cloudinary Error:", err);
+        throw new Error("Document sync failed: " + err.message);
       }
     };
 
-    let processedKyc = { ...kycDetails };
-    if (processedKyc?.aadhaarFront) processedKyc.aadhaarFront = await uploadToCloudinary(processedKyc.aadhaarFront, 'kyc');
-    if (processedKyc?.aadhaarBack) processedKyc.aadhaarBack = await uploadToCloudinary(processedKyc.aadhaarBack, 'kyc');
-    
-    // Dynamically set isVerified if both photos are present
-    if (processedKyc.aadhaarFront && processedKyc.aadhaarBack) {
-      processedKyc.isVerified = true;
-    } else {
-      processedKyc.isVerified = false;
-    }
+    const processedKycDetails = {
+      aadhaarFront: null,
+      aadhaarBack: null,
+      isVerified: false
+    };
 
-    // Auto-generate Employee ID
-    const lastStaff = await Staff.findOne().sort('-createdAt');
-    let nextId = 101;
-    if (lastStaff && lastStaff.employeeId && lastStaff.employeeId.startsWith('FXG-')) {
-        const lastIdNum = parseInt(lastStaff.employeeId.split('-')[1]);
-        if (!isNaN(lastIdNum)) nextId = lastIdNum + 1;
+    if (kycDetails) {
+      if (kycDetails.aadhaarFront) processedKycDetails.aadhaarFront = await uploadToCloudinary(kycDetails.aadhaarFront, 'kyc');
+      if (kycDetails.aadhaarBack) processedKycDetails.aadhaarBack = await uploadToCloudinary(kycDetails.aadhaarBack, 'kyc');
+      if (processedKycDetails.aadhaarFront && processedKycDetails.aadhaarBack) {
+        processedKycDetails.isVerified = true;
+      }
     }
-    const employeeId = `FXG-${nextId.toString().padStart(3, '0')}`;
 
     const staff = await Staff.create({
       employeeId,
       name: (name || '').trim(),
       phone: phone || '',
-      email: email || '',
       role: (role || '').trim(),
       dept: dept || 'Operations',
       shift: shift || 'Regular',
-      reportingManager: reportingManager || '',
-      joiningDate: joiningDate || new Date(),
-      cityZone: cityZone || '',
-      kycDetails: processedKyc
+      joiningDate: joiningDate || Date.now(),
+      kycDetails: processedKycDetails
     });
     res.status(201).json({ success: true, staff });
   } catch (error) {
@@ -567,9 +558,9 @@ export const createStaff = async (req, res) => {
 
 export const updateStaff = async (req, res) => {
   try {
-    const { name, role, dept, shift, phone, email, reportingManager, joiningDate, cityZone, status, kycDetails } = req.body;
+    const { name, role, dept, shift, phone, email, reportingManager, joiningDate, cityZone, status, kycDetails, workingHours, workDaysCount } = req.body;
     console.log("Updating Staff ID:", req.params.id, "with payload:", req.body);
-    
+
     const staff = await Staff.findById(req.params.id);
     if (!staff) {
       return res.status(404).json({ success: false, message: 'Staff not found' });
@@ -605,23 +596,25 @@ export const updateStaff = async (req, res) => {
     if (joiningDate !== undefined) staff.joiningDate = joiningDate;
     if (cityZone !== undefined) staff.cityZone = cityZone;
     if (status !== undefined) staff.status = status;
+    if (workingHours !== undefined) staff.workingHours = workingHours;
+    if (workDaysCount !== undefined) staff.workDaysCount = workDaysCount;
 
     if (kycDetails) {
-        console.log("Processing KYC Update Protocol...");
-        if (!staff.kycDetails) staff.kycDetails = {};
+      console.log("Processing KYC Update Protocol...");
+      if (!staff.kycDetails) staff.kycDetails = {};
 
-        if (kycDetails.aadhaarFront) staff.kycDetails.aadhaarFront = await uploadToCloudinary(kycDetails.aadhaarFront, 'kyc');
-        if (kycDetails.aadhaarBack) staff.kycDetails.aadhaarBack = await uploadToCloudinary(kycDetails.aadhaarBack, 'kyc');
-        if (kycDetails.aadhaar !== undefined) staff.kycDetails.aadhaar = kycDetails.aadhaar;
-        
-        // Dynamically set isVerified based on image presence
-        if (staff.kycDetails.aadhaarFront && staff.kycDetails.aadhaarBack) {
-           staff.kycDetails.isVerified = true;
-        } else {
-           staff.kycDetails.isVerified = false;
-        }
-        
-        staff.markModified('kycDetails');
+      if (kycDetails.aadhaarFront) staff.kycDetails.aadhaarFront = await uploadToCloudinary(kycDetails.aadhaarFront, 'kyc');
+      if (kycDetails.aadhaarBack) staff.kycDetails.aadhaarBack = await uploadToCloudinary(kycDetails.aadhaarBack, 'kyc');
+      if (kycDetails.aadhaar !== undefined) staff.kycDetails.aadhaar = kycDetails.aadhaar;
+
+      // Dynamically set isVerified based on image presence
+      if (staff.kycDetails.aadhaarFront && staff.kycDetails.aadhaarBack) {
+        staff.kycDetails.isVerified = true;
+      } else {
+        staff.kycDetails.isVerified = false;
+      }
+
+      staff.markModified('kycDetails');
     }
 
     await staff.save();
@@ -631,6 +624,72 @@ export const updateStaff = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+export const getStaffAttendance = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { weekKey } = req.query;
+
+    const staff = await Staff.findById(id);
+    if (!staff) return res.status(404).json({ success: false, message: 'Staff not found' });
+
+    let record = await Attendance.findOne({ staffId: id, weekKey });
+
+    if (!record) {
+      record = {
+        staffId: id,
+        weekKey,
+        days: Array(staff.workDaysCount || 5).fill('present')
+      };
+    }
+
+    res.status(200).json({ success: true, attendance: record });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateStaffAttendance = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { weekKey, days } = req.body;
+
+    const record = await Attendance.findOneAndUpdate(
+      { staffId: id, weekKey },
+      { days, updatedAt: Date.now() },
+      { upsert: true, new: true }
+    );
+
+    res.status(200).json({ success: true, attendance: record });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getMonthlyAttendanceReport = async (req, res) => {
+  try {
+    const { month } = req.query; // format: "YYYY-MM"
+    if (!month) return res.status(400).json({ success: false, message: 'Month is required' });
+
+    const staffList = await Staff.find();
+
+    // Find all attendance records that might fall into this month
+    // We'll just search for all records where weekKey starts with the year
+    // and then filter in memory or use a more precise query.
+    // Since weekKey is YYYY-Www, we can't easily filter by month without a date mapping.
+    // However, we can search for all records and the frontend can handle the display,
+    // or we fetch records for the 4-5 weeks of that month.
+
+    const records = await Attendance.find({
+      weekKey: { $regex: new RegExp(`^${month.split('-')[0]}`) }
+    }).populate('staffId', 'name role dept');
+
+    res.status(200).json({ success: true, records, staffList });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 
 // @desc    Get vehicle analytics stats
 // @route   GET /api/v1/admin/vehicle-stats
@@ -862,12 +921,13 @@ export const getFranchiseOpsData = async (req, res) => {
     const grossPayout = txns.reduce((acc, t) => acc + t.amount, 0);
 
     const formattedFranchises = franchises.map(fr => ({
-      id: `FR-${fr._id.toString().slice(-3).toUpperCase()}`,
+      id: fr._id,
       name: fr.businessDetails?.companyName || fr.ownerName,
       city: fr.businessDetails?.city || 'N/A',
       hubs: hubs.filter(h => h.franchise?.toString() === fr._id.toString()).length,
       payout: `₹${(grossPayout / (totalPartners || 1) * (fr.kycStatus === 'verified' ? 1.2 : 0.8)).toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
-      status: fr.kycStatus === 'verified' ? 'settled' : 'processing'
+      status: fr.kycStatus === 'verified' ? 'settled' : 'processing',
+      businessDetails: fr.businessDetails // Pass through for map coordinates
     }));
 
     res.status(200).json({
@@ -934,10 +994,10 @@ export const getEngagementData = async (req, res) => {
     const totalTickets = await SupportTicket.countDocuments(dateFilter);
     const resolvedTickets = await SupportTicket.countDocuments({ ...dateFilter, status: 'resolved' });
     const openTicketsCount = await SupportTicket.countDocuments({ ...dateFilter, status: { $ne: 'resolved' } });
-    
+
     // CSAT Score based on resolution rate (proxy)
     const csat = totalTickets > 0 ? ((resolvedTickets / totalTickets) * 100).toFixed(1) : "95.0";
-    
+
     // SLA Ready: Average resolution time for resolved tickets (in minutes)
     const resolvedSamples = await SupportTicket.find({ ...dateFilter, status: 'resolved' }).limit(10);
     let avgSla = 12; // default
@@ -1147,7 +1207,7 @@ export const verifyStaffAadhaarOTP = async (req, res) => {
     const response = await axios(config);
     if (response.data.success || response.data.status === 'success') {
       const kycData = response.data.data || response.data;
-      
+
       // If staffId is provided (Edit mode), update DB immediately
       if (staffId) {
         const staff = await Staff.findById(staffId);

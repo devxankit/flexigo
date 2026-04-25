@@ -9,9 +9,6 @@ const StaffSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  phone: {
-    type: String
-  },
   email: {
     type: String
   },
@@ -23,19 +20,33 @@ const StaffSchema = new mongoose.Schema({
     type: String,
     default: 'Operations'
   },
-  reportingManager: {
-    type: String
+  phone: {
+    type: String,
+    trim: true
+  },
+  shift: {
+    type: String,
+    default: 'Regular'
   },
   joiningDate: {
     type: Date,
     default: Date.now
   },
-  cityZone: {
-    type: String
+  workingHours: {
+    type: Number,
+    default: 9
   },
-  shift: {
-    type: String,
-    default: 'Regular'
+  attendance: {
+    type: Number,
+    default: 100
+  },
+  workDaysCount: {
+    type: Number,
+    default: 5
+  },
+  weeklyAttendance: {
+    type: [String],
+    default: ['present', 'present', 'present', 'present', 'present']
   },
   status: {
     type: String,

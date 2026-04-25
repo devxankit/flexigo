@@ -1,7 +1,7 @@
 import express from 'express';
-import { 
-  getAdminStats, 
-  getAllHubs, 
+import {
+  getAdminStats,
+  getAllHubs,
   getFleetDistribution,
   getKycRecords,
   updateKycStatus,
@@ -14,6 +14,9 @@ import {
   createStaff,
   updateStaff,
   deleteStaff,
+  getStaffAttendance,
+  updateStaffAttendance,
+  getMonthlyAttendanceReport,
   getFinanceData,
   getInventoryData,
   getFranchiseOpsData,
@@ -63,8 +66,11 @@ router.get('/staff', getAllStaff);
 router.post('/staff', createStaff);
 router.put('/staff/:id', updateStaff);
 router.delete('/staff/:id', deleteStaff);
-router.post('/staff/aadhaar/generate-otp', generateStaffAadhaarOTP);
-router.post('/staff/aadhaar/verify-otp', verifyStaffAadhaarOTP);
+router.get('/staff/:id/attendance', getStaffAttendance);
+router.post('/staff/:id/attendance', updateStaffAttendance);
+router.get('/staff/attendance/report', getMonthlyAttendanceReport);
+router.post('/staff/generate-aadhaar-otp', generateStaffAadhaarOTP);
+router.post('/staff/verify-aadhaar-otp', verifyStaffAadhaarOTP);
 
 // KYC Routes
 router.get('/kyc', getKycRecords);

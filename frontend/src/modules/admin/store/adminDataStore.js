@@ -456,6 +456,42 @@ export const useAdminDataStore = create((set, get) => ({
       return { success: false, message: err.message };
     }
   },
+  
+  fetchWeeklyAttendance: async (staffId, weekKey) => {
+    try {
+      const res = await api.get(`/admin/staff/${staffId}/attendance?weekKey=${weekKey}`);
+      if (res.data.success) {
+        return res.data.attendance;
+      }
+    } catch (err) {
+      console.error("Failed to fetch weekly attendance:", err);
+      return null;
+    }
+  },
+
+  updateWeeklyAttendance: async (staffId, weekKey, days) => {
+    try {
+      const res = await api.post(`/admin/staff/${staffId}/attendance`, { weekKey, days });
+      if (res.data.success) {
+        return res.data.attendance;
+      }
+    } catch (err) {
+      console.error("Failed to update weekly attendance:", err);
+      return null;
+    }
+  },
+
+  fetchMonthlyAttendanceReport: async (month) => {
+    try {
+      const res = await api.get(`/admin/staff/attendance/report?month=${month}`);
+      if (res.data.success) {
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to fetch monthly attendance report:", err);
+      return null;
+    }
+  },
 
   vehicleStats: {
     fleetHealth: '0%',

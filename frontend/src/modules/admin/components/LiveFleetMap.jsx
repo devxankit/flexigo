@@ -88,28 +88,42 @@ export default function LiveFleetMap({ vehicles = [], franchises = [] }) {
       // Use real lastLocation from DB (now populated from assigned Rider)
       const pos = v.lastLocation ? { lat: v.lastLocation.lat, lng: v.lastLocation.lng } : null;
       
-      if (pos) {
-         if (!vehicleMarkers.current[id]) {
-           vehicleMarkers.current[id] = new window.google.maps.Marker({
-             position: pos,
-             map: googleMap.current,
-             title: v.plate || 'Vehicle',
-             icon: {
-               path: window.google.maps.SymbolPath.CIRCLE,
-               fillColor: '#10b981', // Green Icon as requested
-               fillOpacity: 1,
-               strokeWeight: 3,
-               strokeColor: '#FFFFFF',
-               scale: 8,
-             },
-           });
-         } else {
-           vehicleMarkers.current[id].setPosition(pos);
-         }
-         
-         bounds.extend(pos);
-         hasMarkers = true;
-      }
+        if (pos) {
+          if (!vehicleMarkers.current[id]) {
+            vehicleMarkers.current[id] = new window.google.maps.Marker({
+              position: pos,
+              map: googleMap.current,
+              title: v.plate || 'Vehicle',
+              icon: {
+                path: window.google.maps.SymbolPath.CIRCLE,
+                fillColor: '#10b981', // Green Icon as requested
+                fillOpacity: 1,
+                strokeWeight: 3,
+                strokeColor: '#FFFFFF',
+                scale: 8,
+              },
+            });
+
+            const infoWindow = new window.google.maps.InfoWindow({
+               content: `
+                 <div style="color:black; padding:8px; font-family: 'Inter', sans-serif;">
+                   <div style="font-size:10px; font-weight:900; color:#10b981; text-transform:uppercase; margin-bottom:4px;">Vehicle: ${v.plate || 'N/A'}</div>
+                   <div style="font-size:12px; font-weight:800; text-transform:uppercase;">Rider: ${v.rider || 'Unassigned'}</div>
+                   <div style="font-size:9px; font-weight:700; color:#666; margin-top:4px;">Speed: ${v.currentSpeed || 0} km/h</div>
+                 </div>
+               `
+            });
+
+            vehicleMarkers.current[id].addListener('click', () => {
+               infoWindow.open(googleMap.current, vehicleMarkers.current[id]);
+            });
+          } else {
+            vehicleMarkers.current[id].setPosition(pos);
+          }
+          
+          bounds.extend(pos);
+          hasMarkers = true;
+        }
     });
 
     if (hasMarkers && (vehicles.length + franchises.length) > 0) {
