@@ -39,8 +39,8 @@ const HeroSection = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-[28px] sm:text-4xl md:text-6xl lg:text-7xl font-black font-heading text-slate-900 leading-[1.2] mb-6 tracking-tighter"
           >
-            Powering the Future <br className="sm:hidden" />
-            of Delivery <span className="text-flexigo-teal italic">Mobility</span>
+            Driving the Future <br className="sm:hidden" />
+            of Smart Electric <span className="text-flexigo-teal italic">Mobility</span>
           </motion.h1>
 
           <motion.p
