@@ -22,7 +22,7 @@ import {
   Edit
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GoogleMap, useJsApiLoader, Circle, Marker } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, CircleF, MarkerF } from '@react-google-maps/api';
 import AdminStatCard from '../components/AdminStatCard';
 import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
@@ -445,7 +445,7 @@ export default function GeoFencingPage() {
                            >
                               {isModalOpen && draftCenter && (
                                  <>
-                                    <Circle 
+                                    <CircleF 
                                        center={draftCenter}
                                        radius={draftRadius}
                                        options={{
@@ -458,7 +458,7 @@ export default function GeoFencingPage() {
                                           draggable: true
                                        }}
                                     />
-                                    <Marker 
+                                    <MarkerF 
                                        position={draftCenter}
                                        label={{
                                           text: "DRAG PIN TO SET CENTER",
@@ -483,7 +483,7 @@ export default function GeoFencingPage() {
 
                                  return (
                                     <>
-                                       <Circle 
+                                       <CircleF 
                                           center={selectedZone.center || finalLoc}
                                           radius={rMeters}
                                           options={{
@@ -494,7 +494,7 @@ export default function GeoFencingPage() {
                                              fillOpacity: 0.15,
                                           }}
                                        />
-                                       <Marker 
+                                       <MarkerF 
                                           position={finalLoc}
                                           icon={{
                                              url: 'https://maps.google.com/mapfiles/ms/icons/motorcycling.png'
@@ -512,7 +512,7 @@ export default function GeoFencingPage() {
                               })()}
                               
                               {!selectedZone && !isModalOpen && geofences.map(gf => gf.center && (
-                                 <Marker 
+                                 <MarkerF 
                                     key={gf._id}
                                     position={gf.center}
                                     icon={{

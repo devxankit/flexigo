@@ -82,63 +82,63 @@ export default function GpsControlPage() {
          <AdminStatCard title="Low Power" value="14" icon={Zap} color="rose" subtitle="Critical Swap" />
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
          {/* Live Vehicle List */}
-         <div className="space-y-4">
-            <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-sm">
-               <div className="px-6 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/10 flex items-center justify-between">
-                  <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-wider leading-none italic">Fleet Assets Stream</h3>
-                  <p className="text-[7.5px] font-black text-emerald-500 uppercase tracking-widest italic animate-pulse">Polling Active</p>
-               </div>
-               <div className="overflow-x-auto no-scrollbar">
-                  <table className="w-full">
-                     <thead>
-                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
-                           {['Asset ID', 'Assigned Persona', 'Geo-Node', 'Power', 'Sync'].map((header) => (
-                              <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
-                           ))}
-                        </tr>
-                     </thead>
-                     <tbody className="divide-y divide-[var(--border-subtle)]">
-                        {vehicles.map((vehicle) => (
-                           <tr 
-                             key={vehicle._id || vehicle.id} 
-                             onClick={() => setSelectedVehicle(vehicle)}
-                             className={`group/row transition-all duration-200 cursor-pointer  ${(activeVehicle._id || activeVehicle.id) === (vehicle._id || vehicle.id) ? 'bg-emerald-600/5' : 'hover:bg-[var(--bg-tertiary)]/20'}`}
-                           >
-                              <td className="py-2 px-4">
-                                 <span className={`font-medium   transition-colors   ${(activeVehicle._id || activeVehicle.id) === (vehicle._id || vehicle.id) ? 'text-emerald-500' : 'text-[var(--text-primary)]'}`}>{vehicle.plate || 'N/A'}</span>
-                               </td>
-                               <td className="py-2 px-4">
-                                 <div className="flex flex-col">
-                                    <span className="font-medium text-[var(--text-primary)]">{vehicle.rider || 'N/A'}</span>
-                                    <span className="font-medium text-[var(--text-tertiary)]/50  mt-1">Asset Identity</span>
-                                 </div>
-                              </td>
-                              <td className="py-2 px-4">
-                                 <div className="flex items-center gap-1.5">
-                                    <MapPin size={10} className="text-emerald-500 opacity-60" />
-                                    <span className="font-medium text-[var(--text-tertiary)]">{vehicle.location}</span>
-                                 </div>
-                              </td>
-                              <td className="py-2 px-4">
-                                 <div className="flex items-center gap-2">
-                                    <div className="w-12 h-1 bg-[var(--bg-tertiary)] rounded-full overflow-hidden flex-shrink-0 border border-[var(--border-subtle)]">
-                                       <div className={`h-full ${vehicle.battery < 20 ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: `${vehicle.battery}%` }} />
-                                    </div>
-                                    <span className={` font-medium  ${vehicle.battery < 20 ? 'text-rose-500' : 'text-emerald-500'}`}>{vehicle.battery}%</span>
-                                 </div>
-                              </td>
-                              <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]">{vehicle.lastPing}</td>
-                           </tr>
-                        ))}
-                     </tbody>
-                  </table>
-               </div>
+         <div className="lg:col-span-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-sm h-fit">
+            <div className="px-6 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/10 flex items-center justify-between">
+               <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-wider leading-none italic">Fleet Assets Stream</h3>
+               <p className="text-[7.5px] font-black text-emerald-500 uppercase tracking-widest italic animate-pulse">Polling Active</p>
             </div>
+            <div className="overflow-x-auto no-scrollbar">
+               <table className="w-full">
+                  <thead>
+                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
+                        {['Asset ID', 'Assigned Persona', 'Geo-Node', 'Power', 'Sync'].map((header) => (
+                           <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
+                        ))}
+                     </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--border-subtle)]">
+                     {vehicles.map((vehicle) => (
+                        <tr 
+                           key={vehicle._id || vehicle.id} 
+                           onClick={() => setSelectedVehicle(vehicle)}
+                           className={`group/row transition-all duration-200 cursor-pointer  ${(activeVehicle._id || activeVehicle.id) === (vehicle._id || vehicle.id) ? 'bg-emerald-600/5' : 'hover:bg-[var(--bg-tertiary)]/20'}`}
+                        >
+                           <td className="py-2 px-4">
+                              <span className={`font-medium   transition-colors   ${(activeVehicle._id || activeVehicle.id) === (vehicle._id || vehicle.id) ? 'text-emerald-500' : 'text-[var(--text-primary)]'}`}>{vehicle.plate || 'N/A'}</span>
+                           </td>
+                           <td className="py-2 px-4">
+                              <div className="flex flex-col">
+                                 <span className="font-medium text-[var(--text-primary)]">{vehicle.rider || 'N/A'}</span>
+                                 <span className="font-medium text-[var(--text-tertiary)]/50  mt-1">Asset Identity</span>
+                              </div>
+                           </td>
+                           <td className="py-2 px-4">
+                              <div className="flex items-center gap-1.5">
+                                 <MapPin size={10} className="text-emerald-500 opacity-60" />
+                                 <span className="font-medium text-[var(--text-tertiary)]">{vehicle.location}</span>
+                              </div>
+                           </td>
+                           <td className="py-2 px-4">
+                              <div className="flex items-center gap-2">
+                                 <div className="w-12 h-1 bg-[var(--bg-tertiary)] rounded-full overflow-hidden flex-shrink-0 border border-[var(--border-subtle)]">
+                                    <div className={`h-full ${vehicle.battery < 20 ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: `${vehicle.battery}%` }} />
+                                 </div>
+                                 <span className={` font-medium  ${vehicle.battery < 20 ? 'text-rose-500' : 'text-emerald-500'}`}>{vehicle.battery}%</span>
+                              </div>
+                           </td>
+                           <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]">{vehicle.lastPing}</td>
+                        </tr>
+                     ))}
+                  </tbody>
+               </table>
+            </div>
+         </div>
 
-            {/* Tactical Grid Map View */}
-            <div className="h-96 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl relative overflow-hidden group shadow-sm border-l-4 border-l-emerald-600">
+         {/* Tactical Grid Map View */}
+         <div className="space-y-4">
+            <div className="h-[500px] lg:h-full min-h-[500px] bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl relative overflow-hidden group shadow-sm border-l-4 border-l-emerald-600">
                <LiveFleetMap vehicles={vehicles} franchises={franchiseOps} />
                
                <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-[var(--bg-secondary)] to-transparent pointer-events-none">

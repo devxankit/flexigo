@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Zap, 
   Plus, 
@@ -39,10 +40,25 @@ export default function SubscriptionPlansPage() {
   const [activeTab, setActiveTab] = useState('Rider');
   const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
   
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingPlan, setEditingPlan] = useState(null);
+  const [formData, setFormData] = useState({ name: '', type: 'Daily', price: '', deposit: '', features: [''] });
+
   React.useEffect(() => {
     fetchPlans();
     fetchDashboardStats();
   }, []);
+
+  React.useEffect(() => {
+    if (isModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isModalOpen]);
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
@@ -55,10 +71,6 @@ export default function SubscriptionPlansPage() {
     ? Math.round(filteredPlans.reduce((acc, p) => acc + p.price, 0) / filteredPlans.length) 
     : 0;
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingPlan, setEditingPlan] = useState(null);
-  const [formData, setFormData] = useState({ name: '', type: 'Daily', price: '', deposit: '', features: '' });
-
   const handleOpenModal = (plan = null) => {
     if (plan) {
       setEditingPlan(plan);
@@ -67,11 +79,11 @@ export default function SubscriptionPlansPage() {
         type: plan.type, 
         price: plan.price, 
         deposit: plan.deposit, 
-        features: plan.features.join(', ') 
+        features: plan.features || [] 
       });
     } else {
       setEditingPlan(null);
-      setFormData({ name: '', type: activeTab === 'Rider' ? 'Daily' : 'Franchise', price: '', deposit: '', features: '' });
+      setFormData({ name: '', type: activeTab === 'Rider' ? 'Daily' : 'Franchise', price: '', deposit: '', features: [''] });
     }
     setIsModalOpen(true);
   };
@@ -83,7 +95,7 @@ export default function SubscriptionPlansPage() {
       type: formData.type,
       price: parseInt(formData.price),
       deposit: parseInt(formData.deposit),
-      features: formData.features.split(',').map(f => f.trim()),
+      features: formData.features.filter(f => f.trim() !== ''),
       target: activeTab
     };
 
@@ -104,26 +116,26 @@ export default function SubscriptionPlansPage() {
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-2">
-               <div className="w-1 h-5 bg-emerald-600 rounded-full" />
-               <h1 className="text-xl font-black tracking-tighter text-[var(--text-primary)] uppercase italic">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
+               <div className="w-1.5 h-6 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.3)]" />
+               <h1 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
                   Subscription <span className="text-emerald-500">Plans</span>
                </h1>
             </div>
-            <p className="text-[8px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] ml-3">
-               Manage rider and franchise subscriptions
+            <p className="text-xs font-medium text-[var(--text-tertiary)] opacity-60 ml-4">
+               Configure and manage service tiers for riders and franchise partners
             </p>
          </div>
          
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <OpsFilter onFilterChange={handleFilterChange} />
             <button 
               onClick={() => handleOpenModal()}
-              className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95 flex items-center gap-1.5"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-500/20 active:scale-95 flex items-center gap-2"
             >
-                <Plus size={12} strokeWidth={3} /> Add New Plan
+                <Plus size={16} /> Add Plan
             </button>
           </div>
       </div>
@@ -137,18 +149,18 @@ export default function SubscriptionPlansPage() {
       </div>
 
       {/* Tab Selector */}
-      <div className="flex bg-[var(--bg-secondary)] border border-[var(--border-subtle)] p-1 rounded-xl shadow-inner w-fit">
+      <div className="flex bg-[var(--bg-secondary)] border border-[var(--border-subtle)] p-1.5 rounded-2xl shadow-sm w-fit">
         {['Rider', 'Franchise'].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-6 py-2 rounded-lg text-[9px] font-black uppercase tracking-[0.3em] transition-all italic leading-none ${
+            className={`px-8 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 ${
               activeTab === tab 
-              ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-950/40 border border-emerald-500/20' 
-              : 'text-[var(--text-tertiary)] hover:text-white hover:bg-white/5 border border-transparent'
+              ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20' 
+              : 'text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)]'
             }`}
           >
-            {tab} Plans
+            {tab}
           </button>
         ))}
       </div>
@@ -159,164 +171,208 @@ export default function SubscriptionPlansPage() {
             {filteredPlans.map((plan) => (
                <motion.div 
                  layout
-                 initial={{ opacity: 0, scale: 0.95 }}
-                 animate={{ opacity: 1, scale: 1 }}
+                 initial={{ opacity: 0, y: 20 }}
+                 animate={{ opacity: 1, y: 0 }}
                  exit={{ opacity: 0, scale: 0.95 }}
                  key={plan._id || plan.id} 
-                 className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-6 shadow-sm hover:border-emerald-500/30 transition-all group relative overflow-hidden"
+                 className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-3xl p-6 shadow-lg shadow-slate-200/40 dark:shadow-none hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-500 group relative flex flex-col h-full"
                >
-                  <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:scale-110 transition-transform pointer-events-none">
-                     <Zap size={80} strokeWidth={1} />
+                  {/* Admin Actions Overlay */}
+                  <div className="absolute top-4 right-4 flex gap-1.5 z-20">
+                     <button 
+                        onClick={() => handleOpenModal(plan)} 
+                        className="p-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-emerald-500 hover:border-emerald-500/30 transition-all shadow-sm"
+                     >
+                        <Edit3 size={12} />
+                     </button>
+                     <button 
+                        onClick={() => handleDelete(plan._id || plan.id)} 
+                        className="p-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-rose-500 hover:border-rose-500/30 transition-all shadow-sm"
+                     >
+                        <Trash2 size={12} />
+                     </button>
                   </div>
 
-                  <div className="flex justify-between items-start mb-6 relative z-10">
-                     <div className="space-y-1">
-                        <span className="text-[7px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/10 italic leading-none">{plan.type} CYCLE</span>
-                        <h3 className="text-base font-black text-[var(--text-primary)] uppercase italic tracking-tighter pt-1 leading-none">{plan.name}</h3>
-                        <p className="text-[7.5px] font-black text-[var(--text-tertiary)]/50 tracking-widest leading-none mt-1 uppercase italic">{plan._id || plan.id}</p>
-                     </div>
-                     <div className="flex gap-1.5">
-                        <button onClick={() => handleOpenModal(plan)} className="p-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-emerald-500 transition-all shadow-inner">
-                           <Edit3 size={12} />
-                        </button>
-                        <button onClick={() => handleDelete(plan._id || plan.id)} className="p-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-rose-500 transition-all shadow-inner">
-                           <Trash2 size={12} />
-                        </button>
-                     </div>
+                  {/* Plan Header */}
+                  <div className="mb-4">
+                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 mb-3">
+                      <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                        {plan.type === 'Daily' ? '⚡' : plan.type === 'Weekly' ? '📅' : '🏢'} {plan.type} CYCLE
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-bold text-[var(--text-primary)] leading-tight">
+                      {plan.name}
+                    </h3>
+                    <p className="text-[10px] text-[var(--text-tertiary)] opacity-60 font-medium mt-1">
+                      ID: {plan._id || plan.id}
+                    </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 mb-6 relative z-10">
-                     <div className="p-3 bg-[var(--bg-tertiary)]/50 rounded-xl border border-[var(--border-subtle)] shadow-inner">
-                        <p className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1 italic leading-none">Price</p>
-                        <p className="text-base font-black text-emerald-500 tracking-tighter leading-none italic">₹{plan.price}</p>
-                     </div>
-                     <div className="p-3 bg-[var(--bg-tertiary)]/50 rounded-xl border border-[var(--border-subtle)] shadow-inner">
-                        <p className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1 italic leading-none">Deposit</p>
-                        <p className="text-base font-black text-[var(--text-primary)] tracking-tighter italic leading-none opacity-80">₹{plan.deposit}</p>
-                     </div>
+                  {/* Pricing Section */}
+                  <div className="mb-4">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-black text-emerald-600 dark:text-emerald-500 tracking-tight">₹{plan.price.toLocaleString()}</span>
+                      <span className="text-xs font-medium text-[var(--text-tertiary)] opacity-60">/{plan.type.toLowerCase()}</span>
+                    </div>
+                    <div className="mt-1">
+                       <span className="text-[9px] font-bold text-[var(--text-tertiary)] opacity-40 uppercase tracking-wider">Deposit: ₹{plan.deposit.toLocaleString()}</span>
+                    </div>
                   </div>
 
-                  <div className="space-y-2 mb-6 relative z-10">
-                     <p className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-50">Included Service & Features</p>
-                     <div className="space-y-1.5">
+                  <div className="w-full h-px bg-[var(--border-subtle)] opacity-50 mb-5" />
+
+                  {/* Features List */}
+                  <div className="flex-grow space-y-3 mb-6">
+                     <p className="text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest opacity-60">Services</p>
+                     <div className="space-y-2">
                         {plan.features.map((f, i) => (
-                           <div key={i} className="flex items-center gap-2">
-                              <div className="w-1 h-1 rounded-full bg-emerald-600 shadow-[0_0_5px_#10b981]" />
-                              <span className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-tight italic opacity-80 leading-none">{f}</span>
+                           <div key={i} className="flex items-start gap-2.5">
+                              <div className="mt-1 p-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20">
+                                 <CheckCircle size={10} className="text-emerald-600 dark:text-emerald-400" />
+                              </div>
+                              <span className="text-[11px] font-medium text-[var(--text-primary)] leading-snug">{f}</span>
                            </div>
                         ))}
                      </div>
                   </div>
 
-                   <button 
-                      onClick={() => alert(`METRICS_STREAM: ${plan._id || plan.id}`)}
-                      className="w-full py-2.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[8px] font-black uppercase tracking-[0.2em] text-[var(--text-primary)] hover:border-emerald-500/30 transition-all flex items-center justify-center gap-2 group/btn active:scale-95 italic"
-                   >
-                      Performance Metrics <ChevronRight size={12} className="group-hover/btn:translate-x-0.5 transition-transform" />
-                   </button>
-
+                  {/* Decorative Gradient */}
+                  <div className="absolute -bottom-1 -right-1 w-16 h-16 bg-emerald-500/5 blur-2xl rounded-full -z-10" />
                </motion.div>
             ))}
          </AnimatePresence>
       </div>
 
       {/* Plan Modal */}
-      <AnimatePresence>
-         {isModalOpen && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
-               <motion.div 
-                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                  className="w-full max-w-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-8 shadow-2xl relative overflow-hidden"
-               >
-                  <div className="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
-                     <Layers size={100} />
-                  </div>
-
-                  <div className="flex items-center justify-between mb-8 relative z-10 border-b border-[var(--border-subtle)] pb-4">
-                     <div className="space-y-1">
-                        <h2 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tighter italic leading-none">
-                            {editingPlan ? 'Edit' : 'Create'} <span className="text-emerald-500">Subscription Plan</span>
-                         </h2>
-                         <p className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-50">System Version v6.0</p>
-                     </div>
-                     <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-rose-600/10 hover:text-rose-500 transition-all rounded-lg">
-                        <X size={18} />
-                     </button>
-                  </div>
-
-                  <form onSubmit={handleSave} className="space-y-6 relative z-10">
-                     <div className="grid grid-cols-2 gap-4">
-                        <div className="col-span-2 space-y-2">
-                           <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic leading-none">Plan Identity</label>
-                           <input 
-                              required
-                              value={formData.name}
-                              onChange={(e) => setFormData({...formData, name: e.target.value})}
-                              placeholder="e.g. Gig Economy Heavy"
-                              className="w-full px-4 py-3 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all placeholder:text-[var(--text-tertiary)]/30 italic"
-                           />
+      {typeof document !== 'undefined' && createPortal(
+         <AnimatePresence>
+            {isModalOpen && (
+               <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-y-auto bg-slate-900/60 backdrop-blur-md custom-scrollbar overscroll-contain">
+                  <motion.div 
+                     initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                     animate={{ opacity: 1, scale: 1, y: 0 }}
+                     exit={{ opacity: 0, scale: 0.98, y: 10 }}
+                     className="w-full max-w-md bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-3xl p-6 shadow-2xl relative overflow-hidden my-auto"
+                  >
+                     <div className="flex items-center justify-between mb-6 relative z-10">
+                        <div className="space-y-0.5">
+                           <h2 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">
+                               {editingPlan ? 'Edit' : 'Create'} <span className="text-emerald-500">Plan</span>
+                            </h2>
+                            <p className="text-[10px] font-medium text-[var(--text-tertiary)] opacity-60 uppercase tracking-widest">Config Tier v6.0</p>
                         </div>
-                        <div className="space-y-2">
-                           <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic leading-none">Cycle Type</label>
-                           <select 
-                              value={formData.type}
-                              onChange={(e) => setFormData({...formData, type: e.target.value})}
-                              className="w-full px-4 py-3 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all appearance-none cursor-pointer"
-                           >
-                              <option value="Daily">Daily</option>
-                              <option value="Weekly">Weekly</option>
-                              <option value="Monthly">Monthly</option>
-                              <option value="Franchise">Franchise</option>
-                           </select>
-                        </div>
-                        <div className="space-y-2">
-                           <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic leading-none">Price (₹)</label>
-                           <input 
-                              type="number"
-                              required
-                              value={formData.price}
-                              onChange={(e) => setFormData({...formData, price: e.target.value})}
-                              placeholder="0"
-                              className="w-full px-4 py-3 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic"
-                           />
-                        </div>
-                        <div className="space-y-2">
-                           <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic leading-none">Deposit (₹)</label>
-                           <input 
-                              type="number"
-                              required
-                              value={formData.deposit}
-                              onChange={(e) => setFormData({...formData, deposit: e.target.value})}
-                              placeholder="0"
-                              className="w-full px-4 py-3 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic"
-                           />
-                        </div>
-                        <div className="col-span-2 space-y-2">
-                            <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic leading-none">Included Features (comma separated)</label>
-                           <textarea 
-                              required
-                              rows={2}
-                              value={formData.features}
-                              onChange={(e) => setFormData({...formData, features: e.target.value})}
-                              placeholder="e.g. 24h Access, Premium Support..."
-                              className="w-full px-4 py-3 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl text-[10px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all placeholder:text-[var(--text-tertiary)]/30 no-scrollbar"
-                           />
-                        </div>
+                        <button onClick={() => setIsModalOpen(false)} className="p-1.5 hover:bg-rose-500/10 hover:text-rose-500 transition-all rounded-lg">
+                           <X size={18} />
+                        </button>
                      </div>
 
-                     <button 
-                        type="submit"
-                        className="w-full py-4 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.3em] shadow-lg shadow-emerald-950/20 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-3"
-                     >
-                        <Zap size={16} fill="white" /> Save Plan
-                     </button>
-                  </form>
-               </motion.div>
-            </div>
-         )}
-      </AnimatePresence>
+                     <form onSubmit={handleSave} className="space-y-5 relative z-10">
+                        <div className="grid grid-cols-2 gap-4">
+                           <div className="col-span-2 space-y-1.5">
+                              <label className="text-[10px] font-bold text-[var(--text-primary)] ml-1 uppercase tracking-wider opacity-70">Plan Identity</label>
+                              <input 
+                                 required
+                                 value={formData.name}
+                                 onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                 placeholder="e.g. Gig Economy Heavy"
+                                 className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-xs font-medium focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all placeholder:text-[var(--text-tertiary)]/30"
+                              />
+                           </div>
+                           <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold text-[var(--text-primary)] ml-1 uppercase tracking-wider opacity-70">Cycle Type</label>
+                              <select 
+                                 value={formData.type}
+                                 onChange={(e) => setFormData({...formData, type: e.target.value})}
+                                 className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-xs font-medium focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all cursor-pointer"
+                              >
+                                 <option value="Daily">Daily</option>
+                                 <option value="Weekly">Weekly</option>
+                                 <option value="Monthly">Monthly</option>
+                                 <option value="Franchise">Franchise</option>
+                              </select>
+                           </div>
+                           <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold text-[var(--text-primary)] ml-1 uppercase tracking-wider opacity-70">Price (₹)</label>
+                              <input 
+                                 type="number"
+                                 required
+                                 value={formData.price}
+                                 onChange={(e) => setFormData({...formData, price: e.target.value})}
+                                 placeholder="0"
+                                 className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-xs font-medium focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all"
+                              />
+                           </div>
+                           <div className="col-span-2 space-y-1.5">
+                              <label className="text-[10px] font-bold text-[var(--text-primary)] ml-1 uppercase tracking-wider opacity-70">Deposit (₹)</label>
+                              <input 
+                                 type="number"
+                                 required
+                                 value={formData.deposit}
+                                 onChange={(e) => setFormData({...formData, deposit: e.target.value})}
+                                 placeholder="0"
+                                 className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-xs font-medium focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all"
+                              />
+                           </div>
+                           
+                           <div className="col-span-2 space-y-3 pt-1">
+                              <div className="flex items-center justify-between ml-1">
+                                 <label className="text-[10px] font-bold text-[var(--text-primary)] uppercase tracking-wider opacity-70">Included Features</label>
+                                 <button 
+                                    type="button"
+                                    onClick={() => setFormData({...formData, features: [...formData.features, '']})}
+                                    className="flex items-center gap-1 px-2.5 py-1 bg-emerald-500/5 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-lg text-[9px] font-bold hover:bg-emerald-500 hover:text-white transition-all"
+                                 >
+                                    <Plus size={10} /> Add Feature
+                                 </button>
+                              </div>
+                              
+                              <div className="space-y-2 max-h-40 overflow-y-auto no-scrollbar pr-1">
+                                 {formData.features.map((feature, index) => (
+                                    <div key={index} className="flex gap-2">
+                                       <input 
+                                          required
+                                          value={feature}
+                                          onChange={(e) => {
+                                             const newFeatures = [...formData.features];
+                                             newFeatures[index] = e.target.value;
+                                             setFormData({...formData, features: newFeatures});
+                                          }}
+                                          placeholder="e.g. 24h Access"
+                                          className="flex-1 px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[11px] font-medium focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none transition-all"
+                                       />
+                                       <button 
+                                          type="button"
+                                          onClick={() => {
+                                             const newFeatures = formData.features.filter((_, i) => i !== index);
+                                             setFormData({...formData, features: newFeatures.length ? newFeatures : ['']});
+                                          }}
+                                          className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all"
+                                       >
+                                          <Trash2 size={14} />
+                                       </button>
+                                    </div>
+                                 ))}
+                              </div>
+                           </div>
+                        </div>
+
+                        <button 
+                           type="submit"
+                           className="w-full py-3 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-500/10 hover:bg-emerald-700 transition-all active:scale-[0.99] flex items-center justify-center gap-2 mt-2"
+                        >
+                           <Zap size={14} fill="currentColor" /> {editingPlan ? 'Update Plan' : 'Create Plan'}
+                        </button>
+                     </form>
+
+                     {/* Background Decoration */}
+                     <div className="absolute -top-24 -right-24 w-64 h-64 bg-emerald-500/5 blur-3xl rounded-full pointer-events-none" />
+                     <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-500/5 blur-3xl rounded-full pointer-events-none" />
+                  </motion.div>
+               </div>
+            )}
+         </AnimatePresence>,
+         document.body
+      )}
     </div>
   );
 }
