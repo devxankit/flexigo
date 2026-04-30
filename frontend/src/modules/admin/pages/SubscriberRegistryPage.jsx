@@ -113,32 +113,32 @@ export default function SubscriberRegistryPage() {
          </div>
          
          <div className="overflow-x-auto no-scrollbar">
-            <table className="w-full text-left">
+            <table className="w-full">
                <thead>
-                  <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
+                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
                      {['User identity', 'Contact Path', 'Assigned Persona', 'Network Locale', 'Status'].map((header) => (
-                        <th key={header} className="py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
+                        <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                      ))}
                   </tr>
                </thead>
                <tbody className="divide-y divide-[var(--border-subtle)]">
                   {filteredSubscribers.map((user) => (
-                     <tr key={user.id} className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors text-[10px] cursor-pointer">
-                        <td className="py-2.5 px-6 whitespace-nowrap">
+                     <tr key={user.id} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
+                        <td className="py-2 px-4 whitespace-nowrap">
                            <div className="flex flex-col">
-                              <span className="font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic leading-none">{user.phone}</span>
+                              <span className="font-medium text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{user.phone}</span>
                            </div>
                         </td>
-                        <td className="py-2.5 px-6">
-                           <div className="flex flex-col gap-0.5 leading-none">
-                              <span className="text-[9px] font-black text-[var(--text-primary)] lowercase group-hover:text-emerald-500 transition-colors italic leading-none">{user.email}</span>
-                              <span className="text-[7.5px] font-black text-[var(--text-tertiary)]/50 uppercase italic leading-none">{user.phone}</span>
+                        <td className="py-2 px-4">
+                           <div className="flex flex-col gap-0.5">
+                              <span className="font-medium text-[var(--text-primary)] lowercase group-hover:text-emerald-500 transition-colors">{user.email}</span>
+                              <span className="font-medium text-[var(--text-tertiary)]/50">{user.phone}</span>
                            </div>
                         </td>
-                        <td className="py-2.5 px-6 font-black text-[var(--text-primary)] uppercase italic leading-none">{user.persona}</td>
-                        <td className="py-2.5 px-6 text-[8px] font-black text-[var(--text-tertiary)] uppercase italic leading-none whitespace-nowrap">{user.locale}</td>
-                        <td className="py-2.5 px-6">
-                           <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border leading-none ${
+                        <td className="py-2 px-4 font-medium text-[var(--text-primary)]">{user.persona}</td>
+                        <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]    whitespace-nowrap">{user.locale}</td>
+                        <td className="py-2 px-4">
+                           <div className={`inline-flex px-1.5 py-0.5 rounded  font-medium   border  ${
                               user.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 
                               user.status === 'active' ? 'bg-blue-500/10 text-blue-500 border-blue-500/10' :
                               'bg-amber-500/10 text-amber-500 border-amber-500/10'

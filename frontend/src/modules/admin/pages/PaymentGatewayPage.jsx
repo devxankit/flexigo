@@ -86,28 +86,28 @@ export default function PaymentGatewayPage() {
          <div className="overflow-x-auto no-scrollbar">
             <table className="w-full">
                <thead>
-                  <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
+                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
                      {['Ref Identity', 'Initiator', 'Method', 'Amount', 'Status', 'Sync'].map((header) => (
-                        <th key={header} className="text-left py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
+                        <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                      ))}
                   </tr>
                </thead>
                <tbody className="divide-y divide-[var(--border-subtle)]">
                   {financeTransactions.map((txn) => (
-                     <tr key={txn.id} className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors text-[10px]">
-                        <td className="py-2.5 px-6 font-black text-[7px] text-[var(--text-tertiary)] uppercase tracking-widest leading-none italic">{txn.id}</td>
-                        <td className="py-2.5 px-6">
-                           <span className="font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic leading-none">{txn.user}</span>
+                     <tr key={txn.id} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
+                        <td className="py-2 px-4 font-medium  text-[var(--text-tertiary)]">{txn.id}</td>
+                        <td className="py-2 px-4">
+                           <span className="font-medium text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{txn.user}</span>
                         </td>
-                        <td className="py-2.5 px-6">
+                        <td className="py-2 px-4">
                            <div className="flex items-center gap-1.5">
                               <CreditCard size={10} className="text-[var(--text-tertiary)]/50" />
-                              <span className="text-[9px] font-black text-[var(--text-tertiary)] uppercase leading-none italic">{txn.method}</span>
+                              <span className="font-medium text-[var(--text-tertiary)]">{txn.method}</span>
                            </div>
                         </td>
-                        <td className="py-2.5 px-6 font-black text-[var(--text-primary)] italic leading-none">{txn.val}</td>
-                        <td className="py-2.5 px-6">
-                           <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border leading-none ${
+                        <td className="py-2 px-4 font-medium text-[var(--text-primary)]">{txn.val}</td>
+                        <td className="py-2 px-4">
+                           <div className={`inline-flex px-1.5 py-0.5 rounded  font-medium   border  ${
                               txn.status === 'success' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 
                               txn.status === 'pending' ? 'bg-amber-500/10 text-amber-500 border-amber-500/10' : 
                               'bg-rose-500/10 text-rose-500 border-rose-500/10'
@@ -115,7 +115,7 @@ export default function PaymentGatewayPage() {
                               {txn.status}
                            </div>
                         </td>
-                        <td className="py-2.5 px-6 text-[7px] font-black text-[var(--text-tertiary)] uppercase italic tracking-widest leading-none whitespace-nowrap">{new Date(txn.date).toLocaleTimeString()}</td>
+                        <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]     whitespace-nowrap">{new Date(txn.date).toLocaleTimeString()}</td>
                      </tr>
                   ))}
                </tbody>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Zap, 
   ArrowLeft, 
@@ -15,21 +15,22 @@ import {
   ZapOff,
   History,
   ArrowRight,
-  X
+  X,
+  Globe,
+  Building2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useFleetStore } from '../store/fleetStore';
-import { useFranchiseAuthStore } from '../store/franchiseAuthStore';
+import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function AddVehiclePage() {
   const navigate = useNavigate();
-  const { addVehicle } = useFleetStore();
-  const { user } = useFranchiseAuthStore();
+  const { addVehicle, hubs, fetchHubs } = useAdminDataStore();
   
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [ownershipType, setOwnershipType] = useState('platform'); // 'platform' or 'franchise'
   
   const [formData, setFormData] = useState({
     plate: '',
@@ -40,8 +41,13 @@ export default function AddVehiclePage() {
     insuranceExpiry: '',
     pUCNumber: '',
     pUCExpiry: '',
-    rcImage: ''
+    rcImage: '',
+    franchise: ''
   });
+
+  useEffect(() => {
+    fetchHubs();
+  }, []);
 
   const nextStep = () => setStep(prev => prev + 1);
   const prevStep = () => setStep(prev => prev - 1);
@@ -65,13 +71,21 @@ export default function AddVehiclePage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (ownershipType === 'franchise' && !formData.franchise) {
+      alert('Please select a franchise for this vehicle.');
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
-      const res = await addVehicle({
+      const submissionData = {
         ...formData,
-        franchise: user?.id || user?._id
-      });
+        franchise: ownershipType === 'platform' ? null : formData.franchise
+      };
+
+      const res = await addVehicle(submissionData);
       
       if (res.success) {
         setIsSuccess(true);
@@ -91,16 +105,16 @@ export default function AddVehiclePage() {
       <div className="flex items-center gap-4 mb-8">
         <button 
           onClick={() => navigate(-1)}
-          className="p-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl text-[var(--text-tertiary)] hover:text-emerald-500 transition-all font-black uppercase"
+          className="p-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl text-[var(--text-tertiary)] hover:text-emerald-500 transition-all"
         >
           <ArrowLeft size={20} />
         </button>
         <div className="space-y-0.5">
            <h1 className="text-2xl font-black tracking-tighter text-[var(--text-primary)] uppercase italic">
-              Vehicle <span className="text-emerald-500">Provisioning</span>
+              Global <span className="text-emerald-500">Provisioning</span>
            </h1>
            <p className="text-[9px] font-black uppercase tracking-[0.3em] text-[var(--text-tertiary)] italic leading-none">
-              Asset Submission • Admin Approval Protocol
+              Asset Registration • Admin Protocol
            </p>
         </div>
       </div>
@@ -117,35 +131,118 @@ export default function AddVehiclePage() {
           <div className="w-24 h-24 bg-emerald-500/20 border-2 border-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-[0_0_40px_rgba(16,185,129,0.2)]">
              <CheckCircle size={48} className="text-emerald-500" />
           </div>
-          <h2 className="text-2xl font-black text-[var(--text-primary)] uppercase tracking-tighter italic mb-4">Payload Submitted</h2>
+          <h2 className="text-2xl font-black text-[var(--text-primary)] uppercase tracking-tighter italic mb-4">Asset Deployed</h2>
           <p className="text-xs text-[var(--text-tertiary)] font-bold uppercase tracking-widest leading-relaxed max-w-sm mx-auto mb-10 italic">
-            Your vehicle <span className="text-emerald-500 font-extrabold">{formData.plate}</span> has been queued for Admin verification. You will be notified once the node is authorized.
+            Vehicle <span className="text-emerald-500 font-extrabold">{formData.plate}</span> has been successfully added to the {ownershipType === 'platform' ? 'Platform' : 'Franchise'} registry.
           </p>
           <button 
-            onClick={() => navigate('/franchise/fleet')}
+            onClick={() => navigate('/admin/fleet')}
             className="px-10 py-5 bg-emerald-600 text-white rounded-3xl text-[10px] font-black uppercase tracking-[.4em] shadow-xl shadow-emerald-950/40 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-3 mx-auto group"
           >
-            Return to Fleet Registry <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+            Return to Fleet Oversight <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
           </button>
         </motion.div>
       ) : (
         <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-[3rem] p-12 shadow-sm relative overflow-hidden">
           {/* Step Indicator */}
           <div className="flex items-center gap-4 mb-12">
-            {[1, 2, 3].map((s) => (
+            {[1, 2, 3, 4].map((s) => (
               <React.Fragment key={s}>
                 <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-[10px] font-black transition-all border-2 ${
                   step >= s ? 'bg-emerald-500 text-white border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.3)]' : 'bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] border-[var(--border-subtle)]'
                 }`}>
                   {step > s ? <CheckCircle size={14} /> : `0${s}`}
                 </div>
-                {s < 3 && <div className={`flex-1 h-0.5 rounded-full transition-all ${step > s ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.2)]' : 'bg-[var(--border-subtle)]'}`} />}
+                {s < 4 && <div className={`flex-1 h-0.5 rounded-full transition-all ${step > s ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.2)]' : 'bg-[var(--border-subtle)]'}`} />}
               </React.Fragment>
             ))}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-10">
             {step === 1 && (
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }} 
+                animate={{ opacity: 1, x: 0 }} 
+                className="space-y-8"
+              >
+                <div className="space-y-1">
+                   <h3 className="text-lg font-black text-[var(--text-primary)] uppercase italic tracking-tight">Ownership Classification</h3>
+                   <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">Define asset host assignment</p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setOwnershipType('platform')}
+                    className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 group ${
+                      ownershipType === 'platform' 
+                      ? 'border-emerald-500 bg-emerald-500/5' 
+                      : 'border-[var(--border-subtle)] hover:border-emerald-500/20 bg-[var(--bg-tertiary)]'
+                    }`}
+                  >
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+                      ownershipType === 'platform' ? 'bg-emerald-500 text-white shadow-lg' : 'bg-[var(--bg-secondary)] text-[var(--text-tertiary)]'
+                    }`}>
+                      <Globe size={24} />
+                    </div>
+                    <div className="text-center">
+                      <p className={`text-[10px] font-black uppercase tracking-widest italic ${ownershipType === 'platform' ? 'text-emerald-500' : 'text-[var(--text-primary)]'}`}>Platform Asset</p>
+                      <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase mt-1 opacity-60">Company owned</p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setOwnershipType('franchise')}
+                    className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 group ${
+                      ownershipType === 'franchise' 
+                      ? 'border-emerald-500 bg-emerald-500/5' 
+                      : 'border-[var(--border-subtle)] hover:border-emerald-500/20 bg-[var(--bg-tertiary)]'
+                    }`}
+                  >
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+                      ownershipType === 'franchise' ? 'bg-emerald-500 text-white shadow-lg' : 'bg-[var(--bg-secondary)] text-[var(--text-tertiary)]'
+                    }`}>
+                      <Building2 size={24} />
+                    </div>
+                    <div className="text-center">
+                      <p className={`text-[10px] font-black uppercase tracking-widest italic ${ownershipType === 'franchise' ? 'text-emerald-500' : 'text-[var(--text-primary)]'}`}>Franchise Asset</p>
+                      <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase mt-1 opacity-60">Partner assignment</p>
+                    </div>
+                  </button>
+                </div>
+
+                <AnimatePresence>
+                  {ownershipType === 'franchise' && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-4 overflow-hidden"
+                    >
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Target Franchise / Hub</label>
+                        <select 
+                          required
+                          value={formData.franchise}
+                          onChange={(e) => setFormData({...formData, franchise: e.target.value})}
+                          className="w-full px-6 py-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all appearance-none cursor-pointer italic"
+                        >
+                          <option value="">-- SELECT PARTNER NODE --</option>
+                          {hubs.map(hub => (
+                            <option key={hub._id} value={hub._id}>
+                              {hub.hubName} ({hub.city})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            )}
+
+            {step === 2 && (
               <motion.div 
                 initial={{ opacity: 0, x: 20 }} 
                 animate={{ opacity: 1, x: 0 }} 
@@ -202,7 +299,7 @@ export default function AddVehiclePage() {
               </motion.div>
             )}
 
-            {step === 2 && (
+            {step === 3 && (
               <motion.div 
                 initial={{ opacity: 0, x: 20 }} 
                 animate={{ opacity: 1, x: 0 }} 
@@ -283,21 +380,21 @@ export default function AddVehiclePage() {
               </motion.div>
             )}
 
-            {step === 3 && (
+            {step === 4 && (
               <motion.div 
                 initial={{ opacity: 0, x: 20 }} 
                 animate={{ opacity: 1, x: 0 }} 
                 className="space-y-8"
               >
                 <div className="space-y-1">
-                   <h3 className="text-lg font-black text-[var(--text-primary)] uppercase italic tracking-tight">Review Node Deployment</h3>
-                   <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">Authorize for Admin inspection</p>
+                   <h3 className="text-lg font-black text-[var(--text-primary)] uppercase italic tracking-tight">Review Deployment</h3>
+                   <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">Confirm asset entry protocols</p>
                 </div>
                 <div className="p-8 bg-emerald-600/5 border border-emerald-500/10 rounded-3xl space-y-6">
                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                          <div className="w-12 h-12 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
-                            <Zap size={24} />
+                            {ownershipType === 'platform' ? <Globe size={24} /> : <Building2 size={24} />}
                          </div>
                          <div>
                             <p className="text-xs font-black text-[var(--text-primary)] uppercase tracking-tight italic">{formData.plate || 'PLATE_REDACTED'}</p>
@@ -305,8 +402,10 @@ export default function AddVehiclePage() {
                          </div>
                       </div>
                       <div className="text-right">
-                         <p className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1">Authorization Target</p>
-                         <p className="text-[10px] font-black text-emerald-500 uppercase tracking-tighter italic">ADMIN_VERIFY_QUEUE</p>
+                         <p className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1">Ownership</p>
+                         <p className="text-[10px] font-black text-emerald-500 uppercase tracking-tighter italic">
+                            {ownershipType === 'platform' ? 'PLATFORM_UNIT' : `FRANCHISE: ${hubs.find(h => h._id === formData.franchise)?.hubName || 'UNKNOWN'}`}
+                         </p>
                       </div>
                    </div>
                    <div className="grid grid-cols-2 gap-4">
@@ -316,7 +415,7 @@ export default function AddVehiclePage() {
                       </div>
                       <div className="flex items-center gap-3 p-4 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl">
                          <Target size={16} className="text-emerald-500" />
-                         <span className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-widest">P2P Validation</span>
+                         <span className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-widest">Global Sync</span>
                       </div>
                    </div>
                 </div>
@@ -330,20 +429,20 @@ export default function AddVehiclePage() {
                     onClick={prevStep}
                     className="px-10 py-5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] text-[var(--text-primary)] rounded-3xl text-[10px] font-black uppercase tracking-[.4em] hover:bg-[var(--bg-secondary)] transition-all active:scale-95 italic"
                   >
-                    Reverse Node
+                    Back
                   </button>
                )}
                <button 
-                 type={step === 3 ? 'submit' : 'button'}
-                 onClick={step === 3 ? undefined : nextStep}
+                 type={step === 4 ? 'submit' : 'button'}
+                 onClick={step === 4 ? undefined : nextStep}
                  disabled={isSubmitting}
                  className="flex-1 py-5 bg-emerald-600 text-white rounded-3xl text-[10px] font-black uppercase tracking-[.4em] shadow-xl shadow-emerald-950/40 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-3 disabled:opacity-50"
                >
                  {isSubmitting ? (
-                   <span className="animate-pulse">Authorizing Payload...</span>
+                   <span className="animate-pulse">Provisioning...</span>
                  ) : (
                    <>
-                     {step === 3 ? 'Confirm Provisioning' : 'Next Protocol'} <ChevronRight size={14} />
+                     {step === 4 ? 'Confirm Asset' : 'Next Protocol'} <ChevronRight size={14} />
                    </>
                  )}
                </button>

@@ -43,7 +43,7 @@ const RiderSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['active', 'paused', 'pending', 'completed'],
+    enum: ['approved', 'active', 'paused', 'pending', 'completed', 'inactive', 'suspended'],
     default: 'pending',
   },
   subscriptionPlan: {

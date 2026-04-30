@@ -130,22 +130,22 @@ export default function CustomerEngagementPage() {
             <div className="overflow-x-auto no-scrollbar">
                <table className="w-full">
                   <thead>
-                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
+                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
                         {activeTab === 'tickets' ? (
                            ['ID', 'Entity', 'Category', 'Priority', 'SLA', 'Status'].map((header) => (
-                              <th key={header} className="text-left py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
+                              <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                            ))
                         ) : activeTab === 'coupons' ? (
                            ['Code', 'Value', 'Usage', 'Expiry', 'Status'].map((header) => (
-                              <th key={header} className="text-left py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
+                              <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                            ))
                         ) : activeTab === 'crm' ? (
                            ['Campaign ID', 'Name', 'Reach', 'Nodes', 'Status'].map((header) => (
-                              <th key={header} className="text-left py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
+                              <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                            ))
                         ) : (
                            ['User', 'Rating', 'Comment', 'Sync', 'Status'].map((header) => (
-                              <th key={header} className="text-left py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
+                              <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                            ))
                         )}
                      </tr>
@@ -154,14 +154,14 @@ export default function CustomerEngagementPage() {
                      {activeTab === 'tickets' ? (
                         allTickets.map((tck) => (
                            // ... (existing ticket row)
-                           <tr key={tck.id} className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]">
-                              <td className="py-2.5 px-6 font-black text-[7.5px] text-[var(--text-tertiary)] uppercase tracking-widest leading-none">{tck.id}</td>
-                              <td className="py-2.5 px-6 whitespace-nowrap">
-                                 <span className="font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic leading-none">{tck.entity}</span>
+                           <tr key={tck.id} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
+                              <td className="py-2 px-4 font-medium  text-[var(--text-tertiary)]">{tck.id}</td>
+                              <td className="py-2 px-4 whitespace-nowrap">
+                                 <span className="font-medium text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{tck.entity}</span>
                               </td>
-                              <td className="py-2.5 px-6 text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-wider leading-none">{tck.category}</td>
-                              <td className="py-2.5 px-6">
-                                 <span className={`text-[7px] font-black uppercase px-1.5 py-0.5 rounded border leading-none ${
+                              <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]">{tck.category}</td>
+                              <td className="py-2 px-4">
+                                 <span className={` font-medium  px-1.5 py-0.5 rounded border  ${
                                     tck.priority === 'high' ? 'bg-rose-500/10 text-rose-500 border-rose-500/10' : 
                                     tck.priority === 'medium' ? 'bg-amber-500/10 text-amber-500 border-amber-500/10' :
                                     'bg-blue-500/10 text-blue-500 border-blue-500/10'
@@ -169,9 +169,9 @@ export default function CustomerEngagementPage() {
                                     {tck.priority}
                                  </span>
                               </td>
-                              <td className="py-2.5 px-6 text-[7.5px] font-black text-[var(--text-tertiary)] uppercase italic leading-none">{new Date(tck.sla).toLocaleDateString()}</td>
-                              <td className="py-2.5 px-6">
-                                 <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border leading-none ${
+                              <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]">{new Date(tck.sla).toLocaleDateString()}</td>
+                              <td className="py-2 px-4">
+                                 <div className={`inline-flex px-1.5 py-0.5 rounded  font-medium   border  ${
                                     tck.status === 'resolved' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 
                                     tck.status === 'in-progress' ? 'bg-amber-500/10 text-amber-500 border-amber-500/10' : 
                                     'bg-rose-500/10 text-rose-500 border-rose-500/10'
@@ -183,13 +183,13 @@ export default function CustomerEngagementPage() {
                         ))
                       ) : activeTab === 'coupons' ? (
                         allPromos.map((cp) => (
-                           <tr key={cp.code} className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]">
-                              <td className="py-2.5 px-6 font-black text-[9px] text-emerald-500 uppercase tracking-widest italic leading-none">{cp.code}</td>
-                              <td className="py-2.5 px-6 text-[9px] font-black text-[var(--text-primary)] uppercase leading-none">{cp.discount}</td>
-                              <td className="py-2.5 px-6 text-[7.5px] font-black text-[var(--text-tertiary)] uppercase leading-none">{cp.usage} Vol</td>
-                              <td className="py-2.5 px-6 text-[7.5px] font-black text-[var(--text-tertiary)] uppercase italic leading-none">{cp.expiry}</td>
-                              <td className="py-2.5 px-6">
-                                 <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border leading-none ${
+                           <tr key={cp.code} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
+                              <td className="py-2 px-4 font-medium  text-emerald-500">{cp.code}</td>
+                              <td className="py-2 px-4  font-medium text-[var(--text-primary)]">{cp.discount}</td>
+                              <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]">{cp.usage} Vol</td>
+                              <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]">{cp.expiry}</td>
+                              <td className="py-2 px-4">
+                                 <div className={`inline-flex px-1.5 py-0.5 rounded  font-medium   border  ${
                                     cp.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-slate-500/10 text-slate-500 border-slate-500/10'
                                  }`}>
                                     {cp.status}
@@ -199,15 +199,15 @@ export default function CustomerEngagementPage() {
                         ))
                      ) : activeTab === 'crm' ? (
                         allCampaigns.map((camp) => (
-                           <tr key={camp._id || camp.campaignId} className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]">
-                              <td className="py-2.5 px-6 font-black text-[7.5px] text-[var(--text-tertiary)] uppercase tracking-widest leading-none">{camp.campaignId}</td>
-                              <td className="py-2.5 px-6">
-                                 <span className="font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic leading-none">{camp.name}</span>
+                           <tr key={camp._id || camp.campaignId} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
+                              <td className="py-2 px-4 font-medium  text-[var(--text-tertiary)]">{camp.campaignId}</td>
+                              <td className="py-2 px-4">
+                                 <span className="font-medium text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{camp.name}</span>
                               </td>
-                              <td className="py-2.5 px-6 text-[8px] font-black text-[var(--text-tertiary)] uppercase leading-none">{camp.usageCount || 0} Users</td>
-                              <td className="py-2.5 px-6 text-[8px] font-black text-[var(--text-tertiary)] uppercase leading-none italic">{camp.targetNodes || 0} Nodes</td>
-                              <td className="py-2.5 px-6">
-                                 <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border leading-none ${
+                              <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]">{camp.usageCount || 0} Users</td>
+                              <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]">{camp.targetNodes || 0} Nodes</td>
+                              <td className="py-2 px-4">
+                                 <div className={`inline-flex px-1.5 py-0.5 rounded  font-medium   border  ${
                                     camp.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-slate-500/10 text-slate-500 border-slate-500/10'
                                  }`}>
                                     {camp.status}
@@ -216,8 +216,8 @@ export default function CustomerEngagementPage() {
                            </tr>
                         ))
                      ) : (
-                        <tr className="text-center">
-                           <td colSpan="5" className="py-10 text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] italic">No Data Stream Available</td>
+                        <tr className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
+                           <td colSpan="5" className="py-10  font-medium text-[var(--text-tertiary)]  tracking-[0.2em]">No Data Stream Available</td>
                         </tr>
                      )}
                   </tbody>

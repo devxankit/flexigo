@@ -126,9 +126,9 @@ export default function KycOnboardingPage() {
          <div className="overflow-x-auto no-scrollbar">
             <table className="w-full">
                <thead>
-                  <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
+                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
                      {['Identity Identity', 'Persona', 'Liveness Check', 'Registry Date', 'Status', 'Actions'].map((header) => (
-                        <th key={header} className="text-left py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
+                        <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                      ))}
                   </tr>
                </thead>
@@ -141,25 +141,24 @@ export default function KycOnboardingPage() {
                          animate={{ opacity: 1 }}
                          exit={{ opacity: 0 }}
                           key={record._id || record.id} 
-                          className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]"
+                          className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer"
                           onClick={() => openDetails(record)}
                        >
-                          <td className="py-2.5 px-6 whitespace-nowrap">
+                          <td className="py-2 px-4 whitespace-nowrap">
                              <div className="flex flex-col">
-                                <span className="font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic leading-none">{record.name}</span>
-                                <span className="text-[7px] font-bold text-[var(--text-tertiary)]/50 tracking-widest uppercase mt-1 leading-none italic">{record._id || record.id}</span>
+                                <span className="font-medium text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{record.name}</span>
                              </div>
                           </td>
-                          <td className="py-2.5 px-6 font-black text-[var(--text-tertiary)] uppercase tracking-widest leading-none italic">{record.role}</td>
-                          <td className="py-2.5 px-6">
+                          <td className="py-2 px-4 font-medium text-[var(--text-tertiary)]">{record.role}</td>
+                          <td className="py-2 px-4">
                              <div className="flex items-center gap-1.5 px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full w-fit">
                                 <Camera size={8} className="text-emerald-500" />
-                                <span className="text-[7px] font-black text-emerald-500 uppercase tracking-widest">LIVE_MATCH_OK</span>
+                                <span className="font-medium text-emerald-500">LIVE_MATCH_OK</span>
                              </div>
                           </td>
-                          <td className="py-2.5 px-6 text-[9px] font-black text-[var(--text-tertiary)] uppercase italic tracking-widest leading-none whitespace-nowrap">{record.date}</td>
-                          <td className="py-2.5 px-6">
-                             <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border leading-none ${
+                          <td className="py-2 px-4  font-medium text-[var(--text-tertiary)] whitespace-nowrap">{new Date(record.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</td>
+                          <td className="py-2 px-4">
+                             <div className={`inline-flex px-1.5 py-0.5 rounded  font-medium   border  ${
                                 record.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 
                                 record.status === 'pending' ? 'bg-blue-500/10 text-blue-500 border-blue-500/10' : 
                                 'bg-rose-500/10 text-rose-500 border-rose-500/10'
@@ -167,7 +166,7 @@ export default function KycOnboardingPage() {
                                 {record.status}
                              </div>
                           </td>
-                          <td className="py-2.5 px-6">
+                          <td className="py-2 px-4">
                              <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                                 <button 
                                    onClick={() => openDetails(record)}
@@ -208,8 +207,7 @@ export default function KycOnboardingPage() {
                         <div className="space-y-0.5">
                            <h2 className="text-base font-black text-[var(--text-primary)] uppercase tracking-tighter italic leading-none">{selectedRecord.name}</h2>
                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-[7.5px] font-black text-emerald-500 uppercase tracking-widest leading-none">ID: {selectedRecord._id || selectedRecord.id}</span>
-                              <div className={`px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border border-[var(--border-subtle)] leading-none`}>
+                              <div className={`px-1.5 py-0.5 rounded text-xs font-medium border border-[var(--border-subtle)]`}>
                                  {selectedRecord.role}
                               </div>
                            </div>

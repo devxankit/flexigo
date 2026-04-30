@@ -327,12 +327,12 @@ export default function HrManagementPage() {
             </div>
 
             {activeTab === 'employees' ? (
-               <div className="overflow-x-auto">
-                  <table className="w-full text-left">
+               <div className="overflow-x-auto bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl shadow-sm mt-4">
+                  <table className="w-full">
                      <thead>
-                        <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
+                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
                            {['Staff ID', 'Name & Role', 'Dept', 'Shift', 'Access', 'KYC', 'Status', 'Actions'].map((header) => (
-                              <th key={header} className="py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
+                              <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                            ))}
                         </tr>
                      </thead>
@@ -346,33 +346,33 @@ export default function HrManagementPage() {
                                  exit={{ opacity: 0 }}
                                  key={emp._id || emp.id || idx}
                                  onClick={() => handleDetailsOpen(emp)}
-                                 className="group/row hover:bg-emerald-500/5 transition-colors cursor-pointer text-[10px]"
+                                 className="group/row hover:bg-emerald-500/5 transition-colors cursor-pointer"
                               >
-                                 <td className="py-3 px-6 font-black text-[7.5px] text-[var(--text-tertiary)] uppercase tracking-widest leading-none">{(emp._id || emp.id).slice(-8).toUpperCase()}</td>
-                                 <td className="py-3 px-6 whitespace-nowrap">
+                                 <td className="py-2 px-4 font-medium  text-[var(--text-tertiary)]">{(emp._id || emp.id).slice(-8).toUpperCase()}</td>
+                                 <td className="py-2 px-4 whitespace-nowrap">
                                     <div className="flex flex-col">
-                                       <span className="font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic">{emp.name}</span>
-                                       <span className="text-[7.5px] font-bold text-[var(--text-tertiary)] uppercase mt-1 italic tracking-widest leading-none">{emp.role}</span>
+                                       <span className="font-medium text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{emp.name}</span>
+                                       <span className="font-medium text-[var(--text-tertiary)]  mt-1">{emp.role}</span>
                                     </div>
                                  </td>
-                                 <td className="py-3 px-6 text-[9px] font-black text-[var(--text-tertiary)] uppercase italic leading-none">{emp.dept}</td>
-                                 <td className="py-3 px-6 text-[9px] font-black text-[var(--text-primary)] uppercase leading-none">{emp.shift}</td>
-                                 <td className="py-3 px-6 text-[9px] font-black text-[var(--text-primary)] uppercase leading-none italic">
+                                 <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]">{emp.dept}</td>
+                                 <td className="py-2 px-4  font-medium text-[var(--text-primary)]">{emp.shift}</td>
+                                 <td className="py-2 px-4  font-medium text-[var(--text-primary)]">
                                     {emp.role.includes('Lead') ? 'Level_4' : 'Level_2'}
                                  </td>
-                                 <td className="py-3 px-6">
-                                    <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border ${emp.kycDetails?.isVerified ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-rose-500/10 text-rose-500 border-rose-500/10'
+                                 <td className="py-2 px-4">
+                                    <div className={`inline-flex px-1.5 py-0.5 rounded  font-medium   border ${emp.kycDetails?.isVerified ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-rose-500/10 text-rose-500 border-rose-500/10'
                                        }`}>
                                        {emp.kycDetails?.isVerified ? 'Approved' : 'Pending'}
                                     </div>
                                  </td>
-                                 <td className="py-3 px-6">
-                                    <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border ${emp.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-slate-500/10 text-slate-500 border-slate-500/10'
+                                 <td className="py-2 px-4">
+                                    <div className={`inline-flex px-1.5 py-0.5 rounded  font-medium   border ${emp.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-slate-500/10 text-slate-500 border-slate-500/10'
                                        }`}>
                                        {emp.status}
                                     </div>
                                  </td>
-                                 <td className="py-3 px-6">
+                                 <td className="py-2 px-4">
                                     <div className="flex items-center gap-2">
                                        <button
                                           onClick={(e) => { e.stopPropagation(); handleEditOpen(emp); }}

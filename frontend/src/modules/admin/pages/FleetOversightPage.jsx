@@ -12,14 +12,17 @@ import {
   Terminal,
   ArrowUpRight,
   Monitor,
-  Globe
+  Globe,
+  Plus
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
 import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function FleetOversightPage() {
+  const navigate = useNavigate();
   const { 
     vehicles, 
     networkStats, 
@@ -67,6 +70,12 @@ export default function FleetOversightPage() {
          </div>
          
          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => navigate('/admin/fleet/add')}
+              className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all flex items-center gap-2 active:scale-95 shadow-lg shadow-emerald-950/20 italic"
+            >
+               <Plus size={12} strokeWidth={3} /> ADD_VEHICLE
+            </button>
             <OpsFilter onFilterChange={handleFilterChange} />
             <div className="relative group">
                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--text-tertiary)] group-focus-within:text-emerald-500 transition-colors" />
@@ -111,50 +120,50 @@ export default function FleetOversightPage() {
          </div>
          
          <div className="overflow-x-auto no-scrollbar">
-            <table className="w-full text-left">
+            <table className="w-full">
                <thead>
-                  <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
+                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
                      {['Asset identity', 'Host Interface', 'Location', 'Energy Status', 'Grid Link', 'Sync'].map((header) => (
-                        <th key={header} className="py-3 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
+                        <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                      ))}
                   </tr>
                </thead>
                <tbody className="divide-y divide-[var(--border-subtle)]">
                   {filteredVehicles.map((vehicle, vIdx) => (
-                     <tr key={vehicle._id} className="group/row hover:bg-[var(--bg-tertiary)]/30 transition-colors">
-                        <td className="py-2.5 px-6 whitespace-nowrap">
+                     <tr key={vehicle._id} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
+                        <td className="py-2 px-4 whitespace-nowrap">
                            <div className="flex flex-col gap-0">
-                              <span className="text-[11px] font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight">{vehicle.plate}</span>
-                              <span className="text-[7px] font-bold text-[var(--text-tertiary)] tracking-widest leading-none uppercase">{vehicle.model || 'Flexigo Pro v2'}</span>
+                              <span className="font-medium text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{vehicle.plate}</span>
+                              <span className="font-medium text-[var(--text-tertiary)]">{vehicle.model || 'Flexigo Pro v2'}</span>
                            </div>
                         </td>
-                        <td className="py-2.5 px-6">
+                        <td className="py-2 px-4">
                            <div className="flex flex-col gap-0">
-                              <span className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-tight italic">{vehicle.rider}</span>
-                              <span className="text-[7px] font-black text-emerald-500/60 uppercase tracking-widest leading-none">Active Subscriber</span>
+                              <span className="font-medium text-[var(--text-primary)]">{vehicle.rider}</span>
+                              <span className="font-medium text-emerald-500/60">Active Subscriber</span>
                            </div>
                         </td>
-                        <td className="py-2.5 px-6">
+                        <td className="py-2 px-4">
                            <div className="flex items-center gap-1.5">
                               <MapPin size={10} className="text-emerald-500 opacity-60" />
-                              <span className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic">{vehicle.location}</span>
+                              <span className="font-medium text-[var(--text-tertiary)]">{vehicle.location}</span>
                            </div>
                         </td>
-                        <td className="py-2.5 px-6">
+                        <td className="py-2 px-4">
                            <div className="flex items-center gap-2">
                               <div className="w-12 h-1 bg-[var(--bg-tertiary)] rounded-full overflow-hidden flex-shrink-0">
                                  <div className={`h-full ${vehicle.battery < 20 ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: `${vehicle.battery}%` }} />
                               </div>
-                              <span className={`text-[9px] font-black ${vehicle.battery < 20 ? 'text-rose-500' : 'text-[var(--text-primary)]'}`}>{vehicle.battery}%</span>
+                              <span className={` font-medium ${vehicle.battery < 20 ? 'text-rose-500' : 'text-[var(--text-primary)]'}`}>{vehicle.battery}%</span>
                            </div>
                         </td>
-                        <td className="py-2.5 px-6">
+                        <td className="py-2 px-4">
                            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full w-fit">
                               <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-                              <span className="text-[7px] font-black text-emerald-500 uppercase tracking-widest">Linked</span>
+                              <span className="font-medium text-emerald-500">Linked</span>
                            </div>
                         </td>
-                        <td className="py-2.5 px-6 text-[8px] font-black text-[var(--text-tertiary)] uppercase italic tracking-widest">{vehicle.lastPing}</td>
+                        <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]">{vehicle.lastPing}</td>
                      </tr>
                   ))}
                </tbody>

@@ -123,36 +123,36 @@ export default function VehicleAnalyticsPage() {
             <span className="text-[7.5px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-600/5 px-2 py-0.5 rounded border border-emerald-500/10 animate-pulse italic leading-none">LIVE POLLING</span>
          </div>
          <div className="overflow-x-auto no-scrollbar">
-            <table className="w-full text-left">
+            <table className="w-full">
                <thead>
-                  <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
+                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
                      {['Asset ID', 'SOH (Health)', 'Thermal', 'Cycles', 'Voltage', 'Status'].map((header) => (
-                        <th key={header} className="py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
+                        <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                      ))}
                   </tr>
                </thead>
                <tbody className="divide-y divide-[var(--border-subtle)]">
                   {(vehicleStats.assetRegistry || []).map((asset) => (
-                     <tr key={asset.id} className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors text-[10px] cursor-pointer">
-                        <td className="py-2.5 px-6 font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic leading-none">{asset.id}</td>
-                        <td className="py-2.5 px-6">
+                     <tr key={asset.id} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
+                        <td className="py-2 px-4 font-medium text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{asset.id}</td>
+                        <td className="py-2 px-4">
                            <div className="flex items-center gap-2">
                               <div className="flex-1 max-w-[40px] h-1 bg-[var(--bg-tertiary)] rounded-full overflow-hidden shadow-inner">
                                  <div className={`h-full ${asset.health < 80 ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: `${asset.health}%` }} />
                               </div>
-                              <span className={`text-[9px] font-black italic leading-none ${asset.health < 80 ? 'text-rose-500' : 'text-emerald-500'}`}>{asset.health}%</span>
+                              <span className={` font-medium   ${asset.health < 80 ? 'text-rose-500' : 'text-emerald-500'}`}>{asset.health}%</span>
                            </div>
                         </td>
-                        <td className="py-2.5 px-6">
-                           <div className="flex items-center gap-1 leading-none">
+                        <td className="py-2 px-4">
+                           <div className="flex items-center gap-1">
                               <Thermometer size={10} className={parseInt(asset.temp) > 45 ? 'text-rose-500' : 'text-blue-500'} />
-                              <span className="text-[9px] font-black text-[var(--text-primary)] italic leading-none">{asset.temp}</span>
+                              <span className="font-medium text-[var(--text-primary)]">{asset.temp}</span>
                            </div>
                         </td>
-                        <td className="py-2.5 px-6 font-black text-[9px] text-[var(--text-tertiary)] uppercase tracking-widest leading-none italic">{asset.cycles} Cycles</td>
-                        <td className="py-2.5 px-6 font-black text-[9px] text-[var(--text-primary)] italic leading-none">{asset.voltage}</td>
-                        <td className="py-2.5 px-6">
-                           <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border leading-none ${
+                        <td className="py-2 px-4 font-medium  text-[var(--text-tertiary)]">{asset.cycles} Cycles</td>
+                        <td className="py-2 px-4 font-medium  text-[var(--text-primary)]">{asset.voltage}</td>
+                        <td className="py-2 px-4">
+                           <div className={`inline-flex px-1.5 py-0.5 rounded  font-medium   border  ${
                               asset.status === 'optimal' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 
                               asset.status === 'warning' ? 'bg-amber-500/10 text-amber-500 border-amber-500/10' : 
                               'bg-rose-500/10 text-rose-500 border-rose-500/10'

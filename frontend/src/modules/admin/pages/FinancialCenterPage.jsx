@@ -140,28 +140,28 @@ export default function FinancialCenterPage() {
          </div>
          
          <div className="overflow-x-auto no-scrollbar">
-            <table className="w-full text-left">
+            <table className="w-full">
                <thead>
-                  <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
+                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
                      {['Txn identity', 'Settlement Node', 'Quantum', 'Protocol', 'Status', 'Timestamp'].map((header) => (
-                        <th key={header} className="py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
+                        <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                      ))}
                   </tr>
                </thead>
                <tbody className="divide-y divide-[var(--border-subtle)]">
                   {financeTransactions.map((txn) => (
-                     <tr key={txn.id} className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]">
-                        <td className="py-2.5 px-6">
+                     <tr key={txn.id} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
+                        <td className="py-2 px-4">
                            <div className="flex flex-col">
-                              <span className="font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic leading-none">{txn.id}</span>
-                              <span className="text-[7px] font-bold text-[var(--text-tertiary)]/50 tracking-widest uppercase italic mt-1 leading-none">Registry Locked</span>
+                              <span className="font-medium text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{txn.id}</span>
+                              <span className="font-medium text-[var(--text-tertiary)]/50    mt-1">Registry Locked</span>
                            </div>
                         </td>
-                        <td className="py-2.5 px-6 font-black text-[var(--text-primary)] uppercase italic leading-none">{txn.hub}</td>
-                        <td className="py-2.5 px-6 font-black text-emerald-500 tracking-tight italic leading-none">{txn.val}</td>
-                        <td className="py-2.5 px-6 text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-wider leading-none italic">{txn.method}</td>
-                        <td className="py-2.5 px-6">
-                           <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border ${
+                        <td className="py-2 px-4 font-medium text-[var(--text-primary)]">{txn.hub}</td>
+                        <td className="py-2 px-4 font-medium text-emerald-500">{txn.val}</td>
+                        <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]">{txn.method}</td>
+                        <td className="py-2 px-4">
+                           <div className={`inline-flex px-1.5 py-0.5 rounded  font-medium   border ${
                               txn.status === 'success' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 
                               txn.status === 'pending' ? 'bg-amber-500/10 text-amber-500 border-amber-500/10' : 
                               'bg-rose-500/10 text-rose-500 border-rose-500/10'
@@ -169,7 +169,7 @@ export default function FinancialCenterPage() {
                               {txn.status}
                            </div>
                         </td>
-                        <td className="py-2.5 px-6 text-[7.5px] font-black text-[var(--text-tertiary)] uppercase italic tracking-widest leading-none">
+                        <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]">
                            {new Date(txn.date).toLocaleDateString()}
                         </td>
                      </tr>

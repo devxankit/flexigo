@@ -148,13 +148,6 @@ export default function FleetManagement() {
               FLEET_STATUS • DOCUMENT_COMPLIANCE
            </p>
         </div>
-
-        <button 
-          onClick={() => navigate('/franchise/fleet/add')}
-          className="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-[7.5px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all flex items-center gap-1.5 active:scale-95 shadow-lg shadow-emerald-950/20 italic leading-none"
-        >
-           <Plus size={10} strokeWidth={3} /> ADD_VEHICLE
-        </button>
       </div>
 
       {/* Filters & Search Bar */}

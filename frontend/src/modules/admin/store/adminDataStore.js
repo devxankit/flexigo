@@ -162,6 +162,19 @@ export const useAdminDataStore = create((set, get) => ({
       console.error("Failed to fetch all vehicles:", err);
     }
   },
+  
+  addVehicle: async (vehicleData) => {
+    try {
+      const res = await api.post('/admin/fleet/add', vehicleData);
+      if (res.data.success) {
+        set(state => ({ vehicles: [res.data.vehicle, ...state.vehicles] }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to add vehicle:", err);
+      return { success: false, message: err.response?.data?.message || err.message };
+    }
+  },
 
   fetchHubVehicles: async (hubId) => {
     try {
@@ -248,10 +261,29 @@ export const useAdminDataStore = create((set, get) => ({
     try {
       const res = await api.delete(`/admin/geofencing/${id}`);
       if (res.data.success) {
-        set(state => ({ geofences: state.geofences.filter(g => g._id !== id) }));
+        set(state => ({
+          geofences: state.geofences.filter(g => g._id !== id && g.id !== id)
+        }));
+        return res.data;
       }
     } catch (err) {
-      console.error("Failed to delete geofence:", err);
+      console.error("Failed to remove geofence:", err);
+      return { success: false, message: err.message };
+    }
+  },
+
+  updateGeofence: async (id, data) => {
+    try {
+      const res = await api.patch(`/admin/geofencing/${id}`, data);
+      if (res.data.success) {
+        set(state => ({
+          geofences: state.geofences.map(g => (g._id === id || g.id === id) ? res.data.geofence : g)
+        }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to update geofence:", err);
+      return { success: false, message: err.message };
     }
   },
 
@@ -574,6 +606,59 @@ export const useAdminDataStore = create((set, get) => ({
       }
     } catch (err) {
       console.error("Failed to add campaign:", err);
+      return { success: false, message: err.response?.data?.message || err.message };
+    }
+  },
+
+  // --- RIDER MANAGEMENT ---
+  riders: [],
+  fetchRiders: async () => {
+    try {
+      const res = await api.get('/admin/riders');
+      if (res.data.success) {
+        set({ riders: res.data.riders });
+      }
+    } catch (err) {
+      console.error("Failed to fetch riders:", err);
+    }
+  },
+  addRider: async (riderData) => {
+    try {
+      const res = await api.post('/admin/riders', riderData);
+      if (res.data.success) {
+        set(state => ({ riders: [res.data.rider, ...state.riders] }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to add rider:", err);
+      return { success: false, message: err.response?.data?.message || err.message };
+    }
+  },
+  updateRider: async (id, riderData) => {
+    try {
+      const res = await api.put(`/admin/riders/${id}`, riderData);
+      if (res.data.success) {
+        set(state => ({
+          riders: state.riders.map(r => r._id === id ? res.data.rider : r)
+        }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to update rider:", err);
+      return { success: false, message: err.response?.data?.message || err.message };
+    }
+  },
+  removeRider: async (id) => {
+    try {
+      const res = await api.delete(`/admin/riders/${id}`);
+      if (res.data.success) {
+        set(state => ({
+          riders: state.riders.filter(r => r._id !== id)
+        }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to delete rider:", err);
       return { success: false, message: err.response?.data?.message || err.message };
     }
   }

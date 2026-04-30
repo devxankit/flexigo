@@ -10,7 +10,6 @@ import WalletFinancials from '../pages/WalletFinancials';
 import StaffManagement from '../pages/StaffManagement';
 import NotificationsPage from '../pages/NotificationsPage';
 import VehicleDetail from '../pages/VehicleDetail';
-import AddVehiclePage from '../pages/AddVehiclePage';
 import FranchiseOnboarding from '../pages/FranchiseOnboarding';
 import MaintenanceScheduler from '../pages/MaintenanceScheduler';
 import AddRiderPage from '../pages/AddRiderPage';
@@ -28,7 +27,6 @@ export default function FranchiseRoutes() {
         <Route path="/dashboard" element={<HubDashboard />} />
         <Route path="/fleet" element={<FleetManagement />} />
         <Route path="/maintenance" element={<MaintenanceScheduler />} />
-        <Route path="/fleet/add" element={<AddVehiclePage />} />
         <Route path="/fleet/:vehicleId" element={<VehicleDetail />} />
         <Route path="/handover" element={<HandoverModule />} />
         <Route path="/tracking" element={<RiderTracking />} />

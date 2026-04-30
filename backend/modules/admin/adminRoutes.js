@@ -9,6 +9,7 @@ import {
   getSubscribers,
   getGeofences,
   createGeofence,
+  updateGeofence,
   deleteGeofence,
   getAllStaff,
   createStaff,
@@ -35,7 +36,8 @@ import {
 } from './adminController.js';
 import {
   getAssignments,
-  createAssignment
+  createAssignment,
+  addVehicle
 } from '../fleet/vehicleController.js';
 import {
   getPlans,
@@ -55,11 +57,13 @@ router.get('/subscribers', getSubscribers);
 // Geofencing
 router.get('/geofencing', getGeofences);
 router.post('/geofencing', createGeofence);
+router.patch('/geofencing/:id', updateGeofence);
 router.delete('/geofencing/:id', deleteGeofence);
 
-// Vehicle Assignments
+// Vehicle Management
 router.get('/assignments', getAssignments);
 router.post('/assignments', createAssignment);
+router.post('/fleet/add', addVehicle);
 
 // Staff Management
 router.get('/staff', getAllStaff);
@@ -100,5 +104,12 @@ router.post('/roles', createRole);
 // Campaign Management
 router.get('/campaigns', getCampaigns);
 router.post('/campaigns', createCampaign);
+
+// Rider Management
+import { getAllRiders, createRider, updateRider, deleteRider } from './adminController.js';
+router.get('/riders', getAllRiders);
+router.post('/riders', createRider);
+router.put('/riders/:id', updateRider);
+router.delete('/riders/:id', deleteRider);
 
 export default router;

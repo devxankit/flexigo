@@ -15,6 +15,7 @@ const FleetOversightPage = lazy(() => import('../pages/FleetOversightPage'));
 const GpsControlPage = lazy(() => import('../pages/GpsControlPage'));
 const GeoFencingPage = lazy(() => import('../pages/GeoFencingPage'));
 const AssignmentPage = lazy(() => import('../pages/AssignmentPage'));
+const AddVehiclePage = lazy(() => import('../pages/AddVehiclePage'));
 
 // People Group
 const SubscriberRegistryPage = lazy(() => import('../pages/SubscriberRegistryPage'));
@@ -57,6 +58,7 @@ export default function AdminRoutes() {
           <Route path="hubs" element={<HubManagementPage />} />
           <Route path="hubs/:hubId" element={<HubDetailsPage />} />
           <Route path="fleet" element={<FleetOversightPage />} />
+          <Route path="fleet/add" element={<AddVehiclePage />} />
           <Route path="gps-control" element={<GpsControlPage />} />
           <Route path="geofencing" element={<GeoFencingPage />} />
           <Route path="assignment" element={<AssignmentPage />} />

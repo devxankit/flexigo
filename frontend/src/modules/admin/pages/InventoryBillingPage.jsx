@@ -77,27 +77,27 @@ export default function InventoryBillingPage() {
          <div className="overflow-x-auto no-scrollbar">
             <table className="w-full">
                <thead>
-                  <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
+                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
                      {['SKU Identity', 'Category', 'Stock Level', 'Min Threshold', 'Supplier Node', 'Status'].map((header) => (
-                        <th key={header} className="text-left py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
+                        <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                      ))}
                   </tr>
                </thead>
                <tbody className="divide-y divide-[var(--border-subtle)]">
                   {inventory.map((item) => (
-                     <tr key={item.id} className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]">
-                        <td className="py-2.5 px-6 whitespace-nowrap">
+                     <tr key={item.id} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
+                        <td className="py-2 px-4 whitespace-nowrap">
                            <div className="flex flex-col">
-                              <span className="font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic leading-none">{item.name}</span>
-                              <span className="text-[7px] font-bold text-[var(--text-tertiary)]/50 tracking-widest uppercase mt-1 leading-none italic">{item.id}</span>
+                              <span className="font-medium text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{item.name}</span>
+                              <span className="font-medium text-[var(--text-tertiary)]/50   mt-1">{item.id}</span>
                            </div>
                         </td>
-                        <td className="py-2.5 px-6 font-black text-[var(--text-tertiary)] uppercase tracking-widest leading-none italic">{item.category}</td>
-                        <td className="py-2.5 px-6 font-black text-[var(--text-primary)] tracking-tight leading-none italic">{item.stock} Units</td>
-                        <td className="py-2.5 px-6 font-black text-[var(--text-tertiary)] opacity-50 leading-none italic">{item.minLevel}</td>
-                        <td className="py-2.5 px-6 text-[9px] font-black text-[var(--text-primary)] uppercase leading-none italic">{item.supplier}</td>
-                        <td className="py-2.5 px-6">
-                           <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border leading-none ${
+                        <td className="py-2 px-4 font-medium text-[var(--text-tertiary)]">{item.category}</td>
+                        <td className="py-2 px-4 font-medium text-[var(--text-primary)]">{item.stock} Units</td>
+                        <td className="py-2 px-4 font-medium text-[var(--text-tertiary)] opacity-50">{item.minLevel}</td>
+                        <td className="py-2 px-4  font-medium text-[var(--text-primary)]">{item.supplier}</td>
+                        <td className="py-2 px-4">
+                           <div className={`inline-flex px-1.5 py-0.5 rounded  font-medium   border  ${
                               item.status === 'optimal' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-rose-500/10 text-rose-500 border border-rose-500/10'
                            }`}>
                               {item.status}

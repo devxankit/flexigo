@@ -138,11 +138,11 @@ export default function AssignmentPage() {
                </div>
             </div>
             <div className="overflow-x-auto no-scrollbar">
-               <table className="w-full text-left">
+               <table className="w-full">
                   <thead>
-                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
+                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
                         {['ID', 'Asset', 'Host', 'Protocol', 'Time', 'Status'].map((header) => (
-                           <th key={header} className="py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
+                           <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                         ))}
                      </tr>
                   </thead>
@@ -155,27 +155,27 @@ export default function AssignmentPage() {
                                animate={{ opacity: 1 }}
                                exit={{ opacity: 0 }}
                                key={asgn._id} 
-                               className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]"
+                               className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer"
                             >
-                               <td className="py-2.5 px-6 font-black text-[7.5px] text-[var(--text-tertiary)] uppercase tracking-widest leading-none">{(asgn._id || asgn.id).slice(-8).toUpperCase()}</td>
-                               <td className="py-2.5 px-6 font-black text-[var(--text-primary)] uppercase tracking-tight italic leading-none">{asgn.vehicle?.plate}</td>
-                               <td className="py-2.5 px-6">
+                               <td className="py-2 px-4 font-medium  text-[var(--text-tertiary)]">{(asgn._id || asgn.id).slice(-8).toUpperCase()}</td>
+                               <td className="py-2 px-4 font-medium text-[var(--text-primary)]">{asgn.vehicle?.plate}</td>
+                               <td className="py-2 px-4">
                                   <div className="flex flex-col">
-                                     <span className="font-black text-[var(--text-primary)] uppercase tracking-wider leading-tight italic">{asgn.rider?.name || asgn.rider?.phone}</span>
-                                     <span className="text-[7px] font-black text-[var(--text-tertiary)] uppercase italic mt-0.5 leading-none">{asgn.hubName || asgn.hub}</span>
+                                     <span className="font-medium text-[var(--text-primary)]   leading-tight">{asgn.rider?.name || asgn.rider?.phone}</span>
+                                     <span className="font-medium text-[var(--text-tertiary)]   mt-0.5">{asgn.hubName || asgn.hub}</span>
                                   </div>
                                </td>
-                               <td className="py-2.5 px-6">
-                                  <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border ${
+                               <td className="py-2 px-4">
+                                  <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded  font-medium   border ${
                                      asgn.type === 'QR Scan' ? 'bg-blue-500/10 text-blue-500 border-blue-500/10' : 'bg-amber-500/10 text-amber-500 border-amber-500/10'
                                   }`}>
                                      {asgn.type === 'QR Scan' ? <Scan size={8} /> : <UserPlus size={8} />}
                                      {asgn.type}
                                   </div>
                                </td>
-                               <td className="py-2.5 px-6 text-[7.5px] font-black text-[var(--text-tertiary)] uppercase italic leading-none">{new Date(asgn.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
-                               <td className="py-2.5 px-6">
-                                  <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border ${
+                               <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]">{new Date(asgn.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                               <td className="py-2 px-4">
+                                  <div className={`inline-flex px-1.5 py-0.5 rounded  font-medium   border ${
                                      asgn.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-slate-500/10 text-slate-500 border-slate-500/10'
                                   }`}>
                                      {asgn.status === 'active' && <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse mr-1" />}

@@ -93,9 +93,9 @@ export default function GpsControlPage() {
                <div className="overflow-x-auto no-scrollbar">
                   <table className="w-full">
                      <thead>
-                        <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
+                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
                            {['Asset ID', 'Assigned Persona', 'Geo-Node', 'Power', 'Sync'].map((header) => (
-                              <th key={header} className="text-left py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
+                              <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                            ))}
                         </tr>
                      </thead>
@@ -104,32 +104,32 @@ export default function GpsControlPage() {
                            <tr 
                              key={vehicle._id || vehicle.id} 
                              onClick={() => setSelectedVehicle(vehicle)}
-                             className={`group/row transition-all duration-200 cursor-pointer text-[10px] ${(activeVehicle._id || activeVehicle.id) === (vehicle._id || vehicle.id) ? 'bg-emerald-600/5' : 'hover:bg-[var(--bg-tertiary)]/20'}`}
+                             className={`group/row transition-all duration-200 cursor-pointer  ${(activeVehicle._id || activeVehicle.id) === (vehicle._id || vehicle.id) ? 'bg-emerald-600/5' : 'hover:bg-[var(--bg-tertiary)]/20'}`}
                            >
-                              <td className="py-2.5 px-6">
-                                 <span className={`font-black uppercase tracking-tight transition-colors leading-none italic ${(activeVehicle._id || activeVehicle.id) === (vehicle._id || vehicle.id) ? 'text-emerald-500' : 'text-[var(--text-primary)]'}`}>{vehicle.plate || 'N/A'}</span>
+                              <td className="py-2 px-4">
+                                 <span className={`font-medium   transition-colors   ${(activeVehicle._id || activeVehicle.id) === (vehicle._id || vehicle.id) ? 'text-emerald-500' : 'text-[var(--text-primary)]'}`}>{vehicle.plate || 'N/A'}</span>
                                </td>
-                               <td className="py-2.5 px-6">
+                               <td className="py-2 px-4">
                                  <div className="flex flex-col">
-                                    <span className="font-black text-[var(--text-primary)] uppercase tracking-widest leading-none italic">{vehicle.rider || 'N/A'}</span>
-                                    <span className="text-[7px] font-bold text-[var(--text-tertiary)]/50 uppercase mt-1 leading-none italic">Asset Identity</span>
+                                    <span className="font-medium text-[var(--text-primary)]">{vehicle.rider || 'N/A'}</span>
+                                    <span className="font-medium text-[var(--text-tertiary)]/50  mt-1">Asset Identity</span>
                                  </div>
                               </td>
-                              <td className="py-2.5 px-6 leading-none">
-                                 <div className="flex items-center gap-1.5 leading-none">
+                              <td className="py-2 px-4">
+                                 <div className="flex items-center gap-1.5">
                                     <MapPin size={10} className="text-emerald-500 opacity-60" />
-                                    <span className="font-black text-[var(--text-tertiary)] uppercase tracking-widest leading-none italic">{vehicle.location}</span>
+                                    <span className="font-medium text-[var(--text-tertiary)]">{vehicle.location}</span>
                                  </div>
                               </td>
-                              <td className="py-2.5 px-6">
+                              <td className="py-2 px-4">
                                  <div className="flex items-center gap-2">
                                     <div className="w-12 h-1 bg-[var(--bg-tertiary)] rounded-full overflow-hidden flex-shrink-0 border border-[var(--border-subtle)]">
                                        <div className={`h-full ${vehicle.battery < 20 ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: `${vehicle.battery}%` }} />
                                     </div>
-                                    <span className={`text-[8px] font-black italic ${vehicle.battery < 20 ? 'text-rose-500' : 'text-emerald-500'}`}>{vehicle.battery}%</span>
+                                    <span className={` font-medium  ${vehicle.battery < 20 ? 'text-rose-500' : 'text-emerald-500'}`}>{vehicle.battery}%</span>
                                  </div>
                               </td>
-                              <td className="py-2.5 px-6 text-[7px] font-black text-[var(--text-tertiary)] uppercase italic tracking-widest leading-none">{vehicle.lastPing}</td>
+                              <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]">{vehicle.lastPing}</td>
                            </tr>
                         ))}
                      </tbody>

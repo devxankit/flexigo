@@ -10,7 +10,6 @@ import { protectFranchise } from '../../shared/middleware/authMiddleware.js';
 const router = express.Router();
 
 router.get('/', protectFranchise, getVehicles);
-router.post('/add', protectFranchise, addVehicle);
 router.post('/:id/maintenance', protectFranchise, addMaintenanceLog);
 router.patch('/:id/status', protectFranchise, updateVehicleStatus);
 

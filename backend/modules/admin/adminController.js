@@ -291,7 +291,7 @@ export const getKycRecords = async (req, res) => {
           role: r.role || 'Rider',
           type: 'Individual',
           city: r.city || 'N/A',
-          status: hasAllDocs ? 'approved' : 'pending',
+          status: r.kycStatus || 'pending',
           date: r.createdAt,
           details: r.kycDetails
         };
@@ -309,7 +309,7 @@ export const getKycRecords = async (req, res) => {
           role: 'Franchise',
           type: f.businessDetails?.type || 'Pvt Ltd',
           city: f.city || f.businessDetails?.location || 'N/A',
-          status: hasAllDocs ? 'approved' : 'pending',
+          status: f.kycStatus || 'pending',
           date: f.createdAt,
           details: f.kycDetails,
           hubs: 1
@@ -419,7 +419,8 @@ export const getSubscribers = async (req, res) => {
         phone: r.phone,
         persona: r.role || 'Rider',
         location: 'N/A',
-        status: hasAllDocs ? 'approved' : 'pending'
+        status: r.status,
+        kycStatus: r.kycStatus || (hasAllDocs ? 'approved' : 'pending')
       };
     });
 
@@ -453,6 +454,20 @@ export const deleteGeofence = async (req, res) => {
   try {
     await Geofence.findByIdAndDelete(req.params.id);
     res.status(200).json({ success: true, message: 'Geofence deleted' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateGeofence = async (req, res) => {
+  try {
+    const { name, type, radius, riderId, center, status } = req.body;
+    const geofence = await Geofence.findByIdAndUpdate(
+      req.params.id,
+      { name, type, radius, riderId, center, status },
+      { new: true }
+    );
+    res.status(200).json({ success: true, geofence });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -1095,7 +1110,7 @@ export const getSubscriberData = async (req, res) => {
       email: r.email || 'n/a',
       persona: 'Rider',
       locale: r.city || 'N/A',
-      status: r.isVerified ? 'verified' : (r.kycStatus === 'pending' ? 'pending' : 'active')
+      status: r.status || 'active'
     }));
 
     res.status(200).json({
@@ -1229,5 +1244,73 @@ export const verifyStaffAadhaarOTP = async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ success: false, message: error.response?.data?.message || error.message });
+  }
+};
+
+// --- RIDER MANAGEMENT CRUD ---
+
+export const getAllRiders = async (req, res) => {
+  try {
+    const riders = await Rider.find().sort('-createdAt');
+    res.status(200).json({ success: true, riders });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createRider = async (req, res) => {
+  try {
+    const { name, phone, email, status } = req.body;
+    
+    const existingRider = await Rider.findOne({ phone });
+    if (existingRider) {
+      return res.status(400).json({ success: false, message: 'Rider with this phone already exists' });
+    }
+
+    const rider = await Rider.create({
+      name,
+      phone,
+      email,
+      kycStatus: 'uninitiated',
+      status: status || 'active'
+    });
+
+    res.status(201).json({ success: true, rider });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateRider = async (req, res) => {
+  try {
+    const { name, phone, email, status } = req.body;
+    const rider = await Rider.findById(req.params.id);
+    
+    if (!rider) {
+      return res.status(404).json({ success: false, message: 'Rider not found' });
+    }
+
+    if (name) rider.name = name;
+    if (phone) rider.phone = phone;
+    if (email) rider.email = email;
+    if (status) rider.status = status;
+
+    await rider.save();
+    res.status(200).json({ success: true, rider });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteRider = async (req, res) => {
+  try {
+    const rider = await Rider.findById(req.params.id);
+    if (!rider) {
+      return res.status(404).json({ success: false, message: 'Rider not found' });
+    }
+    await rider.deleteOne();
+    res.status(200).json({ success: true, message: 'Rider deleted' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

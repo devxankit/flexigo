@@ -84,29 +84,29 @@ export default function CompliancePage() {
             </div>
          </div>
          <div className="overflow-x-auto no-scrollbar">
-            <table className="w-full text-left">
+            <table className="w-full">
                <thead>
-                  <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
+                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
                      {['ID', 'Asset', 'Issue Type', 'Amount', 'RTO', 'Status'].map((header) => (
-                        <th key={header} className="py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
+                        <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                      ))}
                   </tr>
                </thead>
                <tbody className="divide-y divide-[var(--border-subtle)]">
                   {complianceRecords.map((chl) => (
-                     <tr key={chl.id} className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors text-[10px]">
-                        <td className="py-2.5 px-6 font-black text-[7.5px] text-[var(--text-tertiary)] uppercase tracking-widest leading-none">{chl.id}</td>
-                        <td className="py-2.5 px-6 font-black text-[var(--text-primary)] uppercase tracking-tight italic leading-none">{chl.vehicle}</td>
-                        <td className="py-2.5 px-6">
+                     <tr key={chl.id} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
+                        <td className="py-2 px-4 font-medium  text-[var(--text-tertiary)]">{chl.id}</td>
+                        <td className="py-2 px-4 font-medium text-[var(--text-primary)]">{chl.vehicle}</td>
+                        <td className="py-2 px-4">
                            <div className="flex flex-col">
-                              <span className="font-black text-[var(--text-primary)] uppercase tracking-wider leading-tight italic">{chl.type}</span>
-                              <span className="text-[7px] font-black text-[var(--text-tertiary)] uppercase italic mt-0.5 leading-none">{new Date(chl.date).toLocaleDateString()}</span>
+                              <span className="font-medium text-[var(--text-primary)]   leading-tight">{chl.type}</span>
+                              <span className="font-medium text-[var(--text-tertiary)]   mt-0.5">{new Date(chl.date).toLocaleDateString()}</span>
                            </div>
                         </td>
-                        <td className="py-2.5 px-6 font-black text-rose-500 tracking-tight leading-none">{chl.amount}</td>
-                        <td className="py-2.5 px-6 text-[7.5px] font-black text-[var(--text-tertiary)] uppercase italic leading-none">{chl.rto}</td>
-                        <td className="py-2.5 px-6">
-                           <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border ${
+                        <td className="py-2 px-4 font-medium text-rose-500">{chl.amount}</td>
+                        <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]">{chl.rto}</td>
+                        <td className="py-2 px-4">
+                           <div className={`inline-flex px-1.5 py-0.5 rounded  font-medium   border ${
                               chl.status === 'auto-paid' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 
                               chl.status === 'pending' ? 'bg-amber-500/10 text-amber-500 border-amber-500/10' : 
                               'bg-rose-500/10 text-rose-500 border-rose-500/10'

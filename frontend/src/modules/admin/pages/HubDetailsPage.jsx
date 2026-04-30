@@ -241,49 +241,49 @@ export default function HubDetailsPage() {
                </button>
             </div>
             
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
+             <div className="overflow-x-auto bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl shadow-sm mt-4">
+              <table className="w-full">
                 <thead>
-                  <tr className="border-b border-[var(--border-subtle)] text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">
-                    <th className="px-6 py-3">Vehicle ID</th>
-                    <th className="px-6 py-3">Rider Entity</th>
-                    <th className="px-6 py-3">Battery</th>
-                    <th className="px-6 py-3">Status</th>
-                    <th className="px-6 py-3">Action</th>
+                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Vehicle ID</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Rider Entity</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Battery</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Status</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border-subtle)]">
                   {loadingVehicles ? (
                     <tr>
-                      <td colSpan={5} className="py-12 text-center text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] italic">Streaming Neural Grid...</td>
+                      <td colSpan={5} className="py-12 text-center  font-medium   text-[var(--text-tertiary)]">Streaming Neural Grid...</td>
                     </tr>
                   ) : vehicles.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-12 text-center text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] italic">No assets detected at this hub</td>
+                      <td colSpan={5} className="py-12 text-center  font-medium   text-[var(--text-tertiary)]">No assets detected at this hub</td>
                     </tr>
                   ) : vehicles.map((v, idx) => (
-                    <tr key={v._id} className="group hover:bg-[var(--bg-tertiary)]/30 transition-colors">
-                      <td className="px-6 py-2.5">
+                    <tr key={v._id} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
+                      <td className="px-4 py-2">
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded bg-[var(--bg-tertiary)] flex items-center justify-center text-emerald-500 font-black text-[9px]">
+                          <div className="w-6 h-6 rounded bg-[var(--bg-tertiary)] flex items-center justify-center text-emerald-500 font-medium">
                             EV
                           </div>
-                          <span className="text-[10px] font-black text-[var(--text-primary)]">{v.plate}</span>
+                          <span className="font-medium text-[var(--text-primary)]">{v.plate}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-2.5 text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-tight">{v.model}</td>
-                      <td className="px-6 py-2.5">
+                      <td className="px-4 py-2  font-medium text-[var(--text-tertiary)]">{v.model}</td>
+                      <td className="px-4 py-2">
                         <div className="flex items-center gap-2">
                           <Battery size={12} className={v.battery < 20 ? 'text-rose-500' : 'text-emerald-500'} />
-                          <span className={`text-[10px] font-black ${v.battery < 20 ? 'text-rose-500' : 'text-[var(--text-primary)]'}`}>{v.battery}%</span>
+                          <span className={` font-medium ${v.battery < 20 ? 'text-rose-500' : 'text-[var(--text-primary)]'}`}>{v.battery}%</span>
                         </div>
                       </td>
-                      <td className="px-6 py-2.5">
-                        <span className={`px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest border ${v.status === 'assigned' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'}`}>
+                      <td className="px-4 py-2">
+                        <span className={`px-2 py-0.5 rounded-full  font-medium   border ${v.status === 'assigned' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'}`}>
                           {v.status}
                         </span>
                       </td>
-                      <td className="px-6 py-2.5 relative">
+                      <td className="px-4 py-2 relative">
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
@@ -312,7 +312,7 @@ export default function HubDetailsPage() {
                                   <button 
                                     key={item.label}
                                     onClick={(e) => handleAction(e, v.plate, item.label)}
-                                    className="flex items-center gap-2.5 px-3 py-2 text-[8px] font-black uppercase tracking-wider text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-colors w-full text-left"
+                                    className="flex items-center gap-2.5 px-3 py-2  font-medium   text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-colors w-full text-left"
                                   >
                                     <item.icon size={12} className={`text-${item.color}-500`} />
                                     {item.label}

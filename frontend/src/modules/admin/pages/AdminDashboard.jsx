@@ -218,9 +218,9 @@ export default function AdminDashboard() {
          <div className="overflow-x-auto no-scrollbar">
             <table className="w-full">
                <thead>
-                  <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
+                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
                      {['Franchise Name', 'Location', 'Distance', 'Assets', 'Earnings', 'Health', 'Status'].map((header) => (
-                        <th key={header} className="text-left py-3 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">
+                        <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">
                            {header}
                         </th>
                      ))}
@@ -229,36 +229,36 @@ export default function AdminDashboard() {
                <tbody className="divide-y divide-[var(--border-subtle)]">
                   {hubs.map((hub, idx) => (
                      <tr key={hub.id} className={`group/row hover:bg-[var(--bg-tertiary)]/30 transition-colors ${idx === 0 && hub.distanceKm !== null ? 'bg-emerald-500/[0.03]' : ''}`}>
-                        <td className="py-3 px-6">
+                        <td className="py-2 px-4">
                            <div className="flex flex-col gap-0">
-                              <span className="text-[10px] font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic">{hub.name}</span>
-                              <span className="text-[7px] font-bold text-[var(--text-tertiary)] tracking-widest leading-none">{hub.id}</span>
+                              <span className="font-medium text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{hub.name}</span>
+                              <span className="font-medium text-[var(--text-tertiary)]">{hub.id}</span>
                            </div>
                         </td>
-                        <td className="py-3 px-6 text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic">{hub.city}</td>
-                        <td className="py-3 px-6">
+                        <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]">{hub.city}</td>
+                        <td className="py-2 px-4">
                            {hub.distanceKm !== null ? (
                               <div className="flex items-center gap-1">
-                                 <span className={`text-[9px] font-black ${idx === 0 ? 'text-emerald-500' : 'text-[var(--text-primary)]'}`}>{hub.distanceKm} km</span>
-                                 {idx === 0 && <span className="text-[7px] font-black text-emerald-500 uppercase tracking-wider">Nearest</span>}
+                                 <span className={` font-medium ${idx === 0 ? 'text-emerald-500' : 'text-[var(--text-primary)]'}`}>{hub.distanceKm} km</span>
+                                 {idx === 0 && <span className="font-medium text-emerald-500">Nearest</span>}
                               </div>
                            ) : (
-                              <span className="text-[8px] font-bold text-[var(--text-tertiary)]">—</span>
+                              <span className="font-medium text-[var(--text-tertiary)]">—</span>
                            )}
                         </td>
-                        <td className="py-3 px-6">
+                        <td className="py-2 px-4">
                            <div className="flex flex-col gap-1.5">
                               <div className="flex justify-between items-baseline">
-                                 <span className="text-[10px] font-black text-[var(--text-primary)]">{hub.fleet}</span>
-                                 <span className="text-[7px] font-bold text-[var(--text-tertiary)] uppercase">Units</span>
+                                 <span className="font-medium text-[var(--text-primary)]">{hub.fleet}</span>
+                                 <span className="font-medium text-[var(--text-tertiary)]">Units</span>
                               </div>
                               <div className="w-16 h-1 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
                                  <div className="h-full bg-blue-500" style={{ width: `${(hub.fleet/450)*100}%` }} />
                               </div>
                            </div>
                         </td>
-                        <td className="py-3 px-6 text-[10px] font-black text-emerald-500 tracking-tight">₹{(hub.revenue / 100000).toFixed(1)}L</td>
-                        <td className="py-3 px-6">
+                        <td className="py-2 px-4  font-medium text-emerald-500">₹{(hub.revenue / 100000).toFixed(1)}L</td>
+                        <td className="py-2 px-4">
                            <div className="flex items-center gap-2">
                               <div className="flex-1 w-12 h-1 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
                                  <div 
@@ -266,13 +266,13 @@ export default function AdminDashboard() {
                                    style={{ width: hub.health }} 
                                  />
                               </div>
-                              <span className="text-[8px] font-black text-[var(--text-primary)]">{hub.health}</span>
+                              <span className="font-medium text-[var(--text-primary)]">{hub.health}</span>
                            </div>
                         </td>
-                        <td className="py-3 px-6">
+                        <td className="py-2 px-4">
                            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 w-fit">
                               <div className="w-0.5 h-0.5 rounded-full bg-emerald-500 animate-pulse" />
-                              <span className="text-[7px] font-black uppercase tracking-widest">{hub.status}</span>
+                              <span className="font-medium">{hub.status}</span>
                            </div>
                         </td>
                      </tr>

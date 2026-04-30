@@ -97,22 +97,22 @@ export default function SecurityAuditsPage() {
                </div>
             </div>
             <div className="overflow-x-auto no-scrollbar">
-               <table className="w-full text-left">
+               <table className="w-full">
                   <thead>
-                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
+                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
                         {['Identity', 'Action Profile', 'Object Target', 'Sync', 'Origin IP'].map((header) => (
-                           <th key={header} className="py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
+                           <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                         ))}
                      </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border-subtle)]">
                      {auditLogs.map((log) => (
-                        <tr key={log.id} className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]">
-                           <td className="py-3 px-6 font-black text-[var(--text-primary)] uppercase tracking-tight italic leading-none">{log.identity}</td>
-                           <td className="py-3 px-6 font-black text-[var(--text-tertiary)] uppercase tracking-widest leading-none italic">{log.action}</td>
-                           <td className="py-3 px-6 font-black text-emerald-500 uppercase italic leading-none">{log.target}</td>
-                           <td className="py-3 px-6 text-[7.5px] font-black text-[var(--text-tertiary)] uppercase leading-none">{new Date(log.time).toLocaleDateString()}</td>
-                           <td className="py-3 px-6 text-[8px] font-black text-[var(--text-tertiary)] leading-none italic opacity-50">{log.ip}</td>
+                        <tr key={log.id} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
+                           <td className="py-2 px-4 font-medium text-[var(--text-primary)]">{log.identity}</td>
+                           <td className="py-2 px-4 font-medium text-[var(--text-tertiary)]">{log.action}</td>
+                           <td className="py-2 px-4 font-medium text-emerald-500">{log.target}</td>
+                           <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]">{new Date(log.time).toLocaleDateString()}</td>
+                           <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]   opacity-50">{log.ip}</td>
                         </tr>
                      ))}
                   </tbody>

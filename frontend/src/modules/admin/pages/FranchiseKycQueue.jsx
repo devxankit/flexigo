@@ -108,9 +108,9 @@ export default function FranchiseKycQueue() {
          <div className="overflow-x-auto no-scrollbar">
             <table className="w-full">
                <thead>
-                  <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/20">
+                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
                      {['Partner Identity', 'Entity', 'Zone Node', 'Submission', 'Status', 'Actions'].map((header) => (
-                        <th key={header} className="text-left py-2.5 px-6 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] whitespace-nowrap">{header}</th>
+                        <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                      ))}
                   </tr>
                </thead>
@@ -123,25 +123,24 @@ export default function FranchiseKycQueue() {
                          animate={{ opacity: 1 }}
                          exit={{ opacity: 0 }}
                          key={record.id} 
-                         className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer text-[10px]"
+                         className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer"
                          onClick={() => openDetails(record)}
                        >
-                          <td className="py-2.5 px-6 whitespace-nowrap">
+                          <td className="py-2 px-4 whitespace-nowrap">
                              <div className="flex flex-col gap-0.5">
-                                <span className="font-black text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors uppercase tracking-tight italic leading-none">{record.name}</span>
-                                <span className="text-[7px] font-bold text-[var(--text-tertiary)] tracking-widest uppercase mt-1 leading-none italic">{record.id}</span>
+                                <span className="font-medium text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{record.name}</span>
                              </div>
                           </td>
-                          <td className="py-2.5 px-6 font-black text-[var(--text-tertiary)] uppercase tracking-widest leading-none italic">{record.type}</td>
-                          <td className="py-2.5 px-6">
-                             <div className="flex items-center gap-1.5 leading-none">
+                          <td className="py-2 px-4 font-medium text-[var(--text-tertiary)]">{record.type}</td>
+                          <td className="py-2 px-4">
+                             <div className="flex items-center gap-1.5">
                                 <MapPin size={10} className="text-emerald-500 opacity-60" />
-                                <span className="font-black text-[var(--text-primary)] uppercase italic tracking-widest leading-none">{record.city}</span>
+                                <span className="font-medium text-[var(--text-primary)]">{record.city}</span>
                              </div>
                           </td>
-                          <td className="py-2.5 px-6 font-black text-[var(--text-tertiary)] uppercase tracking-widest whitespace-nowrap leading-none italic">{record.date}</td>
-                          <td className="py-2.5 px-6">
-                             <div className={`inline-flex px-1.5 py-0.5 rounded text-[7px] font-black uppercase tracking-widest border leading-none ${
+                          <td className="py-2 px-4 font-medium text-[var(--text-tertiary)] whitespace-nowrap">{new Date(record.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</td>
+                          <td className="py-2 px-4">
+                             <div className={`inline-flex px-1.5 py-0.5 rounded  font-medium   border  ${
                                 record.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 
                                 record.status === 'pending' ? 'bg-blue-500/10 text-blue-500 border-blue-500/10' : 
                                 'bg-rose-500/10 text-rose-500 border-rose-500/10'
@@ -149,11 +148,11 @@ export default function FranchiseKycQueue() {
                                 {record.status}
                              </div>
                           </td>
-                          <td className="py-2.5 px-6">
+                          <td className="py-2 px-4">
                              <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                                 <button 
                                    onClick={() => openDetails(record)}
-                                   className="p-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-emerald-500 hover:border-emerald-500/30 transition-all font-black"
+                                   className="p-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-emerald-500 hover:border-emerald-500/30 transition-all font-medium"
                                 >
                                    <Eye size={12} />
                                 </button>
@@ -189,7 +188,7 @@ export default function FranchiseKycQueue() {
                         </div>
                         <div className="space-y-0.5">
                            <h2 className="text-base font-black text-[var(--text-primary)] uppercase tracking-tighter italic leading-none">{selectedRecord.name}</h2>
-                           <p className="text-[7px] font-black text-emerald-500 uppercase tracking-widest leading-none">NODE_ID: {selectedRecord.id}</p>
+                           <p className="text-[7px] font-black text-emerald-500 uppercase tracking-widest leading-none">NODE_ID: {String(selectedRecord.id).slice(-6).toUpperCase()}</p>
                         </div>
                      </div>
                      <button onClick={() => setIsModalOpen(false)} className="p-1.5 hover:bg-rose-600/10 hover:text-rose-500 transition-all rounded-lg">
