@@ -1,5 +1,7 @@
+import mongoose from 'mongoose';
 import Franchise from './franchiseModel.js';
 import FranchiseTransaction from './franchiseTransactionModel.js';
+import Handover from './handoverModel.js';
 import Vehicle from '../fleet/vehicleModel.js';
 import Rider from '../rider/riderModel.js';
 import SubscriptionPlan from '../admin/subscriptionPlanModel.js';
@@ -429,4 +431,38 @@ export const verifyAadhaarOTP = async (req, res) => {
     res.status(500).json({ success: false, message: error.response?.data?.message || error.message });
   }
   console.log('--- FRANCHISE QUICKEKYC: VERIFY OTP END ---');
+};
+
+// @desc    Add new vehicle by Franchise
+// @route   POST /api/v1/franchise/fleet/add
+export const addVehicle = async (req, res) => {
+  try {
+    const { rcImage, ...vehicleData } = req.body;
+    const franchiseId = req.franchise._id;
+
+    // Force the franchise ID to be the logged-in franchise admin's ID
+    vehicleData.franchise = franchiseId;
+
+    // Handle RC Image upload if provided
+    let rcUrl = '';
+    if (rcImage && rcImage.startsWith('data:image')) {
+      const result = await cloudinary.uploader.upload(rcImage, {
+        folder: `flexigo/vehicles/rc/${franchiseId}`,
+      });
+      rcUrl = result.secure_url;
+    }
+
+    const vehicle = await Vehicle.create({
+      ...vehicleData,
+      rcUrl,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Vehicle provisioned successfully',
+      vehicle,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };

@@ -9,7 +9,8 @@ import {
   generateAadhaarOTP,
   verifyAadhaarOTP,
   getFranchisePlans,
-  saveFcmToken
+  saveFcmToken,
+  addVehicle
 } from './franchiseController.js';
 import { protectFranchise } from '../../shared/middleware/authMiddleware.js';
 
@@ -25,5 +26,6 @@ router.get('/dashboard-metrics', protectFranchise, getDashboardMetrics);
 router.post('/handover', protectFranchise, createHandover);
 router.post('/kyc/aadhaar/generate-otp', generateAadhaarOTP);
 router.post('/kyc/aadhaar/verify-otp', verifyAadhaarOTP);
+router.post('/fleet/add', protectFranchise, addVehicle);
 
 export default router;

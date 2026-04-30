@@ -27,7 +27,7 @@ export const useFleetStore = create((set, get) => ({
 
   addVehicle: async (newVehicle) => {
     try {
-      const res = await api.post('/fleet/add', newVehicle);
+      const res = await api.post('/franchise/fleet/add', newVehicle);
       if (res.data.success) {
         set((state) => ({
           vehicles: [res.data.vehicle, ...state.vehicles]

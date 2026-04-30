@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  Warehouse, 
-  MapPin, 
-  Activity, 
-  TrendingUp, 
-  Clock, 
-  ShieldCheck, 
+import {
+  ArrowLeft,
+  Warehouse,
+  MapPin,
+  Activity,
+  TrendingUp,
+  Clock,
+  ShieldCheck,
   Zap,
   Users,
   Box,
@@ -15,13 +15,14 @@ import {
   Signal,
   MoreHorizontal,
   Settings,
-  AlertTriangle,
-  ChevronRight,
   Battery,
   Map as MapIcon,
   Search,
   Filter,
-  Download
+  Plus,
+  Pencil,
+  X,
+  Save
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
@@ -31,38 +32,71 @@ import { useAdminDataStore } from '../store/adminDataStore';
 export default function HubDetailsPage() {
   const { hubId } = useParams();
   const navigate = useNavigate();
-  const { hubs, fetchHubVehicles } = useAdminDataStore();
+  const { hubs, fetchHubById, fetchHubVehicles, updateHub } = useAdminDataStore();
   const [hub, setHub] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [activeMenu, setActiveMenu] = useState(null);
   const [vehicles, setVehicles] = useState([]);
   const [loadingVehicles, setLoadingVehicles] = useState(true);
-  const [activeFilters, setActiveFilters] = useState({ range: 'Last 7 Days' });
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({});
 
   useEffect(() => {
-    const foundHub = hubs.find(h => (h._id || h.id).toString() === hubId);
-    if (foundHub) {
-      setHub(foundHub);
-      loadVehicles();
-    }
-
     const handleClickOutside = () => setActiveMenu(null);
     window.addEventListener('click', handleClickOutside);
     return () => window.removeEventListener('click', handleClickOutside);
-  }, [hubId, hubs]);
+  }, []);
 
-  const handleFilterChange = (newFilters) => {
-    setActiveFilters(newFilters);
-    console.log('Hub Details Sync:', newFilters);
-  };
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      // First try to find in local store
+      let found = hubs.find(h => (h._id || h.id)?.toString() === hubId);
+      if (!found) {
+        // Fetch from API
+        found = await fetchHubById(hubId);
+      }
+      if (found) {
+        setHub(found);
+        loadVehicles();
+      }
+      setLoading(false);
+    };
+    load();
+  }, [hubId]);
 
   const loadVehicles = async () => {
     setLoadingVehicles(true);
     const data = await fetchHubVehicles(hubId);
-    setVehicles(data);
+    setVehicles(data || []);
     setLoadingVehicles(false);
   };
 
-  if (!hub) {
+  const handleEditOpen = () => {
+    setEditData({
+      name: hub.name || hub.hubName || '',
+      ownerName: hub.ownerName || '',
+      city: hub.city || '',
+      phone: hub.phone || '',
+      email: hub.email || '',
+      fleet: hub.capacity || ''
+    });
+    setIsEditing(true);
+  };
+
+  const handleEditSave = async (e) => {
+    e.preventDefault();
+    const id = (hub.id || hub._id)?.toString();
+    const result = await updateHub(id, editData);
+    if (result?.success) {
+      setHub(prev => ({ ...prev, ...result.hub }));
+      setIsEditing(false);
+    } else {
+      alert('Failed to update: ' + (result?.message || 'Unknown error'));
+    }
+  };
+
+  if (loading) {
     return (
       <div className="flex h-96 w-full items-center justify-center">
         <div className="text-center space-y-4">
@@ -73,11 +107,22 @@ export default function HubDetailsPage() {
     );
   }
 
+  if (!hub) {
+    return (
+      <div className="flex h-96 w-full items-center justify-center">
+        <div className="text-center space-y-4">
+          <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">Hub not found</p>
+          <button onClick={() => navigate('/admin/hubs')} className="text-emerald-500 text-xs font-bold uppercase">← Back to Registry</button>
+        </div>
+      </div>
+    );
+  }
+
   const sections = [
-    { title: "Fleet Management", icon: Box, count: hub.fleet, color: "emerald" },
-    { title: "Active Users", icon: Users, count: hub.subs, color: "blue" },
-    { title: "Hub Health", icon: Activity, count: hub.health, color: "rose" },
-    { title: "Rev. Target", icon: TrendingUp, count: "92%", color: "amber" },
+    { title: 'Fleet Count', icon: Box, count: hub.fleet ?? 0, color: 'emerald' },
+    { title: 'Active Users', icon: Users, count: hub.subs ?? 0, color: 'blue' },
+    { title: 'Hub Health', icon: Activity, count: hub.health ?? '100%', color: 'rose' },
+    { title: 'Revenue', icon: IndianRupee, count: `₹${((hub.revenue || 0) / 1000).toFixed(0)}k`, color: 'amber' },
   ];
 
   const handleAction = (e, vehicleId, action) => {
@@ -89,8 +134,8 @@ export default function HubDetailsPage() {
   return (
     <div className="space-y-6 pb-12">
       {/* Header Navigation */}
-      <div className="flex items-center justify-between">
-        <button 
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <button
           onClick={() => navigate(-1)}
           className="group flex items-center gap-2 px-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg hover:border-emerald-500/30 transition-all active:scale-95"
         >
@@ -98,19 +143,25 @@ export default function HubDetailsPage() {
           <span className="text-[9px] font-black uppercase tracking-wider text-[var(--text-primary)]">Back to Registry</span>
         </button>
 
-        <div className="flex items-center gap-2">
-          <OpsFilter onFilterChange={handleFilterChange} />
-          <button className="p-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-emerald-500 transition-colors">
-            <Settings size={16} />
+        <div className="flex items-center gap-2 flex-wrap">
+          <OpsFilter onFilterChange={() => {}} />
+          <button
+            onClick={handleEditOpen}
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-secondary)] border border-blue-500/30 text-blue-400 rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-blue-500/10 transition-all active:scale-95"
+          >
+            <Pencil size={13} /> Edit Franchise
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-emerald-700 transition-all shadow-md shadow-emerald-950/20 active:scale-95">
-            Manual Override
+          <button
+            onClick={() => navigate(`/admin/fleet/add?hubId=${hubId}`)}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-emerald-700 transition-all shadow-md shadow-emerald-950/20 active:scale-95"
+          >
+            <Plus size={14} /> Add Vehicle
           </button>
         </div>
       </div>
 
       {/* Hero Section */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="relative overflow-hidden bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-6"
@@ -126,42 +177,28 @@ export default function HubDetailsPage() {
             </div>
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-black text-[var(--text-primary)] uppercase italic tracking-tighter">
-                  {hub.name}
-                </h1>
+                <h1 className="text-xl font-black text-[var(--text-primary)] uppercase italic tracking-tighter">{hub.name}</h1>
                 <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[8px] font-black text-emerald-500 uppercase tracking-widest">
-                  {hub.status}
+                  {hub.status || 'active'}
                 </span>
               </div>
               <div className="flex items-center gap-3 text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">
                 <span className="flex items-center gap-1"><MapPin size={10} className="text-emerald-500" /> {hub.city}</span>
                 <span className="w-1 h-1 bg-[var(--border-subtle)] rounded-full" />
-                <span className="text-emerald-500">ID: {hub.id}</span>
+                <span className="text-emerald-500">ID: {hub.id || hub._id}</span>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-6">
             <div className="space-y-0.5">
-              <p className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Operational Uptime</p>
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-black text-[var(--text-primary)] italic">99.8%</span>
-                <div className="flex gap-0.5">
-                    {[1, 2, 3, 4].map(i => <div key={i} className="w-0.5 h-3 bg-emerald-500 rounded-full" />)}
-                </div>
-              </div>
-            </div>
-            
-            <div className="w-px h-8 bg-[var(--border-subtle)]" />
-
-            <div className="space-y-0.5">
               <p className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">MTD Revenue</p>
               <div className="flex items-center gap-1.5">
                 <IndianRupee size={12} className="text-emerald-500" />
-                <span className="text-lg font-black text-[var(--text-primary)] italic">{(hub.revenue / 100000).toFixed(2)}L</span>
+                <span className="text-lg font-black text-[var(--text-primary)] italic">{((hub.revenue || 0) / 100000).toFixed(2)}L</span>
               </div>
             </div>
-
+            <div className="w-px h-8 bg-[var(--border-subtle)]" />
             <div className="flex gap-2">
               <div className="px-4 py-3 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-center space-y-0.5">
                 <p className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest leading-none">Latency</p>
@@ -199,7 +236,7 @@ export default function HubDetailsPage() {
               <div className={`w-8 h-8 rounded-lg bg-${section.color}-500/10 border border-${section.color}-500/20 flex items-center justify-center text-${section.color}-500`}>
                 <section.icon size={16} />
               </div>
-              <div className="space-y-0">
+              <div>
                 <p className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest leading-none">{section.title}</p>
                 <p className="text-xl font-black text-[var(--text-primary)] italic tracking-tight">{section.count}</p>
               </div>
@@ -208,45 +245,45 @@ export default function HubDetailsPage() {
         ))}
       </div>
 
-      {/* Main Content Areas */}
+      {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Real-time Fleet Tracking */}
+        {/* Fleet Table */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between px-2">
-            <div className="space-y-0">
-              <h2 className="text-base font-black text-[var(--text-primary)] uppercase tracking-tighter italic">Live <span className="text-emerald-500">Fleet Oversight</span></h2>
-              <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">Monitoring {hub.fleet} Connected Vehicles</p>
+            <div>
+              <h2 className="text-base font-black text-[var(--text-primary)] uppercase tracking-tighter italic">
+                Live <span className="text-emerald-500">Fleet Oversight</span>
+              </h2>
+              <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">
+                {vehicles.length} vehicle{vehicles.length !== 1 ? 's' : ''} registered
+              </p>
             </div>
-            <div className="flex gap-1.5">
-              <button className="p-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] transition-all">
-                <Search size={14} />
-              </button>
-              <button className="p-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] transition-all">
-                <Filter size={14} />
-              </button>
-            </div>
+            <button
+              onClick={() => navigate(`/admin/fleet/add?hubId=${hubId}`)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/10 border border-emerald-500/20 text-emerald-500 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition-all"
+            >
+              <Plus size={11} /> Add Vehicle
+            </button>
           </div>
 
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-sm">
             <div className="px-6 py-3 border-b border-[var(--border-subtle)] flex items-center justify-between bg-[var(--bg-tertiary)]/20">
-               <div className="flex gap-4">
-                  {['ALL', 'MOVING', 'IDLE', 'ERROR'].map((tab, i) => (
-                    <button key={tab} className={`text-[8px] font-black uppercase tracking-widest ${i === 0 ? 'text-emerald-500' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'} transition-colors`}>
-                      {tab}
-                    </button>
-                  ))}
-               </div>
-               <button className="flex items-center gap-1.5 text-[8px] font-black uppercase tracking-widest text-emerald-500 hover:underline">
-                  Matrix <MapIcon size={10} />
-               </button>
+              <div className="flex gap-4">
+                {['ALL', 'MOVING', 'IDLE', 'ERROR'].map((tab, i) => (
+                  <button key={tab} className={`text-[8px] font-black uppercase tracking-widest ${i === 0 ? 'text-emerald-500' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'} transition-colors`}>
+                    {tab}
+                  </button>
+                ))}
+              </div>
             </div>
-            
-             <div className="overflow-x-auto bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl shadow-sm mt-4">
+
+            <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Vehicle ID</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Rider Entity</th>
+                  <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Plate</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Model</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Rider</th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Battery</th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Status</th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Action</th>
@@ -255,40 +292,46 @@ export default function HubDetailsPage() {
                 <tbody className="divide-y divide-[var(--border-subtle)]">
                   {loadingVehicles ? (
                     <tr>
-                      <td colSpan={5} className="py-12 text-center  font-medium   text-[var(--text-tertiary)]">Streaming Neural Grid...</td>
+                      <td colSpan={6} className="py-12 text-center text-[10px] font-medium text-[var(--text-tertiary)]">Loading fleet data...</td>
                     </tr>
                   ) : vehicles.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-12 text-center  font-medium   text-[var(--text-tertiary)]">No assets detected at this hub</td>
+                      <td colSpan={6} className="py-12 text-center">
+                        <div className="space-y-3">
+                          <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">No vehicles registered yet</p>
+                          <button
+                            onClick={() => navigate(`/admin/fleet/add?hubId=${hubId}`)}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all"
+                          >
+                            <Plus size={12} /> Add First Vehicle
+                          </button>
+                        </div>
+                      </td>
                     </tr>
-                  ) : vehicles.map((v, idx) => (
+                  ) : vehicles.map(v => (
                     <tr key={v._id} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
                       <td className="px-4 py-2">
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded bg-[var(--bg-tertiary)] flex items-center justify-center text-emerald-500 font-medium">
-                            EV
-                          </div>
-                          <span className="font-medium text-[var(--text-primary)]">{v.plate}</span>
+                          <div className="w-6 h-6 rounded bg-[var(--bg-tertiary)] flex items-center justify-center text-emerald-500 font-medium text-[9px]">EV</div>
+                          <span className="font-medium text-[var(--text-primary)] text-xs">{v.plate}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-2  font-medium text-[var(--text-tertiary)]">{v.model}</td>
+                      <td className="px-4 py-2 text-xs font-medium text-[var(--text-tertiary)]">{v.model}</td>
+                      <td className="px-4 py-2 text-xs font-medium text-[var(--text-tertiary)]">{v.rider || '—'}</td>
                       <td className="px-4 py-2">
                         <div className="flex items-center gap-2">
                           <Battery size={12} className={v.battery < 20 ? 'text-rose-500' : 'text-emerald-500'} />
-                          <span className={` font-medium ${v.battery < 20 ? 'text-rose-500' : 'text-[var(--text-primary)]'}`}>{v.battery}%</span>
+                          <span className={`text-xs font-medium ${v.battery < 20 ? 'text-rose-500' : 'text-[var(--text-primary)]'}`}>{v.battery ?? '—'}%</span>
                         </div>
                       </td>
                       <td className="px-4 py-2">
-                        <span className={`px-2 py-0.5 rounded-full  font-medium   border ${v.status === 'assigned' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'}`}>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${v.status === 'assigned' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : v.status === 'in-service' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'}`}>
                           {v.status}
                         </span>
                       </td>
                       <td className="px-4 py-2 relative">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActiveMenu(activeMenu === v._id ? null : v._id);
-                          }}
+                        <button
+                          onClick={e => { e.stopPropagation(); setActiveMenu(activeMenu === v._id ? null : v._id); }}
                           className={`p-1 hover:bg-emerald-600/10 hover:text-emerald-500 rounded transition-all ${activeMenu === v._id ? 'text-emerald-500 bg-emerald-600/10' : 'text-[var(--text-tertiary)]'}`}
                         >
                           <MoreHorizontal size={14} />
@@ -296,7 +339,7 @@ export default function HubDetailsPage() {
 
                         <AnimatePresence>
                           {activeMenu === v._id && (
-                            <motion.div 
+                            <motion.div
                               initial={{ opacity: 0, scale: 0.95, y: -10 }}
                               animate={{ opacity: 1, scale: 1, y: 0 }}
                               exit={{ opacity: 0, scale: 0.95, y: -10 }}
@@ -308,11 +351,11 @@ export default function HubDetailsPage() {
                                   { label: 'Ring Alarm', icon: Zap, color: 'amber' },
                                   { label: 'Service Log', icon: Clock, color: 'blue' },
                                   { label: 'Maintenance', icon: Settings, color: 'emerald' }
-                                ].map((item) => (
-                                  <button 
+                                ].map(item => (
+                                  <button
                                     key={item.label}
-                                    onClick={(e) => handleAction(e, v.plate, item.label)}
-                                    className="flex items-center gap-2.5 px-3 py-2  font-medium   text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-colors w-full text-left"
+                                    onClick={e => handleAction(e, v.plate, item.label)}
+                                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-colors w-full text-left"
                                   >
                                     <item.icon size={12} className={`text-${item.color}-500`} />
                                     {item.label}
@@ -328,78 +371,136 @@ export default function HubDetailsPage() {
                 </tbody>
               </table>
             </div>
-            <div className="p-3 border-t border-[var(--border-subtle)] text-center">
-               <button className="text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] hover:text-emerald-500 transition-colors">
-                  View Full Registry
-               </button>
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Owner Information */}
+          <div className="space-y-3">
+            <h2 className="text-base font-black text-[var(--text-primary)] uppercase tracking-tighter italic">
+              Owner <span className="text-emerald-500">Details</span>
+            </h2>
+            <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-5 space-y-4 shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
+                  <Users size={18} />
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest leading-none">Franchise Owner</p>
+                  <h4 className="text-sm font-black text-[var(--text-primary)] uppercase italic tracking-tight">{hub.ownerName || 'N/A'}</h4>
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-2 border-t border-[var(--border-subtle)]">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">Phone</span>
+                  <span className="text-[10px] font-black text-[var(--text-primary)] tracking-widest">{hub.phone || 'N/A'}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">Email</span>
+                  <span className="text-[10px] font-black text-[var(--text-primary)] lowercase">{hub.email || 'N/A'}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">KYC Status</span>
+                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${hub.kycStatus === 'approved' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                    {hub.kycStatus || 'uninitiated'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">Capacity</span>
+                  <span className="text-[10px] font-black text-[var(--text-primary)]">{hub.capacity || hub.fleet || 0} vehicles</span>
+                </div>
+              </div>
+
+              <button
+                onClick={handleEditOpen}
+                className="w-full py-3 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[8px] font-black text-[var(--text-primary)] uppercase tracking-[0.2em] hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all active:scale-95 shadow-sm flex items-center justify-center gap-2"
+              >
+                <Pencil size={12} /> Edit Franchise Details
+              </button>
+            </div>
+          </div>
+
+          {/* Alerts */}
+          <div className="space-y-3">
+            <h2 className="text-base font-black text-[var(--text-primary)] uppercase tracking-tighter italic">
+              Anomaly <span className="text-rose-500">Alerts</span>
+            </h2>
+            <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-4 space-y-4">
+              {[
+                { title: 'Geofence Violation', time: '2m', desc: 'EV-9012 left zone', color: 'rose' },
+                { title: 'Thermal Warning', time: '14m', desc: 'Station #4 high temp', color: 'amber' },
+              ].map((alert, i) => (
+                <div key={i} className="flex gap-3">
+                  <div className={`mt-1.5 w-1.5 h-1.5 rounded-full bg-${alert.color}-500 shrink-0`} />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-[10px] font-black text-[var(--text-primary)] uppercase italic leading-none">{alert.title}</p>
+                      <span className="text-[7px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">{alert.time}</span>
+                    </div>
+                    <p className="text-[9px] text-[var(--text-tertiary)] font-medium italic">{alert.desc}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Intelligence Sidebars */}
-        <div className="space-y-6">
-          {/* Security & Alerts */}
-          <div className="space-y-3">
-             <h2 className="text-base font-black text-[var(--text-primary)] uppercase tracking-tighter italic">Anomaly <span className="text-rose-500">Alerts</span></h2>
-             <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-4 space-y-4">
+      {/* Edit Franchise Modal */}
+      <AnimatePresence>
+        {isEditing && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="w-full max-w-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-[2.5rem] p-10 shadow-2xl space-y-6"
+            >
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <h2 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tighter italic">
+                    Edit <span className="text-blue-400">Franchise</span>
+                  </h2>
+                  <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">Update operational parameters</p>
+                </div>
+                <button onClick={() => setIsEditing(false)} className="p-2 hover:bg-rose-600/10 hover:text-rose-500 transition-all rounded-xl">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleEditSave} className="space-y-4 overflow-y-auto max-h-[60vh] pr-1">
                 {[
-                  { title: "Geofence Violation", time: "2m", desc: "EV-9012 left zone", color: "rose" },
-                  { title: "Thermal Warning", time: "14m", desc: "Station #4 high temp", color: "amber" },
-                ].map((alert, i) => (
-                  <div key={i} className="flex gap-3 group">
-                    <div className={`mt-1.5 w-1.5 h-1.5 rounded-full bg-${alert.color}-500 shrink-0`} />
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-2">
-                        <p className="text-[10px] font-black text-[var(--text-primary)] uppercase italic leading-none">{alert.title}</p>
-                        <span className="text-[7px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">{alert.time}</span>
-                      </div>
-                      <p className="text-[9px] text-[var(--text-tertiary)] font-medium italic leading-tight">{alert.desc}</p>
-                    </div>
+                  { label: 'Hub Name *', key: 'name', placeholder: 'Hub Name' },
+                  { label: 'Owner Name *', key: 'ownerName', placeholder: 'Owner Name' },
+                  { label: 'City / Location *', key: 'city', placeholder: 'City' },
+                  { label: 'Phone', key: 'phone', placeholder: '10-digit mobile' },
+                  { label: 'Email', key: 'email', placeholder: 'owner@flexigo.com', type: 'email' },
+                  { label: 'Fleet Capacity', key: 'fleet', placeholder: 'e.g. 150', type: 'number' }
+                ].map(field => (
+                  <div key={field.key} className="space-y-2">
+                    <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">{field.label}</label>
+                    <input
+                      type={field.type || 'text'}
+                      value={editData[field.key] || ''}
+                      onChange={e => setEditData({ ...editData, [field.key]: e.target.value })}
+                      placeholder={field.placeholder}
+                      className="w-full px-5 py-3 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-widest focus:ring-1 focus:ring-blue-500/20 focus:border-blue-500/40 outline-none transition-all placeholder:text-[var(--text-tertiary)]/50"
+                    />
                   </div>
                 ))}
-                <button className="w-full py-2.5 bg-rose-500/5 border border-rose-500/10 rounded-xl text-[8px] font-black text-rose-500 uppercase tracking-widest hover:bg-rose-500/10 transition-all">
-                  Resolve All
+                <button
+                  type="submit"
+                  className="w-full py-4 bg-blue-600 text-white rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-3 mt-4"
+                >
+                  <Save size={16} /> Save Changes
                 </button>
-             </div>
+              </form>
+            </motion.div>
           </div>
-
-          {/* Infrastructure Health */}
-          <div className="space-y-3">
-             <h2 className="text-base font-black text-[var(--text-primary)] uppercase tracking-tighter italic">Infra <span className="text-emerald-500">Pulse</span></h2>
-             <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-4 space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Grid Stability</p>
-                    <span className="text-[8px] font-black text-emerald-500 uppercase">92%</span>
-                  </div>
-                  <div className="w-full h-1 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500" style={{ width: '92%' }} />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Storage Used</p>
-                    <span className="text-[8px] font-black text-amber-500 uppercase">88%</span>
-                  </div>
-                  <div className="w-full h-1 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
-                    <div className="h-full bg-amber-500" style={{ width: '88%' }} />
-                  </div>
-                </div>
-
-                <div className="pt-2 flex items-center justify-between border-t border-[var(--border-subtle)]">
-                  <div className="flex items-center gap-1.5">
-                    <ShieldCheck size={12} className="text-emerald-500" />
-                    <span className="text-[8px] font-black text-[var(--text-primary)] uppercase">Security Protocol</span>
-                  </div>
-                  <div className="w-8 h-4 bg-emerald-600/20 rounded-full relative p-0.5 cursor-pointer">
-                    <div className="w-3 h-3 bg-emerald-500 rounded-full ml-auto shadow-sm" />
-                  </div>
-                </div>
-             </div>
-          </div>
-        </div>
-      </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

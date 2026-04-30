@@ -14,6 +14,12 @@ const FranchiseSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
+  password: {
+    type: String,
+    required: false,
+  },
+  hubName: String,
+  city: String,
   aadhaarNumber: String,
   panNumber: String,
 

@@ -87,7 +87,56 @@ export const useAdminDataStore = create((set, get) => ({
       }
     } catch (err) {
       console.error("Failed to add hub:", err);
-      return { success: false, message: err.message };
+      return { success: false, message: err.response?.data?.message || err.message };
+    }
+  },
+
+  fetchHubById: async (id) => {
+    try {
+      const res = await api.get(`/admin/hubs/${id}`);
+      if (res.data.success) {
+        set(state => {
+          const exists = state.hubs.some(h => (h.id || h._id)?.toString() === id);
+          if (exists) {
+            return { hubs: state.hubs.map(h => (h.id || h._id)?.toString() === id ? res.data.hub : h) };
+          }
+          return { hubs: [res.data.hub, ...state.hubs] };
+        });
+        return res.data.hub;
+      }
+    } catch (err) {
+      console.error("Failed to fetch hub:", err);
+      return null;
+    }
+  },
+
+  updateHub: async (id, hubData) => {
+    try {
+      const res = await api.put(`/admin/hubs/${id}`, hubData);
+      if (res.data.success) {
+        set(state => ({
+          hubs: state.hubs.map(h => (h.id || h._id)?.toString() === id ? { ...h, ...res.data.hub } : h)
+        }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to update hub:", err);
+      return { success: false, message: err.response?.data?.message || err.message };
+    }
+  },
+
+  removeHub: async (id) => {
+    try {
+      const res = await api.delete(`/admin/hubs/${id}`);
+      if (res.data.success) {
+        set(state => ({
+          hubs: state.hubs.filter(h => (h.id || h._id)?.toString() !== id)
+        }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to delete hub:", err);
+      return { success: false, message: err.response?.data?.message || err.message };
     }
   },
 
@@ -178,7 +227,7 @@ export const useAdminDataStore = create((set, get) => ({
 
   fetchHubVehicles: async (hubId) => {
     try {
-      const res = await api.get(`/fleet?franchiseId=${hubId}`);
+      const res = await api.get(`/admin/hubs/${hubId}/vehicles`);
       if (res.data.success) {
         return res.data.vehicles;
       }

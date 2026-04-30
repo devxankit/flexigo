@@ -6,6 +6,10 @@ import {
   getKycRecords,
   updateKycStatus,
   createHub,
+  getFranchiseById,
+  getHubVehicles,
+  updateHub,
+  deleteHub,
   getSubscribers,
   getGeofences,
   createGeofence,
@@ -32,7 +36,11 @@ import {
   getCampaigns,
   createCampaign,
   generateStaffAadhaarOTP,
-  verifyStaffAadhaarOTP
+  verifyStaffAadhaarOTP,
+  getAllRiders,
+  createRider,
+  updateRider,
+  deleteRider
 } from './adminController.js';
 import {
   getAssignments,
@@ -49,8 +57,15 @@ import {
 const router = express.Router();
 
 router.get('/dashboard-stats', getAdminStats);
+
+// Hub / Franchise Management (full CRUD)
 router.get('/hubs', getAllHubs);
 router.post('/hubs', createHub);
+router.get('/hubs/:id', getFranchiseById);
+router.get('/hubs/:id/vehicles', getHubVehicles);
+router.put('/hubs/:id', updateHub);
+router.delete('/hubs/:id', deleteHub);
+
 router.get('/distribution', getFleetDistribution);
 router.get('/subscribers', getSubscribers);
 
@@ -87,7 +102,6 @@ router.get('/franchise-ops', getFranchiseOpsData);
 router.get('/compliance', getComplianceData);
 router.get('/engagement', getEngagementData);
 router.get('/security', getSecurityData);
-router.get('/subscribers', getSubscriberData);
 router.get('/vehicle-stats', getVehicleStats);
 router.get('/rider-behaviour', getRiderBehaviour);
 
@@ -106,7 +120,6 @@ router.get('/campaigns', getCampaigns);
 router.post('/campaigns', createCampaign);
 
 // Rider Management
-import { getAllRiders, createRider, updateRider, deleteRider } from './adminController.js';
 router.get('/riders', getAllRiders);
 router.post('/riders', createRider);
 router.put('/riders/:id', updateRider);

@@ -1,6 +1,8 @@
+import mongoose from 'mongoose';
 import Vehicle from './vehicleModel.js';
 import Rider from '../rider/riderModel.js';
 import Assignment from './assignmentModel.js';
+import Franchise from '../franchise/franchiseModel.js';
 import cloudinary from '../../config/cloudinary.js';
 
 // @desc    Add new vehicle
@@ -8,6 +10,33 @@ import cloudinary from '../../config/cloudinary.js';
 export const addVehicle = async (req, res) => {
   try {
     const { rcImage, ...vehicleData } = req.body;
+
+    // Robust franchise resolution
+    if (vehicleData.franchise) {
+      let fId = vehicleData.franchise;
+      if (typeof fId === 'string') {
+        fId = fId.trim().replace(/^\(|\)$/g, ''); // Strip leading/trailing parentheses
+      }
+
+      if (mongoose.Types.ObjectId.isValid(fId)) {
+        vehicleData.franchise = fId;
+      } else {
+        // Try searching by hubName or ownerName as fallback if name was passed
+        const hub = await Franchise.findOne({ 
+          $or: [
+            { hubName: fId }, 
+            { "businessDetails.name": fId },
+            { ownerName: fId }
+          ] 
+        });
+        if (hub) {
+          vehicleData.franchise = hub._id;
+        } else {
+          console.warn(`Could not resolve franchise for: ${fId}. Removing.`);
+          delete vehicleData.franchise;
+        }
+      }
+    }
 
     // Handle RC Image upload if provided
     let rcUrl = '';
@@ -38,7 +67,28 @@ export const addVehicle = async (req, res) => {
 export const getVehicles = async (req, res) => {
   try {
     const { franchiseId } = req.query;
-    const query = franchiseId ? { franchise: franchiseId } : {};
+    let fId = franchiseId;
+    if (fId && typeof fId === 'string') {
+      fId = fId.trim().replace(/^\(|\)$/g, '');
+    }
+
+    let resolvedFranchiseId = null;
+    if (fId) {
+      if (mongoose.Types.ObjectId.isValid(fId)) {
+        resolvedFranchiseId = fId;
+      } else {
+        const hub = await Franchise.findOne({ 
+          $or: [
+            { hubName: fId }, 
+            { "businessDetails.name": fId },
+            { ownerName: fId }
+          ] 
+        });
+        if (hub) resolvedFranchiseId = hub._id;
+      }
+    }
+
+    const query = resolvedFranchiseId ? { franchise: resolvedFranchiseId } : (fId ? { franchise: null } : {});
     
     let vehicles = await Vehicle.find(query).sort('-createdAt').lean();
 

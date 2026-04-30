@@ -95,7 +95,10 @@ export default function HubDashboard() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-[7.5px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all flex items-center gap-2 active:scale-95 shadow-lg shadow-emerald-950/20 italic leading-none">
+          <button 
+            onClick={() => navigate('/franchise/fleet/add')}
+            className="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-[7.5px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all flex items-center gap-2 active:scale-95 shadow-lg shadow-emerald-950/20 italic leading-none"
+          >
              + NEW_VEHICLE
           </button>
           <button className="px-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] text-[var(--text-primary)] rounded-xl text-[7.5px] font-black uppercase tracking-widest hover:border-emerald-500/20 transition-all flex items-center gap-2 active:scale-95 shadow-inner italic leading-none group">

@@ -1,5 +1,6 @@
 import Franchise from '../franchise/franchiseModel.js';
 import Vehicle from '../fleet/vehicleModel.js';
+import Assignment from '../fleet/assignmentModel.js';
 import Transaction from '../franchise/franchiseTransactionModel.js';
 import Rider from '../rider/riderModel.js';
 import Geofence from './geofenceModel.js';
@@ -217,6 +218,9 @@ export const getAllHubs = async (req, res) => {
       return {
         id: f._id,
         name: displayName,
+        ownerName: f.ownerName,
+        phone: f.phone,
+        email: f.email,
         city: displayCity,
         fleet: fleetCount,
         subs: fleetCount,
@@ -369,18 +373,30 @@ export const updateKycStatus = async (req, res) => {
 // @route   POST /api/v1/admin/hubs
 export const createHub = async (req, res) => {
   try {
-    const { name, city, email, phone, password, fleet } = req.body;
+    const { name, city, email, phone, password, fleet, ownerName } = req.body;
+
+    if (!name || !city || !phone || !ownerName) {
+      return res.status(400).json({ success: false, message: 'Missing required fields: name, city, phone, and ownerName are required' });
+    }
+
+    // Check if franchise already exists
+    const existingFranchise = await Franchise.findOne({ phone });
+    if (existingFranchise) {
+      return res.status(400).json({ success: false, message: 'Franchise with this phone number already exists' });
+    }
 
     // Register as franchise
     const franchise = await Franchise.create({
       hubName: name,
+      ownerName,
       city,
       email,
       phone,
-      password, // Note: Should be hashed
+      password, // Note: Should ideally be hashed if used for password login
       businessDetails: {
         name,
         address: city,
+        location: city,
         latitude: req.body.latitude || 0,
         longitude: req.body.longitude || 0,
         capacity: parseInt(fleet) || 0
@@ -392,8 +408,13 @@ export const createHub = async (req, res) => {
       hub: {
         id: franchise._id,
         name: franchise.hubName,
+        ownerName: franchise.ownerName,
         city: franchise.city,
-        status: franchise.status
+        status: franchise.status || 'active',
+        fleet: fleet || 0,
+        subs: 0,
+        revenue: 0,
+        health: '100%'
       }
     });
   } catch (error) {
@@ -923,26 +944,25 @@ export const getInventoryData = async (req, res) => {
 
 export const getFranchiseOpsData = async (req, res) => {
   try {
-    const [franchises, hubs] = await Promise.all([
-      Franchise.find().sort('-createdAt'),
-      Hub.find()
-    ]);
-
+    const franchises = await Franchise.find().sort('-createdAt');
     const totalPartners = franchises.length;
-    const activeNodes = hubs.length;
 
-    // Aggregated stats from transactions
     const txns = await Transaction.find({ status: 'completed' });
     const grossPayout = txns.reduce((acc, t) => acc + t.amount, 0);
 
-    const formattedFranchises = franchises.map(fr => ({
-      id: fr._id,
-      name: fr.businessDetails?.companyName || fr.ownerName,
-      city: fr.businessDetails?.city || 'N/A',
-      hubs: hubs.filter(h => h.franchise?.toString() === fr._id.toString()).length,
-      payout: `₹${(grossPayout / (totalPartners || 1) * (fr.kycStatus === 'verified' ? 1.2 : 0.8)).toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
-      status: fr.kycStatus === 'verified' ? 'settled' : 'processing',
-      businessDetails: fr.businessDetails // Pass through for map coordinates
+    const formattedFranchises = await Promise.all(franchises.map(async (fr) => {
+      const fleetCount = await Vehicle.countDocuments({ franchise: fr._id });
+      return {
+        id: fr._id,
+        name: fr.businessDetails?.name || fr.hubName || fr.ownerName || fr.phone,
+        city: fr.businessDetails?.location || fr.city || 'N/A',
+        hubs: 1,
+        fleet: fleetCount,
+        payout: `₹${(grossPayout / (totalPartners || 1) * (fr.kycStatus === 'approved' ? 1.2 : 0.8)).toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
+        status: fr.kycStatus === 'approved' ? 'settled' : 'processing',
+        kycStatus: fr.kycStatus,
+        businessDetails: fr.businessDetails
+      };
     }));
 
     res.status(200).json({
@@ -950,7 +970,7 @@ export const getFranchiseOpsData = async (req, res) => {
       franchises: formattedFranchises,
       stats: {
         totalPartners,
-        activeNodes,
+        activeNodes: totalPartners,
         grossPayout: `₹${(grossPayout / 100000).toFixed(1)}L`,
         growth: "+14%"
       }
@@ -1310,6 +1330,190 @@ export const deleteRider = async (req, res) => {
     }
     await rider.deleteOne();
     res.status(200).json({ success: true, message: 'Rider deleted' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get all vehicles for a specific hub (no franchise auth required)
+// @route   GET /api/v1/admin/hubs/:id/vehicles
+export const getHubVehicles = async (req, res) => {
+  try {
+    const vehicles = await Vehicle.find({ franchise: req.params.id }).sort('-createdAt').lean();
+
+    for (let vehicle of vehicles) {
+      try {
+        let assignment = await Assignment.findOne({ vehicle: vehicle._id, status: 'active' }).lean();
+        if (!assignment) {
+          assignment = await Assignment.findOne({ vehicle: vehicle._id }).sort('-startTime').lean();
+        }
+        if (assignment) {
+          const rider = await Rider.findById(assignment.rider).select('name phone').lean();
+          if (rider) vehicle.rider = rider.name || rider.phone;
+        }
+      } catch (_) {}
+    }
+
+    res.status(200).json({ success: true, count: vehicles.length, vehicles });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get single franchise/hub by ID with full details
+// @route   GET /api/v1/admin/hubs/:id
+export const getFranchiseById = async (req, res) => {
+  try {
+    const franchise = await Franchise.findById(req.params.id);
+    if (!franchise) {
+      return res.status(404).json({ success: false, message: 'Franchise not found' });
+    }
+
+    const fleetCount = await Vehicle.countDocuments({ franchise: franchise._id });
+    const revenueData = await Transaction.find({ franchise: franchise._id, type: 'Subscription', status: 'completed' });
+    const totalRevenue = revenueData.reduce((acc, t) => acc + t.amount, 0);
+    const serviceCount = await Vehicle.countDocuments({ franchise: franchise._id, status: 'in-service' });
+    const healthVal = fleetCount > 0 ? Math.round(((fleetCount - serviceCount) / fleetCount) * 100) : 100;
+
+    const displayName =
+      (franchise.businessDetails?.name && franchise.businessDetails.name.length < 40
+        ? franchise.businessDetails.name
+        : null) ||
+      franchise.hubName ||
+      franchise.ownerName ||
+      franchise.phone ||
+      'Unknown Hub';
+
+    const displayCity =
+      franchise.businessDetails?.location ||
+      franchise.businessDetails?.address ||
+      franchise.city ||
+      '-';
+
+    res.status(200).json({
+      success: true,
+      hub: {
+        id: franchise._id,
+        _id: franchise._id,
+        name: displayName,
+        hubName: franchise.hubName,
+        ownerName: franchise.ownerName,
+        phone: franchise.phone,
+        email: franchise.email,
+        city: displayCity,
+        address: franchise.businessDetails?.address || '',
+        capacity: franchise.businessDetails?.capacity || 0,
+        lat: franchise.businessDetails?.latitude || null,
+        lng: franchise.businessDetails?.longitude || null,
+        fleet: fleetCount,
+        subs: fleetCount,
+        revenue: totalRevenue,
+        status: franchise.status || 'active',
+        health: `${healthVal}%`,
+        kycStatus: franchise.kycStatus,
+        isVerified: franchise.isVerified,
+        businessDetails: franchise.businessDetails,
+        bankDetails: franchise.bankDetails,
+        createdAt: franchise.createdAt
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Update franchise/hub
+// @route   PUT /api/v1/admin/hubs/:id
+export const updateHub = async (req, res) => {
+  try {
+    const { name, ownerName, city, email, phone, fleet, status, address, latitude, longitude } = req.body;
+
+    const franchise = await Franchise.findById(req.params.id);
+    if (!franchise) {
+      return res.status(404).json({ success: false, message: 'Franchise not found' });
+    }
+
+    if (name !== undefined) {
+      franchise.hubName = name;
+      if (!franchise.businessDetails) franchise.businessDetails = {};
+      franchise.businessDetails.name = name;
+    }
+    if (ownerName !== undefined) franchise.ownerName = ownerName;
+    if (city !== undefined) {
+      franchise.city = city;
+      if (!franchise.businessDetails) franchise.businessDetails = {};
+      franchise.businessDetails.location = city;
+    }
+    if (email !== undefined) franchise.email = email;
+    if (phone !== undefined) franchise.phone = phone;
+    if (status !== undefined) franchise.status = status;
+    if (address !== undefined) {
+      if (!franchise.businessDetails) franchise.businessDetails = {};
+      franchise.businessDetails.address = address;
+    }
+    if (latitude !== undefined) {
+      if (!franchise.businessDetails) franchise.businessDetails = {};
+      franchise.businessDetails.latitude = parseFloat(latitude);
+    }
+    if (longitude !== undefined) {
+      if (!franchise.businessDetails) franchise.businessDetails = {};
+      franchise.businessDetails.longitude = parseFloat(longitude);
+    }
+    if (fleet !== undefined) {
+      if (!franchise.businessDetails) franchise.businessDetails = {};
+      franchise.businessDetails.capacity = parseInt(fleet) || 0;
+    }
+
+    franchise.markModified('businessDetails');
+    await franchise.save();
+
+    const fleetCount = await Vehicle.countDocuments({ franchise: franchise._id });
+    const serviceCount = await Vehicle.countDocuments({ franchise: franchise._id, status: 'in-service' });
+    const healthVal = fleetCount > 0 ? Math.round(((fleetCount - serviceCount) / fleetCount) * 100) : 100;
+
+    const displayName =
+      franchise.businessDetails?.name ||
+      franchise.hubName ||
+      franchise.ownerName ||
+      franchise.phone ||
+      'Unknown Hub';
+    const displayCity =
+      franchise.businessDetails?.location ||
+      franchise.businessDetails?.address ||
+      franchise.city ||
+      '-';
+
+    res.status(200).json({
+      success: true,
+      hub: {
+        id: franchise._id,
+        name: displayName,
+        ownerName: franchise.ownerName,
+        phone: franchise.phone,
+        email: franchise.email,
+        city: displayCity,
+        fleet: fleetCount,
+        subs: fleetCount,
+        status: franchise.status || 'active',
+        health: `${healthVal}%`,
+        capacity: franchise.businessDetails?.capacity || 0,
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Delete franchise/hub
+// @route   DELETE /api/v1/admin/hubs/:id
+export const deleteHub = async (req, res) => {
+  try {
+    const franchise = await Franchise.findById(req.params.id);
+    if (!franchise) {
+      return res.status(404).json({ success: false, message: 'Franchise not found' });
+    }
+    await franchise.deleteOne();
+    res.status(200).json({ success: true, message: 'Franchise deleted successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
