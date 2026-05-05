@@ -27,8 +27,8 @@ export default function SecurityAuditsPage() {
   const [newRole, setNewRole] = React.useState({ name: '', permissions: '' });
 
   useEffect(() => {
-    fetchSecurityData();
-    fetchRoles();
+    fetchSecurityData(activeFilters);
+    fetchRoles(activeFilters);
   }, []);
 
   const handleFilterChange = (newFilters) => {

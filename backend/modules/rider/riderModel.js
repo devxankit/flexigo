@@ -47,7 +47,8 @@ const RiderSchema = new mongoose.Schema({
     default: 'pending',
   },
   subscriptionPlan: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'SubscriptionPlan',
     default: null,
   },
   subscriptionStart: Date,

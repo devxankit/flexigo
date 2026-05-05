@@ -27,10 +27,12 @@ import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function KycOnboardingPage() {
-  const { kycRecords, fetchKycRecords, updateKycStatus } = useAdminDataStore();
+  const { kycRecords, fetchKycRecords, updateKycStatus, assignVehicle } = useAdminDataStore();
   const [activeTab, setActiveTab] = useState('all');
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [assignmentData, setAssignmentData] = useState({ vehiclePlate: '', riderPhone: '', riderName: '' });
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState({ range: 'Last 7 Days' });
 
@@ -40,13 +42,21 @@ export default function KycOnboardingPage() {
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
+    fetchKycRecords(newFilters);
     console.log('KYC Onboarding Sync:', newFilters);
   };
 
   const filteredRecords = kycRecords.filter(r => {
-    const matchesTab = activeTab === 'all' || r.role.toLowerCase() === activeTab.slice(0, -1);
-    const matchesSearch = r.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         r.id.toString().toLowerCase().includes(searchQuery.toLowerCase());
+    let matchesTab = activeTab === 'all';
+    if (activeTab === 'drivers') {
+      matchesTab = r.role.toLowerCase() === 'rider' || r.role.toLowerCase() === 'driver';
+    } else if (activeTab === 'franchises') {
+      matchesTab = r.role.toLowerCase() === 'franchise';
+    }
+    
+    const matchesSearch = (r.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         (r._id || r.id || '').toString().toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (r.vehiclePlate || '').toLowerCase().includes(searchQuery.toLowerCase());
     return matchesTab && matchesSearch;
   });
 
@@ -86,7 +96,7 @@ export default function KycOnboardingPage() {
                  type="text" 
                  value={searchQuery}
                  onChange={(e) => setSearchQuery(e.target.value)}
-                 placeholder="Search PAN/ID..." 
+                 placeholder="Search Name/Vehicle No/ID..." 
                  className="pl-8 pr-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all w-32 text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50"
                />
             </div>
@@ -98,14 +108,14 @@ export default function KycOnboardingPage() {
 
       {/* KPI Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <AdminStatCard title="Requests" value={kycRecords.length} icon={UserCheck} color="emerald" subtitle="Network Applications" />
-         <AdminStatCard title="Pending" value={kycRecords.filter(r => r.status === 'pending').length} icon={Clock} color="blue" subtitle="Awaiting Decision" />
-         <AdminStatCard title="Approved" value={kycRecords.filter(r => r.status === 'approved').length} icon={CheckCircle} color="emerald" subtitle="Cleared Node" />
+         <AdminStatCard title="Requests" value={filteredRecords.length} icon={UserCheck} color="emerald" subtitle={`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Applications`} />
+         <AdminStatCard title="Pending" value={filteredRecords.filter(r => r.status === 'pending').length} icon={Clock} color="blue" subtitle="Awaiting Decision" />
+         <AdminStatCard title="Approved" value={filteredRecords.filter(r => r.status === 'approved').length} icon={CheckCircle} color="emerald" subtitle="Cleared Node" />
       </div>
 
       {/* Tabbed Navigation */}
       <div className="flex border-b border-[var(--border-subtle)] gap-6">
-         {['all', 'drivers', 'consumers', 'franchises'].map((tab) => (
+         {['all', 'drivers', 'franchises'].map((tab) => (
             <button 
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -174,7 +184,22 @@ export default function KycOnboardingPage() {
                                 >
                                    <Eye size={12} />
                                 </button>
-                                 {/* Removed Quick Approve button as per request */}
+                                {record.status === 'approved' && record.role?.toLowerCase() === 'rider' && !record.vehicleId && (
+                                    <button 
+                                      onClick={() => {
+                                        setAssignmentData({
+                                          vehiclePlate: '',
+                                          riderPhone: record.phone || '',
+                                          riderName: record.name || ''
+                                        });
+                                        setIsAssignModalOpen(true);
+                                      }}
+                                      className="p-1.5 bg-emerald-600/10 border border-emerald-500/20 rounded-lg text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all ml-1.5"
+                                      title="Assign Vehicle"
+                                    >
+                                       <Zap size={12} fill="currentColor" />
+                                    </button>
+                                 )}
                              </div>
                           </td>
                        </motion.tr>
@@ -311,6 +336,94 @@ export default function KycOnboardingPage() {
          )}
       </AnimatePresence>
 
+      {/* Vehicle Assignment Modal */}
+      <AnimatePresence>
+         {isAssignModalOpen && (
+            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+               <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="w-full max-w-md bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-8 shadow-2xl space-y-6"
+               >
+                  <div className="flex items-center justify-between">
+                     <div className="space-y-0.5">
+                        <h2 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-tighter italic leading-none">Vehicle <span className="text-emerald-500">Assignment</span></h2>
+                        <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">PROVISION_DISPATCH_PROTOCOL</p>
+                     </div>
+                     <button onClick={() => setIsAssignModalOpen(false)} className="p-1.5 hover:bg-rose-600/10 hover:text-rose-500 transition-all rounded-lg">
+                        <X size={16} />
+                     </button>
+                  </div>
+
+                  <form 
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      const res = await assignVehicle({
+                        vehiclePlate: assignmentData.vehiclePlate,
+                        riderPhone: assignmentData.riderPhone,
+                        type: 'Manual',
+                        hubName: 'KYC Hub'
+                      });
+                      if (res.success) {
+                        setIsAssignModalOpen(false);
+                        alert("Vehicle Assigned Successfully!");
+                      } else {
+                        alert(res.message || "Assignment Failed");
+                      }
+                    }} 
+                    className="space-y-6"
+                  >
+                     <div className="space-y-4">
+                        <div className="space-y-1.5">
+                           <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Rider Name</label>
+                           <input 
+                              value={assignmentData.riderName}
+                              onChange={(e) => setAssignmentData({...assignmentData, riderName: e.target.value})}
+                              placeholder="Rider Name"
+                              className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
+                           />
+                        </div>
+
+                        <div className="space-y-1.5">
+                           <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Mobile Number</label>
+                           <input 
+                              value={assignmentData.riderPhone}
+                              onChange={(e) => {
+                                 const val = e.target.value.replace(/\D/g, '');
+                                 if (val.length <= 10) {
+                                   setAssignmentData({...assignmentData, riderPhone: val});
+                                 }
+                              }}
+                              placeholder="Mobile Number"
+                              className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
+                           />
+                        </div>
+
+                        <div className="space-y-1.5">
+                           <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Vehicle Plate Number</label>
+                           <input 
+                              autoFocus
+                              required
+                              value={assignmentData.vehiclePlate}
+                              onChange={(e) => setAssignmentData({...assignmentData, vehiclePlate: e.target.value.toUpperCase()})}
+                              placeholder="e.g. DL 01 AB 1234"
+                              className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
+                           />
+                        </div>
+                     </div>
+
+                     <button 
+                        type="submit"
+                        className="w-full py-3 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-emerald-950/20 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+                     >
+                        <Zap size={14} fill="white" /> Save & Assign Vehicle
+                     </button>
+                  </form>
+               </motion.div>
+            </div>
+         )}
+      </AnimatePresence>
 
     </div>
   );

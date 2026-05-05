@@ -32,7 +32,19 @@ export const useAdminDataStore = create((set, get) => ({
   subscribers: [],
   roles: [],
   campaigns: [],
+  notifications: [],
   isLoading: false,
+
+  fetchNotifications: async () => {
+    try {
+      const res = await api.get('/admin/notifications-feed');
+      if (res.data.success) {
+        set({ notifications: res.data.notifications });
+      }
+    } catch (err) {
+      console.error("Failed to fetch notifications:", err);
+    }
+  },
 
   fetchDashboardStats: async (filters = {}) => {
     set({ isLoading: true });
@@ -54,24 +66,33 @@ export const useAdminDataStore = create((set, get) => ({
     }
   },
 
-  fetchHubs: async () => {
+  fetchHubs: async (filters = {}) => {
     try {
       // Get browser geolocation if available, then fetch hubs sorted by proximity
       const getCoords = () =>
         new Promise((resolve) => {
-          if (!navigator.geolocation) return resolve(null);
           navigator.geolocation.getCurrentPosition(
             (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-            () => resolve(null),
-            { timeout: 4000 }
+            () => resolve({ lat: null, lng: null }),
+            { timeout: 3000 }
           );
         });
 
-      const coords = await getCoords();
-      const params = coords ? `?lat=${coords.lat}&lng=${coords.lng}` : '';
-      const res = await api.get(`/admin/hubs${params}`);
+      const { lat, lng } = await getCoords();
+      const params = new URLSearchParams();
+      if (lat) params.append('lat', lat);
+      if (lng) params.append('lng', lng);
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/hubs?${params.toString()}`);
       if (res.data.success) {
-        set({ hubs: res.data.hubs });
+        set({ 
+          hubs: res.data.hubs,
+          networkStats: {
+            ...get().networkStats,
+            ...res.data.stats
+          }
+        });
       }
     } catch (err) {
       console.error("Failed to fetch hubs:", err);
@@ -140,9 +161,12 @@ export const useAdminDataStore = create((set, get) => ({
     }
   },
 
-  fetchDistribution: async () => {
+  fetchDistribution: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/distribution');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/distribution?${params.toString()}`);
       if (res.data.success) {
         set({ fleetDistribution: res.data.distribution });
       }
@@ -151,9 +175,12 @@ export const useAdminDataStore = create((set, get) => ({
     }
   },
 
-  fetchPlans: async () => {
+  fetchPlans: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/plans');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/plans?${params.toString()}`);
       if (res.data.success) {
         set({ plans: res.data.plans });
       }
@@ -163,9 +190,12 @@ export const useAdminDataStore = create((set, get) => ({
   },
 
   kycStats: { markets: 0, gstSync: '0%', integrity: '0%' },
-  fetchKycRecords: async () => {
+  fetchKycRecords: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/kyc');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/kyc?${params.toString()}`);
       if (res.data.success) {
         set({
           kycRecords: res.data.records,
@@ -201,9 +231,12 @@ export const useAdminDataStore = create((set, get) => ({
     }
   },
 
-  fetchAllVehicles: async () => {
+  fetchAllVehicles: async (filters = {}) => {
     try {
-      const res = await api.get('/fleet'); // no franchiseId param = all
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+      
+      const res = await api.get(`/fleet?${params.toString()}`); // no franchiseId param = all
       if (res.data.success) {
         set({ vehicles: res.data.vehicles });
       }
@@ -282,11 +315,20 @@ export const useAdminDataStore = create((set, get) => ({
   },
 
   geofences: [],
-  fetchGeofences: async () => {
+  fetchGeofences: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/geofencing');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/geofencing?${params.toString()}`);
       if (res.data.success) {
-        set({ geofences: res.data.geofences });
+        set({ 
+          geofences: res.data.geofences,
+          networkStats: {
+            ...get().networkStats,
+            geofenceStats: res.data.stats
+          }
+        });
       }
     } catch (err) {
       console.error("Failed to fetch geofences:", err);
@@ -339,7 +381,7 @@ export const useAdminDataStore = create((set, get) => ({
   assignments: [],
   fetchAssignments: async () => {
     try {
-      const res = await api.get('/admin/assignments');
+      const res = await api.get('/fleet/assignments');
       if (res.data.success) {
         set({ assignments: res.data.assignments });
       }
@@ -350,9 +392,12 @@ export const useAdminDataStore = create((set, get) => ({
 
   assignVehicle: async (data) => {
     try {
-      const res = await api.post('/admin/assignments', data);
+      const res = await api.post('/fleet/assignments', data);
       if (res.data.success) {
-        set(state => ({ assignments: [res.data.assignment, ...state.assignments] }));
+        set(state => ({ 
+          assignments: [res.data.assignment, ...state.assignments],
+          kycRecords: state.kycRecords.map(r => r.phone === data.riderPhone ? { ...r, vehicleId: res.data.assignment.vehicle } : r)
+        }));
         return res.data;
       }
     } catch (err) {
@@ -363,9 +408,12 @@ export const useAdminDataStore = create((set, get) => ({
 
   financeStats: { settled: '0L', liability: '0L', unitYield: '0k' },
   financeTransactions: [],
-  fetchFinanceData: async () => {
+  fetchFinanceData: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/finance');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/finance?${params.toString()}`);
       if (res.data.success) {
         set({
           financeTransactions: res.data.transactions,
@@ -380,9 +428,12 @@ export const useAdminDataStore = create((set, get) => ({
   inventory: [],
   billing: [],
   inventoryStats: { totalItems: 0, restockCount: '0', stockValue: '₹0L', unpaidAmount: '₹0L' },
-  fetchInventoryData: async () => {
+  fetchInventoryData: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/inventory');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/inventory?${params.toString()}`);
       if (res.data.success) {
         set({
           inventory: res.data.inventory,
@@ -397,9 +448,12 @@ export const useAdminDataStore = create((set, get) => ({
 
   franchiseOps: [],
   franchiseOpsStats: { totalPartners: 0, activeNodes: 0, grossPayout: '₹0L', growth: '+0%' },
-  fetchFranchiseOpsData: async () => {
+  fetchFranchiseOpsData: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/franchise-ops');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/franchise-ops?${params.toString()}`);
       if (res.data.success) {
         set({
           franchiseOps: res.data.franchises,
@@ -413,9 +467,12 @@ export const useAdminDataStore = create((set, get) => ({
 
   complianceRecords: [],
   complianceStats: { activeFines: '0', autoSettled: '₹0K', complianceRate: '0%', apiStatus: 'Offline' },
-  fetchComplianceData: async () => {
+  fetchComplianceData: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/compliance');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/compliance?${params.toString()}`);
       if (res.data.success) {
         set({
           complianceRecords: res.data.challans,
@@ -469,9 +526,12 @@ export const useAdminDataStore = create((set, get) => ({
 
   subscribers: [],
   subscriberStats: { totalUsers: '0', dailyRiders: '0', kycVerified: '0%', flagged: '0' },
-  fetchSubscriberData: async () => {
+  fetchSubscriberData: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/subscribers');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/subscribers?${params.toString()}`);
       if (res.data.success) {
         set({
           subscribers: res.data.subscribers,
@@ -485,9 +545,12 @@ export const useAdminDataStore = create((set, get) => ({
 
   staff: [],
   staffStats: { totalStaff: 0, onDuty: 0, performance: '0%', leaves: '0' },
-  fetchStaff: async () => {
+  fetchStaff: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/staff');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/staff?${params.toString()}`);
       if (res.data.success) {
         set({
           staff: res.data.staff,
@@ -600,9 +663,12 @@ export const useAdminDataStore = create((set, get) => ({
     cleanup: '0%',
     behaviourAlerts: []
   },
-  fetchRiderBehaviour: async () => {
+  fetchRiderBehaviour: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/rider-behaviour');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/rider-behaviour?${params.toString()}`);
       if (res.data.success) {
         set({ riderBehaviour: res.data.stats });
       }
@@ -661,11 +727,17 @@ export const useAdminDataStore = create((set, get) => ({
 
   // --- RIDER MANAGEMENT ---
   riders: [],
-  fetchRiders: async () => {
+  fetchRiders: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/riders');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/riders?${params.toString()}`);
       if (res.data.success) {
-        set({ riders: res.data.riders });
+        set({ 
+          riders: res.data.riders,
+          riderBehaviour: res.data.stats || get().riderBehaviour
+        });
       }
     } catch (err) {
       console.error("Failed to fetch riders:", err);

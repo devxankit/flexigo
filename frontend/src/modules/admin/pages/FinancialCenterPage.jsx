@@ -33,12 +33,14 @@ export default function FinancialCenterPage() {
   const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
 
   React.useEffect(() => {
-    fetchFinanceData();
-    fetchDashboardStats(); // For gross revenue
+    fetchFinanceData(activeFilters);
+    fetchDashboardStats(activeFilters); // For gross revenue
   }, []);
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
+    fetchFinanceData(newFilters);
+    fetchDashboardStats(newFilters);
     console.log('Financial Center Sync:', newFilters);
   };
 

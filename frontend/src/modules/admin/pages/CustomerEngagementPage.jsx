@@ -37,8 +37,8 @@ export default function CustomerEngagementPage() {
   const [newCampaign, setNewCampaign] = useState({ name: '', campaignId: '' });
   
   useEffect(() => {
-    fetchEngagementData();
-    fetchCampaigns();
+    fetchEngagementData(activeFilters);
+    fetchCampaigns(activeFilters);
   }, []);
 
   const handleFilterChange = (newFilters) => {

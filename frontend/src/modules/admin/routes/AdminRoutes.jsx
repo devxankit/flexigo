@@ -5,7 +5,6 @@ import AdminLayout from '../components/AdminLayout';
 // Intelligence Group
 const AdminDashboard = lazy(() => import('../pages/AdminDashboard'));
 const DeepAnalyticsPage = lazy(() => import('../pages/DeepAnalyticsPage'));
-const VehicleAnalyticsPage = lazy(() => import('../pages/VehicleAnalyticsPage'));
 const RiderBehaviourPage = lazy(() => import('../pages/RiderBehaviourPage'));
 
 // Operations Group
@@ -14,7 +13,6 @@ const HubDetailsPage = lazy(() => import('../pages/HubDetailsPage'));
 const FleetOversightPage = lazy(() => import('../pages/FleetOversightPage'));
 const GpsControlPage = lazy(() => import('../pages/GpsControlPage'));
 const GeoFencingPage = lazy(() => import('../pages/GeoFencingPage'));
-const AssignmentPage = lazy(() => import('../pages/AssignmentPage'));
 const AddVehiclePage = lazy(() => import('../pages/AddVehiclePage'));
 
 // People Group
@@ -35,6 +33,7 @@ const CompliancePage = lazy(() => import('../pages/CompliancePage'));
 const CustomerEngagementPage = lazy(() => import('../pages/CustomerEngagementPage'));
 const SecurityAuditsPage = lazy(() => import('../pages/SecurityAuditsPage'));
 const AlertCenterPage = lazy(() => import('../pages/AlertCenterPage'));
+const SettingsPage = lazy(() => import('../pages/SettingsPage'));
 
 const AdminLogin = lazy(() => import('../pages/AdminLogin'));
 
@@ -61,7 +60,6 @@ export default function AdminRoutes() {
           <Route path="fleet/add" element={<AddVehiclePage />} />
           <Route path="gps-control" element={<GpsControlPage />} />
           <Route path="geofencing" element={<GeoFencingPage />} />
-          <Route path="assignment" element={<AssignmentPage />} />
           
           {/* People Group */}
           <Route path="subscribers" element={<SubscriberRegistryPage />} />
@@ -78,7 +76,6 @@ export default function AdminRoutes() {
           
           {/* Intelligence Group */}
           <Route path="analytics" element={<DeepAnalyticsPage />} />
-          <Route path="vehicle-analytics" element={<VehicleAnalyticsPage />} />
           <Route path="rider-behaviour" element={<RiderBehaviourPage />} />
           
           {/* Legal & Support Group */}
@@ -86,6 +83,7 @@ export default function AdminRoutes() {
           <Route path="engagement" element={<CustomerEngagementPage />} />
           <Route path="security" element={<SecurityAuditsPage />} />
           <Route path="notifications" element={<AlertCenterPage />} />
+          <Route path="settings" element={<SettingsPage />} />
           
           <Route path="" element={<Navigate to="dashboard" replace />} />
         </Route>

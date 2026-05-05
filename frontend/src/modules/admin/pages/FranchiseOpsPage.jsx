@@ -22,11 +22,12 @@ export default function FranchiseOpsPage() {
   const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
 
   useEffect(() => {
-    fetchFranchiseOpsData();
+    fetchFranchiseOpsData(activeFilters);
   }, []);
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
+    fetchFranchiseOpsData(newFilters);
     console.log('Franchise Ops Sync:', newFilters);
   };
 

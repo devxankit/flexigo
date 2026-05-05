@@ -180,7 +180,10 @@ export default function HubManagementPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <OpsFilter onFilterChange={setActiveFilters} />
+          <OpsFilter onFilterChange={(newFilters) => {
+            setActiveFilters(newFilters);
+            fetchHubs(newFilters);
+          }} />
           <div className="relative group">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--text-tertiary)] group-focus-within:text-emerald-500 transition-colors" />
             <input
@@ -204,8 +207,8 @@ export default function HubManagementPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <AdminStatCard title="Total Franchises" value={hubs.length} icon={Warehouse} color="emerald" subtitle="Active nodes" />
         <AdminStatCard title="Utilization" value={networkStats.hubUtilization} icon={TrendingUp} color="blue" subtitle="Avg space" />
-        <AdminStatCard title="Connectivity" value="98.2%" icon={Signal} color="emerald" subtitle="Uptime" />
-        <AdminStatCard title="System Health" value="94%" icon={Activity} color="emerald" subtitle="Registry sync" />
+        <AdminStatCard title="Connectivity" value={networkStats.connectivity || "98.2%"} icon={Signal} color="emerald" subtitle="Uptime" />
+        <AdminStatCard title="System Health" value={networkStats.systemHealth || "94%"} icon={Activity} color="emerald" subtitle="Registry sync" />
       </div>
 
       {/* Hub Cards */}

@@ -33,12 +33,13 @@ import { useAdminDataStore } from '../store/adminDataStore';
 const COLORS = ['#10b981', '#0ea5e9', '#f59e0b', '#ef4444'];
 
 export default function DeepAnalyticsPage() {
-  const { networkStats, revenueData } = useAdminDataStore();
+  const { networkStats, revenueData, fetchDashboardStats } = useAdminDataStore();
   const [activeSegment, setActiveSegment] = useState('predictive');
   const [activeFilters, setActiveFilters] = useState({ range: 'Last 7 Days' });
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
+    fetchDashboardStats(newFilters);
     console.log('Deep Analytics Sync:', newFilters);
   };
 

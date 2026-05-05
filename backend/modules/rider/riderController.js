@@ -9,6 +9,9 @@ import crypto from 'crypto';
 import generateToken from '../../shared/utils/generateToken.js';
 import { sendSMS } from '../../shared/utils/smsService.js';
 import cloudinary from '../../config/cloudinary.js';
+import Geofence from '../admin/geofenceModel.js';
+import { sendPushNotification } from '../../shared/utils/firebase.js';
+import AuditLog from '../admin/auditLogModel.js';
 
 // @desc    Send OTP to Rider
 // @route   POST /api/v1/rider/auth/send-otp
@@ -47,7 +50,7 @@ export const sendOTP = async (req, res) => {
     // Send SMS via SMSIndiaHub
     const message = `Welcome to the Flexigo powered by SMSINDIAHUB. Your OTP for registration is ${otp}`;
     console.log('[RIDER AUTH] Triggering SMS Service...');
-    
+
     try {
       await sendSMS(phone, message);
       console.log('[RIDER AUTH] SMS sent successfully');
@@ -158,10 +161,10 @@ export const saveFcmToken = async (req, res) => {
 export const updateKYC = async (req, res) => {
   try {
     const { selfie, aadhaarFront, aadhaarBack, drivingLicense } = req.body;
-    
+
     // In a real app, req.rider would come from auth middleware
     // For now, we take phone from body or just use a mock approach if auth not ready
-    const { phone } = req.body; 
+    const { phone } = req.body;
 
     const rider = await Rider.findOne({ phone });
 
@@ -170,11 +173,11 @@ export const updateKYC = async (req, res) => {
     }
 
     const uploadToCloudinary = async (base64Data, folder) => {
-        if (!base64Data) return null;
-        const result = await cloudinary.uploader.upload(base64Data, {
-            folder: `flexigo/riders/${rider._id}/${folder}`
-        });
-        return result.secure_url;
+      if (!base64Data) return null;
+      const result = await cloudinary.uploader.upload(base64Data, {
+        folder: `flexigo/riders/${rider._id}/${folder}`
+      });
+      return result.secure_url;
     };
 
     if (selfie) rider.kycDetails.selfie = await uploadToCloudinary(selfie, 'selfie');
@@ -182,10 +185,10 @@ export const updateKYC = async (req, res) => {
     if (aadhaarBack) rider.kycDetails.aadhaarBack = await uploadToCloudinary(aadhaarBack, 'aadhaar');
     if (drivingLicense) rider.kycDetails.drivingLicense = await uploadToCloudinary(drivingLicense, 'license');
 
-    const hasAllDocs = rider.kycDetails.selfie && 
-                       rider.kycDetails.aadhaarFront && 
-                       rider.kycDetails.aadhaarBack && 
-                       rider.kycDetails.drivingLicense;
+    const hasAllDocs = rider.kycDetails.selfie &&
+      rider.kycDetails.aadhaarFront &&
+      rider.kycDetails.aadhaarBack &&
+      rider.kycDetails.drivingLicense;
 
     rider.kycStatus = hasAllDocs ? 'approved' : 'pending';
     rider.isRegistered = true;
@@ -218,9 +221,9 @@ export const generateAadhaarOTP = async (req, res) => {
       method: 'post',
       url: 'https://api.quickekyc.com/api/v1/aadhaar-v2/generate-otp',
       headers: { 'Content-Type': 'application/json' },
-      data: { 
-        key: process.env.SUREPASS_API_KEY, 
-        id_number: aadhaarNumber 
+      data: {
+        key: process.env.SUREPASS_API_KEY,
+        id_number: aadhaarNumber
       }
     };
     console.log('QUICKEKYC: Request Data:', JSON.stringify(config.data));
@@ -230,20 +233,20 @@ export const generateAadhaarOTP = async (req, res) => {
     console.log('QUICKEKYC: Response Status:', response.status);
     console.log('QUICKEKYC: Response Body:', JSON.stringify(response.data));
 
-    const isActuallySuccess = response.data.success === true || 
-                               response.data.status === 'success' || 
-                               response.data.message?.toLowerCase().includes('sent') ||
-                               response.data.message?.toLowerCase().includes('success');
+    const isActuallySuccess = response.data.success === true ||
+      response.data.status === 'success' ||
+      response.data.message?.toLowerCase().includes('sent') ||
+      response.data.message?.toLowerCase().includes('success');
 
     if (isActuallySuccess) {
       console.log('QUICKEKYC: OTP Sequence Success confirmed');
-      const requestId = response.data.data?.request_id || 
-                        response.data.request_id || 
-                        response.data.data?.client_id || 
-                        response.data.client_id || 
-                        response.data.data?.id || 
-                        response.data.id;
-      
+      const requestId = response.data.data?.request_id ||
+        response.data.request_id ||
+        response.data.data?.client_id ||
+        response.data.client_id ||
+        response.data.data?.id ||
+        response.data.id;
+
       console.log('QUICKEKYC: Final RequestID:', requestId);
 
       res.status(200).json({
@@ -270,7 +273,7 @@ export const verifyAadhaarOTP = async (req, res) => {
   try {
     const { client_id, clientId, requestId, otp, phone } = req.body;
     const finalClientId = client_id || clientId || requestId;
-    
+
     console.log('QUICKEKYC: Verify Params -> finalClientId:', finalClientId, '| otp:', otp, '| phone:', phone);
 
     if (!finalClientId || !otp) {
@@ -282,10 +285,10 @@ export const verifyAadhaarOTP = async (req, res) => {
       method: 'post',
       url: 'https://api.quickekyc.com/api/v1/aadhaar-v2/submit-otp',
       headers: { 'Content-Type': 'application/json' },
-      data: { 
+      data: {
         key: process.env.SUREPASS_API_KEY,
-        request_id: finalClientId, 
-        otp 
+        request_id: finalClientId,
+        otp
       }
     };
     console.log('QUICKEKYC: Request Data:', JSON.stringify(config.data));
@@ -298,7 +301,7 @@ export const verifyAadhaarOTP = async (req, res) => {
     if (response.data.success || response.data.status === 'success') {
       console.log('QUICKEKYC: Verification SUCCESS');
       const kycData = response.data.data || response.data;
-      
+
       const rider = await Rider.findOne({ phone });
       if (rider) {
         console.log('QUICKEKYC: Updating Rider Info in DB');
@@ -327,77 +330,79 @@ export const verifyAadhaarOTP = async (req, res) => {
   console.log('--- QUICKEKYC: VERIFY OTP END ---');
 };
 
+
 // @desc    Get Rider Profile
 // @route   GET /api/v1/rider/profile/:phone
 export const getRiderProfile = async (req, res) => {
-    try {
-        const rider = await Rider.findOne({ phone: req.params.phone });
-        if (!rider) {
-            return res.status(404).json({ success: false, message: 'Rider not found' });
-        }
-        res.status(200).json({ success: true, rider });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+  try {
+    const rider = await Rider.findOne({ phone: req.params.phone }).populate('subscriptionPlan');
+    if (!rider) {
+      return res.status(404).json({ success: false, message: 'Rider not found' });
     }
+    res.status(200).json({ success: true, rider });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
 // @desc    Add Money to Wallet
 // @route   POST /api/v1/rider/wallet/add
 export const addMoney = async (req, res) => {
-    try {
-        const { phone, amount } = req.body;
+  try {
+    const { phone, amount } = req.body;
 
-        if (!phone || !amount || amount <= 0) {
-            return res.status(400).json({ success: false, message: 'Invalid data' });
-        }
-
-        const rider = await Rider.findOne({ phone });
-        if (!rider) {
-            return res.status(404).json({ success: false, message: 'Rider not found' });
-        }
-
-        // Update balance
-        rider.walletBalance += Number(amount);
-        await rider.save();
-
-        // Create transaction record
-        await Transaction.create({
-            riderId: rider._id,
-            amount,
-            type: 'credit',
-            status: 'success',
-            description: 'Added to wallet',
-        });
-
-        res.status(200).json({
-            success: true,
-            message: `₹${amount} added successfully`,
-            walletBalance: rider.walletBalance,
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+    if (!phone || !amount || amount <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid data' });
     }
+
+    const rider = await Rider.findOne({ phone });
+    if (!rider) {
+      return res.status(404).json({ success: false, message: 'Rider not found' });
+    }
+
+    // Update balance
+    rider.walletBalance += Number(amount);
+    await rider.save();
+
+    // Create transaction record
+    await Transaction.create({
+      riderId: rider._id,
+      amount,
+      type: 'credit',
+      status: 'success',
+      description: 'Added to wallet',
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `₹${amount} added successfully`,
+      walletBalance: rider.walletBalance,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
 // @desc    Get Wallet Data (Balance + Transactions)
 // @route   GET /api/v1/rider/wallet/:phone
+
 export const getWalletData = async (req, res) => {
-    try {
-        const rider = await Rider.findOne({ phone: req.params.phone });
-        if (!rider) {
-            return res.status(404).json({ success: false, message: 'Rider not found' });
-        }
-
-        const transactions = await Transaction.find({ riderId: rider._id }).sort({ createdAt: -1 });
-
-        res.status(200).json({
-            success: true,
-            walletBalance: rider.walletBalance,
-            transactions,
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+  try {
+    const rider = await Rider.findOne({ phone: req.params.phone });
+    if (!rider) {
+      return res.status(404).json({ success: false, message: 'Rider not found' });
     }
+
+    const transactions = await Transaction.find({ riderId: rider._id }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      walletBalance: rider.walletBalance,
+      transactions,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
 // @desc    Get All Subscribers for a Franchise
@@ -432,18 +437,18 @@ export const getActiveHubs = async (req, res) => {
       const a =
         Math.sin(dLat / 2) * Math.sin(dLat / 2) +
         Math.cos((lat1 * Math.PI) / 180) *
-          Math.cos((lat2 * Math.PI) / 180) *
-          Math.sin(dLon / 2) *
-          Math.sin(dLon / 2);
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     };
 
     const franchises = await Franchise.find().select('businessDetails hubName status walletBalance');
-    
+
     const hubs = await Promise.all(franchises.map(async (f) => {
       const fleetCount = await Vehicle.countDocuments({ franchise: f._id });
       const availableBatteries = await Vehicle.countDocuments({ franchise: f._id, status: 'available' });
-      
+
       const hubLat = f.businessDetails?.latitude;
       const hubLng = f.businessDetails?.longitude;
       const distanceKm = hasLocation ? getDistanceKm(userLat, userLng, hubLat, hubLng) : null;
@@ -490,10 +495,10 @@ export const getMyVehicle = async (req, res) => {
 
     // Find vehicle assigned to this rider
     const vehicle = await Vehicle.findOne({ currentRider: rider._id });
-    
+
     if (!vehicle) {
-      return res.status(200).json({ 
-        success: true, 
+      return res.status(200).json({
+        success: true,
         hasVehicle: false,
         vehicle: {
           id: 'FLX-PENDING',
@@ -506,8 +511,8 @@ export const getMyVehicle = async (req, res) => {
       });
     }
 
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       hasVehicle: true,
       vehicle: {
         id: vehicle.vehicleId || `FLX-${vehicle._id.toString().slice(-4)}`,
@@ -529,7 +534,7 @@ export const getMyVehicle = async (req, res) => {
 export const getRiderPlans = async (req, res) => {
   try {
     const plans = await SubscriptionPlan.find({ target: 'Rider', status: 'active' }).sort({ price: 1 });
-    
+
     // Map DB model to Frontend UI format
     const formattedPlans = plans.map(plan => ({
       id: plan._id,
@@ -589,14 +594,14 @@ export const verifyPayment = async (req, res) => {
     if (expectedSignature === razorpay_signature) {
       // Payment verified - Update Rider's subscription in DB
       const plan = await SubscriptionPlan.findById(planId);
-      
+
       // Calculate expiry
       const durationMs = plan.type === 'Daily' ? 86400000 : plan.type === 'Weekly' ? 604800000 : 2592000000;
       const expiresAt = new Date(Date.now() + durationMs);
 
       await Rider.findOneAndUpdate(
         { phone },
-        { 
+        {
           status: 'active',
           subscriptionPlan: plan.name,
           subscriptionStart: new Date(),
@@ -613,3 +618,80 @@ export const verifyPayment = async (req, res) => {
   }
 };
 
+// @desc    Update Rider Location and check Geofences
+// @route   PATCH /api/v1/rider/location
+export const updateRiderLocation = async (req, res) => {
+  try {
+    const { latitude, longitude, speed } = req.body;
+    const riderId = req.rider._id;
+
+    const rider = await Rider.findById(riderId);
+    if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
+
+    rider.lastLocation = {
+      latitude,
+      longitude,
+      timestamp: new Date()
+    };
+    if (speed !== undefined) rider.currentSpeed = speed;
+    await rider.save();
+
+    // Check Geofences
+    const activeFences = await Geofence.find({ 
+      status: 'active',
+      $or: [{ riderId: riderId }, { riderId: null }] // Global or specific
+    });
+
+    const getDistance = (lat1, lon1, lat2, lon2) => {
+      const R = 6371; // km
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    };
+
+    for (const fence of activeFences) {
+      const dist = getDistance(latitude, longitude, fence.center.lat, fence.center.lng);
+      const radiusKm = parseFloat(fence.radius) || 1.0;
+      
+      let breached = false;
+      let alertMsg = '';
+
+      if (fence.type === 'inclusion' && dist > radiusKm) {
+        breached = true;
+        alertMsg = `Geofence Breach: Rider ${rider.name || rider.phone} has exited the authorized zone [${fence.name}].`;
+      } else if (fence.type === 'exclusion' && dist < radiusKm) {
+        breached = true;
+        alertMsg = `Geofence Breach: Rider ${rider.name || rider.phone} has entered a restricted zone [${fence.name}].`;
+      }
+
+      if (breached) {
+        fence.alerts += 1;
+        await fence.save();
+
+        // Send FCM to Rider
+        if (rider.fcmToken) {
+          await sendPushNotification(rider.fcmToken, 'Safety Alert: Geofence Breach', alertMsg, {
+            type: 'geofence_breach',
+            fenceId: fence._id.toString()
+          });
+        }
+        if (rider.fcmTokenMobile) {
+          await sendPushNotification(rider.fcmTokenMobile, 'Safety Alert: Geofence Breach', alertMsg, {
+            type: 'geofence_breach',
+            fenceId: fence._id.toString()
+          });
+        }
+        
+        console.log(`[GEOFENCE] Breach Alert Sent for Rider ${rider.phone}: ${alertMsg}`);
+      }
+    }
+
+    res.status(200).json({ success: true, message: 'Location updated and fences checked' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

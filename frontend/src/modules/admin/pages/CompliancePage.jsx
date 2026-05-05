@@ -23,11 +23,12 @@ export default function CompliancePage() {
   const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
 
   useEffect(() => {
-    fetchComplianceData();
+    fetchComplianceData(activeFilters);
   }, []);
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
+    fetchComplianceData(newFilters);
     console.log('Compliance Sync:', newFilters);
   };
 
@@ -49,21 +50,14 @@ export default function CompliancePage() {
          
          <div className="flex items-center gap-2">
             <OpsFilter onFilterChange={handleFilterChange} />
-            <button 
-               onClick={fetchComplianceData}
-               className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95 flex items-center gap-1.5"
-            >
-               <RefreshCcw size={12} /> Sync Vahan
-            </button>
          </div>
       </div>
 
       {/* KPI Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
          <AdminStatCard title="Active Fines" value={complianceStats.activeFines} icon={Gavel} color="rose" subtitle="Unpaid" />
          <AdminStatCard title="Auto Settled" value={complianceStats.autoSettled} icon={IndianRupee} color="emerald" subtitle="MTD Pay" />
          <AdminStatCard title="Compliance" value={complianceStats.complianceRate} icon={ShieldCheck} color="blue" subtitle="Asset Health" />
-         <AdminStatCard title="API Guard" value={complianceStats.apiStatus} icon={RefreshCcw} color="emerald" subtitle="Vahan Node" />
       </div>
 
       <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-sm">

@@ -168,7 +168,7 @@ export default function OnboardingKYC() {
               selfie: await fileToBase64(uploads.selfie),
               aadhaarFront: await fileToBase64(uploads.aadhaarFront),
               aadhaarBack: await fileToBase64(uploads.aadhaarBack),
-              drivingLicense: await fileToBase64(uploads.license)
+              drivingLicense: uploads.license ? await fileToBase64(uploads.license) : null
           };
           console.log('ONBOARDING: kycData prepared. Files converted to Base64');
           console.log('ONBOARDING: Calling updateKYC store method');
@@ -497,6 +497,15 @@ export default function OnboardingKYC() {
                   {uploads.license ? 'License Uploaded ✓' : 'Upload License Copy'}
                 </span>
               </GlassCard>
+
+              <button 
+                onClick={handleNext}
+                className={`w-full py-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${
+                  isDark ? 'text-gray-500 hover:text-white' : 'text-slate-400 hover:text-slate-900'
+                }`}
+              >
+                Skip for now →
+              </button>
             </motion.div>
           )}
         </AnimatePresence>
@@ -507,9 +516,9 @@ export default function OnboardingKYC() {
           size="full"
           variant={canContinue() ? 'solid' : 'green'}
           onClick={handleNext}
-          disabled={loading || !canContinue()}
+          disabled={loading || (currentStep !== 3 && !canContinue())}
         >
-          {loading ? 'Processing...' : currentStep === 3 ? 'Finish & Verify' : 'Continue'}
+          {loading ? 'Processing...' : currentStep === 3 ? (uploads.license ? 'Finish & Verify' : 'Finish without License') : 'Continue'}
         </NeonButton>
       </div>
     </PageWrapper>

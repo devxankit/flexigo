@@ -45,8 +45,8 @@ export default function SubscriptionPlansPage() {
   const [formData, setFormData] = useState({ name: '', type: 'Daily', price: '', deposit: '', features: [''] });
 
   React.useEffect(() => {
-    fetchPlans();
-    fetchDashboardStats();
+    fetchPlans(activeFilters);
+    fetchDashboardStats(activeFilters);
   }, []);
 
   React.useEffect(() => {
@@ -62,6 +62,8 @@ export default function SubscriptionPlansPage() {
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
+    fetchPlans(newFilters);
+    fetchDashboardStats(newFilters);
     console.log('Subscription Plans Sync:', newFilters);
   };
 
@@ -141,11 +143,10 @@ export default function SubscriptionPlansPage() {
       </div>
 
       {/* KPI Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
          <AdminStatCard title="Active Plans" value={filteredPlans.length} icon={Layers} color="emerald" subtitle="Market Offerings" />
          <AdminStatCard title="Avg. Ticket" value={`₹${avgTicket.toLocaleString()}`} icon={IndianRupee} color="blue" subtitle="Revenue Per User" />
          <AdminStatCard title="Churn Rate" value={networkStats.churnRate} icon={ZapOff} color="rose" subtitle="Plan Delta" />
-         <AdminStatCard title="Growth Tier" value={networkStats.growthTier} icon={TrendingUp} color="emerald" subtitle="Monthly Expansion" />
       </div>
 
       {/* Tab Selector */}

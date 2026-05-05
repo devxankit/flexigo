@@ -37,7 +37,6 @@ const navigationGroups = [
     items: [
       { id: 'dashboard', label: 'Overview', icon: LayoutDashboard, path: '/admin/dashboard' },
       { id: 'analysis', label: 'Platform Analytics', icon: BarChart3, path: '/admin/analytics' },
-      { id: 'vehicle-analytics', label: 'Vehicle Stats', icon: Settings, path: '/admin/vehicle-analytics' },
       { id: 'rider-behaviour', label: 'Riders', icon: Target, path: '/admin/rider-behaviour' },
     ]
   },
@@ -48,7 +47,6 @@ const navigationGroups = [
       { id: 'fleet', label: 'Fleet Oversight', icon: Truck, path: '/admin/fleet' },
       { id: 'gps-control', label: 'GPS & Control', icon: Navigation, path: '/admin/gps-control' },
       { id: 'geofencing', label: 'Geo Fencing', icon: Map, path: '/admin/geofencing' },
-      { id: 'assignment', label: 'Assignment & QR', icon: QrCode, path: '/admin/assignment' },
     ]
   },
   {

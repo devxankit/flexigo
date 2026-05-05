@@ -64,6 +64,7 @@ export default function GeoFencingPage() {
   const { 
     geofences, 
     subscribers,
+    networkStats,
     fetchGeofences, 
     fetchSubscriberData,
     createGeofence, 
@@ -151,6 +152,7 @@ export default function GeoFencingPage() {
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
+    fetchGeofences(newFilters);
     console.log('Geo Fencing Sync:', newFilters);
   };
 
@@ -312,8 +314,8 @@ export default function GeoFencingPage() {
 
       {/* KPI Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-         <AdminStatCard title="Active Zones" value={geofences.length} icon={MapIcon} color="emerald" subtitle="Monitored Nodes" />
-         <AdminStatCard title="Breaches" value={notifications.length > 0 ? `0${notifications.length}` : "00"} icon={AlertTriangle} color="rose" subtitle="Live Alerts" />
+         <AdminStatCard title="Active Zones" value={(networkStats.geofenceStats?.activeZones !== undefined) ? networkStats.geofenceStats.activeZones : geofences.length} icon={MapIcon} color="emerald" subtitle="Monitored Nodes" />
+         <AdminStatCard title="Breaches" value={(networkStats.geofenceStats?.breaches !== undefined) ? networkStats.geofenceStats.breaches : (notifications.length > 0 ? `0${notifications.length}` : "00")} icon={AlertTriangle} color="rose" subtitle="Live Alerts" />
       </div>
 
       <AnimatePresence mode="wait">

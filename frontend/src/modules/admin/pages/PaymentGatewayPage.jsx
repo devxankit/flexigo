@@ -32,7 +32,7 @@ export default function PaymentGatewayPage() {
   const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
 
   React.useEffect(() => {
-    fetchFinanceData();
+    fetchFinanceData(activeFilters);
   }, []);
 
   const handleFilterChange = (newFilters) => {
@@ -63,11 +63,10 @@ export default function PaymentGatewayPage() {
       </div>
 
       {/* KPI Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
          <AdminStatCard title="Daily Volume" value={financeStats.dailyVolume} icon={Zap} color="emerald" subtitle="Gross Transacted" />
          <AdminStatCard title="Success Rate" value={financeStats.successRate} icon={CheckCircle2} color="blue" subtitle="Fleet Conversions" />
          <AdminStatCard title="Pending" value={financeStats.pending} icon={Clock} color="amber" subtitle="Awaiting Bank" />
-         <AdminStatCard title="Fraud Guard" value="Secure" icon={Lock} color="emerald" subtitle="Secure Tunnel" />
       </div>
 
       {/* Transaction Ledger */}

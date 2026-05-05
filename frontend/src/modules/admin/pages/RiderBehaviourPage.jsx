@@ -17,28 +17,32 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function RiderBehaviourPage() {
-  const { riderBehaviour, fetchRiderBehaviour, riders, fetchRiders, addRider, updateRider, removeRider } = useAdminDataStore();
+  const { riderBehaviour, fetchRiderBehaviour, riders, fetchRiders, addRider, updateRider, removeRider, plans, fetchPlans } = useAdminDataStore();
   const [activeFilters, setActiveFilters] = useState({ range: 'Last 7 Days' });
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
-  const [formData, setFormData] = useState({ name: '', phone: '', email: '', status: 'active' });
+  const [formData, setFormData] = useState({ name: '', phone: '', email: '', status: 'active', plan: '' });
   const [selectedRiderId, setSelectedRiderId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    fetchRiderBehaviour();
-    fetchRiders();
+    fetchRiderBehaviour(activeFilters);
+    fetchRiders(activeFilters);
+    fetchPlans({ range: 'All Time' }); // Plans are master data, shouldn't be date-filtered for dropdowns
   }, []);
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
+    fetchRiderBehaviour(newFilters);
+    fetchRiders(newFilters);
+    // Note: fetchPlans is not called here with newFilters to ensure dropdown stays populated with all plans
   };
 
   const openAddModal = () => {
     setModalMode('add');
-    setFormData({ name: '', phone: '', email: '', status: 'active' });
+    setFormData({ name: '', phone: '', email: '', status: 'active', plan: '' });
     setIsModalOpen(true);
   };
 
@@ -49,7 +53,8 @@ export default function RiderBehaviourPage() {
       name: rider.name || '',
       phone: rider.phone || '',
       email: rider.email || '',
-      status: rider.status || 'active'
+      status: rider.status || 'active',
+      plan: rider.subscriptionPlan?._id || rider.subscriptionPlan || ''
     });
     setIsModalOpen(true);
   };
@@ -129,7 +134,7 @@ export default function RiderBehaviourPage() {
                <table className="w-full">
                   <thead>
                      <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/10">
-                        {['Rider ID', 'Name', 'Phone', 'Email', 'Status', 'Actions'].map((header) => (
+                        {['Rider ID', 'Name', 'Phone', 'Email', 'Plan', 'Status', 'Actions'].map((header) => (
                            <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                         ))}
                      </tr>
@@ -148,6 +153,11 @@ export default function RiderBehaviourPage() {
                            </td>
                            <td className="py-2 px-4 text-[var(--text-secondary)] whitespace-nowrap">{rider.phone}</td>
                            <td className="py-2 px-4 text-[var(--text-secondary)] whitespace-nowrap">{rider.email || 'N/A'}</td>
+                           <td className="py-2 px-4">
+                              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-blue-500/5 border border-blue-500/10 rounded text-[10px] font-bold text-blue-500 uppercase tracking-tighter w-fit">
+                                 {rider.subscriptionPlan?.name || 'No Plan'}
+                              </div>
+                           </td>
                            <td className="py-2 px-4">
                               <div className={`inline-flex px-2.5 py-1 rounded-md text-xs font-normal border whitespace-nowrap ${
                                  ['active', 'approved'].includes(rider.status) ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 
@@ -225,7 +235,12 @@ export default function RiderBehaviourPage() {
                   <input 
                     type="tel" 
                     value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '');
+                      if (val.length <= 10) {
+                        setFormData({...formData, phone: val});
+                      }
+                    }}
                     placeholder="10-digit phone number"
                     required
                     className="w-full px-4 py-2.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-sm font-medium focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all text-[var(--text-primary)]"
@@ -253,9 +268,22 @@ export default function RiderBehaviourPage() {
                     <option value="pending">Pending</option>
                     <option value="approved">Approved</option>
                     <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
                     <option value="suspended">Suspended</option>
-                  </select>
+                   </select>
+                </div>
+
+                <div className="space-y-1.5">
+                   <label className="text-xs font-semibold text-[var(--text-secondary)]">Assigned Plan</label>
+                   <select
+                     value={formData.plan}
+                     onChange={(e) => setFormData({...formData, plan: e.target.value})}
+                     className="w-full px-4 py-2.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-sm font-medium focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all text-[var(--text-primary)]"
+                   >
+                     <option value="">Select a Plan</option>
+                     {(plans || []).filter(p => p.target === 'Rider').map(plan => (
+                       <option key={plan._id} value={plan._id}>{plan.name} (₹{plan.price})</option>
+                     ))}
+                   </select>
                 </div>
 
                 <div className="pt-4">

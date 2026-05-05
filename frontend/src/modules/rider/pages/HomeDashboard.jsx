@@ -189,7 +189,14 @@ export default function HomeDashboard() {
                           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                      </div>
-                     <div className="text-[9px] font-black text-[#00D4FF] uppercase tracking-tighter shadow-sm">Active</div>
+                     <div className="flex flex-col items-end">
+                       <div className="text-[9px] font-black text-[#00D4FF] uppercase tracking-tighter shadow-sm">Active</div>
+                       {activePlan?.expiresAt && (
+                         <div className="text-[7px] font-bold text-slate-500 uppercase mt-0.5">
+                           Due: {new Date(activePlan.expiresAt).toLocaleDateString([], { day: 'numeric', month: 'short' })}
+                         </div>
+                       )}
+                     </div>
                   </div>
                   <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>Current Plan</span>
                </GlassCard>

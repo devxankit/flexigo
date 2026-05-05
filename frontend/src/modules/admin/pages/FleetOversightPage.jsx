@@ -40,6 +40,7 @@ export default function FleetOversightPage() {
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
+    fetchAllVehicles(newFilters);
     console.log('Fleet Oversight Sync:', newFilters);
   };
 
@@ -139,8 +140,8 @@ export default function FleetOversightPage() {
                         </td>
                         <td className="py-2 px-4">
                            <div className="flex flex-col gap-0">
-                              <span className="font-medium text-[var(--text-primary)]">{vehicle.rider}</span>
-                              <span className="font-medium text-emerald-500/60">Active Subscriber</span>
+                              <span className="font-medium text-[var(--text-primary)]">{vehicle.riderPhone || 'Unassigned'}</span>
+                              <span className="font-medium text-emerald-500/60 uppercase text-[8px] tracking-widest font-black italic">Active Subscriber</span>
                            </div>
                         </td>
                         <td className="py-2 px-4">

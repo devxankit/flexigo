@@ -38,6 +38,7 @@ export default function FranchiseKycQueue() {
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
+    fetchKycRecords(newFilters);
     console.log('Franchise KYC Sync:', newFilters);
   };
 

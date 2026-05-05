@@ -10,7 +10,6 @@ import {
   getHubVehicles,
   updateHub,
   deleteHub,
-  getSubscribers,
   getGeofences,
   createGeofence,
   updateGeofence,
@@ -40,7 +39,10 @@ import {
   getAllRiders,
   createRider,
   updateRider,
-  deleteRider
+  deleteRider,
+  getNotificationsFeed,
+  getAdminProfile,
+  updateAdminPassword
 } from './adminController.js';
 import {
   getAssignments,
@@ -55,8 +57,12 @@ import {
 } from './subscriptionPlanController.js';
 
 const router = express.Router();
+console.log('DEBUG: Admin Routes initialized at /api/v1/admin');
 
 router.get('/dashboard-stats', getAdminStats);
+router.get('/notifications-feed', getNotificationsFeed);
+router.get('/profile', getAdminProfile);
+router.put('/update-password', updateAdminPassword);
 
 // Hub / Franchise Management (full CRUD)
 router.get('/hubs', getAllHubs);
@@ -67,7 +73,7 @@ router.put('/hubs/:id', updateHub);
 router.delete('/hubs/:id', deleteHub);
 
 router.get('/distribution', getFleetDistribution);
-router.get('/subscribers', getSubscribers);
+router.get('/subscribers', getSubscriberData);
 
 // Geofencing
 router.get('/geofencing', getGeofences);

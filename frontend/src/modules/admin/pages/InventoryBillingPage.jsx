@@ -25,11 +25,12 @@ export default function InventoryBillingPage() {
   const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
 
   useEffect(() => {
-    fetchInventoryData();
+    fetchInventoryData(activeFilters);
   }, []);
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
+    fetchInventoryData(newFilters);
     console.log('Inventory Sync:', newFilters);
   };
 
