@@ -1,9 +1,26 @@
 import React from 'react';
 import { Twitter, Instagram, Linkedin, Zap, Mail, Phone, MapPin, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import logo from '../../../assets/logo.png';
 
 const FooterSection = () => {
+  const productLinks = [
+    { name: 'Rider App', path: '/rider-app' },
+    { name: 'Franchise Panel', path: '/franchise-panel' },
+    { name: 'Admin Dashboard', path: '/admin-dashboard' },
+    { name: 'Vehicle Catalog', path: '/vehicle-catalog' },
+    { name: 'Pricing Plans', path: '/pricing-plans' },
+  ];
+
+  const companyLinks = [
+    { name: 'About Us', path: '/about' },
+    { name: 'Careers', path: '/careers' },
+    { name: 'Press & Media', path: '/press' },
+    { name: 'Sustainability', path: '/sustainability' },
+    { name: 'Contact', path: '/contact' },
+  ];
+
   return (
     <footer className="bg-slate-50 border-t border-slate-200 pt-20 pb-10 overflow-hidden">
       <div className="w-full px-4 md:px-8">
@@ -11,7 +28,7 @@ const FooterSection = () => {
 
           {/* Brand Col */}
           <div className="lg:col-span-2">
-            <a href="/" className="flex items-center group mb-6 relative w-max inline-flex">
+            <Link to="/" className="flex items-center group mb-6 relative w-max inline-flex">
               <img
                 src={logo}
                 alt="FlexiGo Logo"
@@ -21,7 +38,7 @@ const FooterSection = () => {
               <span className="text-2xl font-heading font-black tracking-tighter text-flexigo-primary mt-1 whitespace-nowrap relative z-20 uppercase">
                 Flex<span className="text-flexigo-teal">igo E-Mobility</span>
               </span>
-            </a>
+            </Link>
             <p className="text-slate-600 leading-relaxed mb-8 max-w-sm">
               Powering the future of micro-mobility and delivery logistics in India with
               smart, zero-maintenance EVs.
@@ -49,11 +66,11 @@ const FooterSection = () => {
           <div>
             <h4 className="font-bold font-heading text-slate-900 mb-6">Product</h4>
             <ul className="space-y-4">
-              {['Rider App', 'Franchise Panel', 'Admin Dashboard', 'Vehicle Catalog', 'Pricing Plans'].map((link) => (
-                <li key={link}>
-                  <a href="#" className="text-slate-600 hover:text-flexigo-teal transition-colors text-sm font-medium">
-                    {link}
-                  </a>
+              {productLinks.map((link) => (
+                <li key={link.name}>
+                  <Link to={link.path} className="text-slate-600 hover:text-flexigo-teal transition-colors text-sm font-medium">
+                    {link.name}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -63,11 +80,11 @@ const FooterSection = () => {
           <div>
             <h4 className="font-bold font-heading text-slate-900 mb-6">Company</h4>
             <ul className="space-y-4">
-              {['About Us', 'Careers', 'Press & Media', 'Sustainability', 'Contact'].map((link) => (
-                <li key={link}>
-                  <a href="#" className="text-slate-600 hover:text-flexigo-teal transition-colors text-sm font-medium">
-                    {link}
-                  </a>
+              {companyLinks.map((link) => (
+                <li key={link.name}>
+                  <Link to={link.path} className="text-slate-600 hover:text-flexigo-teal transition-colors text-sm font-medium">
+                    {link.name}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -111,8 +128,8 @@ const FooterSection = () => {
             © {new Date().getFullYear()} Flexigo E-Mobility Pvt. Ltd. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm">
-            <a href="#" className="text-slate-500 hover:text-flexigo-primary transition-colors">Privacy Policy</a>
-            <a href="#" className="text-slate-500 hover:text-flexigo-primary transition-colors">Terms of Service</a>
+            <Link to="/privacy-policy" className="text-slate-500 hover:text-flexigo-primary transition-colors">Privacy Policy</Link>
+            <Link to="/terms" className="text-slate-500 hover:text-flexigo-primary transition-colors">Terms of Service</Link>
           </div>
         </div>
       </div>
