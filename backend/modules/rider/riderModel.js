@@ -30,6 +30,7 @@ const RiderSchema = new mongoose.Schema({
     drivingLicense: String,
     ekycVerified: { type: Boolean, default: false },
     ekycData: Object,
+    certificate: String,
   },
   name: String,
   email: String,

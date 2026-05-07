@@ -252,27 +252,75 @@ export default function KycOnboardingPage() {
                            {[
                               { label: 'Aadhaar Card', key: 'aadhaarFront', verified: selectedRecord.details?.ekycVerified },
                               { label: 'PAN Card', key: 'panCard' },
-                              { label: 'Driving License', key: 'drivingLicense' }
+                              { label: 'Driving License', key: 'drivingLicense' },
+                              { label: 'Certificate', key: 'certificate', isUploadable: true }
                            ].map(doc => {
                               const hasDoc = selectedRecord.details?.[doc.key];
                               return (
                                  <div 
                                     key={doc.label} 
-                                    onClick={() => hasDoc && window.open(hasDoc, '_blank')}
-                                    className={`p-2.5 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl flex items-center justify-between group transition-all ${hasDoc ? 'cursor-pointer hover:border-emerald-500/30' : 'opacity-50 cursor-not-allowed'}`}
+                                    className={`p-2.5 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl flex items-center justify-between group transition-all ${hasDoc ? 'cursor-pointer hover:border-emerald-500/30' : (doc.isUploadable ? 'cursor-pointer border-dashed border-emerald-500/30 hover:bg-emerald-500/5' : 'opacity-50 cursor-not-allowed')}`}
+                                    onClick={() => {
+                                       if (hasDoc) {
+                                         window.open(hasDoc, '_blank');
+                                       } else if (doc.isUploadable) {
+                                         document.getElementById('certificate-upload').click();
+                                       }
+                                    }}
                                  >
                                     <div className="flex items-center gap-2">
                                        <span className="text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest italic leading-none">{doc.label}</span>
                                        {doc.verified && <Check size={10} className="text-emerald-500" />}
                                     </div>
-                                    {hasDoc ? (
-                                       <Download size={10} className="text-[var(--text-tertiary)]/50 group-hover:text-emerald-500 transition-all" />
-                                    ) : (
-                                       <AlertCircle size={10} className="text-rose-500/50" />
-                                    )}
+                                    <div className="flex items-center gap-2">
+                                       {hasDoc ? (
+                                          <Download size={10} className="text-[var(--text-tertiary)]/50 group-hover:text-emerald-500 transition-all" />
+                                       ) : doc.isUploadable ? (
+                                          <Camera size={10} className="text-emerald-500 animate-pulse" />
+                                       ) : (
+                                          <AlertCircle size={10} className="text-rose-500/50" />
+                                       )}
+                                    </div>
                                  </div>
                               );
                            })}
+                           <input 
+                              type="file" 
+                              id="certificate-upload" 
+                              className="hidden" 
+                              accept="image/*"
+                              onChange={async (e) => {
+                                 const file = e.target.files[0];
+                                 if (!file) return;
+
+                                 const id = selectedRecord.id || selectedRecord._id;
+                                 if (!id) {
+                                    alert("Error: Record ID not found");
+                                    return;
+                                 }
+
+                                 const reader = new FileReader();
+                                 reader.onloadend = async () => {
+                                    try {
+                                       const res = await useAdminDataStore.getState().uploadKycCertificate(id, reader.result);
+                                       if (res?.success) {
+                                          setSelectedRecord(prev => ({
+                                             ...prev,
+                                             details: { ...prev.details, certificate: res.certificateUrl }
+                                          }));
+                                          alert("Certificate Uploaded Successfully!");
+                                       } else {
+                                          alert(res?.message || "Upload failed. Please try again.");
+                                       }
+                                    } catch (err) {
+                                       alert("Upload Error: " + err.message);
+                                    } finally {
+                                       e.target.value = ''; // Reset input
+                                    }
+                                 };
+                                 reader.readAsDataURL(file);
+                              }}
+                           />
                         </div>
                      </div>
 

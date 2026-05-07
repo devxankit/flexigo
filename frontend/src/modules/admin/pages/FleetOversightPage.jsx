@@ -13,7 +13,10 @@ import {
   ArrowUpRight,
   Monitor,
   Globe,
-  Plus
+  Plus,
+  FileUp,
+  X,
+  CheckCircle2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,7 +30,8 @@ export default function FleetOversightPage() {
     vehicles, 
     networkStats, 
     fetchAllVehicles, 
-    fetchDashboardStats 
+    fetchDashboardStats,
+    bulkAddVehicles
   } = useAdminDataStore();
 
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -42,6 +46,50 @@ export default function FleetOversightPage() {
     setActiveFilters(newFilters);
     fetchAllVehicles(newFilters);
     console.log('Fleet Oversight Sync:', newFilters);
+  };
+
+  const [isBulkModalOpen, setIsBulkModalOpen] = React.useState(false);
+  const [isUploading, setIsUploading] = React.useState(false);
+
+  const handleCsvUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const text = event.target.result;
+        const rows = text.split('\n').map(r => r.trim()).filter(r => r !== '');
+        if (rows.length < 2) throw new Error('CSV file is empty or missing headers');
+
+        const headers = rows[0].split(',').map(h => h.trim());
+        const vehiclesToUpload = rows.slice(1).map(row => {
+          const values = row.split(',').map(v => v.trim());
+          const obj = {};
+          headers.forEach((header, index) => {
+            if (header && values[index]) obj[header] = values[index];
+          });
+          return obj;
+        });
+
+        const res = await bulkAddVehicles(vehiclesToUpload);
+        if (res.success) {
+          alert(`Success: ${res.message}`);
+          setIsBulkModalOpen(false);
+          fetchAllVehicles(activeFilters);
+        } else {
+          alert(`Error: ${res.message}`);
+        }
+      } catch (err) {
+        console.error("Bulk Upload Error:", err);
+        alert("Failed to process CSV: " + err.message);
+      } finally {
+        setIsUploading(false);
+        e.target.value = ''; // Reset input
+      }
+    };
+    reader.readAsText(file);
   };
 
   const filteredVehicles = (vehicles || []).filter(v => {
@@ -71,6 +119,12 @@ export default function FleetOversightPage() {
          </div>
          
          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setIsBulkModalOpen(true)}
+              className="px-4 py-2 bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-subtle)] rounded-lg text-[10px] font-black uppercase tracking-widest hover:border-emerald-500 transition-all flex items-center gap-2 active:scale-95 italic"
+            >
+               <FileUp size={12} strokeWidth={3} /> BULK_PROVISION
+            </button>
             <button 
               onClick={() => navigate('/admin/fleet/add')}
               className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all flex items-center gap-2 active:scale-95 shadow-lg shadow-emerald-950/20 italic"
@@ -172,6 +226,75 @@ export default function FleetOversightPage() {
          </div>
       </div>
 
+      {/* Bulk Upload Modal */}
+      <AnimatePresence>
+        {isBulkModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-3xl p-8 w-full max-w-lg shadow-[0_0_50px_-12px_rgba(16,185,129,0.3)] relative overflow-hidden"
+            >
+              {/* Background Glow */}
+              <div className="absolute -top-24 -right-24 w-48 h-48 bg-emerald-600/10 blur-[80px] rounded-full" />
+              
+              <div className="flex items-center justify-between mb-8 relative">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-inner">
+                    <FileUp size={24} />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tighter italic">Bulk Provisioning <span className="text-emerald-500">Protocol</span></h2>
+                    <p className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.3em] opacity-60">System Asset Ingestion</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setIsBulkModalOpen(false)}
+                  className="p-2 text-[var(--text-tertiary)] hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all border border-transparent hover:border-rose-500/20"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="space-y-6 relative">
+                <div className="bg-[var(--bg-tertiary)]/50 border-2 border-dashed border-[var(--border-subtle)] rounded-2xl p-10 flex flex-col items-center justify-center text-center group hover:border-emerald-500/50 transition-all duration-500">
+                  <div className="w-16 h-16 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-tertiary)] mb-4 group-hover:scale-110 group-hover:text-emerald-500 transition-all duration-500 shadow-xl">
+                    <Zap size={24} className={isUploading ? 'animate-bounce' : ''} />
+                  </div>
+                  <h4 className="text-xs font-black text-[var(--text-primary)] uppercase tracking-widest mb-1 italic">Drop CSV Registry</h4>
+                  <p className="text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest mb-6 opacity-60">Columns: plate, vin, model, franchise</p>
+                  
+                  <label className="cursor-pointer">
+                    <span className="px-8 py-3 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-[0_10px_20px_-5px_rgba(16,185,129,0.4)] hover:bg-emerald-500 transition-all active:scale-95 block italic">
+                      {isUploading ? 'INGESTING_DATA...' : 'SELECT_SOURCE_FILE'}
+                    </span>
+                    <input 
+                      type="file" 
+                      accept=".csv" 
+                      className="hidden" 
+                      onChange={handleCsvUpload}
+                      disabled={isUploading}
+                    />
+                  </label>
+                </div>
+
+                <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-4 flex items-start gap-3">
+                   <CheckCircle2 size={16} className="text-emerald-500 shrink-0 mt-0.5" />
+                   <div className="space-y-1">
+                      <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest italic">Provisioning Rules:</p>
+                      <ul className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest space-y-1 opacity-80 italic">
+                         <li>• Ensure 'plate' and 'vin' are unique across network</li>
+                         <li>• Franchise name must match exactly or use ID</li>
+                         <li>• Max 500 records per ingestion cycle recommended</li>
+                      </ul>
+                   </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

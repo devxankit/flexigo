@@ -11,12 +11,13 @@ const RiderBehaviourPage = lazy(() => import('../pages/RiderBehaviourPage'));
 const HubManagementPage = lazy(() => import('../pages/HubManagementPage'));
 const HubDetailsPage = lazy(() => import('../pages/HubDetailsPage'));
 const FleetOversightPage = lazy(() => import('../pages/FleetOversightPage'));
-const GpsControlPage = lazy(() => import('../pages/GpsControlPage'));
+
 const GeoFencingPage = lazy(() => import('../pages/GeoFencingPage'));
 const AddVehiclePage = lazy(() => import('../pages/AddVehiclePage'));
 
 // People Group
 const SubscriberRegistryPage = lazy(() => import('../pages/SubscriberRegistryPage'));
+const RiderReportPage = lazy(() => import('../pages/RiderReportPage'));
 const KycOnboardingPage = lazy(() => import('../pages/KycOnboardingPage'));
 const HrManagementPage = lazy(() => import('../pages/HrManagementPage'));
 const FranchiseKycQueue = lazy(() => import('../pages/FranchiseKycQueue'));
@@ -58,11 +59,12 @@ export default function AdminRoutes() {
           <Route path="hubs/:hubId" element={<HubDetailsPage />} />
           <Route path="fleet" element={<FleetOversightPage />} />
           <Route path="fleet/add" element={<AddVehiclePage />} />
-          <Route path="gps-control" element={<GpsControlPage />} />
+
           <Route path="geofencing" element={<GeoFencingPage />} />
           
           {/* People Group */}
           <Route path="subscribers" element={<SubscriberRegistryPage />} />
+          <Route path="rider-reports" element={<RiderReportPage />} />
           <Route path="kyc" element={<KycOnboardingPage />} />
           <Route path="hr" element={<HrManagementPage />} />
           <Route path="franchise-kyc" element={<FranchiseKycQueue />} />
