@@ -83,9 +83,11 @@ const HeroSection = () => {
             <img
               src={heroImage}
               alt="Flexigo V1 Scooter"
-              fetchpriority="high"
+              fetchPriority="high"
               loading="eager"
               decoding="async"
+              width="600"
+              height="600"
               className="relative z-10 w-full h-auto object-contain drop-shadow-[0_15px_30px_rgba(0,0,0,0.1)]"
             />
           </div>
@@ -93,14 +95,14 @@ const HeroSection = () => {
       </div>
 
       {/* Scroll indicator */}
-      <motion.div
+      {/* <motion.div
         animate={{ y: [0, 10, 0] }}
         transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
         className="absolute bottom-10 left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center gap-2 opacity-50"
       >
         <span className="text-xs font-medium uppercase tracking-widest text-slate-500">Scroll</span>
         <div className="w-[1px] h-8 bg-slate-400" />
-      </motion.div>
+      </motion.div> */}
     </section>
   );
 };

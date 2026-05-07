@@ -39,6 +39,8 @@ const Navbar = () => {
           <img 
             src={logo} 
             alt="FlexiGo Logo" 
+            width="192"
+            height="192"
             className="w-40 h-40 md:w-48 md:h-48 absolute top-1/2 -translate-y-[48%] md:-translate-y-[44%] -left-10 md:-left-6 object-contain transition-transform duration-300 group-hover:scale-105 z-10" 
           />
           <div className="w-20 md:w-32 h-10 md:h-12" />

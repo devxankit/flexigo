@@ -12,19 +12,19 @@ const fadeUp = {
 
 const pressReleases = [
   {
-    date: 'March 2025',
+    date: 'May 2026',
     tag: 'Platform Launch',
     title: 'FlexiGo Launches Full Tech Platform — Rider App, Franchise Panel & Admin Dashboard',
     excerpt: 'FlexiGo E-Mobility announces the full launch of its integrated technology platform, enabling real-time fleet management, digital wallet payments, and franchise operations across its growing network.',
   },
   {
-    date: 'November 2024',
+    date: 'May 2026',
     tag: 'Expansion',
     title: 'FlexiGo Expands Franchise Network, Targets 5 New Cities in 2025',
     excerpt: "Following its successful Pune operations, FlexiGo announces the launch of its franchise model enabling local entrepreneurs to operate EV hubs under the FlexiGo brand.",
   },
   {
-    date: 'June 2024',
+    date: 'May 2026',
     tag: 'Milestone',
     title: 'FlexiGo Crosses 200 Active Riders and 200 Deployed Vehicles',
     excerpt: 'In less than 18 months since launch, FlexiGo E-Mobility has deployed over 200 smart electric scooters with 200+ active delivery partner subscriptions in Pune.',

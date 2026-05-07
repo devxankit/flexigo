@@ -1,39 +1,79 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import projectVideo from '../../../assets/Clean_brand-focused_ending(flexigo)._202604081303.mp4';
 
 const VideoSection = () => {
   const videoRef = useRef(null);
+  const sectionRef = useRef(null);
+  const [videoSrc, setVideoSrc] = useState('');
 
-  // Fallback for browsers that block auto-autoplay
   useEffect(() => {
-    if (videoRef.current) {
+    let observer;
+    const loadVideo = () => {
+      setVideoSrc(projectVideo);
+    };
+
+    if (typeof IntersectionObserver !== 'undefined') {
+      observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            loadVideo();
+            observer.disconnect();
+          }
+        });
+      }, { rootMargin: '200px' });
+
+      if (sectionRef.current) {
+        observer.observe(sectionRef.current);
+      }
+    } else {
+      // Fallback if IntersectionObserver is not supported
+      if (document.readyState === 'complete') {
+        loadVideo();
+      } else {
+        const handleLoad = () => loadVideo();
+        window.addEventListener('load', handleLoad);
+        return () => window.removeEventListener('load', handleLoad);
+      }
+    }
+
+    return () => {
+      if (observer) observer.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (videoSrc && videoRef.current) {
+      videoRef.current.load();
       videoRef.current.play().catch(error => {
         console.log("Autoplay was prevented:", error);
       });
     }
-  }, []);
+  }, [videoSrc]);
 
   return (
-    <section className="relative w-full h-[60vh] md:h-[80vh] overflow-hidden bg-black flex items-center justify-center">
+    <section ref={sectionRef} className="relative w-full h-[60vh] md:h-[80vh] overflow-hidden bg-black flex items-center justify-center">
       
       {/* Edge-to-Edge Background Video (Project Source) */}
       <div className="absolute inset-0 w-full h-full">
-        <video 
-          ref={videoRef}
-          autoPlay 
-          muted 
-          loop 
-          playsInline 
-          className="absolute inset-0 w-full h-full object-cover"
-        >
-          <source 
-            src={projectVideo} 
-            type="video/mp4" 
-          />
-          {/* Fallback if the path still fails to resolve */}
-          Your browser does not support the video tag.
-        </video>
+        {videoSrc ? (
+          <video 
+            ref={videoRef}
+            autoPlay 
+            muted 
+            loop 
+            playsInline 
+            className="absolute inset-0 w-full h-full object-cover"
+          >
+            <source 
+              src={videoSrc} 
+              type="video/mp4" 
+            />
+            Your browser does not support the video tag.
+          </video>
+        ) : (
+          <div className="absolute inset-0 bg-black" />
+        )}
 
         {/* Tactical Dark Overlay Gradients */}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40 z-10" />
