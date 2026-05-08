@@ -1305,7 +1305,42 @@ export const getSubscriberData = async (req, res) => {
 // @route   GET /api/v1/admin/roles
 export const getRoles = async (req, res) => {
   try {
-    const roles = await Role.find().sort({ createdAt: -1 });
+    const defaultModules = ['Dashboard', 'Hubs', 'Fleet', 'KYC', 'Plans', 'Subscribers', 'Geofencing', 'Finance', 'Inventory', 'Franchise', 'Compliance', 'Engagement', 'Security', 'Staff'];
+    let roles = await Role.find().sort({ createdAt: -1 });
+    
+    // Seed if empty
+    if (roles.length === 0) {
+      const initialPermissions = {};
+      defaultModules.forEach(mod => {
+        initialPermissions[mod] = { read: true, create: false, update: false, delete: false };
+      });
+
+      await Role.insertMany([
+        { name: 'Admin', permissions: initialPermissions },
+        { name: 'Manager', permissions: initialPermissions },
+        { name: 'Staff', permissions: initialPermissions }
+      ]);
+      roles = await Role.find().sort({ createdAt: -1 });
+    } else {
+      // Background Repair (Non-blocking)
+      roles.forEach(async (role) => {
+        let permissionsUpdated = false;
+        if (!role.permissions) {
+          role.permissions = {};
+          permissionsUpdated = true;
+        }
+        defaultModules.forEach(mod => {
+          if (!role.permissions[mod]) {
+            role.permissions[mod] = { read: true, create: false, update: false, delete: false };
+            permissionsUpdated = true;
+          }
+        });
+        if (permissionsUpdated) {
+          await Role.updateOne({ _id: role._id }, { $set: { permissions: role.permissions } });
+        }
+      });
+    }
+
     res.status(200).json({ success: true, roles });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -1317,8 +1352,40 @@ export const getRoles = async (req, res) => {
 export const createRole = async (req, res) => {
   try {
     const { name, permissions } = req.body;
-    const newRole = await Role.create({ name, permissions });
+    // Default permissions if not provided
+    const defaultModules = ['Dashboard', 'Hubs', 'Fleet', 'KYC', 'Plans', 'Subscribers', 'Geofencing', 'Finance', 'Inventory', 'Franchise', 'Compliance', 'Engagement', 'Security', 'Staff'];
+    const finalPermissions = permissions || {};
+    defaultModules.forEach(mod => {
+      if (!finalPermissions[mod]) {
+        finalPermissions[mod] = { read: false, create: false, update: false, delete: false };
+      }
+    });
+
+    const newRole = await Role.create({ name, permissions: finalPermissions });
     res.status(201).json({ success: true, role: newRole });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Update an existing role's permissions
+// @route   PUT /api/v1/admin/roles/:id
+export const updateRole = async (req, res) => {
+  try {
+    const { permissions, name } = req.body;
+    const role = await Role.findById(req.params.id);
+    if (!role) {
+      return res.status(404).json({ success: false, message: 'Role not found' });
+    }
+
+    if (name) role.name = name;
+    if (permissions) {
+      role.permissions = permissions;
+      role.markModified('permissions');
+    }
+
+    const updatedRole = await role.save();
+    res.status(200).json({ success: true, role: updatedRole });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

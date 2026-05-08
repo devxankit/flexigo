@@ -206,6 +206,35 @@ export default function HomeDashboard() {
       </div>
 
       <div className="px-6 space-y-6 pt-2">
+        {/* Pickup Location Card for new riders after payment */}
+        {vehicle?.model === 'Assignment Pending' && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            <GlassCard className={`p-5 border-2 border-flexigo-teal/30 bg-flexigo-teal/5 relative overflow-hidden group`}>
+               <div className="flex items-center gap-4 relative z-10">
+                 <div className="w-12 h-12 rounded-2xl bg-flexigo-teal flex items-center justify-center text-white shadow-[0_0_15px_rgba(57,255,20,0.4)] group-hover:rotate-6 transition-transform">
+                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-6 h-6"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" /></svg>
+                 </div>
+                 <div className="flex-1">
+                   <h3 className={`text-sm font-black transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>Pickup Your Vehicle</h3>
+                   <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Visit office to complete delivery</p>
+                 </div>
+                 <button 
+                   onClick={() => window.open('https://www.google.com/maps?q=18.566177368164062,73.7693099975586&z=17&hl=en', '_blank')}
+                   className="px-4 py-2 bg-flexigo-teal text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-emerald-950/40 hover:bg-emerald-400 transition-all active:scale-95"
+                 >
+                   Open Maps
+                 </button>
+               </div>
+               <div className="absolute top-0 right-0 p-4 opacity-[0.03] pointer-events-none -mr-4 -mt-4">
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-24 h-24 text-flexigo-teal"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
+               </div>
+            </GlassCard>
+          </motion.div>
+        )}
         {/* Hub List Section */}
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
@@ -286,10 +315,14 @@ export default function HomeDashboard() {
         {/* Main Status Card */}
         <GlassCard className="p-5 flex items-center gap-4 group">
           <div className="w-16 h-16 rounded-2xl bg-flexigo-teal/10 flex items-center justify-center overflow-hidden border border-flexigo-teal/20 transition-all group-hover:scale-105 duration-500">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="1.5" className="w-10 h-10">
-              <rect x="2" y="7" width="20" height="14" rx="2" />
-              <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
-            </svg>
+            {vehicle.images && vehicle.images.length > 0 ? (
+              <img src={vehicle.images[0]} alt={vehicle.model} className="w-full h-full object-cover" />
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="1.5" className="w-10 h-10">
+                <rect x="2" y="7" width="20" height="14" rx="2" />
+                <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
+              </svg>
+            )}
           </div>
           <div className="flex-1">
             <h3 className={`font-heading font-black text-xl transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>{vehicle.model}</h3>

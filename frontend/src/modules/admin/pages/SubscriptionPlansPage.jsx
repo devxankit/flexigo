@@ -37,8 +37,19 @@ export default function SubscriptionPlansPage() {
     deletePlan 
   } = useAdminDataStore();
   
-  const [activeTab, setActiveTab] = useState('Rider');
-  const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('sub_plans_active_tab') || 'Rider');
+  const [activeFilters, setActiveFilters] = React.useState(() => {
+    const saved = localStorage.getItem('sub_plans_filters');
+    return saved ? JSON.parse(saved) : { range: 'Last 7 Days' };
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('sub_plans_active_tab', activeTab);
+  }, [activeTab]);
+
+  React.useEffect(() => {
+    localStorage.setItem('sub_plans_filters', JSON.stringify(activeFilters));
+  }, [activeFilters]);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);

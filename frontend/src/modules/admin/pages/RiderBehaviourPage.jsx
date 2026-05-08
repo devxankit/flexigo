@@ -21,11 +21,23 @@ export default function RiderBehaviourPage() {
   const [activeFilters, setActiveFilters] = useState({ range: 'Last 7 Days' });
 
   // Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
-  const [formData, setFormData] = useState({ name: '', phone: '', email: '', status: 'active', plan: '' });
-  const [selectedRiderId, setSelectedRiderId] = useState(null);
+  // Modal State Persistence
+  const [isModalOpen, setIsModalOpen] = useState(() => localStorage.getItem('rider_modal_open') === 'true');
+  const [modalMode, setModalMode] = useState(() => localStorage.getItem('rider_modal_mode') || 'add');
+  const [formData, setFormData] = useState(() => {
+    const saved = localStorage.getItem('rider_form_data');
+    return saved ? JSON.parse(saved) : { name: '', phone: '', email: '', status: 'active', plan: '' };
+  });
+  const [selectedRiderId, setSelectedRiderId] = useState(() => localStorage.getItem('rider_selected_id'));
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('rider_modal_open', isModalOpen);
+    localStorage.setItem('rider_modal_mode', modalMode);
+    localStorage.setItem('rider_form_data', JSON.stringify(formData));
+    if (selectedRiderId) localStorage.setItem('rider_selected_id', selectedRiderId);
+    else localStorage.removeItem('rider_selected_id');
+  }, [isModalOpen, modalMode, formData, selectedRiderId]);
 
   useEffect(() => {
     fetchRiderBehaviour(activeFilters);
@@ -75,6 +87,10 @@ export default function RiderBehaviourPage() {
         await updateRider(selectedRiderId, formData);
       }
       setIsModalOpen(false);
+      // Clear persistence on success
+      localStorage.removeItem('rider_modal_open');
+      localStorage.removeItem('rider_form_data');
+      localStorage.removeItem('rider_selected_id');
     } catch (error) {
       console.error(error);
     } finally {

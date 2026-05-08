@@ -81,7 +81,7 @@ export const verifyOTP = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Franchise not found' });
     }
 
-    if (process.env.NODE_ENV !== 'development' && (franchise.otp !== otp || franchise.otpExpire < Date.now())) {
+    if (franchise.otp !== otp || franchise.otpExpire < Date.now()) {
       return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
     }
 

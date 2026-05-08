@@ -831,4 +831,60 @@ export const useAdminDataStore = create((set, get) => ({
       set({ isLoading: false });
     }
   },
+
+  updateRole: async (id, roleData) => {
+    const originalRoles = get().roles;
+    const stringId = String(id);
+    set(state => ({
+      roles: state.roles.map(r => (String(r._id) === stringId || String(r.id) === stringId) ? { ...r, ...roleData } : r)
+    }));
+    try {
+      const res = await api.put(`/admin/roles/${id}`, roleData);
+      if (!res.data.success) set({ roles: originalRoles });
+    } catch (err) {
+      set({ roles: originalRoles });
+      console.error("Update Role Failed:", err);
+    }
+  },
+
+  togglePermission: async (roleId, module, action) => {
+    const stringId = String(roleId);
+    const originalRoles = get().roles;
+    
+    // 1. Find the role and toggle locally first
+    let newPermissions = {};
+    
+    set(state => ({
+      roles: state.roles.map(r => {
+        if (String(r._id) === stringId || String(r.id) === stringId) {
+          // Create a fresh clone of permissions
+          const currentPerms = r.permissions || {};
+          const modPerms = currentPerms[module] || { read: false, create: false, update: false, delete: false };
+          
+          // Toggle the specific action and spread everything to ensure React sees the change
+          newPermissions = {
+            ...currentPerms,
+            [module]: {
+              ...modPerms,
+              [action]: !modPerms[action]
+            }
+          };
+          
+          return { ...r, permissions: newPermissions };
+        }
+        return r;
+      })
+    }));
+
+    // 2. Sync with server
+    try {
+      const res = await api.put(`/admin/roles/${roleId}`, { permissions: newPermissions });
+      if (!res.data.success) {
+        set({ roles: originalRoles });
+      }
+    } catch (err) {
+      console.error("Permission sync failed:", err);
+      set({ roles: originalRoles });
+    }
+  },
 }));
