@@ -33,6 +33,7 @@ export const useAdminDataStore = create((set, get) => ({
   roles: [],
   campaigns: [],
   notifications: [],
+  riderReport: [],
   isLoading: false,
 
   fetchNotifications: async () => {
@@ -220,6 +221,22 @@ export const useAdminDataStore = create((set, get) => ({
     }
   },
 
+  uploadKycCertificate: async (id, certificateBase64) => {
+    try {
+      const res = await api.post(`/admin/kyc/${id}/certificate`, { certificate: certificateBase64 });
+      if (res.data.success) {
+        set(state => ({
+          kycRecords: state.kycRecords.map(r => r.id === id ? { ...r, details: { ...r.details, certificate: res.data.certificateUrl } } : r)
+        }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to upload KYC certificate:", err);
+      return { success: false, message: err.response?.data?.message || err.message };
+    }
+  },
+
+
   fetchSubscribers: async () => {
     try {
       const res = await api.get('/admin/subscribers');
@@ -257,6 +274,20 @@ export const useAdminDataStore = create((set, get) => ({
       return { success: false, message: err.response?.data?.message || err.message };
     }
   },
+
+  bulkAddVehicles: async (vehicles) => {
+    try {
+      const res = await api.post('/admin/fleet/bulk-add', { vehicles });
+      if (res.data.success) {
+        set(state => ({ vehicles: [...res.data.vehicles, ...state.vehicles] }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to bulk add vehicles:", err);
+      return { success: false, message: err.response?.data?.message || err.message };
+    }
+  },
+
 
   fetchHubVehicles: async (hubId) => {
     try {
@@ -782,5 +813,22 @@ export const useAdminDataStore = create((set, get) => ({
       console.error("Failed to delete rider:", err);
       return { success: false, message: err.response?.data?.message || err.message };
     }
-  }
+  },
+
+  fetchRiderReport: async (filters = {}) => {
+    set({ isLoading: true });
+    try {
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/rider-report?${params.toString()}`);
+      if (res.data.success) {
+        set({ riderReport: res.data.report });
+      }
+    } catch (err) {
+      console.error("Failed to fetch rider report:", err);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
 }));

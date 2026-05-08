@@ -25,7 +25,8 @@ import {
   Briefcase,
   Layers,
   Settings,
-  Zap
+  Zap,
+  Activity
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAdminAuthStore as useAuthStore } from '../store/adminAuthStore';
@@ -45,7 +46,7 @@ const navigationGroups = [
     items: [
       { id: 'hubs', label: 'Franchise Management', icon: Warehouse, path: '/admin/hubs' },
       { id: 'fleet', label: 'Fleet Oversight', icon: Truck, path: '/admin/fleet' },
-      { id: 'gps-control', label: 'GPS & Control', icon: Navigation, path: '/admin/gps-control' },
+
       { id: 'geofencing', label: 'Geo Fencing', icon: Map, path: '/admin/geofencing' },
     ]
   },
@@ -53,6 +54,7 @@ const navigationGroups = [
     title: "People",
     items: [
       { id: 'subscribers', label: 'Subscribers', icon: Users, path: '/admin/subscribers' },
+      { id: 'rider-reports', label: 'Rider Reports', icon: Activity, path: '/admin/rider-reports' },
       { id: 'kyc', label: 'KYC & Onboard', icon: UserCheck, path: '/admin/kyc' },
       { id: 'hr', label: 'HR Management', icon: Briefcase, path: '/admin/hr' },
       { id: 'franchise-kyc', label: 'Franchise Onboard', icon: ShieldCheck, path: '/admin/franchise-kyc' },

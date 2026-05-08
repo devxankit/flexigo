@@ -301,3 +301,62 @@ export const getAssignments = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Bulk add vehicles
+// @route   POST /api/v1/fleet/bulk-add
+export const bulkAddVehicles = async (req, res) => {
+  try {
+    const { vehicles } = req.body;
+
+    if (!vehicles || !Array.isArray(vehicles) || vehicles.length === 0) {
+      return res.status(400).json({ success: false, message: 'Please provide an array of vehicles' });
+    }
+
+    // Process franchise IDs for all vehicles in bulk
+    const processedVehicles = await Promise.all(vehicles.map(async (v) => {
+      const vData = { ...v };
+      if (vData.franchise) {
+        let fId = vData.franchise;
+        if (typeof fId === 'string') {
+          fId = fId.trim().replace(/^\(|\)$/g, '');
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(fId)) {
+          const hub = await Franchise.findOne({ 
+            $or: [
+              { hubName: fId }, 
+              { "businessDetails.name": fId },
+              { ownerName: fId }
+            ] 
+          });
+          if (hub) vData.franchise = hub._id;
+          else delete vData.franchise;
+        } else {
+          vData.franchise = fId;
+        }
+      }
+      return vData;
+    }));
+
+    // Use insertMany for efficiency
+    const result = await Vehicle.insertMany(processedVehicles, { ordered: false });
+
+    res.status(201).json({
+      success: true,
+      count: result.length,
+      message: `${result.length} vehicles provisioned successfully`,
+      vehicles: result
+    });
+  } catch (error) {
+    // If some succeeded and some failed (due to ordered: false), handle accordingly
+    if (error.writeErrors) {
+      const succeededCount = error.result.nInserted;
+      return res.status(207).json({ 
+        success: true, 
+        message: `${succeededCount} vehicles added, but some failed due to duplicates.`,
+        error: error.message 
+      });
+    }
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

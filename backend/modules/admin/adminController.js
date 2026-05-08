@@ -3,6 +3,7 @@ import { sendPushNotification } from '../../shared/utils/firebase.js';
 import Vehicle from '../fleet/vehicleModel.js';
 import Assignment from '../fleet/assignmentModel.js';
 import Transaction from '../franchise/franchiseTransactionModel.js';
+import RiderTransaction from '../rider/transactionModel.js';
 import Rider from '../rider/riderModel.js';
 import Geofence from './geofenceModel.js';
 import Staff from './staffModel.js';
@@ -255,12 +256,12 @@ export const getAllHubs = async (req, res) => {
     const totalCapacity = hubs.reduce((acc, h) => acc + (h.capacity || 0), 0);
     const totalFleet = hubs.reduce((acc, h) => acc + h.fleet, 0);
     const utilization = totalCapacity > 0 ? ((totalFleet / totalCapacity) * 100).toFixed(1) : "100.0";
-    
+
     // Connectivity & Health proxies following filter
     const avgHealth = hubs.length > 0 ? Math.round(hubs.reduce((acc, h) => acc + parseInt(h.health), 0) / hubs.length) : 0;
 
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       hubs,
       stats: {
         totalHubs: totalCount,
@@ -401,6 +402,53 @@ export const updateKycStatus = async (req, res) => {
   }
 };
 
+// @desc    Upload Certificate for KYC Record
+// @route   POST /api/v1/admin/kyc/:id/certificate
+export const uploadKycCertificate = async (req, res) => {
+  try {
+    const { certificate } = req.body;
+    const id = req.params.id;
+
+    console.log(`[Admin] Certificate Upload Request for: ${id}`);
+
+    if (!certificate) {
+      return res.status(400).json({ success: false, message: 'No certificate data provided' });
+    }
+
+    const uploadToCloudinary = async (base64Data) => {
+      if (!base64Data || !base64Data.startsWith('data:')) return base64Data;
+      const result = await cloudinary.uploader.upload(base64Data, {
+        folder: `flexigo/kyc-certificates/${id}`
+      });
+      return result.secure_url;
+    };
+
+    const certificateUrl = await uploadToCloudinary(certificate);
+
+    let updated = await Franchise.findByIdAndUpdate(id, {
+      'kycDetails.certificate': certificateUrl
+    }, { new: true });
+
+    if (!updated) {
+      updated = await Rider.findByIdAndUpdate(id, {
+        'kycDetails.certificate': certificateUrl
+      }, { new: true });
+    }
+
+    if (!updated) {
+      return res.status(404).json({ success: false, message: 'Record not found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      certificateUrl: updated.kycDetails.certificate
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
 // @desc    Create Hub (Franchise)
 // @route   POST /api/v1/admin/hubs
 export const createHub = async (req, res) => {
@@ -497,8 +545,8 @@ export const getGeofences = async (req, res) => {
     const activeZones = geofences.length;
     const breaches = 0; // Placeholder until Breach model is implemented
 
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       geofences,
       stats: {
         activeZones: activeZones,
@@ -553,7 +601,7 @@ export const getAllStaff = async (req, res) => {
 
     // Stats Logic (Filtered by selected range as requested)
     const totalCount = staff.length;
-    const onDutyCount = staff.length; 
+    const onDutyCount = staff.length;
 
     res.status(200).json({
       success: true,
@@ -573,7 +621,7 @@ export const getAllStaff = async (req, res) => {
 export const createStaff = async (req, res) => {
   try {
     const { name, role, dept, shift, phone, joiningDate, kycDetails } = req.body;
-    
+
     const employeeId = req.body.employeeId || `STF-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
 
     // Helper for Cloudinary (copying from updateStaff logic)
@@ -890,47 +938,72 @@ export const deleteStaff = async (req, res) => {
 export const getFinanceData = async (req, res) => {
   try {
     const { range } = req.query;
-    const dateFilter = getDateFilter(range, 'date');
 
-    const transactions = await Transaction.find(dateFilter).sort('-date').limit(50).populate({
-      path: 'franchise',
-      select: 'hubName businessDetails'
-    });
+    // Fetch from both sources
+    const frFilter = getDateFilter(range, 'date');
+    const riderFilter = getDateFilter(range, 'createdAt');
 
-    // Aggregated Stats
-    const allTxns = await Transaction.find(dateFilter);
-    const totalRev = allTxns.filter(t => t.status === 'completed').reduce((acc, t) => acc + t.amount, 0);
+    const [frTxns, riderTxns] = await Promise.all([
+      Transaction.find(frFilter).populate('franchise', 'hubName ownerName').lean(),
+      RiderTransaction.find(riderFilter).populate('riderId', 'name phone').lean()
+    ]);
+
+    // Normalize and Combine
+    const combined = [
+      ...frTxns.map(t => ({
+        id: `TXN-${t._id.toString().slice(-4).toUpperCase()}`,
+        hub: t.franchise?.hubName || 'Hub Network',
+        user: t.franchise?.ownerName || t.subscriberName || 'Partner',
+        amount: t.amount,
+        method: t.type === 'Subscription' ? 'UPI (RAZORPAY)' : 'CARD (PAYU)',
+        status: (t.status === 'completed' || t.status === 'success') ? 'success' : t.status,
+        date: t.date,
+        rawStatus: t.status
+      })),
+      ...riderTxns.map(t => ({
+        id: `TXN-${t._id.toString().slice(-4).toUpperCase()}`,
+        hub: 'Direct (Rider)',
+        user: t.riderId?.name || t.riderId?.phone || 'Rider',
+        amount: t.amount,
+        method: 'UPI (RAZORPAY)',
+        status: (t.status === 'success' || t.status === 'completed') ? 'success' : t.status,
+        date: t.createdAt,
+        rawStatus: t.status
+      }))
+    ].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    // Calculate Aggregated Stats
+    const successTxns = combined.filter(t => t.status === 'success');
+    const totalRev = successTxns.reduce((acc, t) => acc + t.amount, 0);
     const settled = totalRev * 0.85;
     const liability = totalRev * 0.15;
+    const successRate = combined.length > 0 ? ((successTxns.length / combined.length) * 100).toFixed(1) : "100.0";
 
-    // Success Rate Calculation
-    const totalCount = allTxns.length;
-    const successCount = allTxns.filter(t => t.status === 'completed').length;
-    const successRate = totalCount > 0 ? ((successCount / totalCount) * 100).toFixed(1) : "100";
-
-    const formattedTxns = transactions.map(t => ({
-      id: `TXN-${t._id.toString().slice(-4).toUpperCase()}`,
-      hub: t.franchise?.hubName || 'System',
-      user: t.franchise?.ownerName || 'Rider', // Initiator
-      val: `₹${t.amount.toLocaleString()}`,
-      method: t.type === 'Subscription' ? 'UPI (RAZORPAY)' : 'CARD (PAYU)',
-      status: t.status === 'completed' ? 'success' : t.status,
-      date: t.date
-    }));
+    // Helper for precise formatting
+    const formatValue = (val) => {
+      if (val >= 100000) return `₹${(val / 100000).toFixed(2)}L`;
+      if (val >= 1000) return `₹${(val / 1000).toFixed(1)}K`;
+      return `₹${Math.round(val).toLocaleString()}`;
+    };
 
     res.status(200).json({
       success: true,
-      transactions: formattedTxns,
+      transactions: combined.slice(0, 50).map(t => ({
+        ...t,
+        val: `₹${t.amount.toLocaleString()}`,
+        date: t.date 
+      })),
       stats: {
-        settled: `₹${(settled / 100000).toFixed(1)}L`,
-        liability: `₹${(liability / 100000).toFixed(1)}L`,
-        unitYield: `₹${(totalRev / 1000).toFixed(1)}k`,
+        settled: formatValue(settled),
+        liability: formatValue(liability),
+        unitYield: formatValue(totalRev / (combined.length || 1)),
         successRate: `${successRate}%`,
-        dailyVolume: `₹${(totalRev / 100000).toFixed(1)}L`,
-        pending: `₹${(liability / 1000).toFixed(1)}K`
+        dailyVolume: formatValue(totalRev),
+        pending: formatValue(liability)
       }
     });
   } catch (error) {
+    console.error("Finance Data Error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -1361,8 +1434,8 @@ export const getAllRiders = async (req, res) => {
     const lowBalance = riders.filter(r => (r.walletBalance || 0) < 500).length; // Threshold ₹500
     const docExpiry = riders.filter(r => r.kycStatus === 'pending').length;
 
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       riders,
       stats: {
         activeAlerts,
@@ -1378,7 +1451,7 @@ export const getAllRiders = async (req, res) => {
 export const createRider = async (req, res) => {
   try {
     const { name, phone, email, status, plan } = req.body;
-    
+
     const existingRider = await Rider.findOne({ phone });
     if (existingRider) {
       return res.status(400).json({ success: false, message: 'Rider with this phone already exists' });
@@ -1405,7 +1478,7 @@ export const updateRider = async (req, res) => {
   try {
     const { name, phone, email, status, plan } = req.body;
     const rider = await Rider.findById(req.params.id);
-    
+
     if (!rider) {
       return res.status(404).json({ success: false, message: 'Rider not found' });
     }
@@ -1438,6 +1511,63 @@ export const deleteRider = async (req, res) => {
   }
 };
 
+// @desc    Get detailed rider report with vehicle, plan and payments
+// @route   GET /api/v1/admin/rider-report
+export const getRiderDetailedReport = async (req, res) => {
+  try {
+    const { range } = req.query;
+    const dateFilter = getDateFilter(range, 'createdAt');
+
+    const riders = await Rider.find(dateFilter)
+      .populate('subscriptionPlan')
+      .populate('vehicleId', 'plate model')
+      .sort('-createdAt')
+      .lean();
+
+    const report = await Promise.all(riders.map(async (r) => {
+      // Fetch successful transactions for this rider
+      const txns = await RiderTransaction.find({
+        riderId: r._id,
+        status: 'success'
+      }).sort('-createdAt').lean();
+
+      const totalPayments = txns.reduce((acc, t) => acc + (t.type === 'credit' ? t.amount : 0), 0);
+      const totalDebits = txns.reduce((acc, t) => acc + (t.type === 'debit' ? t.amount : 0), 0);
+
+      return {
+        id: r._id,
+        name: r.name || 'Unnamed',
+        phone: r.phone,
+        email: r.email || 'N/A',
+        vehicleNumber: r.vehicleId?.plate || 'N/A',
+        vehicleModel: r.vehicleId?.model || 'N/A',
+        activePlan: r.subscriptionPlan?.name || 'No Plan',
+        planPrice: r.subscriptionPlan?.price || 0,
+        totalPayments: totalPayments,
+        totalDebits: totalDebits,
+        walletBalance: r.walletBalance || 0,
+        status: r.status,
+        kycStatus: r.kycStatus,
+        recentPayments: txns.slice(0, 5).map(t => ({
+          amount: t.amount,
+          type: t.type,
+          date: t.createdAt,
+          description: t.description
+        }))
+      };
+    }));
+
+    res.status(200).json({
+      success: true,
+      count: report.length,
+      report
+    });
+  } catch (error) {
+    console.error("Rider Detailed Report Error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @desc    Get all vehicles for a specific hub (no franchise auth required)
 // @route   GET /api/v1/admin/hubs/:id/vehicles
 export const getHubVehicles = async (req, res) => {
@@ -1454,7 +1584,7 @@ export const getHubVehicles = async (req, res) => {
           const rider = await Rider.findById(assignment.rider).select('name phone').lean();
           if (rider) vehicle.rider = rider.name || rider.phone;
         }
-      } catch (_) {}
+      } catch (_) { }
     }
 
     res.status(200).json({ success: true, count: vehicles.length, vehicles });
@@ -1628,7 +1758,7 @@ export const getAdminProfile = async (req, res) => {
     // For now, since we only have one admin, we find the first one
     // or create one if it doesn't exist (Seeding logic)
     let admin = await Admin.findOne({ email: 'admin@flexigo.com' });
-    
+
     if (!admin) {
       admin = await Admin.create({
         name: 'Master Administrator',
@@ -1658,7 +1788,7 @@ export const getAdminProfile = async (req, res) => {
 export const updateAdminPassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    
+
     const admin = await Admin.findOne({ email: 'admin@flexigo.com' });
     if (!admin) {
       return res.status(404).json({ success: false, message: 'Admin not found' });

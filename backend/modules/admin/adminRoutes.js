@@ -40,14 +40,17 @@ import {
   createRider,
   updateRider,
   deleteRider,
+  getRiderDetailedReport,
   getNotificationsFeed,
   getAdminProfile,
-  updateAdminPassword
+  updateAdminPassword,
+  uploadKycCertificate
 } from './adminController.js';
 import {
   getAssignments,
   createAssignment,
-  addVehicle
+  addVehicle,
+  bulkAddVehicles
 } from '../fleet/vehicleController.js';
 import {
   getPlans,
@@ -85,6 +88,7 @@ router.delete('/geofencing/:id', deleteGeofence);
 router.get('/assignments', getAssignments);
 router.post('/assignments', createAssignment);
 router.post('/fleet/add', addVehicle);
+router.post('/fleet/bulk-add', bulkAddVehicles);
 
 // Staff Management
 router.get('/staff', getAllStaff);
@@ -100,6 +104,7 @@ router.post('/staff/verify-aadhaar-otp', verifyStaffAadhaarOTP);
 // KYC Routes
 router.get('/kyc', getKycRecords);
 router.patch('/kyc/:id', updateKycStatus);
+router.post('/kyc/:id/certificate', uploadKycCertificate);
 
 // Finance Management
 router.get('/finance', getFinanceData);
@@ -130,5 +135,6 @@ router.get('/riders', getAllRiders);
 router.post('/riders', createRider);
 router.put('/riders/:id', updateRider);
 router.delete('/riders/:id', deleteRider);
+router.get('/rider-report', getRiderDetailedReport);
 
 export default router;
