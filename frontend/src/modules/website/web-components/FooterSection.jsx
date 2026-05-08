@@ -65,7 +65,7 @@ const FooterSection = () => {
           </div>
 
           {/* Links Col 1 */}
-          <div>
+          <div className="hidden md:block">
             <h4 className="font-bold font-heading text-slate-900 mb-6">Product</h4>
             <ul className="space-y-4">
               {productLinks.map((link) => (
@@ -79,7 +79,7 @@ const FooterSection = () => {
           </div>
 
           {/* Links Col 2 */}
-          <div>
+          <div className="hidden md:block">
             <h4 className="font-bold font-heading text-slate-900 mb-6">Company</h4>
             <ul className="space-y-4">
               {companyLinks.map((link) => (
@@ -93,7 +93,7 @@ const FooterSection = () => {
           </div>
 
           {/* Contact Col */}
-          <div>
+          <div className="hidden md:block">
             <h4 className="font-bold font-heading text-slate-900 mb-6">Contact Us</h4>
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
