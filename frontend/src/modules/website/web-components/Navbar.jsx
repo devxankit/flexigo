@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ChevronDown, ChevronUp, MapPin, Phone, Mail, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '../../../lib/utils';
 import logo from '../../../assets/logo.png';
@@ -8,6 +8,7 @@ import logo from '../../../assets/logo.png';
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeAccordion, setActiveAccordion] = useState(null); // 'product' | 'company' | 'contact' | null
 
   useEffect(() => {
     const handleScroll = () => {
@@ -17,12 +18,39 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Reset accordion state when hamburger menu is closed
+  useEffect(() => {
+    if (!mobileMenuOpen) {
+      setActiveAccordion(null);
+    }
+  }, [mobileMenuOpen]);
+
   const navLinks = [
     { name: 'Features', href: '#features' },
     { name: 'How It Works', href: '#how-it-works' },
     { name: 'Plans', href: '#plans' },
     { name: 'Ecosystem', href: '#ecosystem' },
   ];
+
+  const productLinks = [
+    { name: 'Rider App', path: '/rider-app' },
+    { name: 'Franchise Panel', path: '/franchise-panel' },
+    { name: 'Admin Dashboard', path: '/admin-dashboard' },
+    { name: 'Vehicle Catalog', path: '/vehicle-catalog' },
+    { name: 'Pricing Plans', path: '/pricing-plans' },
+  ];
+
+  const companyLinks = [
+    { name: 'About Us', path: '/about' },
+    { name: 'Careers', path: '/careers' },
+    { name: 'Press & Media', path: '/press' },
+    { name: 'Sustainability', path: '/sustainability' },
+    { name: 'Contact', path: '/contact' },
+  ];
+
+  const toggleAccordion = (section) => {
+    setActiveAccordion(activeAccordion === section ? null : section);
+  };
 
   return (
     <nav
@@ -104,7 +132,7 @@ const Navbar = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="absolute top-0 left-0 w-full bg-white/95 backdrop-blur-xl shadow-2xl border-b border-slate-100 overflow-hidden md:hidden z-50 pt-24 pb-10"
+            className="absolute top-0 left-0 w-full bg-white/95 backdrop-blur-xl shadow-2xl border-b border-slate-100 overflow-y-auto max-h-[85vh] md:hidden z-50 pt-24 pb-10"
           >
             <div className="flex flex-col gap-5 px-6">
               {navLinks.map((link, i) => (
@@ -120,6 +148,156 @@ const Navbar = () => {
                   {link.name}
                 </motion.a>
               ))}
+
+              {/* Collapsible Footer Sections */}
+              <div className="h-px bg-slate-100 my-1" />
+
+              {/* Product Accordion */}
+              <div className="flex flex-col">
+                <button
+                  onClick={() => toggleAccordion('product')}
+                  className="flex items-center justify-between py-2 text-xl font-heading font-bold text-slate-800 hover:text-flexigo-teal transition-colors text-left"
+                >
+                  <span>Product</span>
+                  {activeAccordion === 'product' ? (
+                    <ChevronUp size={20} className="text-slate-500" />
+                  ) : (
+                    <ChevronDown size={20} className="text-slate-500" />
+                  )}
+                </button>
+                <AnimatePresence>
+                  {activeAccordion === 'product' && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden pl-4 flex flex-col gap-3 py-2 border-l border-slate-100 mt-1"
+                    >
+                      {productLinks.map((link) => (
+                        <Link
+                          key={link.name}
+                          to={link.path}
+                          className="text-base text-slate-600 hover:text-flexigo-teal transition-colors font-semibold py-1"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          {link.name}
+                        </Link>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Company Accordion */}
+              <div className="flex flex-col">
+                <button
+                  onClick={() => toggleAccordion('company')}
+                  className="flex items-center justify-between py-2 text-xl font-heading font-bold text-slate-800 hover:text-flexigo-teal transition-colors text-left"
+                >
+                  <span>Company</span>
+                  {activeAccordion === 'company' ? (
+                    <ChevronUp size={20} className="text-slate-500" />
+                  ) : (
+                    <ChevronDown size={20} className="text-slate-500" />
+                  )}
+                </button>
+                <AnimatePresence>
+                  {activeAccordion === 'company' && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden pl-4 flex flex-col gap-3 py-2 border-l border-slate-100 mt-1"
+                    >
+                      {companyLinks.map((link) => (
+                        <Link
+                          key={link.name}
+                          to={link.path}
+                          className="text-base text-slate-600 hover:text-flexigo-teal transition-colors font-semibold py-1"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          {link.name}
+                        </Link>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Contact Us Accordion */}
+              <div className="flex flex-col">
+                <button
+                  onClick={() => toggleAccordion('contact')}
+                  className="flex items-center justify-between py-2 text-xl font-heading font-bold text-slate-800 hover:text-flexigo-teal transition-colors text-left"
+                >
+                  <span>Contact Us</span>
+                  {activeAccordion === 'contact' ? (
+                    <ChevronUp size={20} className="text-slate-500" />
+                  ) : (
+                    <ChevronDown size={20} className="text-slate-500" />
+                  )}
+                </button>
+                <AnimatePresence>
+                  {activeAccordion === 'contact' && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden pl-4 flex flex-col gap-4 py-3 border-l border-slate-100 mt-1"
+                    >
+                      {/* Address */}
+                      <div className="flex items-start gap-3">
+                        <MapPin className="w-5 h-5 text-flexigo-teal shrink-0 mt-0.5" />
+                        <span className="text-slate-600 text-sm leading-relaxed font-semibold">
+                          ‘Krushna Avenue’, SR NO: 111/10/Baner Pune City Pune(CB) 411045.
+                        </span>
+                      </div>
+                      
+                      {/* Phone */}
+                      <div className="flex items-center gap-3">
+                        <Phone className="w-5 h-5 text-flexigo-teal shrink-0" />
+                        <a
+                          href="tel:+919922968093"
+                          className="text-slate-600 text-sm font-semibold hover:text-flexigo-teal transition-colors"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          +91 99229 68093
+                        </a>
+                      </div>
+
+                      {/* WhatsApp */}
+                      <div className="flex items-center gap-3">
+                        <MessageCircle className="w-5 h-5 text-flexigo-teal shrink-0" />
+                        <a
+                          href="https://wa.me/919922968093"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-slate-600 text-sm font-semibold hover:text-flexigo-teal transition-colors"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          +91 99229 68093 (WhatsApp)
+                        </a>
+                      </div>
+
+                      {/* Email */}
+                      <div className="flex items-center gap-3">
+                        <Mail className="w-5 h-5 text-flexigo-teal shrink-0" />
+                        <a
+                          href="mailto:support@flexigoemobility.com"
+                          className="text-slate-600 text-sm font-semibold hover:text-flexigo-teal transition-colors"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          support@flexigoemobility.com
+                        </a>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
               <div className="h-px bg-slate-100 my-1" />
               <div className="flex flex-col gap-3">
                 <motion.button 
