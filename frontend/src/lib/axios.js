@@ -25,7 +25,14 @@ api.interceptors.request.use(
       const { state } = JSON.parse(riderAuth);
       if (state.token) {
         config.headers.Authorization = `Bearer ${state.token}`;
+        return config;
       }
+    }
+
+    // NEW: Add Admin Token
+    const adminToken = localStorage.getItem('admin_token');
+    if (adminToken) {
+      config.headers.Authorization = `Bearer ${adminToken}`;
     }
     return config;
   },

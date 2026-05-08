@@ -21,6 +21,7 @@ import Attendance from './attendanceModel.js';
 import cloudinary from '../../config/cloudinary.js';
 import Admin from './adminModel.js';
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 export const getDateFilter = (range, fieldName = 'createdAt') => {
   if (!range) return {};
@@ -164,6 +165,45 @@ export const getAdminStats = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Admin Login
+// @route   POST /api/v1/admin/login
+export const adminLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // 1. Check for admin
+    const admin = await Admin.findOne({ email });
+    if (!admin) {
+      return res.status(401).json({ success: false, message: 'Invalid Credentials' });
+    }
+
+    // 2. Check password
+    const isMatch = await admin.matchPassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Invalid Credentials' });
+    }
+
+    // 3. Create Token
+    const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET, {
+      expiresIn: '30d'
+    });
+
+    res.status(200).json({
+      success: true,
+      token,
+      admin: {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role
+      }
+    });
+  } catch (error) {
+    console.error("Login Error:", error);
+    res.status(500).json({ success: false, message: 'Server Error' });
   }
 };
 
@@ -1325,7 +1365,7 @@ export const getRoles = async (req, res) => {
       // Background Repair (Non-blocking)
       roles.forEach(async (role) => {
         let permissionsUpdated = false;
-        if (!role.permissions) {
+        if (!role.permissions || typeof role.permissions !== 'object') {
           role.permissions = {};
           permissionsUpdated = true;
         }

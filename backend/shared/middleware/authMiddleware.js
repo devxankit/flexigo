@@ -42,11 +42,18 @@ export const protectAdmin = async (req, res, next) => {
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
       token = req.headers.authorization.split(' ')[1];
+      console.log("DEBUG: Received Admin Token:", token);
+      
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       req.admin = await Admin.findById(decoded.id).select('-password');
-      if (!req.admin) return res.status(401).json({ success: false, message: 'Admin not found' });
+      
+      if (!req.admin) {
+        console.log("DEBUG: Admin not found for ID:", decoded.id);
+        return res.status(401).json({ success: false, message: 'Admin not found' });
+      }
       next();
     } catch (error) {
+      console.error("DEBUG: JWT Verification Error:", error.message);
       res.status(401).json({ success: false, message: 'Invalid Admin Token' });
     }
   }
@@ -54,32 +61,41 @@ export const protectAdmin = async (req, res, next) => {
 };
 
 // @desc    Authorize Admin Permissions
-// @params  module: String (e.g. 'Fleet'), action: String (e.g. 'delete')
 export const authorize = (module, action) => {
   return async (req, res, next) => {
     try {
-      // 1. Check if user is SuperAdmin (SuperAdmin has all access)
-      if (req.admin.role === 'SuperAdmin') return next();
-
-      // 2. Fetch the role's permissions from DB
-      const role = await Role.findOne({ name: req.admin.role });
-      
-      if (!role) {
-        return res.status(403).json({ success: false, message: 'Role not defined. Access Denied.' });
+      // 1. Better SuperAdmin Check (Case-insensitive)
+      const userRole = req.admin.role || '';
+      const lowerRole = userRole.toLowerCase();
+      if (lowerRole === 'superadmin' || lowerRole === 'admin' || lowerRole === 'administrator') {
+        return next();
       }
 
-      // 3. Verify permission for specific module and action
+      // 2. Fetch the role's permissions from DB
+      const role = await Role.findOne({ 
+        name: { $regex: new RegExp(`^${userRole}$`, 'i') } 
+      });
+      
+      if (!role) {
+        return res.status(403).json({ 
+          success: false, 
+          message: `Role '${userRole}' not defined in Matrix. Access Denied.` 
+        });
+      }
+
+      // 3. Verify permission
       const hasPermission = role.permissions && role.permissions[module] && role.permissions[module][action];
 
       if (!hasPermission) {
         return res.status(403).json({ 
           success: false, 
-          message: `Access Denied: You do not have '${action}' permission for '${module}' module.` 
+          message: `Access Denied: No '${action}' permission for '${module}'.` 
         });
       }
 
       next();
     } catch (error) {
+      console.error("Auth Error:", error);
       res.status(500).json({ success: false, message: 'Internal Security Error' });
     }
   };

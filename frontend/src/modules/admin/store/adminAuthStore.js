@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import api from '../../../lib/axios';
+
 
 export const useAdminAuthStore = create((set) => ({
   user: JSON.parse(localStorage.getItem('admin_user')) || null,
@@ -6,18 +8,22 @@ export const useAdminAuthStore = create((set) => ({
   token: localStorage.getItem('admin_token') || null,
 
   login: async (email, password) => {
-    // Mock Admin Login Logic
-    if (email === 'admin@flexigo.com' && password === 'flexigo_root') {
-      const mockUser = { id: 'ROOT-01', name: 'Master Administrator', role: 'SuperAdmin', email };
-      const mockToken = 'admin_jwt_889900';
-      
-      localStorage.setItem('admin_user', JSON.stringify(mockUser));
-      localStorage.setItem('admin_token', mockToken);
-      
-      set({ user: mockUser, isAuthenticated: true, token: mockToken });
-      return true;
+    try {
+      const res = await api.post('/admin/login', { email, password });
+      if (res.data.success) {
+        const { token, admin } = res.data;
+        
+        localStorage.setItem('admin_user', JSON.stringify(admin));
+        localStorage.setItem('admin_token', token);
+        
+        set({ user: admin, isAuthenticated: true, token });
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error("Login failed:", err);
+      return false;
     }
-    return false;
   },
 
   logout: () => {

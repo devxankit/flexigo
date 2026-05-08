@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   getAdminStats,
+  adminLogin,
   getAllHubs,
   getFleetDistribution,
   getKycRecords,
@@ -65,6 +66,7 @@ const router = express.Router();
 console.log('DEBUG: Admin Routes initialized at /api/v1/admin');
 
 router.get('/dashboard-stats', getAdminStats);
+router.post('/login', adminLogin);
 router.get('/notifications-feed', getNotificationsFeed);
 router.get('/profile', getAdminProfile);
 router.put('/update-password', updateAdminPassword);
