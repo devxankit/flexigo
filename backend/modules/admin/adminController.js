@@ -1365,18 +1365,26 @@ export const getRoles = async (req, res) => {
       // Background Repair (Non-blocking)
       roles.forEach(async (role) => {
         let permissionsUpdated = false;
-        if (!role.permissions || typeof role.permissions !== 'object') {
+        
+        // Deep Repair: Ensure permissions is a valid object and NOT a string
+        if (!role.permissions || typeof role.permissions !== 'object' || Array.isArray(role.permissions)) {
           role.permissions = {};
           permissionsUpdated = true;
         }
+
         defaultModules.forEach(mod => {
-          if (!role.permissions[mod]) {
+          if (!role.permissions[mod] || typeof role.permissions[mod] !== 'object') {
             role.permissions[mod] = { read: true, create: false, update: false, delete: false };
             permissionsUpdated = true;
           }
         });
+
         if (permissionsUpdated) {
-          await Role.updateOne({ _id: role._id }, { $set: { permissions: role.permissions } });
+          try {
+            await Role.updateOne({ _id: role._id }, { $set: { permissions: role.permissions } });
+          } catch (err) {
+            console.error("Background Repair Failed:", err);
+          }
         }
       });
     }

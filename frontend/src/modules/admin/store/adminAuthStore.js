@@ -3,9 +3,9 @@ import api from '../../../lib/axios';
 
 
 export const useAdminAuthStore = create((set) => ({
-  user: JSON.parse(localStorage.getItem('admin_user')) || null,
-  isAuthenticated: !!localStorage.getItem('admin_token'),
-  token: localStorage.getItem('admin_token') || null,
+  user: (localStorage.getItem('admin_user') && localStorage.getItem('admin_user') !== 'undefined') ? JSON.parse(localStorage.getItem('admin_user')) : null,
+  isAuthenticated: !!localStorage.getItem('admin_token') && localStorage.getItem('admin_token') !== 'undefined' && localStorage.getItem('admin_token') !== 'null',
+  token: (localStorage.getItem('admin_token') === 'undefined' || localStorage.getItem('admin_token') === 'null') ? null : localStorage.getItem('admin_token'),
 
   login: async (email, password) => {
     try {
