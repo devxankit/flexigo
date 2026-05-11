@@ -119,9 +119,19 @@ export const generateAadhaarOTP = async (req, res) => {
       key: process.env.SUREPASS_API_KEY,
       id_number: aadhaarNumber
     });
-    res.status(200).json({ success: true, client_id: response.data.request_id || response.data.data?.request_id, message: response.data.message });
+    
+    if (response.data.success || response.data.status === 'success' || response.data.message === 'OTP Sent.') {
+      const requestId = response.data.data?.request_id || response.data.request_id || response.data.data?.client_id;
+      res.status(200).json({ 
+        success: true, 
+        client_id: requestId, 
+        message: response.data.message || 'OTP sent to mobile' 
+      });
+    } else {
+      res.status(400).json({ success: false, message: response.data.message || 'Failed to send Aadhaar OTP' });
+    }
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.response?.data?.message || error.message });
   }
 };
 
@@ -133,18 +143,21 @@ export const verifyAadhaarOTP = async (req, res) => {
       request_id: client_id,
       otp
     });
-    if (response.data.success) {
+    
+    if (response.data.success || response.data.status === 'success') {
       const rider = await Rider.findOne({ phone });
       if (rider) {
         rider.kycDetails.ekycVerified = true;
         rider.kycStatus = 'approved';
-        rider.name = response.data.data?.full_name;
+        rider.name = response.data.data?.full_name || response.data.full_name;
         await rider.save();
       }
-      res.status(200).json({ success: true, message: 'Aadhaar Verified', data: response.data.data });
-    } else res.status(400).json({ success: false, message: response.data.message });
+      res.status(200).json({ success: true, message: 'Aadhaar Verified', data: response.data.data || response.data });
+    } else {
+      res.status(400).json({ success: false, message: response.data.message || 'OTP verification failed' });
+    }
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.response?.data?.message || error.message });
   }
 };
 

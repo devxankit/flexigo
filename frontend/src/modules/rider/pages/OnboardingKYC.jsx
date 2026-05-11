@@ -16,7 +16,10 @@ const steps = [
 
 export default function OnboardingKYC() {
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(() => {
+    const savedStep = localStorage.getItem('onboarding_step');
+    return savedStep ? parseInt(savedStep) : 1;
+  });
   const [loading, setLoading] = useState(false);
   const [uploads, setUploads] = useState({
     selfie: null,
@@ -50,6 +53,10 @@ export default function OnboardingKYC() {
       setIsAadhaarVerified(true);
     }
   }, [user]);
+
+  useEffect(() => {
+    localStorage.setItem('onboarding_step', currentStep.toString());
+  }, [currentStep]);
 
   const fileToBase64 = (file) => {
     console.log(`UTIL: Converting file to base64: ${file?.name}`);
@@ -176,6 +183,7 @@ export default function OnboardingKYC() {
           console.log('ONBOARDING: updateKYC result:', JSON.stringify(result));
           if (result.success) {
               console.log('ONBOARDING: Success! Navigating to /rider/plans');
+              localStorage.removeItem('onboarding_step');
               navigate('/rider/plans');
           } else {
               console.log('ONBOARDING: Failed result. message:', result.message);
