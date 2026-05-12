@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Check, Zap, HelpCircle } from 'lucide-react';
 import logo from '../../../assets/logo.png';
+import api from '../../../lib/axios';
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -65,6 +66,24 @@ const plans = [
 ];
 
 const PricingPlansPage = () => {
+  const [livePlans, setLivePlans] = useState([]);
+
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const res = await api.get('/admin/web/plans');
+        if (res.data.success && res.data.plans.length > 0) {
+          setLivePlans(res.data.plans);
+        }
+      } catch (err) {
+        console.error("Failed to fetch plans:", err);
+      }
+    };
+    fetchPlans();
+  }, []);
+
+  const displayPlans = livePlans.length > 0 ? livePlans : plans;
+
   return (
     <div className="landing-page-theme min-h-screen bg-white font-body text-slate-800 antialiased">
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
@@ -101,7 +120,7 @@ const PricingPlansPage = () => {
       <section className="py-24 bg-slate-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {plans.map((plan, i) => (
+            {displayPlans.map((plan, i) => (
               <motion.div
                 key={i}
                 {...fadeUp}

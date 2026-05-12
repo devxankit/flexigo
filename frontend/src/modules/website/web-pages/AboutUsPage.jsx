@@ -1,8 +1,18 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Zap, Target, Heart, Users, MapPin, Mail, Leaf, Shield, TrendingUp, Award } from 'lucide-react';
+import { ArrowLeft, Zap, Target, Heart, Users, MapPin, Mail, Leaf, Shield, TrendingUp, Award, Calendar } from 'lucide-react';
 import logo from '../../../assets/logo.png';
+import api from '../../../lib/axios';
+
+const iconMap = {
+  Zap: <Zap className="w-6 h-6" />,
+  Leaf: <Leaf className="w-6 h-6" />,
+  Shield: <Shield className="w-6 h-6" />,
+  TrendingUp: <TrendingUp className="w-6 h-6" />,
+  Users: <Users className="w-6 h-6" />,
+  Award: <Award className="w-6 h-6" />,
+};
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -52,6 +62,28 @@ const milestones = [
 ];
 
 const AboutUsPage = () => {
+  const [liveAbout, setLiveAbout] = useState(null);
+
+  useEffect(() => {
+    const fetchAbout = async () => {
+      try {
+        const res = await api.get('/admin/web/about');
+        if (res.data.success && res.data.about) {
+          setLiveAbout(res.data.about);
+        }
+      } catch (err) {
+        console.error("Failed to fetch about info:", err);
+      }
+    };
+    fetchAbout();
+  }, []);
+
+  const displayMission = liveAbout?.mission || "To make electric vehicles accessible to every delivery professional in India through flexible, affordable subscription plans backed by world-class service.";
+  const displayVision = liveAbout?.vision || "A zero-emission last-mile delivery ecosystem across India, powered by a tech-enabled franchise network that creates livelihood for thousands.";
+  const displayStats = liveAbout?.stats || { activeRiders: '200+', vehiclesDeployed: '200+', cities: '2' };
+  const displayValues = liveAbout?.values?.length > 0 ? liveAbout.values : values;
+  const displayMilestones = liveAbout?.milestones?.length > 0 ? liveAbout.milestones : milestones;
+
   return (
     <div className="landing-page-theme min-h-screen bg-white font-body text-slate-800 antialiased">
       {/* Nav Bar */}
@@ -82,7 +114,7 @@ const AboutUsPage = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-flexigo-teal font-bold uppercase tracking-[0.25em] text-xs mb-6"
           >
-            Our Story
+            {liveAbout?.heroTag || "Our Story"}
           </motion.p>
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
@@ -90,9 +122,22 @@ const AboutUsPage = () => {
             transition={{ delay: 0.1 }}
             className="text-4xl md:text-6xl lg:text-7xl font-black font-heading text-white leading-[1.1] tracking-tighter mb-8"
           >
-            Powering India's
-            <br />
-            <span className="text-flexigo-teal italic">Last-Mile Revolution</span>
+            {liveAbout?.heroTitle ? (
+               <>
+                 {liveAbout.heroTitle.split('\n').map((line, idx) => (
+                    <React.Fragment key={idx}>
+                       {line}
+                       <br />
+                    </React.Fragment>
+                 ))}
+               </>
+            ) : (
+              <>
+                Powering India's
+                <br />
+                <span className="text-flexigo-teal italic">Last-Mile Revolution</span>
+              </>
+            )}
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -100,8 +145,7 @@ const AboutUsPage = () => {
             transition={{ delay: 0.2 }}
             className="text-slate-300 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed"
           >
-            FlexiGo E-Mobility is a Pune-based EV subscription platform built for delivery professionals.
-            We provide smart, zero-maintenance electric scooters through flexible plans — so partners earn more, spend less, and ride green.
+            {liveAbout?.heroDescription || "FlexiGo E-Mobility is a Pune-based EV subscription platform built for delivery professionals. We provide smart, zero-maintenance electric scooters through flexible plans — so partners earn more, spend less, and ride green."}
           </motion.p>
         </div>
       </section>
@@ -111,31 +155,27 @@ const AboutUsPage = () => {
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div {...fadeUp} transition={{ duration: 0.6 }}>
-              <p className="text-flexigo-teal font-bold uppercase tracking-[0.2em] text-xs mb-4">Who We Are</p>
-              <h2 className="text-4xl md:text-5xl font-black font-heading text-flexigo-primary leading-[1.15] tracking-tighter mb-6">
-                Redefining How Delivery
-                <br />
-                <span className="text-slate-400">Partners Own Their Ride</span>
+              <p className="text-flexigo-teal font-bold uppercase tracking-[0.2em] text-xs mb-4">{liveAbout?.whoWeAreTag || "Who We Are"}</p>
+              <h2 className="text-4xl md:text-5xl font-black font-heading text-flexigo-primary leading-[1.15] tracking-tighter mb-6 whitespace-pre-line">
+                {liveAbout?.whoWeAreTitle || "Redefining How Delivery\nPartners Own Their Ride"}
               </h2>
               <p className="text-slate-600 text-lg leading-relaxed mb-6">
-                Founded in 2026 and headquartered at Krushna Avenue, Baner, Pune, FlexiGo E-Mobility was born out of a simple observation:
-                delivery partners were trapped paying high EMIs on depreciating petrol bikes while bearing all the risk of ownership.
+                {liveAbout?.whoWeAreDescription1 || "Founded in 2026 and headquartered at Krushna Avenue, Baner, Pune, FlexiGo E-Mobility was born out of a simple observation: delivery partners were trapped paying high EMIs on depreciating petrol bikes while bearing all the risk of ownership."}
               </p>
               <p className="text-slate-600 text-lg leading-relaxed mb-8">
-                We flipped the model. With FlexiGo, partners subscribe to a smart EV — we handle everything from servicing and insurance to
-                battery swaps and GPS tracking. Partners focus on earning; we handle the rest.
+                {liveAbout?.whoWeAreDescription2 || "We flipped the model. With FlexiGo, partners subscribe to a smart EV — we handle everything from servicing and insurance to battery swaps and GPS tracking. Partners focus on earning; we handle the rest."}
               </p>
               <div className="flex flex-wrap gap-4">
                 <div className="px-5 py-3 bg-flexigo-primary/5 border border-flexigo-primary/10 rounded-xl text-center">
-                  <div className="text-2xl font-black font-heading text-flexigo-primary">200+</div>
+                  <div className="text-2xl font-black font-heading text-flexigo-primary">{displayStats.activeRiders}</div>
                   <div className="text-xs text-slate-500 font-medium mt-1">Active Riders</div>
                 </div>
                 <div className="px-5 py-3 bg-flexigo-teal/5 border border-flexigo-teal/10 rounded-xl text-center">
-                  <div className="text-2xl font-black font-heading text-flexigo-teal">200+</div>
+                  <div className="text-2xl font-black font-heading text-flexigo-teal">{displayStats.vehiclesDeployed}</div>
                   <div className="text-xs text-slate-500 font-medium mt-1">Vehicles Deployed</div>
                 </div>
                 <div className="px-5 py-3 bg-slate-50 border border-slate-100 rounded-xl text-center">
-                  <div className="text-2xl font-black font-heading text-slate-700">2</div>
+                  <div className="text-2xl font-black font-heading text-slate-700">{displayStats.cities}</div>
                   <div className="text-xs text-slate-500 font-medium mt-1">Cities & Growing</div>
                 </div>
               </div>
@@ -150,21 +190,21 @@ const AboutUsPage = () => {
                 <Target className="w-8 h-8 mb-4 text-flexigo-teal" />
                 <h3 className="text-xl font-bold font-heading mb-3">Our Mission</h3>
                 <p className="text-white/80 text-sm leading-relaxed">
-                  To make electric vehicles accessible to every delivery professional in India through flexible, affordable subscription plans backed by world-class service.
+                  {displayMission}
                 </p>
               </div>
               <div className="p-6 rounded-2xl bg-gradient-to-br from-flexigo-teal to-flexigo-teal/80 text-white shadow-xl sm:mt-8">
                 <Heart className="w-8 h-8 mb-4 text-white/80" />
                 <h3 className="text-xl font-bold font-heading mb-3">Our Vision</h3>
                 <p className="text-white/80 text-sm leading-relaxed">
-                  A zero-emission last-mile delivery ecosystem across India, powered by a tech-enabled franchise network that creates livelihood for thousands.
+                  {displayVision}
                 </p>
               </div>
               <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100 sm:col-span-2">
                 <MapPin className="w-7 h-7 mb-3 text-flexigo-teal" />
-                <h3 className="text-lg font-bold font-heading text-slate-800 mb-2">Headquartered in Pune</h3>
+                <h3 className="text-lg font-bold font-heading text-slate-800 mb-2">{liveAbout?.addressTitle || "Headquartered in Pune"}</h3>
                 <p className="text-slate-500 text-sm leading-relaxed">
-                  'Krushna Avenue', SR NO: 111/10, Baner Pune City, Pune (CB) — 411045, Maharashtra, India.
+                  {liveAbout?.addressContent || "'Krushna Avenue', SR NO: 111/10, Baner Pune City, Pune (CB) — 411045, Maharashtra, India."}
                 </p>
               </div>
             </motion.div>
@@ -185,15 +225,15 @@ const AboutUsPage = () => {
             </p>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {values.map((v, i) => (
+            {displayValues.map((v, i) => (
               <motion.div
                 key={i}
                 {...fadeUp}
                 transition={{ delay: i * 0.08 }}
                 className="p-7 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg hover:border-flexigo-teal/20 transition-all duration-300 group"
               >
-                <div className="w-12 h-12 rounded-xl bg-flexigo-teal/10 flex items-center justify-center text-flexigo-teal mb-5 group-hover:bg-flexigo-teal group-hover:text-white transition-all duration-300">
-                  {v.icon}
+                <div className={`w-12 h-12 rounded-xl bg-${v.color || 'emerald'}-500/10 flex items-center justify-center text-${v.color || 'emerald'}-500 mb-5 group-hover:bg-${v.color || 'emerald'}-500 group-hover:text-white transition-all duration-300`}>
+                  {iconMap[v.icon] || v.icon}
                 </div>
                 <h3 className="text-lg font-bold font-heading text-slate-800 mb-3">{v.title}</h3>
                 <p className="text-slate-500 text-sm leading-relaxed">{v.desc}</p>
@@ -215,7 +255,7 @@ const AboutUsPage = () => {
           <div className="relative">
             <div className="absolute left-6 top-0 bottom-0 w-px bg-slate-100" />
             <div className="space-y-10 pl-16">
-              {milestones.map((m, i) => (
+              {displayMilestones.map((m, i) => (
                 <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.1 }} className="relative">
                   <div className="absolute -left-10 top-1 w-8 h-8 rounded-full bg-flexigo-primary flex items-center justify-center shadow-lg">
                     <div className="w-3 h-3 rounded-full bg-flexigo-teal" />

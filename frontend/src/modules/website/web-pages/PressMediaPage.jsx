@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Download, Mail, ExternalLink, Newspaper, Mic } from 'lucide-react';
 import logo from '../../../assets/logo.png';
+import api from '../../../lib/axios';
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -38,6 +39,25 @@ const mediaAssets = [
 ];
 
 const PressMediaPage = () => {
+  const [liveReleases, setLiveReleases] = useState([]);
+
+  useEffect(() => {
+    const fetchReleases = async () => {
+      try {
+        const res = await api.get('/admin/web/press');
+        if (res.data.success && res.data.releases.length > 0) {
+          // Only show published ones on public site
+          setLiveReleases(res.data.releases.filter(r => r.published));
+        }
+      } catch (err) {
+        console.error("Failed to fetch press releases:", err);
+      }
+    };
+    fetchReleases();
+  }, []);
+
+  const displayReleases = liveReleases.length > 0 ? liveReleases : pressReleases;
+
   return (
     <div className="landing-page-theme min-h-screen bg-white font-body text-slate-800 antialiased">
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm">
@@ -84,7 +104,7 @@ const PressMediaPage = () => {
             <h2 className="text-3xl md:text-4xl font-black font-heading text-flexigo-primary tracking-tighter">Press Releases</h2>
           </motion.div>
           <div className="space-y-6">
-            {pressReleases.map((pr, i) => (
+            {displayReleases.map((pr, i) => (
               <motion.div key={i} {...fadeUp} transition={{ delay: i * 0.08 }}
                 className="p-6 border border-slate-100 rounded-2xl hover:border-flexigo-teal/30 hover:shadow-lg transition-all duration-300 group"
               >
@@ -94,9 +114,15 @@ const PressMediaPage = () => {
                 </div>
                 <h3 className="text-xl font-bold font-heading text-slate-800 mb-3 group-hover:text-flexigo-primary transition-colors">{pr.title}</h3>
                 <p className="text-slate-500 text-sm leading-relaxed mb-4">{pr.excerpt}</p>
-                <button className="flex items-center gap-1 text-flexigo-teal text-sm font-bold hover:gap-2 transition-all">
-                  Read More <ExternalLink className="w-3.5 h-3.5" />
-                </button>
+                {pr.link ? (
+                  <a href={pr.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-flexigo-teal text-sm font-bold hover:gap-2 transition-all">
+                    Read More <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                ) : (
+                  <button className="flex items-center gap-1 text-flexigo-teal text-sm font-bold hover:gap-2 transition-all">
+                    Read More <ExternalLink className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </motion.div>
             ))}
           </div>

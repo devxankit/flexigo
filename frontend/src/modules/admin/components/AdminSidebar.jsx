@@ -26,7 +26,12 @@ import {
   Layers,
   Settings,
   Zap,
-  Activity
+  Activity,
+  Globe2,
+  CreditCardIcon,
+  Phone,
+  Info,
+  Newspaper
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAdminAuthStore as useAuthStore } from '../store/adminAuthStore';
@@ -77,6 +82,15 @@ const navigationGroups = [
       { id: 'engagement', label: 'Engagement & CRM', icon: Ticket, path: '/admin/engagement' },
       { id: 'security', label: 'Security & Audit', icon: Lock, path: '/admin/security' },
       { id: 'notifications', label: 'Notifications', icon: Bell, path: '/admin/notifications' },
+    ]
+  },
+  {
+    title: "Website",
+    items: [
+      { id: 'website-plans', label: 'Plans Page', icon: Zap, path: '/admin/website-plans' },
+      { id: 'website-contact', label: 'Contact Us', icon: Phone, path: '/admin/website-contact' },
+      { id: 'website-about', label: 'About Us', icon: Info, path: '/admin/website-about' },
+      { id: 'website-press', label: 'Press & Media', icon: Newspaper, path: '/admin/website-press' },
     ]
   }
 ];

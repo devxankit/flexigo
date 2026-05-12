@@ -49,6 +49,24 @@ import {
   uploadKycCertificate
 } from './adminController.js';
 import {
+  getWebsitePlans,
+  createWebsitePlan,
+  updateWebsitePlan,
+  deleteWebsitePlan,
+  getWebsiteInquiries,
+  submitWebsiteInquiry,
+  updateInquiryStatus,
+  deleteInquiry,
+  getWebsiteContactInfo,
+  updateWebsiteContactInfo,
+  getWebsiteAbout,
+  updateWebsiteAbout,
+  getWebsitePressReleases,
+  createWebsitePressRelease,
+  updateWebsitePressRelease,
+  deleteWebsitePressRelease
+} from './websiteController.js';
+import {
   getAssignments,
   createAssignment,
   addVehicle,
@@ -95,7 +113,7 @@ router.post('/fleet/add', protectAdmin, authorize('Fleet', 'create'), addVehicle
 router.post('/fleet/bulk-add', protectAdmin, authorize('Fleet', 'create'), bulkAddVehicles);
 
 // Staff Management
-router.get('/staff', getAllStaff);
+  router.get('/staff', getAllStaff);
 router.post('/staff', createStaff);
 router.put('/staff/:id', updateStaff);
 router.delete('/staff/:id', deleteStaff);
@@ -141,5 +159,27 @@ router.post('/riders', createRider);
 router.put('/riders/:id', updateRider);
 router.delete('/riders/:id', deleteRider);
 router.get('/rider-report', getRiderDetailedReport);
+
+// Website Management
+router.get('/web/plans', getWebsitePlans);
+router.post('/web/plans', createWebsitePlan);
+router.patch('/web/plans/:id', updateWebsitePlan);
+router.delete('/web/plans/:id', deleteWebsitePlan);
+
+router.get('/web/contact', getWebsiteInquiries);
+router.post('/web/contact/submit', submitWebsiteInquiry);
+router.patch('/web/contact/:id', updateInquiryStatus);
+router.delete('/web/contact/:id', deleteInquiry);
+
+router.get('/web/contact-info', getWebsiteContactInfo);
+router.put('/web/contact-info', updateWebsiteContactInfo);
+
+router.get('/web/about', getWebsiteAbout);
+router.put('/web/about', updateWebsiteAbout);
+
+router.get('/web/press', getWebsitePressReleases);
+router.post('/web/press', createWebsitePressRelease);
+router.patch('/web/press/:id', updateWebsitePressRelease);
+router.delete('/web/press/:id', deleteWebsitePressRelease);
 
 export default router;

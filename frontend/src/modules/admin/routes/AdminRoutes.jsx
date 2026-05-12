@@ -36,6 +36,12 @@ const SecurityAuditsPage = lazy(() => import('../pages/SecurityAuditsPage'));
 const AlertCenterPage = lazy(() => import('../pages/AlertCenterPage'));
 const SettingsPage = lazy(() => import('../pages/SettingsPage'));
 
+// Website Management Group
+const WebsitePlansPage = lazy(() => import('../pages/WebsitePlansPage'));
+const WebsiteContactUsPage = lazy(() => import('../pages/WebsiteContactUsPage'));
+const WebsiteAboutUsPage = lazy(() => import('../pages/WebsiteAboutUsPage'));
+const WebsitePressMediaPage = lazy(() => import('../pages/WebsitePressMediaPage'));
+
 const AdminLogin = lazy(() => import('../pages/AdminLogin'));
 
 export default function AdminRoutes() {
@@ -86,6 +92,12 @@ export default function AdminRoutes() {
           <Route path="security" element={<SecurityAuditsPage />} />
           <Route path="notifications" element={<AlertCenterPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          
+          {/* Website Management Group */}
+          <Route path="website-plans" element={<WebsitePlansPage />} />
+          <Route path="website-contact" element={<WebsiteContactUsPage />} />
+          <Route path="website-about" element={<WebsiteAboutUsPage />} />
+          <Route path="website-press" element={<WebsitePressMediaPage />} />
           
           <Route path="" element={<Navigate to="dashboard" replace />} />
         </Route>

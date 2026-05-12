@@ -1,17 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, MapPin, Phone, MessageCircle, Mail, Clock, Send, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Phone, MessageCircle, Mail, Clock, Send, CheckCircle2, Loader2 } from 'lucide-react';
 import logo from '../../../assets/logo.png';
+import api from '../../../lib/axios';
 
 const ContactPage = () => {
   const [form, setForm] = useState({ name: '', email: '', phone: '', subject: 'rider', message: '' });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [contactInfo, setContactInfo] = useState(null);
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      try {
+        const res = await api.get('/admin/web/contact-info');
+        if (res.data.success) {
+          setContactInfo(res.data.info);
+        }
+      } catch (err) {
+        console.error("Failed to fetch contact info:", err);
+      }
+    };
+    fetchContactInfo();
+  }, []);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    try {
+      const res = await api.post('/admin/web/contact/submit', form);
+      if (res.data.success) {
+        setSubmitted(true);
+      }
+    } catch (err) {
+      console.error("Failed to submit inquiry:", err);
+      alert("Something went wrong. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const defaultInfo = {
+    email: 'support@flexigoemobility.com',
+    phone: '+91 99229 68093',
+    address: '‘Krushna Avenue’, SR NO: 111/10/Baner, Pune City, Pune (CB) 411045, Maharashtra, India.',
+    workingHours: 'Monday to Saturday: 9:30 AM – 6:30 PM'
+  };
+
+  const info = contactInfo || defaultInfo;
 
   return (
     <div className="landing-page-theme min-h-screen bg-white font-body text-slate-800 antialiased">
@@ -64,10 +101,8 @@ const ContactPage = () => {
                   </div>
                   <div>
                     <h3 className="font-bold font-heading text-slate-800 text-lg mb-1">Office Address</h3>
-                    <p className="text-slate-600 text-sm leading-relaxed">
-                      ‘Krushna Avenue’, SR NO: 111/10/Baner,<br />
-                      Pune City, Pune (CB) 411045,<br />
-                      Maharashtra, India.
+                    <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line">
+                      {info.address}
                     </p>
                   </div>
                 </div>
@@ -78,8 +113,8 @@ const ContactPage = () => {
                   </div>
                   <div>
                     <h3 className="font-bold font-heading text-slate-800 text-lg mb-1">Call Support</h3>
-                    <a href="tel:+919922968093" className="text-slate-600 text-sm font-medium hover:text-flexigo-teal transition-colors">
-                      +91 99229 68093
+                    <a href={`tel:${info.phone}`} className="text-slate-600 text-sm font-medium hover:text-flexigo-teal transition-colors">
+                      {info.phone}
                     </a>
                   </div>
                 </div>
@@ -90,8 +125,8 @@ const ContactPage = () => {
                   </div>
                   <div>
                     <h3 className="font-bold font-heading text-slate-800 text-lg mb-1">WhatsApp Support</h3>
-                    <a href="https://wa.me/919922968093" target="_blank" rel="noopener noreferrer" className="text-slate-600 text-sm font-medium hover:text-flexigo-teal transition-colors">
-                      +91 99229 68093
+                    <a href={`https://wa.me/${info.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-slate-600 text-sm font-medium hover:text-flexigo-teal transition-colors">
+                      {info.phone}
                     </a>
                   </div>
                 </div>
@@ -102,8 +137,8 @@ const ContactPage = () => {
                   </div>
                   <div>
                     <h3 className="font-bold font-heading text-slate-800 text-lg mb-1">Email Support</h3>
-                    <a href="mailto:support@flexigoemobility.com" className="text-slate-600 text-sm font-medium hover:text-flexigo-teal transition-colors">
-                      support@flexigoemobility.com
+                    <a href={`mailto:${info.email}`} className="text-slate-600 text-sm font-medium hover:text-flexigo-teal transition-colors">
+                      {info.email}
                     </a>
                   </div>
                 </div>
@@ -114,7 +149,7 @@ const ContactPage = () => {
                   </div>
                   <div>
                     <h3 className="font-bold font-heading text-slate-800 text-lg mb-1">Working Hours</h3>
-                    <p className="text-slate-600 text-sm">Monday to Saturday: 9:30 AM – 6:30 PM</p>
+                    <p className="text-slate-600 text-sm">{info.workingHours}</p>
                   </div>
                 </div>
               </div>
@@ -200,10 +235,17 @@ const ContactPage = () => {
 
                   <button
                     type="submit"
-                    className="w-full py-4 bg-flexigo-primary hover:bg-flexigo-teal text-white font-bold rounded-xl text-sm transition-all duration-300 flex items-center justify-center gap-2 group shadow-lg shadow-flexigo-primary/10"
+                    disabled={loading}
+                    className="w-full py-4 bg-flexigo-primary hover:bg-flexigo-teal text-white font-bold rounded-xl text-sm transition-all duration-300 flex items-center justify-center gap-2 group shadow-lg shadow-flexigo-primary/10 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    Send Message
-                    <Send className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    {loading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        Send Message
+                        <Send className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </>
+                    )}
                   </button>
                 </form>
               )}

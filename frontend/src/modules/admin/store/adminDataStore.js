@@ -34,6 +34,11 @@ export const useAdminDataStore = create((set, get) => ({
   campaigns: [],
   notifications: [],
   riderReport: [],
+  websitePlans: [],
+  websiteInquiries: [],
+  websiteAbout: null,
+  websiteContactInfo: null,
+  websitePressReleases: [],
   isLoading: false,
 
   fetchNotifications: async () => {
@@ -885,6 +890,182 @@ export const useAdminDataStore = create((set, get) => ({
     } catch (err) {
       console.error("Permission sync failed:", err);
       set({ roles: originalRoles });
+    }
+  },
+
+  // --- Website Plans ---
+  fetchWebsitePlans: async () => {
+    try {
+      const res = await api.get('/admin/web/plans');
+      if (res.data.success) set({ websitePlans: res.data.plans });
+    } catch (err) {
+      console.error("Failed to fetch website plans:", err);
+    }
+  },
+  addWebsitePlan: async (data) => {
+    try {
+      const res = await api.post('/admin/web/plans', data);
+      if (res.data.success) {
+        set(state => ({ websitePlans: [...state.websitePlans, res.data.plan].sort((a, b) => a.order - b.order) }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to add website plan:", err);
+      return { success: false, message: err.message };
+    }
+  },
+  updateWebsitePlan: async (id, data) => {
+    try {
+      const res = await api.patch(`/admin/web/plans/${id}`, data);
+      if (res.data.success) {
+        set(state => ({
+          websitePlans: state.websitePlans.map(p => p._id === id ? res.data.plan : p).sort((a, b) => a.order - b.order)
+        }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to update website plan:", err);
+      return { success: false, message: err.message };
+    }
+  },
+  deleteWebsitePlan: async (id) => {
+    try {
+      const res = await api.delete(`/admin/web/plans/${id}`);
+      if (res.data.success) {
+        set(state => ({ websitePlans: state.websitePlans.filter(p => p._id !== id) }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to delete website plan:", err);
+      return { success: false, message: err.message };
+    }
+  },
+
+  // --- Website Inquiries ---
+  fetchWebsiteInquiries: async () => {
+    try {
+      const res = await api.get('/admin/web/contact');
+      if (res.data.success) set({ websiteInquiries: res.data.inquiries });
+    } catch (err) {
+      console.error("Failed to fetch website inquiries:", err);
+    }
+  },
+  updateInquiryStatus: async (id, status) => {
+    try {
+      const res = await api.patch(`/admin/web/contact/${id}`, { status });
+      if (res.data.success) {
+        set(state => ({
+          websiteInquiries: state.websiteInquiries.map(i => i._id === id ? res.data.inquiry : i)
+        }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to update inquiry status:", err);
+      return { success: false, message: err.message };
+    }
+  },
+  deleteInquiry: async (id) => {
+    try {
+      const res = await api.delete(`/admin/web/contact/${id}`);
+      if (res.data.success) {
+        set(state => ({ websiteInquiries: state.websiteInquiries.filter(i => i._id !== id) }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to delete inquiry:", err);
+      return { success: false, message: err.message };
+    }
+  },
+
+  // --- Website Contact Info ---
+  fetchWebsiteContactInfo: async () => {
+    try {
+      const res = await api.get('/admin/web/contact-info');
+      if (res.data.success) set({ websiteContactInfo: res.data.info });
+    } catch (err) {
+      console.error("Failed to fetch website contact info:", err);
+    }
+  },
+  updateWebsiteContactInfo: async (data) => {
+    try {
+      const res = await api.put('/admin/web/contact-info', data);
+      if (res.data.success) {
+        set({ websiteContactInfo: res.data.info });
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to update website contact info:", err);
+      return { success: false, message: err.message };
+    }
+  },
+
+  // --- Website About ---
+  fetchWebsiteAbout: async () => {
+    try {
+      const res = await api.get('/admin/web/about');
+      if (res.data.success) set({ websiteAbout: res.data.about });
+    } catch (err) {
+      console.error("Failed to fetch website about:", err);
+    }
+  },
+  updateWebsiteAbout: async (data) => {
+    try {
+      const res = await api.put('/admin/web/about', data);
+      if (res.data.success) {
+        set({ websiteAbout: res.data.about });
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to update website about:", err);
+      return { success: false, message: err.message };
+    }
+  },
+
+  // --- Website Press Releases ---
+  fetchWebsitePressReleases: async () => {
+    try {
+      const res = await api.get('/admin/web/press');
+      if (res.data.success) set({ websitePressReleases: res.data.releases });
+    } catch (err) {
+      console.error("Failed to fetch website press releases:", err);
+    }
+  },
+  addPressRelease: async (data) => {
+    try {
+      const res = await api.post('/admin/web/press', data);
+      if (res.data.success) {
+        set(state => ({ websitePressReleases: [...state.websitePressReleases, res.data.release].sort((a, b) => a.order - b.order) }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to add press release:", err);
+      return { success: false, message: err.message };
+    }
+  },
+  updatePressRelease: async (id, data) => {
+    try {
+      const res = await api.patch(`/admin/web/press/${id}`, data);
+      if (res.data.success) {
+        set(state => ({
+          websitePressReleases: state.websitePressReleases.map(r => r._id === id ? res.data.release : r).sort((a, b) => a.order - b.order)
+        }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to update press release:", err);
+      return { success: false, message: err.message };
+    }
+  },
+  deletePressRelease: async (id) => {
+    try {
+      const res = await api.delete(`/admin/web/press/${id}`);
+      if (res.data.success) {
+        set(state => ({ websitePressReleases: state.websitePressReleases.filter(r => r._id !== id) }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to delete press release:", err);
+      return { success: false, message: err.message };
     }
   },
 }));
