@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   getAdminStats,
+  adminLogin,
   getAllHubs,
   getFleetDistribution,
   getKycRecords,
@@ -32,6 +33,7 @@ import {
   getRiderBehaviour,
   getRoles,
   createRole,
+  updateRole,
   getCampaigns,
   createCampaign,
   generateStaffAadhaarOTP,
@@ -58,22 +60,24 @@ import {
   updatePlan,
   deletePlan
 } from './subscriptionPlanController.js';
+import { protectAdmin, authorize } from '../../shared/middleware/authMiddleware.js';
 
 const router = express.Router();
 console.log('DEBUG: Admin Routes initialized at /api/v1/admin');
 
 router.get('/dashboard-stats', getAdminStats);
+router.post('/login', adminLogin);
 router.get('/notifications-feed', getNotificationsFeed);
 router.get('/profile', getAdminProfile);
 router.put('/update-password', updateAdminPassword);
 
 // Hub / Franchise Management (full CRUD)
-router.get('/hubs', getAllHubs);
-router.post('/hubs', createHub);
-router.get('/hubs/:id', getFranchiseById);
-router.get('/hubs/:id/vehicles', getHubVehicles);
-router.put('/hubs/:id', updateHub);
-router.delete('/hubs/:id', deleteHub);
+router.get('/hubs', protectAdmin, authorize('Hubs', 'read'), getAllHubs);
+router.post('/hubs', protectAdmin, authorize('Hubs', 'create'), createHub);
+router.get('/hubs/:id', protectAdmin, authorize('Hubs', 'read'), getFranchiseById);
+router.get('/hubs/:id/vehicles', protectAdmin, authorize('Hubs', 'read'), getHubVehicles);
+router.put('/hubs/:id', protectAdmin, authorize('Hubs', 'update'), updateHub);
+router.delete('/hubs/:id', protectAdmin, authorize('Hubs', 'delete'), deleteHub);
 
 router.get('/distribution', getFleetDistribution);
 router.get('/subscribers', getSubscriberData);
@@ -85,10 +89,10 @@ router.patch('/geofencing/:id', updateGeofence);
 router.delete('/geofencing/:id', deleteGeofence);
 
 // Vehicle Management
-router.get('/assignments', getAssignments);
-router.post('/assignments', createAssignment);
-router.post('/fleet/add', addVehicle);
-router.post('/fleet/bulk-add', bulkAddVehicles);
+router.get('/assignments', protectAdmin, authorize('Fleet', 'read'), getAssignments);
+router.post('/assignments', protectAdmin, authorize('Fleet', 'create'), createAssignment);
+router.post('/fleet/add', protectAdmin, authorize('Fleet', 'create'), addVehicle);
+router.post('/fleet/bulk-add', protectAdmin, authorize('Fleet', 'create'), bulkAddVehicles);
 
 // Staff Management
 router.get('/staff', getAllStaff);
@@ -102,9 +106,9 @@ router.post('/staff/generate-aadhaar-otp', generateStaffAadhaarOTP);
 router.post('/staff/verify-aadhaar-otp', verifyStaffAadhaarOTP);
 
 // KYC Routes
-router.get('/kyc', getKycRecords);
-router.patch('/kyc/:id', updateKycStatus);
-router.post('/kyc/:id/certificate', uploadKycCertificate);
+router.get('/kyc', protectAdmin, authorize('KYC', 'read'), getKycRecords);
+router.patch('/kyc/:id', protectAdmin, authorize('KYC', 'update'), updateKycStatus);
+router.post('/kyc/:id/certificate', protectAdmin, authorize('KYC', 'update'), uploadKycCertificate);
 
 // Finance Management
 router.get('/finance', getFinanceData);
@@ -125,6 +129,7 @@ router.delete('/plans/:id', deletePlan);
 // Role Management
 router.get('/roles', getRoles);
 router.post('/roles', createRole);
+router.put('/roles/:id', updateRole);
 
 // Campaign Management
 router.get('/campaigns', getCampaigns);

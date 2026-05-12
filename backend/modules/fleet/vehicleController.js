@@ -10,8 +10,8 @@ import { sendPushNotification } from '../../shared/utils/firebase.js';
 // @route   POST /api/v1/fleet/add
 export const addVehicle = async (req, res) => {
   try {
-    const { rcImage, ...vehicleData } = req.body;
-
+    const { rcImage, vehicleImages, ...vehicleData } = req.body;
+    
     // Robust franchise resolution
     if (vehicleData.franchise) {
       let fId = vehicleData.franchise;
@@ -48,9 +48,26 @@ export const addVehicle = async (req, res) => {
       rcUrl = result.secure_url;
     }
 
+    // Handle Real Vehicle Images upload (Max 3)
+    let imageUrls = [];
+    if (vehicleImages && Array.isArray(vehicleImages)) {
+      const uploadPromises = vehicleImages.slice(0, 3).map(img => {
+        if (img && img.startsWith('data:image')) {
+          return cloudinary.uploader.upload(img, {
+            folder: 'flexigo/vehicles/main',
+          });
+        }
+        return null;
+      });
+      
+      const results = await Promise.all(uploadPromises);
+      imageUrls = results.filter(r => r !== null).map(r => r.secure_url);
+    }
+
     const vehicle = await Vehicle.create({
       ...vehicleData,
       rcUrl,
+      images: imageUrls,
     });
 
     res.status(201).json({

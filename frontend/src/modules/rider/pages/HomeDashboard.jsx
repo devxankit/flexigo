@@ -50,13 +50,15 @@ export default function HomeDashboard() {
         // Fetch hubs again with coordinates for backend sorting
         fetchHubs(latitude, longitude);
         
-        // Reverse geocoding
-        const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (results, status) => {
-          if (status === 'OK' && results[0]) {
-            setCurrentAddress(results[0].formatted_address);
-          }
-        });
+        // Reverse geocoding - with safety check for Google Maps script
+        if (window.google && window.google.maps && window.google.maps.Geocoder) {
+          const geocoder = new window.google.maps.Geocoder();
+          geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (results, status) => {
+            if (status === 'OK' && results[0]) {
+              setCurrentAddress(results[0].formatted_address);
+            }
+          });
+        }
       }, (err) => {
         console.error("Location Error:", err);
       }, { enableHighAccuracy: true });
@@ -64,23 +66,24 @@ export default function HomeDashboard() {
   }, []);
 
   // Use Dynamic Hubs OR Fallback to Mocks if DB is empty after loading
-  const displayHubs = hubLoading ? [] : (hubs.length > 0 ? hubs : [
+  const displayHubs = hubLoading ? [] : (Array.isArray(hubs) && hubs.length > 0 ? hubs : [
     { id: 1, name: 'FlexiHub Koramangala', latitude: 12.9345, longitude: 77.6266, batteries: 14, status: 'Open', color: '#39FF14' },
     { id: 2, name: 'HSR Layout Station', latitude: 12.9128, longitude: 77.6388, batteries: 8, status: 'Open', color: '#39FF14' },
     { id: 3, name: 'Indiranagar Hub', latitude: 12.9716, longitude: 77.6412, batteries: 2, status: 'Limited', color: '#EAB308' },
   ]);
 
-  const processedHubs = displayHubs.map(hub => {
+  const processedHubs = (displayHubs || []).map(hub => {
+    if (!hub) return null;
     const dist = coords ? calculateDistance(coords.latitude, coords.longitude, hub.latitude, hub.longitude) : null;
     return {
       ...hub,
       distValue: dist === null ? 9999 : dist,
       distance: dist !== null ? (dist < 1 ? Math.round(dist * 1000) + ' m' : dist.toFixed(1) + ' km') : (hub.distance || 'Dist. Pending')
     };
-  }).sort((a, b) => a.distValue - b.distValue);
+  }).filter(Boolean).sort((a, b) => a.distValue - b.distValue);
 
   const filteredHubs = processedHubs.filter(hub => 
-    hub.name.toLowerCase().includes(searchQuery.toLowerCase())
+    hub?.name?.toLowerCase()?.includes(searchQuery?.toLowerCase() || '')
   );
 
   return (
@@ -100,7 +103,7 @@ export default function HomeDashboard() {
              <div className="flex items-center gap-2.5">
                <div className="w-1.5 h-6 bg-flexigo-teal rounded-full shadow-[0_0_12px_rgba(57,255,20,0.5)]" />
                <h1 className={`text-3xl font-heading font-black tracking-tighter transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                 Hello, <span className="text-flexigo-teal">{user?.name?.split(' ')[0] || 'Rider'}</span>!
+                 Hello, <span className="text-flexigo-teal">{user?.name?.split(' ')?.[0] || 'Rider'}</span>!
                </h1>
              </div>
              {activePlan && (
@@ -193,7 +196,7 @@ export default function HomeDashboard() {
                        <div className="text-[9px] font-black text-[#00D4FF] uppercase tracking-tighter shadow-sm">Active</div>
                        {activePlan?.expiresAt && (
                          <div className="text-[7px] font-bold text-slate-500 uppercase mt-0.5">
-                           Due: {new Date(activePlan.expiresAt).toLocaleDateString([], { day: 'numeric', month: 'short' })}
+                           Due: {activePlan.expiresAt ? new Date(activePlan.expiresAt).toLocaleDateString([], { day: 'numeric', month: 'short' }) : 'N/A'}
                          </div>
                        )}
                      </div>
@@ -206,6 +209,35 @@ export default function HomeDashboard() {
       </div>
 
       <div className="px-6 space-y-6 pt-2">
+        {/* Pickup Location Card for new riders after payment */}
+        {vehicle?.model === 'Assignment Pending' && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            <GlassCard className={`p-5 border-2 border-flexigo-teal/30 bg-flexigo-teal/5 relative overflow-hidden group`}>
+               <div className="flex items-center gap-4 relative z-10">
+                 <div className="w-12 h-12 rounded-2xl bg-flexigo-teal flex items-center justify-center text-white shadow-[0_0_15px_rgba(57,255,20,0.4)] group-hover:rotate-6 transition-transform">
+                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-6 h-6"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" /></svg>
+                 </div>
+                 <div className="flex-1">
+                   <h3 className={`text-sm font-black transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>Pickup Your Vehicle</h3>
+                   <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Visit office to complete delivery</p>
+                 </div>
+                 <button 
+                   onClick={() => window.open('https://www.google.com/maps?q=18.566177368164062,73.7693099975586&z=17&hl=en', '_blank')}
+                   className="px-4 py-2 bg-flexigo-teal text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-emerald-950/40 hover:bg-emerald-400 transition-all active:scale-95"
+                 >
+                   Open Maps
+                 </button>
+               </div>
+               <div className="absolute top-0 right-0 p-4 opacity-[0.03] pointer-events-none -mr-4 -mt-4">
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-24 h-24 text-flexigo-teal"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
+               </div>
+            </GlassCard>
+          </motion.div>
+        )}
         {/* Hub List Section */}
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
@@ -286,14 +318,18 @@ export default function HomeDashboard() {
         {/* Main Status Card */}
         <GlassCard className="p-5 flex items-center gap-4 group">
           <div className="w-16 h-16 rounded-2xl bg-flexigo-teal/10 flex items-center justify-center overflow-hidden border border-flexigo-teal/20 transition-all group-hover:scale-105 duration-500">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="1.5" className="w-10 h-10">
-              <rect x="2" y="7" width="20" height="14" rx="2" />
-              <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
-            </svg>
+            {vehicle?.images?.length > 0 ? (
+              <img src={vehicle.images[0]} alt={vehicle.model} className="w-full h-full object-cover" />
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="1.5" className="w-10 h-10">
+                <rect x="2" y="7" width="20" height="14" rx="2" />
+                <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
+              </svg>
+            )}
           </div>
           <div className="flex-1">
-            <h3 className={`font-heading font-black text-xl transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>{vehicle.model}</h3>
-            <p className="text-gray-500 text-[10px] mt-1 uppercase tracking-[0.25em] font-black">{vehicle.plateNumber}</p>
+            <h3 className={`font-heading font-black text-xl transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>{vehicle?.model || 'No Vehicle'}</h3>
+            <p className="text-gray-500 text-[10px] mt-1 uppercase tracking-[0.25em] font-black">{vehicle?.plateNumber || 'N/A'}</p>
           </div>
           <div className="flex flex-col items-end gap-2">
             <div className="bg-flexigo-teal/20 text-flexigo-teal px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-[0_0_15px_#39FF1444]">
@@ -311,7 +347,7 @@ export default function HomeDashboard() {
             </div>
             <span className="text-[10px] tracking-[0.25em] uppercase font-black text-gray-500">Live Range</span>
             <div className="flex items-baseline gap-1">
-              <span className={`text-3xl font-heading font-black transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>{vehicle.range}</span>
+              <span className={`text-3xl font-heading font-black transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>{vehicle?.range || 0}</span>
               <span className="text-flexigo-teal text-xs font-black uppercase">KM</span>
             </div>
             <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
@@ -329,7 +365,7 @@ export default function HomeDashboard() {
             </div>
             <span className="text-[10px] tracking-[0.25em] uppercase font-black text-gray-500">Battery</span>
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-heading font-black text-flexigo-teal">{vehicle.battery}%</span>
+              <span className="text-3xl font-heading font-black text-flexigo-teal">{vehicle?.battery || 0}%</span>
             </div>
             <div className="flex gap-1.5">
               {Array.from({length: 5}).map((_, i) => (

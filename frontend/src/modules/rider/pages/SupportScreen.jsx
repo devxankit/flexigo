@@ -99,11 +99,30 @@ export default function SupportScreen() {
           </div>
        </div>
 
-       <div className="mt-10">
-          <NeonButton variant="green" size="lg" className="w-full">
-             Contact Center
-          </NeonButton>
-       </div>
+        <div className="mt-10 space-y-4">
+           <NeonButton 
+             variant="green" 
+             size="lg" 
+             className="w-full"
+             onClick={() => {
+               const url = 'https://www.google.com/maps?q=18.566177368164062,73.7693099975586&z=17&hl=en';
+               if (navigator.share) {
+                 navigator.share({
+                   title: 'Flexigo Office Location',
+                   text: 'Visit Flexigo Office:',
+                   url: url,
+                 }).catch(console.error);
+               } else {
+                 window.open(`https://wa.me/?text=${encodeURIComponent('Visit Flexigo Office: ' + url)}`, '_blank');
+               }
+             }}
+           >
+              Share Office Location
+           </NeonButton>
+           <NeonButton variant="outline" size="lg" className="w-full">
+              Contact Center
+           </NeonButton>
+        </div>
     </PageWrapper>
   );
 }

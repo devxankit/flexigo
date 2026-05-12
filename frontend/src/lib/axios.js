@@ -12,20 +12,27 @@ api.interceptors.request.use(
   (config) => {
     // Try to get token from franchise or rider auth stores in localStorage
     const franchiseAuth = localStorage.getItem('franchise-auth');
-    if (franchiseAuth) {
+    if (franchiseAuth && franchiseAuth !== 'undefined') {
       const { state } = JSON.parse(franchiseAuth);
-      if (state.token) {
+      if (state.token && state.token !== 'undefined' && state.token !== 'null') {
         config.headers.Authorization = `Bearer ${state.token}`;
         return config;
       }
     }
 
     const riderAuth = localStorage.getItem('rider-auth');
-    if (riderAuth) {
+    if (riderAuth && riderAuth !== 'undefined') {
       const { state } = JSON.parse(riderAuth);
-      if (state.token) {
+      if (state.token && state.token !== 'undefined' && state.token !== 'null') {
         config.headers.Authorization = `Bearer ${state.token}`;
+        return config;
       }
+    }
+
+    // NEW: Add Admin Token
+    const adminToken = localStorage.getItem('admin_token');
+    if (adminToken && adminToken !== 'undefined' && adminToken !== 'null') {
+      config.headers.Authorization = `Bearer ${adminToken}`;
     }
     return config;
   },

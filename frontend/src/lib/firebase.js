@@ -28,7 +28,12 @@ export const requestForToken = async () => {
       console.log('❌ No registration token available. Request permission to generate one.');
     }
   } catch (err) {
-    console.log('❌ An error occurred while retrieving token:', err);
+    if (err.code === 'messaging/permission-blocked') {
+      console.warn('⚠️ Push notifications are blocked by the user.');
+    } else {
+      console.error('❌ FCM Token retrieval error:', err);
+    }
+    return null;
   }
 };
 

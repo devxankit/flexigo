@@ -28,13 +28,30 @@ import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function KycOnboardingPage() {
   const { kycRecords, fetchKycRecords, updateKycStatus, assignVehicle } = useAdminDataStore();
-  const [activeTab, setActiveTab] = useState('all');
-  const [selectedRecord, setSelectedRecord] = useState(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('kyc_active_tab') || 'all');
+  const [selectedRecord, setSelectedRecord] = useState(() => {
+    const saved = localStorage.getItem('kyc_selected_record');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(() => localStorage.getItem('kyc_modal_open') === 'true');
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [assignmentData, setAssignmentData] = useState({ vehiclePlate: '', riderPhone: '', riderName: '' });
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(() => localStorage.getItem('kyc_search_query') || '');
   const [activeFilters, setActiveFilters] = useState({ range: 'Last 7 Days' });
+
+  React.useEffect(() => {
+    localStorage.setItem('kyc_active_tab', activeTab);
+  }, [activeTab]);
+
+  React.useEffect(() => {
+    localStorage.setItem('kyc_search_query', searchQuery);
+  }, [searchQuery]);
+
+  React.useEffect(() => {
+    localStorage.setItem('kyc_modal_open', isDetailModalOpen);
+    if (selectedRecord) localStorage.setItem('kyc_selected_record', JSON.stringify(selectedRecord));
+    else localStorage.removeItem('kyc_selected_record');
+  }, [isDetailModalOpen, selectedRecord]);
 
   React.useEffect(() => {
     fetchKycRecords();

@@ -42,6 +42,7 @@ const VehicleSchema = new mongoose.Schema({
     default: 100,
   },
   rcUrl: String,
+  images: [String],
   maintenanceLogs: [MaintenanceLogSchema],
   franchise: {
     type: mongoose.Schema.Types.ObjectId,
