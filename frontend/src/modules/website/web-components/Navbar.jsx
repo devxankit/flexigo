@@ -50,7 +50,6 @@ const Navbar = () => {
   ];
 
   const companyLinks = [
-    { name: 'About Us', path: '/about' },
     { name: 'Careers', path: '/careers' },
     { name: 'Press & Media', path: '/press' },
     { name: 'Sustainability', path: '/sustainability' },
