@@ -338,8 +338,17 @@ export default function FranchiseOnboarding() {
                                       INITIALIZE_SESSION <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                                    </button>
                                    <button 
+                                      type="button"
+                                      onClick={handleSendOTP}
+                                      disabled={isSubmitting}
+                                      className="w-full py-1 text-[7.5px] font-black text-emerald-500 hover:text-emerald-400 uppercase tracking-widest italic transition-colors mt-2"
+                                   >
+                                      RESEND_OTP
+                                   </button>
+                                   <button 
+                                      type="button"
                                       onClick={() => { setOtpSent(false); setOtp(''); }}
-                                      className="w-full py-2 text-[7px] font-black text-slate-700 hover:text-white uppercase tracking-widest italic transition-colors"
+                                      className="w-full py-1 text-[7px] font-black text-slate-700 hover:text-white uppercase tracking-widest italic transition-colors"
                                    >
                                       USE_DIFFERENT_NUMBER
                                    </button>
@@ -408,14 +417,25 @@ export default function FranchiseOnboarding() {
                                        />
                                      </div>
                                      <button 
-                                       type="button"
-                                       onClick={handleEkycVerifyOTP}
-                                       disabled={ekycOtp.length !== 6 || ekycLoading}
-                                       className="px-4 bg-emerald-600 hover:bg-emerald-500 text-white text-[7px] font-black uppercase rounded-xl transition-all disabled:opacity-30 italic shadow-xl"
-                                     >
-                                       {ekycLoading ? '...' : 'CONFIRM'}
-                                     </button>
+                                        type="button"
+                                        onClick={handleEkycVerifyOTP}
+                                        disabled={ekycOtp.length !== 6 || ekycLoading}
+                                        className="px-4 bg-emerald-600 hover:bg-emerald-500 text-white text-[7px] font-black uppercase rounded-xl transition-all disabled:opacity-30 italic shadow-xl"
+                                      >
+                                        {ekycLoading ? '...' : 'CONFIRM'}
+                                      </button>
                                   </motion.div>
+                                )}
+
+                                {ekycOtpSent && !isAadhaarVerified && (
+                                   <button 
+                                      type="button"
+                                      onClick={handleEkycGenerateOTP}
+                                      disabled={ekycLoading}
+                                      className="text-[7px] font-black text-emerald-500 hover:text-emerald-400 uppercase tracking-widest italic mt-2 ml-1"
+                                   >
+                                      RESEND_AADHAAR_OTP
+                                   </button>
                                 )}
                              </div>
                              <div className="space-y-1.5">

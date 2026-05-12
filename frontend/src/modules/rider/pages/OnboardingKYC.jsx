@@ -361,6 +361,19 @@ export default function OnboardingKYC() {
                   >
                     {ekycLoading ? 'Wait...' : otpSent ? 'Verify OTP' : 'Send OTP'}
                   </NeonButton>
+                  
+                  {otpSent && (
+                    <button
+                      type="button"
+                      onClick={handleSendAadhaarOTP}
+                      disabled={ekycLoading}
+                      className={`w-full text-center text-[10px] font-black uppercase tracking-widest mt-2 transition-colors ${
+                        isDark ? 'text-flexigo-teal hover:text-white' : 'text-emerald-600 hover:text-emerald-800'
+                      }`}
+                    >
+                      Resend Aadhaar OTP
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="bg-[#39FF14]/10 border-2 border-[#39FF14] rounded-xl p-4 flex items-center gap-4">

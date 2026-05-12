@@ -48,10 +48,17 @@ export default function AuthOTP() {
     }).catch(err => console.log('failed: ', err));
   }, []);
 
-  const handleResend = () => {
-    setResent(true);
-    setOtp('');
-    setTimeout(() => setResent(false), 3000);
+  const handleResend = async () => {
+    setLoading(true);
+    const result = await useAuthStore.getState().sendOTP(phone);
+    setLoading(false);
+    if (result.success) {
+      setResent(true);
+      setOtp('');
+      setTimeout(() => setResent(false), 3000);
+    } else {
+      setError(result.message);
+    }
   };
 
   return (
