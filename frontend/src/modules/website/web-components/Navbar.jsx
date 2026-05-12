@@ -25,6 +25,18 @@ const Navbar = () => {
     }
   }, [mobileMenuOpen]);
 
+  // Lock body scroll when mobile hamburger is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
+
   const navLinks = [
     { name: 'Features', href: '#features' },
     { name: 'How It Works', href: '#how-it-works' },
@@ -35,9 +47,6 @@ const Navbar = () => {
   const productLinks = [
     { name: 'Rider App', path: '/rider-app' },
     { name: 'Franchise Panel', path: '/franchise-panel' },
-    { name: 'Admin Dashboard', path: '/admin-dashboard' },
-    { name: 'Vehicle Catalog', path: '/vehicle-catalog' },
-    { name: 'Pricing Plans', path: '/pricing-plans' },
   ];
 
   const companyLinks = [
@@ -130,6 +139,7 @@ const Navbar = () => {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             className="absolute top-0 left-0 w-full bg-white/95 backdrop-blur-xl shadow-2xl border-b border-slate-100 overflow-y-auto max-h-[85vh] md:hidden z-50 pt-24 pb-10"
+            data-lenis-prevent
           >
             <div className="flex flex-col gap-5 px-6">
               {navLinks.map((link, i) => {
