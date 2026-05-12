@@ -46,9 +46,6 @@ const CtaSection = () => {
                   Download App
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
-               <button className="w-full sm:w-auto px-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-full font-medium text-lg transition-all duration-300 backdrop-blur-md border border-white/10 hover:border-white/30 hidden sm:block">
-                 Talk to Sales
-               </button>
              </div>
           </div>
         </motion.div>

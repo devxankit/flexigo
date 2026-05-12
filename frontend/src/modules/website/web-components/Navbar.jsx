@@ -28,8 +28,8 @@ const Navbar = () => {
   const navLinks = [
     { name: 'Features', href: '#features' },
     { name: 'How It Works', href: '#how-it-works' },
-    { name: 'Plans', href: '#plans' },
-    { name: 'Ecosystem', href: '#ecosystem' },
+    { name: 'Plans', href: '/pricing-plans' },
+    { name: 'About Us', href: '/about' },
   ];
 
   const productLinks = [
@@ -57,8 +57,8 @@ const Navbar = () => {
       className={cn(
         'fixed top-0 w-full z-50 transition-all duration-300 pointer-events-auto',
         scrolled
-          ? 'bg-flexigo-bg/80 backdrop-blur-md shadow-sm pt-2 pb-5'
-          : 'bg-transparent pt-3 pb-8'
+          ? 'bg-flexigo-bg/80 backdrop-blur-md shadow-sm pt-2 pb-5 md:pt-4 md:pb-7'
+          : 'bg-transparent pt-3 pb-8 md:pt-5 md:pb-10'
       )}
     >
       <div className="w-full max-w-[1440px] mx-auto px-2 md:px-6 flex justify-between items-center">
@@ -69,9 +69,9 @@ const Navbar = () => {
             alt="FlexiGo Logo" 
             width="192"
             height="192"
-            className="w-40 h-40 md:w-48 md:h-48 absolute top-1/2 -translate-y-[48%] md:-translate-y-[44%] -left-10 md:-left-6 object-contain transition-transform duration-300 group-hover:scale-105 z-10" 
+            className="w-40 h-40 md:w-56 md:h-56 absolute top-1/2 -translate-y-[48%] md:-translate-y-[44%] -left-10 md:-left-12 object-contain transition-transform duration-300 group-hover:scale-105 z-10" 
           />
-          <div className="w-20 md:w-32 h-10 md:h-12" />
+          <div className="w-20 md:w-30 h-10 md:h-12" />
           <span className={cn(
             "text-2xl font-heading font-black tracking-tighter transition-colors mt-0.5 whitespace-nowrap uppercase",
             scrolled ? "text-flexigo-primary" : "text-black"
@@ -82,35 +82,32 @@ const Navbar = () => {
 
         {/* Desktop Links */}
         <div className="hidden lg:flex items-center gap-8">
-          {navLinks.map((link) => (
-            <a
-              key={link.name}
-              href={link.href}
-              className={cn(
-                "text-sm font-medium transition-colors",
-                scrolled 
-                  ? "text-flexigo-teal hover:text-flexigo-primary" 
-                  : "text-black hover:text-flexigo-teal"
-              )}
-            >
-              {link.name}
-            </a>
-          ))}
-        </div>
-
-        {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-4">
-          <button 
-            className={cn(
+          {navLinks.map((link) => {
+            const isRoute = link.href.startsWith('/');
+            const className = cn(
               "text-sm font-medium transition-colors",
               scrolled 
                 ? "text-flexigo-teal hover:text-flexigo-primary" 
                 : "text-black hover:text-flexigo-teal"
-            )}
-          >
+            );
+            return isRoute ? (
+              <Link key={link.name} to={link.href} className={className}>
+                {link.name}
+              </Link>
+            ) : (
+              <a key={link.name} href={link.href} className={className}>
+                {link.name}
+              </a>
+            );
+          })}
+        </div>
+
+        {/* Invisible spacer to keep desktop links perfectly aligned in their original position */}
+        <div className="hidden md:flex items-center gap-4 invisible pointer-events-none select-none" aria-hidden="true">
+          <button className="text-sm font-medium">
             Log In
           </button>
-          <button className="bg-flexigo-primary hover:bg-flexigo-teal text-white px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 hover:shadow-lg hover:shadow-flexigo-teal/20 active:scale-95">
+          <button className="px-5 py-2.5 rounded-full text-sm font-medium">
             Get Started
           </button>
         </div>
@@ -135,19 +132,36 @@ const Navbar = () => {
             className="absolute top-0 left-0 w-full bg-white/95 backdrop-blur-xl shadow-2xl border-b border-slate-100 overflow-y-auto max-h-[85vh] md:hidden z-50 pt-24 pb-10"
           >
             <div className="flex flex-col gap-5 px-6">
-              {navLinks.map((link, i) => (
-                <motion.a
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  key={link.name}
-                  href={link.href}
-                  className="text-xl font-heading font-bold text-slate-800 hover:text-flexigo-teal transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {link.name}
-                </motion.a>
-              ))}
+              {navLinks.map((link, i) => {
+                const isRoute = link.href.startsWith('/');
+                const className = "text-xl font-heading font-bold text-slate-800 hover:text-flexigo-teal transition-colors block";
+                return (
+                  <motion.div
+                    key={link.name}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                  >
+                    {isRoute ? (
+                      <Link
+                        to={link.href}
+                        className={className}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {link.name}
+                      </Link>
+                    ) : (
+                      <a
+                        href={link.href}
+                        className={className}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {link.name}
+                      </a>
+                    )}
+                  </motion.div>
+                );
+              })}
 
               {/* Collapsible Footer Sections */}
               <div className="h-px bg-slate-100 my-1" />
@@ -298,25 +312,7 @@ const Navbar = () => {
                 </AnimatePresence>
               </div>
 
-              <div className="h-px bg-slate-100 my-1" />
-              <div className="flex flex-col gap-3">
-                <motion.button 
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="w-full py-3.5 text-slate-700 font-bold border-2 border-slate-100 rounded-xl hover:bg-slate-50 transition-colors"
-                >
-                  Log In
-                </motion.button>
-                <motion.button 
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="w-full py-3.5 bg-flexigo-primary text-white font-bold rounded-xl shadow-xl shadow-flexigo-primary/20"
-                >
-                  Get Started
-                </motion.button>
-              </div>
+
             </div>
           </motion.div>
         )}

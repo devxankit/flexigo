@@ -35,12 +35,12 @@ const FranchisePanelPage = () => {
             Become a local logistics entrepreneur. Host a FlexiGo battery swap and maintenance hub and tap into a recurring revenue stream.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
+            {/* <Link
               to="/franchise/login"
               className="px-8 py-4 bg-flexigo-teal text-white rounded-full font-bold text-base hover:bg-flexigo-teal/90 transition-all duration-300 flex items-center justify-center gap-2 shadow-xl shadow-flexigo-teal/20"
             >
               <LogIn className="w-5 h-5" /> Open Franchise Panel
-            </Link>
+            </Link> */}
             <Link
               to="/contact"
               className="px-8 py-4 bg-white/10 border border-white/20 text-white rounded-full font-bold text-base hover:bg-white/20 transition-all duration-300 flex items-center justify-center gap-2"

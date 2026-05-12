@@ -58,14 +58,14 @@ const HeroSection = () => {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 w-full max-w-[280px] sm:max-w-none mx-auto lg:mx-0"
           >
-            <button className="w-full sm:w-auto px-8 py-4 bg-flexigo-primary hover:bg-flexigo-teal text-white rounded-full font-bold text-base transition-all duration-300 flex items-center justify-center gap-2 group shadow-xl shadow-flexigo-primary/20">
+            {/* <button className="w-full sm:w-auto px-8 py-4 bg-flexigo-primary hover:bg-flexigo-teal text-white rounded-full font-bold text-base transition-all duration-300 flex items-center justify-center gap-2 group shadow-xl shadow-flexigo-primary/20">
               Get Started
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
             <button className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-slate-50 text-flexigo-primary border-2 border-slate-100 rounded-full font-bold text-base transition-all flex items-center justify-center gap-2 group">
               Explore Plans
               <ChevronRight className="w-5 h-5" />
-            </button>
+            </button> */}
           </motion.div>
         </motion.div>
 

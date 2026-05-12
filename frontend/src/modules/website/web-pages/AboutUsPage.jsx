@@ -44,11 +44,11 @@ const values = [
 ];
 
 const milestones = [
-  { year: '2023', title: 'Founded in Pune', desc: 'FlexiGo E-Mobility was incorporated in Baner, Pune with a vision to democratise EV access for delivery professionals.' },
-  { year: '2023', title: 'First Fleet Deployed', desc: 'Our first batch of 50 smart e-scooters hit the roads in Pune, partnering with leading delivery aggregators.' },
-  { year: '2024', title: '200+ Vehicles & Riders', desc: 'Rapid growth to 200+ active vehicles and 200+ registered riders across 2 cities — Pune and beyond.' },
-  { year: '2024', title: 'Franchise Network Launch', desc: 'Launched our franchise model, enabling local operators to manage FlexiGo hubs and grow with us.' },
-  { year: '2025', title: 'Full Tech Platform', desc: 'Released our complete platform — Rider App, Franchise Panel, and Admin Dashboard — making fleet ops fully digital.' },
+  { year: '2026', title: 'Founded in Pune', desc: 'FlexiGo E-Mobility was incorporated in Baner, Pune with a vision to democratise EV access for delivery professionals.' },
+  { year: '2026', title: 'First Fleet Deployed', desc: 'Our first batch of 50 smart e-scooters hit the roads in Pune, partnering with leading delivery aggregators.' },
+  { year: '2026', title: '200+ Vehicles & Riders', desc: 'Rapid growth to 200+ active vehicles and 200+ registered riders across 2 cities — Pune and beyond.' },
+  { year: '2026', title: 'Franchise Network Launch', desc: 'Launched our franchise model, enabling local operators to manage FlexiGo hubs and grow with us.' },
+  { year: 'May 2026', title: 'Full Tech Platform', desc: 'Released our complete platform — Rider App, Franchise Panel, and Admin Dashboard — making fleet ops fully digital.' },
 ];
 
 const AboutUsPage = () => {
@@ -118,7 +118,7 @@ const AboutUsPage = () => {
                 <span className="text-slate-400">Partners Own Their Ride</span>
               </h2>
               <p className="text-slate-600 text-lg leading-relaxed mb-6">
-                Founded in 2023 and headquartered at Krushna Avenue, Baner, Pune, FlexiGo E-Mobility was born out of a simple observation:
+                Founded in 2026 and headquartered at Krushna Avenue, Baner, Pune, FlexiGo E-Mobility was born out of a simple observation:
                 delivery partners were trapped paying high EMIs on depreciating petrol bikes while bearing all the risk of ownership.
               </p>
               <p className="text-slate-600 text-lg leading-relaxed mb-8">
@@ -230,34 +230,6 @@ const AboutUsPage = () => {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 bg-flexigo-dark relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-flexigo-primary to-flexigo-dark opacity-90" />
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-flexigo-teal/10 rounded-full blur-[100px]" />
-        <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
-          <h2 className="text-3xl md:text-5xl font-black font-heading text-white tracking-tighter mb-6">
-            Ready to Join the <span className="text-flexigo-teal">FlexiGo</span> Network?
-          </h2>
-          <p className="text-slate-300 text-lg mb-10 leading-relaxed">
-            Whether you're a delivery partner looking for your first EV subscription or an entrepreneur interested in a franchise, we'd love to talk.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/"
-              className="px-8 py-4 bg-flexigo-teal text-white rounded-full font-bold text-base hover:bg-flexigo-teal/90 transition-all duration-300 shadow-xl shadow-flexigo-teal/30"
-            >
-              Get Started
-            </Link>
-            <a
-              href="mailto:support@flexigoemobility.com"
-              className="px-8 py-4 bg-white/10 border border-white/20 text-white rounded-full font-bold text-base hover:bg-white/20 transition-all duration-300 flex items-center justify-center gap-2"
-            >
-              <Mail className="w-5 h-5" />
-              Contact Us
-            </a>
-          </div>
-        </div>
-      </section>
 
       {/* Footer */}
       <div className="bg-flexigo-dark border-t border-white/5 py-8 text-center">

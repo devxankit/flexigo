@@ -8,13 +8,9 @@ const FooterSection = () => {
   const productLinks = [
     { name: 'Rider App', path: '/rider-app' },
     { name: 'Franchise Panel', path: '/franchise-panel' },
-    { name: 'Admin Dashboard', path: '/admin-dashboard' },
-    { name: 'Vehicle Catalog', path: '/vehicle-catalog' },
-    { name: 'Pricing Plans', path: '/pricing-plans' },
   ];
 
   const companyLinks = [
-    { name: 'About Us', path: '/about' },
     { name: 'Careers', path: '/careers' },
     { name: 'Press & Media', path: '/press' },
     { name: 'Sustainability', path: '/sustainability' },
