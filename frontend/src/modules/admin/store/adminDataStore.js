@@ -218,8 +218,10 @@ export const useAdminDataStore = create((set, get) => ({
       const res = await api.patch(`/admin/kyc/${id}`, { status });
       if (res.data.success) {
         set(state => ({
-          kycRecords: state.kycRecords.map(r => r.id === id ? { ...r, status } : r)
+          kycRecords: state.kycRecords.map(r => (r.id === id || r._id === id) ? { ...r, status } : r)
         }));
+        // Re-fetch to ensure all modules are in sync
+        get().fetchKycRecords();
       }
     } catch (err) {
       console.error("Failed to update KYC status:", err);

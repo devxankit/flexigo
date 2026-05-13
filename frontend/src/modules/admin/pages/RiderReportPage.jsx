@@ -109,7 +109,7 @@ export default function RiderReportPage() {
             <table className="w-full text-left">
                <thead>
                   <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
-                     {['Rider Details', 'Vehicle Info', 'Active Plan', 'Total Payments', 'Wallet', 'Status'].map((header) => (
+                     {['Rider Details', 'Vehicle Info', 'Active Plan', 'Distance (KM)', 'Total Payments', 'Wallet', 'Status'].map((header) => (
                         <th key={header} className="py-3 px-4 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest whitespace-nowrap">{header}</th>
                      ))}
                   </tr>
@@ -144,6 +144,12 @@ export default function RiderReportPage() {
                         </td>
                         <td className="py-3 px-4">
                            <div className="flex flex-col">
+                              <span className="text-[11px] font-black text-blue-500">{r.totalDistance?.toFixed(2) || '0.00'} KM</span>
+                              <span className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Total Drive</span>
+                           </div>
+                        </td>
+                        <td className="py-3 px-4">
+                           <div className="flex flex-col">
                               <span className="text-[11px] font-black text-emerald-500">₹{r.totalPayments.toLocaleString()}</span>
                               <span className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Total Successful</span>
                            </div>
@@ -156,7 +162,7 @@ export default function RiderReportPage() {
                         <td className="py-3 px-4">
                            <div className={`inline-flex px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border ${
                               ['active', 'approved'].includes(r.status) ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 
-                              r.status === 'suspended' ? 'bg-rose-500/10 text-rose-500 border-rose-500/10' :
+                              ['suspended', 'rejected'].includes(r.status) ? 'bg-rose-500/10 text-rose-500 border-rose-500/10' :
                               'bg-amber-500/10 text-amber-500 border-amber-500/10'
                            }`}>
                               {r.status}

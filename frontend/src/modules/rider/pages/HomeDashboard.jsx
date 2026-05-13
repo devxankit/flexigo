@@ -123,31 +123,7 @@ export default function HomeDashboard() {
            </div>
         </div>
 
-        {/* Search Bar Professional */}
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className={`backdrop-blur-3xl border transition-all duration-500 rounded-2xl p-4 flex items-center gap-4 shadow-xl relative group ${
-            isDark ? 'bg-slate-900/60 border-white/10 shadow-black/20' : 'bg-white border-slate-200 shadow-slate-200/50'
-          }`}
-        >
-          <div className="absolute inset-0 bg-flexigo-teal/[0.03] opacity-0 group-focus-within:opacity-100 transition-opacity rounded-2xl pointer-events-none" />
-          <svg viewBox="0 0 24 24" fill="none" stroke={isDark ? '#39FF14' : '#0F766E'} strokeWidth="3" className="w-5 h-5 opacity-70">
-            <circle cx="11" cy="11" r="8" />
-            <path d="M21 21l-4.35-4.35" />
-          </svg>
-          <input 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search for a battery franchise..." 
-            className={`bg-transparent border-none outline-none text-sm w-full font-bold placeholder:text-slate-500 transition-colors ${
-              isDark ? 'text-white' : 'text-slate-900'
-            }`}
-          />
-          <div className="w-px h-6 bg-slate-500/20" />
-          <svg className="w-5 h-5 text-slate-400 ml-1 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
-        </motion.div>
+
 
         {/* Quick Stats: Wallet & Subscription */}
         <div className="grid grid-cols-2 gap-4">
@@ -238,74 +214,7 @@ export default function HomeDashboard() {
             </GlassCard>
           </motion.div>
         )}
-        {/* Hub List Section */}
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col">
-            <h2 className={`text-xl font-heading font-black tracking-tight transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>Nearest Franchises</h2>
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5 truncate max-w-[200px]">Near: {currentAddress}</p>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 gap-8 pb-12">
-          {filteredHubs.map((hub, i) => (
-            <motion.div
-              key={hub.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-50px' }}
-              transition={{ delay: i * 0.05 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => navigate('/rider/hub/' + hub.id)}
-              className="cursor-pointer"
-            >
-              <GlassCard className="p-5 flex items-center gap-5 group hover:border-flexigo-teal/40 transition-all duration-500 hover:shadow-2xl">
-                <div 
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center border transition-all duration-700 shadow-lg group-hover:-rotate-6 shrink-0 relative overflow-hidden"
-                  style={{ 
-                    backgroundColor: isDark ? `${hub.color}22` : `${hub.color}15`, 
-                    borderColor: isDark ? `${hub.color}44` : `${hub.color}33`,
-                    boxShadow: isDark ? `0 8px 24px -12px ${hub.color}` : `0 8px 24px -10px ${hub.color}` 
-                  }}
-                >
-                  <img 
-                    src={logo} 
-                    alt="Flexigo" 
-                    className={`absolute w-full h-full object-contain transition-all duration-700 ${
-                      isDark ? 'brightness-0 invert opacity-40 group-hover:opacity-70' : 'brightness-0 opacity-80 group-hover:opacity-100'
-                    } scale-[1.45]`} 
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-transparent to-white/5" />
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <h3 className={`font-heading font-black tracking-tight truncate transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>{hub.name}</h3>
-                  <div className="flex items-center gap-2.5 mt-1">
-                    <div className={`flex items-center gap-1 transition-colors ${isDark ? 'text-slate-400' : 'text-slate-500 opacity-60'}`}>
-                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="3" /></svg>
-                      <span className="text-[10px] font-black uppercase tracking-widest">{hub.distance}</span>
-                    </div>
-                    <span className="w-1 h-1 rounded-full bg-slate-200" />
-                    <span className={`text-[10px] font-black uppercase tracking-widest`} style={{ color: hub.color }}>
-                      {hub.status}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col items-end gap-1">
-                  <div className={`text-xs font-black p-1 px-2.5 rounded-lg border ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-100 text-slate-800'}`}>
-                    {hub.batteries}
-                  </div>
-                  <span className="text-[8px] font-black text-gray-400/80 uppercase tracking-tighter">Batteries</span>
-                </div>
-              </GlassCard>
-            </motion.div>
-          ))}
-          
-          <div className="text-center py-10 opacity-30">
-            <div className="inline-block w-8 h-1 bg-flexigo-teal/40 rounded-full mb-3" />
-            <p className="text-[9px] font-black uppercase tracking-[0.4em]">End of results</p>
-          </div>
-        </div>
       </div>
     </PageWrapper>
 

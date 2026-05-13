@@ -44,7 +44,7 @@ const RiderSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['approved', 'active', 'paused', 'pending', 'completed', 'inactive', 'suspended'],
+    enum: ['approved', 'active', 'paused', 'pending', 'completed', 'inactive', 'suspended', 'rejected'],
     default: 'pending',
   },
   subscriptionPlan: {
@@ -76,6 +76,10 @@ const RiderSchema = new mongoose.Schema({
     updatedAt: Date
   },
   currentSpeed: {
+    type: Number,
+    default: 0
+  },
+  totalDistance: {
     type: Number,
     default: 0
   },

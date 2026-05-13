@@ -6,27 +6,64 @@ import { NeonButton } from '../components/NeonButton';
 import { useSubscriptionStore } from '../store/subscriptionStore';
 import { useThemeStore } from '../store/themeStore';
 import { useAuthStore } from '../store/authStore';
+import { useWalletStore } from '../store/walletStore';
 import api from '../../../lib/axios';
 
 export default function SubscriptionPlans() {
   const { plans, selectedPlan, selectPlan, activePlan, activatePlan, fetchPlans } = useSubscriptionStore();
   const { user } = useAuthStore();
+  const { balance, fetchWalletData } = useWalletStore();
 
   useEffect(() => {
     fetchPlans();
-  }, []);
+    if (user?.phone) fetchWalletData(user.phone);
+  }, [user]);
+
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
 
   const [isPaying, setIsPaying] = useState(false);
   const [showRazorpay, setShowRazorpay] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState('UPI');
+  const [selectedMethod, setSelectedMethod] = useState('WALLET');
 
-  const handleUpdatePlan = async () => {
+  const handleUpdatePlan = () => {
     if (!selectedPlan || !user) return;
-    
     setIsPaying(true);
+  };
+
+  const handleWalletPayment = async () => {
+    if (balance < selectedPlan.price) {
+      alert("Insufficient wallet balance! Please add money to your wallet.");
+      return;
+    }
+
+    try {
+      const res = await api.post('/rider/payments/wallet', {
+        planId: selectedPlan.id,
+        phone: user.phone
+      });
+
+      if (res.data.success) {
+        setPaymentSuccess(true);
+        setTimeout(() => {
+          activatePlan(selectedPlan);
+          setIsPaying(false);
+          setPaymentSuccess(false);
+          selectPlan(null);
+          window.location.reload();
+        }, 2000);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Wallet payment failed!");
+    }
+  };
+
+  const handleOpenRazorpay = async () => {
+    if (selectedMethod === 'WALLET') {
+      return handleWalletPayment();
+    }
+
     try {
       // 1. Create Order on Backend
       const orderRes = await api.post('/rider/payments/create-order', {
@@ -62,12 +99,11 @@ export default function SubscriptionPlans() {
                 setIsPaying(false);
                 setPaymentSuccess(false);
                 selectPlan(null);
-                window.location.reload(); // Redirect/refresh safely on the same page
+                window.location.reload(); 
               }, 2000);
             }
           } catch (err) {
             alert("Payment Verification Failed!");
-            setIsPaying(false);
           }
         },
         prefill: {
@@ -78,7 +114,7 @@ export default function SubscriptionPlans() {
           color: "#39FF14"
         },
         modal: {
-          ondismiss: () => setIsPaying(false)
+          ondismiss: () => {}
         }
       };
 
@@ -87,14 +123,16 @@ export default function SubscriptionPlans() {
     } catch (err) {
       console.error(err);
       alert("Payment Initiation Failed!");
-      setIsPaying(false);
     }
   };
 
+  const handleFinalPayment = () => {
+    handleOpenRazorpay();
+  };
+
   const paymentMethods = [
-    { id: 'UPI', label: 'UPI Transfer', sub: 'Instant Verification', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg> },
-    { id: 'CARD', label: 'Credit / Debit Card', sub: 'Secure Gateway', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg> },
-    { id: 'BANK', label: 'Net Banking', sub: 'All Indian Banks', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zm-4.5-9L2 6v2h19V6l-9.5-5z"/></svg> },
+    { id: 'WALLET', label: 'Flexigo Wallet', sub: `Balance: ₹${balance}`, icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M21 18c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h9v1zm-9-10v6h9V8h-9zM3 13V6c0-.55.45-1 1-1h16c.55 0 1 .45 1 1v2h-9c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h9v2c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1v-2z"/></svg> },
+    { id: 'RAZORPAY', label: 'Razorpay UPI', sub: 'Instant Online Payment', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg> },
   ];
 
   return (

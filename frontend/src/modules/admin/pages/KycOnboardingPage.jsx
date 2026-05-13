@@ -372,29 +372,18 @@ export default function KycOnboardingPage() {
                   </div>
 
                   <div className="flex gap-2.5 pt-6 border-t border-[var(--border-subtle)] relative z-10">
-                     {selectedRecord.status === 'pending' ? (
-                        <>
-                           <button 
-                              onClick={() => { handleAction(selectedRecord._id || selectedRecord.id, 'approved'); setIsDetailModalOpen(false); }}
-                              className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-950/20 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2"
-                           >
-                              <Zap size={14} fill="currentColor" /> Authorize Subscriber
-                           </button>
-                           <button 
-                              onClick={() => { handleAction(selectedRecord._id || selectedRecord.id, 'rejected'); setIsDetailModalOpen(false); }}
-                              className="px-5 py-3 bg-rose-600/10 text-rose-500 border border-rose-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-600/20 transition-all active:scale-95 italic"
-                           >
-                              Decline
-                           </button>
-                        </>
-                     ) : (
-                        <button 
-                           onClick={() => setIsDetailModalOpen(false)}
-                           className="w-full py-2.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[8px] font-black uppercase tracking-widest text-[var(--text-primary)] hover:border-emerald-500/30 transition-all font-black italic"
-                        >
-                           Close Registry Payload
-                        </button>
-                     )}
+                     <button 
+                        onClick={() => { handleAction(selectedRecord._id || selectedRecord.id, 'approved'); setIsDetailModalOpen(false); }}
+                        className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-950/20 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+                     >
+                        <Zap size={14} fill="currentColor" /> {selectedRecord.status === 'approved' ? 'Already Authorized' : 'Authorize Subscriber'}
+                     </button>
+                     <button 
+                        onClick={() => { handleAction(selectedRecord._id || selectedRecord.id, 'rejected'); setIsDetailModalOpen(false); }}
+                        className="px-5 py-3 bg-rose-600/10 text-rose-500 border border-rose-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-600/20 transition-all active:scale-95 italic"
+                     >
+                        {selectedRecord.status === 'rejected' ? 'Already Declined' : 'Decline'}
+                     </button>
                   </div>
                </motion.div>
             </div>

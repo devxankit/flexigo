@@ -12,9 +12,11 @@ import {
   getRiderPlans,
   createPaymentOrder,
   verifyPayment,
+  payViaWallet,
   generateAadhaarOTP,
   verifyAadhaarOTP,
-  saveFcmToken
+  saveFcmToken,
+  updateRiderLocation
 } from './riderController.js';
 import { protectFranchise, protectRider } from '../../shared/middleware/authMiddleware.js';
 
@@ -35,5 +37,7 @@ router.get('/my-vehicle/:phone', getMyVehicle);
 router.get('/plans', getRiderPlans);
 router.post('/payments/create-order', createPaymentOrder);
 router.post('/payments/verify', verifyPayment);
+router.post('/payments/wallet', payViaWallet);
+router.patch('/location', protectRider, updateRiderLocation);
 
 export default router;
