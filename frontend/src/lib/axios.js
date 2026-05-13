@@ -10,7 +10,19 @@ const api = axios.create({
 // Add a request interceptor to include the JWT token
 api.interceptors.request.use(
   (config) => {
-    // Try to get token from franchise or rider auth stores in localStorage
+    // 1. Check URL to decide token priority
+    const isAdminRoute = config.url?.includes('/admin');
+
+    // If it's an admin route, prioritize admin_token
+    if (isAdminRoute) {
+      const adminToken = localStorage.getItem('admin_token');
+      if (adminToken && adminToken !== 'undefined' && adminToken !== 'null') {
+        config.headers.Authorization = `Bearer ${adminToken}`;
+        return config;
+      }
+    }
+
+    // Try to get token from franchise or rider auth stores
     const franchiseAuth = localStorage.getItem('franchise-auth');
     if (franchiseAuth && franchiseAuth !== 'undefined') {
       const { state } = JSON.parse(franchiseAuth);
@@ -29,7 +41,7 @@ api.interceptors.request.use(
       }
     }
 
-    // NEW: Add Admin Token
+    // Fallback for admin if not already handled (for non-explicit admin routes)
     const adminToken = localStorage.getItem('admin_token');
     if (adminToken && adminToken !== 'undefined' && adminToken !== 'null') {
       config.headers.Authorization = `Bearer ${adminToken}`;

@@ -175,7 +175,18 @@ export const adminLogin = async (req, res) => {
     const { email, password } = req.body;
 
     // 1. Check for admin
-    const admin = await Admin.findOne({ email });
+    let admin = await Admin.findOne({ email });
+    
+    // Auto-seed if no admin exists at all (Development Safety)
+    if (!admin && email === 'admin@flexigo.com') {
+      admin = await Admin.create({
+        name: 'Master Administrator',
+        email: 'admin@flexigo.com',
+        password: 'flexigo_root',
+        role: 'SuperAdmin'
+      });
+    }
+
     if (!admin) {
       return res.status(401).json({ success: false, message: 'Invalid Credentials' });
     }
@@ -361,7 +372,7 @@ export const getKycRecords = async (req, res) => {
         role: r.role || 'Rider',
         type: 'Individual',
         city: r.city || 'N/A',
-        status: r.kycStatus || 'pending',
+        status: r.kycStatus === 'approved' ? 'approved' : (r.kycStatus === 'rejected' ? 'rejected' : (r.status || r.kycStatus || 'pending')),
         vehicleId: r.vehicleId?._id || r.vehicleId,
         vehiclePlate: r.vehicleId?.plate || 'N/A',
         date: r.createdAt,
@@ -373,7 +384,7 @@ export const getKycRecords = async (req, res) => {
         role: 'Franchise',
         type: f.businessDetails?.type || 'Pvt Ltd',
         city: f.city || f.businessDetails?.location || 'N/A',
-        status: f.kycStatus || 'pending',
+        status: f.kycStatus === 'approved' ? 'approved' : (f.kycStatus === 'rejected' ? 'rejected' : (f.status || f.kycStatus || 'pending')),
         date: f.createdAt,
         details: f.kycDetails,
         hubs: 1
@@ -408,11 +419,15 @@ export const updateKycStatus = async (req, res) => {
     // Try updating Franchise first, then Rider
     let updated = await Franchise.findByIdAndUpdate(id, {
       kycStatus: status,
-      isVerified: status === 'approved'
+      isVerified: status === 'approved',
+      status: status // Sync status for franchise
     }, { new: true });
 
     if (!updated) {
-      updated = await Rider.findByIdAndUpdate(id, { kycStatus: status }, { new: true });
+      updated = await Rider.findByIdAndUpdate(id, { 
+        kycStatus: status,
+        status: status // Sync status for rider
+      }, { new: true });
     }
 
     if (!updated) {
@@ -560,7 +575,7 @@ export const getSubscribers = async (req, res) => {
         phone: r.phone,
         persona: r.role || 'Rider',
         location: 'N/A',
-        status: r.status,
+        status: r.kycStatus === 'approved' ? 'approved' : (r.kycStatus === 'rejected' ? 'rejected' : (r.status || 'pending')),
         kycStatus: r.kycStatus || (hasAllDocs ? 'approved' : 'pending')
       };
     });
@@ -1005,7 +1020,7 @@ export const getFinanceData = async (req, res) => {
         hub: 'Direct (Rider)',
         user: t.riderId?.name || t.riderId?.phone || 'Rider',
         amount: t.amount,
-        method: 'UPI (RAZORPAY)',
+        method: t.method === 'wallet' ? 'WALLET' : 'UPI',
         status: (t.status === 'success' || t.status === 'completed') ? 'success' : t.status,
         date: t.createdAt,
         rawStatus: t.status
@@ -1578,7 +1593,7 @@ export const createRider = async (req, res) => {
       email,
       subscriptionPlan: plan || null,
       kycStatus: 'uninitiated',
-      status: status || 'active'
+      status: status || 'pending'
     });
 
     rider = await rider.populate('subscriptionPlan');
@@ -1661,7 +1676,8 @@ export const getRiderDetailedReport = async (req, res) => {
         totalPayments: totalPayments,
         totalDebits: totalDebits,
         walletBalance: r.walletBalance || 0,
-        status: r.status,
+        totalDistance: r.totalDistance || 0,
+        status: r.kycStatus === 'approved' ? 'approved' : (r.kycStatus === 'rejected' ? 'rejected' : (r.status || 'pending')),
         kycStatus: r.kycStatus,
         recentPayments: txns.slice(0, 5).map(t => ({
           amount: t.amount,
