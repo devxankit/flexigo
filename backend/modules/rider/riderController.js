@@ -12,6 +12,7 @@ import cloudinary from '../../config/cloudinary.js';
 import Geofence from '../admin/geofenceModel.js';
 import { sendPushNotification } from '../../shared/utils/firebase.js';
 import AuditLog from '../admin/auditLogModel.js';
+import Admin from '../admin/adminModel.js';
 
 // @desc    Send OTP to Rider
 export const sendOTP = async (req, res) => {
@@ -392,4 +393,58 @@ export const updateRiderLocation = async (req, res) => {
     }
     res.status(200).json({ success: true, message: 'Location updated' });
   } catch (error) { res.status(500).json({ success: false, message: error.message }); }
+};
+// @desc    Request Vehicle Handover
+// @route   POST /api/v1/rider/handover/request
+export const requestHandover = async (req, res) => {
+  try {
+    const rider = await Rider.findById(req.rider._id);
+    if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
+
+    // 1. Send Notification to Rider
+    const riderToken = rider.fcmToken || rider.fcmTokenMobile;
+    if (riderToken) {
+      const title = 'Handover Request Sent';
+      const body = 'pls vist the office for flexigo vehicele handover';
+      await sendPushNotification(riderToken, title, body, {
+        type: 'handover_request_confirmation'
+      });
+    }
+
+    // 2. Send Notification to Admin/Franchise
+    // Find the franchise associated with this rider
+    if (rider.franchise) {
+      const franchise = await Franchise.findById(rider.franchise);
+      const frToken = franchise?.fcmToken || franchise?.fcmTokenMobile;
+      if (frToken) {
+        await sendPushNotification(frToken, 'New Handover Request', `Rider ${rider.name || rider.phone} has requested a vehicle handover.`, {
+          type: 'handover_request_admin',
+          riderId: rider._id.toString()
+        });
+      }
+    }
+
+    // Also notify SuperAdmins
+    const admins = await Admin.find({ role: 'SuperAdmin' });
+    for (const admin of admins) {
+      if (admin.fcmToken) {
+        await sendPushNotification(admin.fcmToken, 'New Handover Request', `Rider ${rider.name || rider.phone} requested handover.`, {
+          type: 'handover_request_admin',
+          riderId: rider._id.toString()
+        });
+      }
+    }
+
+    // Log the activity
+    await AuditLog.create({
+      identity: rider.phone || 'Unknown Rider',
+      actionProfile: 'HANDOVER_REQUEST',
+      objectTarget: rider._id.toString(),
+      status: 'success'
+    });
+
+    res.status(200).json({ success: true, message: 'Handover request submitted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };

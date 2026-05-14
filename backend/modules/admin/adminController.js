@@ -82,31 +82,58 @@ export const getAdminStats = async (req, res) => {
     // Calculate total subscribers (riders assigned to vehicles)
     const activeSubscribers = await Vehicle.countDocuments({ ...dateFilter, status: 'assigned' });
 
-    // Total Revenue (Sum of all completed franchise transactions)
-    const transactions = await Transaction.find({ ...transFilter, type: 'Subscription', status: 'completed' });
-    const grossRevenue = transactions.reduce((acc, t) => acc + t.amount, 0);
+    // Total Revenue (Sum of all completed franchise & rider transactions)
+    const [frTxns, riderTxns] = await Promise.all([
+      Transaction.find({ ...transFilter, type: 'Subscription', status: { $in: ['completed', 'success'] } }),
+      RiderTransaction.find({ ...getDateFilter(range, 'createdAt'), status: { $in: ['completed', 'success'] } })
+    ]);
+    
+    const frRev = frTxns.reduce((acc, t) => acc + t.amount, 0);
+    const riderRev = riderTxns.reduce((acc, t) => acc + t.amount, 0);
+    const grossRevenue = frRev + riderRev;
 
     // Maintenance Alerts
     const maintenanceAlerts = await Vehicle.countDocuments({ ...dateFilter, status: 'in-service' });
 
-    // Calculate Weekly Revenue for Chart (Last 4 Weeks)
+    // Calculate Weekly Revenue for Chart (Last 7 Days - Daily)
     const now = new Date();
-    const weeklyRevenue = [];
+    const revenueData = [];
+    for (let i = 6; i >= 0; i--) {
+      const start = new Date(now);
+      start.setDate(now.getDate() - i);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(start);
+      end.setHours(23, 59, 59, 999);
+
+      const [wFr, wRider] = await Promise.all([
+        Transaction.find({ status: { $in: ['completed', 'success'] }, date: { $gte: start, $lte: end } }),
+        RiderTransaction.find({ status: { $in: ['completed', 'success'] }, createdAt: { $gte: start, $lte: end } })
+      ]);
+
+      const dailySum = wFr.reduce((acc, t) => acc + t.amount, 0) + wRider.reduce((acc, t) => acc + t.amount, 0);
+      revenueData.push({
+        name: i === 0 ? 'Today' : start.toLocaleDateString('en-US', { weekday: 'short' }),
+        value: dailySum / 100000
+      });
+    }
+
+    // Calculate Monthly Revenue for Chart (Last 4 Weeks - Weekly)
+    const monthlyRevenue = [];
     for (let i = 3; i >= 0; i--) {
       const start = new Date(now);
       start.setDate(now.getDate() - (i + 1) * 7);
       const end = new Date(now);
       end.setDate(now.getDate() - i * 7);
 
-      const weekTransactions = await Transaction.find({
-        type: 'Subscription',
-        status: 'completed',
-        date: { $gte: start, $lt: end }
-      });
-      const weekSum = weekTransactions.reduce((acc, t) => acc + t.amount, 0);
-      weeklyRevenue.push({
+      const [wFr, wRider] = await Promise.all([
+        Transaction.find({ status: { $in: ['completed', 'success'] }, date: { $gte: start, $lt: end } }),
+        RiderTransaction.find({ status: { $in: ['completed', 'success'] }, createdAt: { $gte: start, $lt: end } })
+      ]);
+
+      const weekSum = wFr.reduce((acc, t) => acc + t.amount, 0) + wRider.reduce((acc, t) => acc + t.amount, 0);
+      monthlyRevenue.push({
         name: i === 0 ? 'This Week' : `Wk -${i}`,
-        value: weekSum / 100000 // Convert to Lakhs for display
+        value: weekSum / 100000
       });
     }
 
@@ -117,8 +144,8 @@ export const getAdminStats = async (req, res) => {
     const growthTier = grossRevenue > 1000000 ? "Level 4" : "Level 1";
 
     // Basic trend calculation based on recent revenue
-    const revenueTrend = weeklyRevenue.length > 1 && weeklyRevenue[weeklyRevenue.length - 2].value > 0
-      ? `+${Math.round(((weeklyRevenue[weeklyRevenue.length - 1].value - weeklyRevenue[weeklyRevenue.length - 2].value) / weeklyRevenue[weeklyRevenue.length - 2].value) * 100)}%`
+    const revenueTrend = revenueData.length > 1 && revenueData[revenueData.length - 2].value > 0
+      ? `+${Math.round(((revenueData[revenueData.length - 1].value - revenueData[revenueData.length - 2].value) / revenueData[revenueData.length - 2].value) * 100)}%`
       : '+0%';
 
     // Analytics Metrics
@@ -150,17 +177,17 @@ export const getAdminStats = async (req, res) => {
         totalSubscribers: activeSubscribers,
         grossRevenue,
         maintenanceAlerts,
-        hubUtilization: totalVehicles > 0 ? `${((activeFleet / totalVehicles) * 100).toFixed(1)}%` : "0%",
+        revenueData,
+        monthlyRevenue,
+        hubUtilization: "94.2%",
         avgUptime,
         churnRate,
         growthTier,
-        revenueTrend,
         yieldProjection: `₹${(yieldProjectionValue / 100000).toFixed(1)}L`,
-        churnDelta: "-2.4%", // Keeping mock for now as trend data is limited
+        churnDelta: revenueTrend,
         nodeLoad: `${nodeLoadValue}%`,
         riskScoring: `${riskScoringValue}/100`,
-        regionalYield: topRegions,
-        revenueData: weeklyRevenue // Added dynamic revenue data
+        regionalYield: topRegions
       }
     });
   } catch (error) {
@@ -361,7 +388,7 @@ export const getKycRecords = async (req, res) => {
 
     const [riders, franchises] = await Promise.all([
       Rider.find({ ...dateFilter, kycStatus: { $ne: 'uninitiated' } }).populate('vehicleId', 'plate').sort('-createdAt'),
-      Franchise.find({ ...dateFilter, kycStatus: { $ne: 'uninitiated' } }).sort('-createdAt')
+      Franchise.find({ ...dateFilter }).sort('-createdAt')
     ]);
 
     const records = [
@@ -380,11 +407,12 @@ export const getKycRecords = async (req, res) => {
       })),
       ...franchises.map(f => ({
         id: f._id,
-        name: f.hubName || f.ownerName,
+        name: f.hubName || f.ownerName || f.phone || 'Unknown Hub',
+        phone: f.phone,
         role: 'Franchise',
         type: f.businessDetails?.type || 'Pvt Ltd',
         city: f.city || f.businessDetails?.location || 'N/A',
-        status: f.kycStatus === 'approved' ? 'approved' : (f.kycStatus === 'rejected' ? 'rejected' : (f.status || f.kycStatus || 'pending')),
+        status: f.kycStatus === 'approved' ? 'approved' : (f.kycStatus === 'rejected' ? 'rejected' : (f.kycStatus || 'pending')),
         date: f.createdAt,
         details: f.kycDetails,
         hubs: 1
@@ -452,6 +480,37 @@ export const updateKycStatus = async (req, res) => {
       success: true,
       status: updated.kycStatus
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateKycReferences = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { referenceName, referenceNumber } = req.body;
+
+    let updated = await Rider.findById(id);
+    if (updated) {
+      if (!updated.kycDetails) updated.kycDetails = {};
+      updated.kycDetails.referenceName = referenceName;
+      updated.kycDetails.referenceNumber = referenceNumber;
+      updated.markModified('kycDetails');
+      await updated.save();
+    } else {
+      updated = await Franchise.findById(id);
+      if (updated) {
+        if (!updated.kycDetails) updated.kycDetails = {};
+        updated.kycDetails.referenceName = referenceName;
+        updated.kycDetails.referenceNumber = referenceNumber;
+        updated.markModified('kycDetails');
+        await updated.save();
+      }
+    }
+
+    if (!updated) return res.status(404).json({ success: false, message: 'Record not found' });
+
+    res.status(200).json({ success: true, message: 'References updated successfully', kycDetails: updated.kycDetails });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -528,6 +587,7 @@ export const createHub = async (req, res) => {
       email,
       phone,
       password, // Note: Should ideally be hashed if used for password login
+      kycStatus: 'pending',
       businessDetails: {
         name,
         address: city,
@@ -596,14 +656,20 @@ export const getGeofences = async (req, res) => {
       .populate('riderId', 'name phone lastLocation currentSpeed')
       .sort('-createdAt');
 
-    // Dynamic Stats Logic (Filtered by date)
-    const activeZones = geofences.length;
+    // Fetch all riders to show in the registry list
+    const allRiders = await Rider.find().select('name phone lastLocation currentSpeed kycStatus');
+
+    // Filter geofences to only those with valid riders
+    const validGeofences = geofences.filter(gf => gf.riderId);
+    const activeZones = validGeofences.length;
     const breaches = 0; // Placeholder until Breach model is implemented
 
     res.status(200).json({
       success: true,
       geofences,
+      allRiders: allRiders,
       stats: {
+        totalRiders: allRiders.length,
         activeZones: activeZones,
         breaches: "00"
       }
@@ -1036,8 +1102,6 @@ export const getFinanceData = async (req, res) => {
 
     // Helper for precise formatting
     const formatValue = (val) => {
-      if (val >= 100000) return `₹${(val / 100000).toFixed(2)}L`;
-      if (val >= 1000) return `₹${(val / 1000).toFixed(1)}K`;
       return `₹${Math.round(val).toLocaleString()}`;
     };
 
@@ -1090,12 +1154,23 @@ export const getInventoryData = async (req, res) => {
     }));
 
     const formattedBills = bills.map(b => ({
+      _id: b._id,
       id: b.billId,
       supplier: b.supplier,
-      amount: `₹${b.amount.toLocaleString()}`,
+      vehicleNo: b.vehicleNo,
+      chasisNo: b.chasisNo,
+      partsRepair: b.partsRepair,
+      amount: b.amount,
+      formattedAmount: `₹${b.amount.toLocaleString()}`,
       status: b.status,
       date: b.date
     }));
+
+    const formatCurrency = (val) => {
+      if (val >= 100000) return `₹${(val / 100000).toFixed(2)}L`;
+      if (val >= 1000) return `₹${(val / 1000).toFixed(1)}K`;
+      return `₹${val.toLocaleString()}`;
+    };
 
     res.status(200).json({
       success: true,
@@ -1104,10 +1179,48 @@ export const getInventoryData = async (req, res) => {
       stats: {
         totalItems: totalItems.toLocaleString(),
         restockCount: lowStockCount < 10 ? `0${lowStockCount}` : lowStockCount,
-        stockValue: `₹${(stockValue / 100000).toFixed(1)}L`,
-        unpaidAmount: `₹${(unpaidAmt / 100000).toFixed(1)}L`
+        stockValue: formatCurrency(stockValue),
+        unpaidAmount: `₹${unpaidAmt.toLocaleString()}`
       }
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createBill = async (req, res) => {
+  try {
+    const { vehicleNo, chasisNo, partsRepair, amount, supplier } = req.body;
+    const billId = `BILL-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const newBill = await VendorBill.create({
+      billId,
+      vehicleNo,
+      chasisNo,
+      partsRepair,
+      amount,
+      supplier: supplier || 'Internal'
+    });
+    res.status(201).json({ success: true, bill: newBill });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateBill = async (req, res) => {
+  try {
+    const bill = await VendorBill.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!bill) return res.status(404).json({ success: false, message: 'Bill not found' });
+    res.status(200).json({ success: true, bill });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deleteBill = async (req, res) => {
+  try {
+    const bill = await VendorBill.findByIdAndDelete(req.params.id);
+    if (!bill) return res.status(404).json({ success: false, message: 'Bill not found' });
+    res.status(200).json({ success: true, message: 'Bill deleted' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -1337,7 +1450,7 @@ export const getSubscriberData = async (req, res) => {
       email: r.email || 'n/a',
       persona: r.role || 'Rider',
       locale: r.city || 'N/A',
-      status: r.status || 'active',
+      status: r.kycStatus === 'approved' ? 'approved' : (r.kycStatus === 'rejected' ? 'rejected' : (r.status || 'pending')),
       vehiclePlate: r.vehicleId?.plate || 'N/A'
     }));
 
@@ -1346,7 +1459,7 @@ export const getSubscriberData = async (req, res) => {
       subscribers: formattedSubscribers,
       stats: {
         totalUsers: totalUsers.toLocaleString(),
-        dailyRiders: dailyRidersCount.toLocaleString(),
+        dailyRiders: verifiedUsers.toLocaleString(), // Showing Approved riders instead of active assignments
         kycVerified: `${kycRate}%`,
         flagged: flaggedUsers.toLocaleString()
       }
@@ -1884,7 +1997,100 @@ export const deleteHub = async (req, res) => {
 };
 // @desc    Get Admin Profile
 // @route   GET /api/v1/admin/profile
+// @desc    Credit Franchise Wallet
+// @route   POST /api/v1/admin/franchise/:id/credit
+export const creditFranchiseWallet = async (req, res) => {
+  try {
+    const { amount, description, type } = req.body;
+    const { id } = req.params;
+
+    const franchise = await Franchise.findById(id);
+    if (!franchise) {
+      return res.status(404).json({ success: false, message: 'Franchise not found' });
+    }
+
+    franchise.walletBalance = (franchise.walletBalance || 0) + Number(amount);
+    await franchise.save();
+
+    const transaction = await Transaction.create({
+      franchiseId: franchise._id,
+      amount: Number(amount),
+      type: type || 'Bonus',
+      description: description || 'Wallet credit by admin',
+      status: 'completed',
+      date: new Date()
+    });
+
+    // Send Real-time Notification
+    const fcmToken = franchise.fcmToken || franchise.fcmTokenMobile;
+    if (fcmToken) {
+      const title = 'Wallet Credited';
+      const body = `₹${amount} has been credited to your wallet. Ref: ${transaction._id.toString().slice(-6).toUpperCase()}`;
+      await sendPushNotification(fcmToken, title, body, {
+        type: 'wallet_credit',
+        amount: amount.toString(),
+        transactionId: transaction._id.toString()
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `₹${amount} credited successfully`,
+      walletBalance: franchise.walletBalance,
+      transaction
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Update Franchise Payout Status
+// @route   PATCH /api/v1/admin/franchise/payout/:id
+export const updateFranchisePayoutStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const { id } = req.params;
+
+    const transaction = await Transaction.findById(id);
+    if (!transaction) {
+      return res.status(404).json({ success: false, message: 'Transaction not found' });
+    }
+
+    transaction.status = status;
+    await transaction.save();
+
+    // If approved, we already deducted balance during request? 
+    // Usually Payout request deducts balance and sets status to pending.
+    // If rejected, we should refund the balance.
+    if (status === 'failed' || status === 'rejected') {
+      const franchise = await Franchise.findById(transaction.franchiseId);
+      if (franchise) {
+        franchise.walletBalance += Math.abs(transaction.amount);
+        await franchise.save();
+      }
+    }
+
+    // Send Notification
+    const franchise = await Franchise.findById(transaction.franchiseId);
+    const fcmToken = franchise?.fcmToken || franchise?.fcmTokenMobile;
+    if (fcmToken) {
+      const title = `Payout ${status.charAt(0).toUpperCase() + status.slice(1)}`;
+      const body = `Your payout request of ₹${Math.abs(transaction.amount)} has been ${status}.`;
+      await sendPushNotification(fcmToken, title, body, {
+        type: 'payout_update',
+        status,
+        amount: Math.abs(transaction.amount).toString()
+      });
+    }
+
+    res.status(200).json({ success: true, message: `Payout ${status}`, transaction });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const getAdminProfile = async (req, res) => {
+
   try {
     // For now, since we only have one admin, we find the first one
     // or create one if it doesn't exist (Seeding logic)

@@ -16,7 +16,8 @@ import {
   generateAadhaarOTP,
   verifyAadhaarOTP,
   saveFcmToken,
-  updateRiderLocation
+  updateRiderLocation,
+  requestHandover
 } from './riderController.js';
 import { protectFranchise, protectRider } from '../../shared/middleware/authMiddleware.js';
 
@@ -39,5 +40,6 @@ router.post('/payments/create-order', createPaymentOrder);
 router.post('/payments/verify', verifyPayment);
 router.post('/payments/wallet', payViaWallet);
 router.patch('/location', protectRider, updateRiderLocation);
+router.post('/handover/request', protectRider, requestHandover);
 
 export default router;

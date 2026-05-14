@@ -9,6 +9,7 @@ import { useSubscriptionStore } from '../store/subscriptionStore';
 import { useThemeStore } from '../store/themeStore';
 import { useAuthStore } from '../store/authStore';
 import { useWalletStore } from '../store/walletStore';
+import { RefreshCw, MapPin, Zap, Info, ChevronRight, Share2, Shield } from 'lucide-react';
 import logo from '../../../assets/logo.png';
 
 // Mock data removed as we are going dynamic
@@ -292,6 +293,40 @@ export default function HomeDashboard() {
            <p className={`text-[11px] font-black uppercase tracking-wider leading-relaxed ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
              Impact: You've saved <span className="text-flexigo-teal font-black text-sm">12.5KG</span> of carbon footprint this week.
            </p>
+        </div>
+
+        {/* Operational Actions */}
+        <div className="space-y-3">
+          <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] ml-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Operational Actions</h4>
+          <GlassCard 
+            className={`p-4 border border-flexigo-teal/10 hover:border-flexigo-teal/30 transition-all group cursor-pointer`}
+            onClick={async () => {
+              if (window.confirm('Are you sure you want to request a vehicle handover?')) {
+                const { requestHandover } = useRideStore.getState();
+                const res = await requestHandover();
+                if (res.success) {
+                  alert('Handover request sent successfully. Please visit the office.');
+                } else {
+                  alert(res.message);
+                }
+              }
+            }}
+          >
+             <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                   <div className="w-10 h-10 rounded-xl bg-flexigo-teal/10 flex items-center justify-center text-flexigo-teal group-hover:rotate-180 transition-transform duration-700">
+                      <RefreshCw size={20} strokeWidth={2.5} />
+                   </div>
+                   <div className="space-y-0.5">
+                      <h4 className={`text-sm font-black uppercase tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Vehicle Handover</h4>
+                      <p className={`text-[8px] font-bold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Initiate return protocol</p>
+                   </div>
+                </div>
+                <div className={`p-2 rounded-lg bg-flexigo-teal/5 text-flexigo-teal transition-all group-hover:translate-x-1`}>
+                   <ChevronRight size={14} strokeWidth={3} />
+                </div>
+             </div>
+          </GlassCard>
         </div>
       </div>
     </BottomSheet>

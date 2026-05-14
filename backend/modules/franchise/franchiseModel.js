@@ -56,6 +56,8 @@ const FranchiseSchema = new mongoose.Schema({
     panCard: { type: String },
     businessLicense: { type: String },
     certificate: { type: String },
+    referenceName: { type: String, default: '' },
+    referenceNumber: { type: String, default: '' },
     ekycVerified: { type: Boolean, default: false },
     ekycData: Object,
   },

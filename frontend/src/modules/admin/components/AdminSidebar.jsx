@@ -50,7 +50,7 @@ const navigationGroups = [
     title: "Operations",
     items: [
       { id: 'hubs', label: 'Franchise Management', icon: Warehouse, path: '/admin/hubs' },
-      { id: 'fleet', label: 'Fleet Oversight', icon: Truck, path: '/admin/fleet' },
+      { id: 'fleet', label: 'Fleet Addition', icon: Truck, path: '/admin/fleet' },
 
       { id: 'geofencing', label: 'Geo Fencing', icon: Map, path: '/admin/geofencing' },
     ]

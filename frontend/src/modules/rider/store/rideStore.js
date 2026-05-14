@@ -82,4 +82,14 @@ export const useRideStore = create((set, get) => ({
       console.error("Failed to fetch vehicle:", err);
     }
   },
+  
+  requestHandover: async () => {
+    try {
+      const res = await api.post('/rider/handover/request');
+      return res.data;
+    } catch (err) {
+      console.error("Handover request failed:", err);
+      return { success: false, message: err.response?.data?.message || 'Handover request failed' };
+    }
+  }
 }));

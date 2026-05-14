@@ -10,17 +10,7 @@ export default function FranchiseHeader() {
 
   return (
     <header className="h-14 w-full bg-[var(--bg-secondary)] border-b border-[var(--border-subtle)] flex items-center justify-between px-6 sticky top-0 z-40 transition-all duration-300 shadow-sm">
-      {/* Search Bar - Professional Pill */}
-      <div className="flex-1 max-w-md">
-        <div className="flex items-center gap-2.5 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-lg px-3 py-1.5 group focus-within:ring-1 focus-within:ring-emerald-500/20 focus-within:border-emerald-500/40 transition-all duration-200">
-          <Search size={16} className="text-[var(--text-tertiary)] group-focus-within:text-emerald-500" />
-          <input 
-            type="text" 
-            placeholder="Search hub inventory, subscribers..." 
-            className="bg-transparent border-none outline-none text-sm text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] w-full font-medium"
-          />
-        </div>
-      </div>
+      <div className="flex-1" />
 
       {/* Actions Section */}
       <div className="flex items-center gap-3">

@@ -1,41 +1,106 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, 
-  Filter, 
-  MoreVertical, 
-  Plus, 
-  Battery, 
-  MapPin, 
-  History, 
-  FileText, 
-  Settings, 
   ChevronRight,
-  ShieldCheck,
   Zap,
-  ArrowLeft,
   ArrowRight,
   Navigation,
-  X
+  X,
+  Target,
+  Activity,
+  History,
+  FileText,
+  Settings,
+  Battery,
+  ShieldCheck,
+  MapPin
 } from 'lucide-react';
+import { GoogleMap, useJsApiLoader, MarkerF, CircleF } from '@react-google-maps/api';
 import { useFleetStore } from '../store/fleetStore';
 import { useFranchiseAuthStore } from '../store/franchiseAuthStore';
 import GlassTable from '../components/GlassTable';
 import StatusBadge from '../components/StatusBadge';
+
+const containerStyle = {
+  width: '100%',
+  height: '100%'
+};
+
+const defaultCenter = {
+  lat: 22.7196,
+  lng: 75.8577
+};
+
+const mapStyles = [
+  { "elementType": "geometry", "stylers": [{ "color": "#121212" }] },
+  { "elementType": "labels.text.fill", "stylers": [{ "color": "#746855" }] },
+  { "elementType": "labels.text.stroke", "stylers": [{ "color": "#242f3e" }] },
+  { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#38414e" }] },
+  { "featureType": "road", "elementType": "geometry.stroke", "stylers": [{ "color": "#212a37" }] },
+  { "featureType": "road", "elementType": "labels.text.fill", "stylers": [{ "color": "#9ca5b3" }] },
+  { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#17263c" }] }
+];
 
 export default function FleetManagement() {
   const navigate = useNavigate();
   const { vehicles, filter, setFilter, fetchVehicles, isLoading } = useFleetStore();
   const { user } = useFranchiseAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [selectedVehicle, setSelectedVehicle] = useState(null); // Controls Detail Drawer
+  const [focusedVehicle, setFocusedVehicle] = useState(null);   // Controls Map Widget & Focus
+  const [map, setMap] = useState(null);
+
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: "AIzaSyBRHvhhxVDQyYkOryyo2IA19GuDFqsYD30"
+  });
+
+  const onLoad = useCallback(function callback(map) {
+    setMap(map);
+  }, []);
+
+  const onUnmount = useCallback(function callback(map) {
+    setMap(null);
+  }, []);
 
   useEffect(() => {
-    if (user?.id || user?._id) {
-        fetchVehicles(user.id || user._id);
+    const fId = user?.id || user?._id;
+    if (fId) {
+        fetchVehicles(fId);
+        // Live polling every 5 seconds for "Exact Live Location"
+        const interval = setInterval(() => fetchVehicles(fId), 5000);
+        return () => clearInterval(interval);
     }
   }, [user]);
+
+  // Automatically follow focused vehicle and SYNC state when its location updates (live tracking)
+  useEffect(() => {
+    if (focusedVehicle) {
+      const latest = vehicles.find(v => (v._id || v.id) === (focusedVehicle._id || focusedVehicle.id));
+      if (latest) {
+        // Sync the focusedVehicle state with the latest data from the store
+        // This ensures the "Live Grid Monitor" header and "Last Location" boxes are always up-to-date
+        setFocusedVehicle(latest);
+        
+        if (map) {
+          const loc = latest.lastLocation || latest.location;
+          if (loc) {
+            map.panTo({ lat: Number(loc.lat), lng: Number(loc.lng) });
+          }
+        }
+      }
+    }
+  }, [vehicles, map]);
+
+  useEffect(() => {
+    const loc = focusedVehicle?.lastLocation || focusedVehicle?.location;
+    if (loc && map) {
+      map.panTo({ lat: Number(loc.lat), lng: Number(loc.lng) });
+      map.setZoom(19); // High precision zoom for "Exact Live Location"
+    }
+  }, [focusedVehicle?._id, focusedVehicle?.id, map]);
 
   const filteredVehicles = useMemo(() => {
     return vehicles.filter(v => {
@@ -46,6 +111,17 @@ export default function FleetManagement() {
     });
   }, [vehicles, filter, searchQuery]);
 
+  const handleRowClick = (vehicle) => {
+    setFocusedVehicle(vehicle);
+    setSelectedVehicle(vehicle); 
+    
+    const loc = vehicle.lastLocation || vehicle.location;
+    if (loc && map) {
+      map.panTo({ lat: Number(loc.lat), lng: Number(loc.lng) });
+      map.setZoom(19); // "Exact Live Location" focus
+    }
+  };
+
   const columns = [
     { 
       header: 'Vehicle Identifier', 
@@ -54,6 +130,22 @@ export default function FleetManagement() {
         <div className="flex flex-col gap-0">
           <span className="text-emerald-500 text-[9px] font-black italic tracking-[0.2em] uppercase leading-tight">{row.plate}</span>
           <span className="text-[6.5px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.3em] italic opacity-60 leading-none">{row.model}</span>
+        </div>
+      )
+    },
+    { 
+      header: 'Operator / Rider', 
+      accessor: 'rider', 
+      render: (row) => (
+        <div className="flex flex-col gap-0">
+          <span className={`text-[8px] font-black italic tracking-widest uppercase leading-tight ${row.status === 'assigned' ? 'text-emerald-500' : 'text-[var(--text-tertiary)] opacity-40'}`}>
+            {row.rider || '—'}
+          </span>
+          {row.status === 'assigned' && (
+            <span className="text-[6px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] italic opacity-40 leading-none">
+              ACTIVE_IN_FIELD
+            </span>
+          )}
         </div>
       )
     },
@@ -68,54 +160,15 @@ export default function FleetManagement() {
       render: (row) => <StatusBadge status={row.status} /> 
     },
     { 
-      header: 'Energy State', 
-      accessor: 'battery', 
-      render: (row) => (
-        <div className="flex items-center gap-2 w-20">
-          <div className="flex-1 h-1 bg-[var(--bg-tertiary)] rounded-full overflow-hidden shadow-inner border border-white/5">
-             <motion.div 
-               initial={{ width: 0 }}
-               animate={{ width: `${row.battery}%` }}
-               className={`h-full shadow-[0_0_8px_currentColor] ${
-                 row.battery > 60 ? 'bg-emerald-500 text-emerald-500' : row.battery > 20 ? 'bg-amber-500 text-amber-500' : 'bg-red-500 text-red-500'
-               }`} 
-             />
-          </div>
-          <span className="text-[7.5px] font-black text-[var(--text-primary)] italic">{row.battery}%</span>
-        </div>
-      )
-    },
-    { 
-      header: 'Documents', 
-      accessor: 'insuranceExpiry', 
-      render: (row) => {
-        const isPUCExpiring = new Date(row.pUCExpiry) < new Date(Date.now() + 15 * 24 * 60 * 60 * 1000); // 15 days
-        const isINSExpiring = new Date(row.insuranceExpiry) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
-        
-        return (
-          <div className="flex items-center gap-2">
-              <div className={`px-1.5 py-0.5 rounded border text-[6.5px] font-black italic flex items-center gap-1 ${
-                isPUCExpiring ? 'bg-rose-500/10 border-rose-500/20 text-rose-500 animate-pulse' : 'bg-[var(--bg-tertiary)] border-[var(--border-subtle)] text-[var(--text-secondary)]'
-              }`}>
-               <span className="uppercase tracking-[0.2em] leading-none">PUC</span>
-               <span className="leading-none">{row.pUCExpiry ? `${row.pUCExpiry.split('-')[1]}/${row.pUCExpiry.split('-')[0].slice(2)}` : 'N/A'}</span>
-             </div>
-              <div className={`px-1.5 py-0.5 rounded border text-[6.5px] font-black italic flex items-center gap-1 ${
-                isINSExpiring ? 'bg-rose-500/10 border-rose-500/20 text-rose-500' : 'bg-[var(--bg-tertiary)] border-[var(--border-subtle)] text-[var(--text-secondary)]'
-              }`}>
-                <span className="uppercase tracking-[0.2em] leading-none">INS</span>
-                <span className="leading-none">{row.insuranceExpiry ? `${row.insuranceExpiry.split('-')[1]}/${row.insuranceExpiry.split('-')[0].slice(2)}` : 'N/A'}</span>
-              </div>
-          </div>
-        );
-      }
-    },
-    { 
       header: '', 
       accessor: 'actions', 
       render: (row) => (
         <button 
-          onClick={(e) => { e.stopPropagation(); setSelectedVehicle(row); }}
+          onClick={(e) => { 
+            e.stopPropagation(); 
+            setSelectedVehicle(row);
+            setFocusedVehicle(row); // Also focus on map when opening drawer
+          }}
           className="p-2 hover:bg-[var(--bg-tertiary)] rounded-lg transition-all text-[var(--text-tertiary)] hover:text-emerald-500"
         >
           <ChevronRight size={18} />
@@ -126,16 +179,11 @@ export default function FleetManagement() {
 
   const filterTabs = [
     { id: 'all', label: 'Whole Fleet' },
-    { id: 'available', label: 'Idle / Available' },
-    { id: 'assigned', label: 'Active Leases' },
-    { id: 'in-transit', label: 'In-Transit' },
-    { id: 'in-service', label: 'In Repair' },
-    { id: 'quarantined', label: 'Issue Flagged' },
   ];
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Page Header */}
+      {/* Page Header Area */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-0.5">
            <div className="flex items-center gap-2">
@@ -150,18 +198,17 @@ export default function FleetManagement() {
         </div>
       </div>
 
-      {/* Filters & Search Bar */}
+      {/* Filters & Search Bar Area */}
       <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
-         {/* Filter Tabs */}
-         <div className="flex bg-[var(--bg-secondary)] border border-[var(--border-subtle)] p-1 rounded-xl overflow-x-auto no-scrollbar max-w-full shadow-inner">
+         <div className="flex bg-[var(--bg-secondary)] border border-[var(--border-subtle)] p-1 rounded-xl shadow-inner">
             {filterTabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setFilter(tab.id)}
-                className={`px-3 py-1.5 rounded-lg text-[7px] font-black uppercase tracking-widest whitespace-nowrap transition-all duration-200 italic leading-none ${
+                className={`px-3 py-1.5 rounded-lg text-[7px] font-black uppercase tracking-widest transition-all italic leading-none ${
                   filter === tab.id 
                   ? 'bg-emerald-600 text-white shadow-sm' 
-                  : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
+                  : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'
                 }`}
               >
                 {tab.id.replace(/-/g, '_')}
@@ -169,7 +216,6 @@ export default function FleetManagement() {
             ))}
          </div>
 
-         {/* Search Bar - Professional Pill */}
          <div className="relative w-full lg:w-80 group">
             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-[var(--text-tertiary)] group-focus-within:text-emerald-500 transition-colors">
                <Search size={12} strokeWidth={3} />
@@ -183,15 +229,127 @@ export default function FleetManagement() {
          </div>
       </div>
 
-      {/* Table Section */}
-      <GlassTable 
-        columns={columns} 
-        data={filteredVehicles} 
-        onRowClick={setSelectedVehicle}
-        emptyMessage={`No ${filter !== 'all' ? filter : ''} assets registered`}
-      />
+      {/* Main Content: Split Layout (Table & Map) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+         {/* Table Registry */}
+         <div className="lg:col-span-2">
+            <GlassTable 
+              columns={columns} 
+              data={filteredVehicles} 
+              onRowClick={handleRowClick}
+              selectedId={focusedVehicle?._id || focusedVehicle?.id}
+              emptyMessage={`No assets registered`}
+            />
+         </div>
 
-      {/* Vehicle Detail Slide-in Drawer - Professional B2B */}
+         {/* Map Visualization */}
+         <div className="space-y-4">
+            <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-4 space-y-4 shadow-sm h-full flex flex-col min-h-[500px]">
+               <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                     <Target size={14} className="text-emerald-500" />
+                     <h4 className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-widest italic">Live Grid Monitor</h4>
+                  </div>
+                   {focusedVehicle && (
+                      <div className="flex items-center gap-1">
+                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                         <span className="text-[7px] font-black text-emerald-500 uppercase tracking-widest">{focusedVehicle.plate}</span>
+                      </div>
+                   )}
+               </div>
+
+               <div className="flex-1 min-h-[350px] bg-[var(--bg-tertiary)] rounded-xl relative overflow-hidden group shadow-inner border border-[var(--border-subtle)]">
+                  {isLoaded ? (
+                     <GoogleMap
+                        mapContainerStyle={containerStyle}
+                         center={focusedVehicle?.lastLocation || focusedVehicle?.location || defaultCenter}
+                         zoom={focusedVehicle ? 19 : 12}
+                        onLoad={onLoad}
+                        onUnmount={onUnmount}
+                        options={{
+                           styles: mapStyles,
+                           disableDefaultUI: true,
+                           zoomControl: true,
+                           mapTypeControl: false,
+                           streetViewControl: false,
+                           fullscreenControl: true,
+                           clickableIcons: false
+                        }}
+                     >
+                        {filteredVehicles.map(v => v.status === 'assigned' && (v.lastLocation || v.location) && (
+                           <CircleF 
+                              key={`pulse-${v._id || v.id}`}
+                              center={{
+                                 lat: Number((v.lastLocation || v.location).lat),
+                                 lng: Number((v.lastLocation || v.location).lng)
+                              }}
+                              radius={focusedVehicle?._id === v._id ? 60 : 30}
+                              options={{
+                                 fillColor: '#10b981',
+                                 fillOpacity: focusedVehicle?._id === v._id ? 0.3 : 0.1,
+                                 strokeColor: '#10b981',
+                                 strokeWeight: 1,
+                                 strokeOpacity: 0.4,
+                                 clickable: false
+                              }}
+                           />
+                        ))}
+                        {filteredVehicles.map(v => (v.lastLocation || v.location) && (
+                           <MarkerF 
+                              key={`marker-${v._id || v.id}`}
+                              position={{
+                                 lat: Number((v.lastLocation || v.location).lat),
+                                 lng: Number((v.lastLocation || v.location).lng)
+                              }}
+                              onClick={() => handleRowClick(v)}
+                              icon={{
+                                 url: v.status === 'assigned' 
+                                    ? 'http://maps.google.com/mapfiles/ms/icons/green-dot.png' // Standard high-visibility green for active riders
+                                    : 'https://maps.google.com/mapfiles/ms/icons/purple-dot.png',
+                                 scaledSize: v.status === 'assigned' 
+                                    ? new window.google.maps.Size(35, 35) 
+                                    : new window.google.maps.Size(30, 30)
+                              }}
+                              animation={focusedVehicle?._id === v._id || focusedVehicle?.id === v.id ? window.google.maps.Animation.BOUNCE : null}
+                              label={{
+                                 text: v.rider ? v.rider.toUpperCase() : v.plate,
+                                 color: '#10b981', // Emerald Green matching GeoFencing
+                                 fontSize: '10px',
+                                 fontWeight: '900',
+                                 className: 'mt-14 uppercase tracking-[0.15em] italic drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]'
+                              }}
+                           />
+                        ))}
+                     </GoogleMap>
+                  ) : (
+                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 space-y-4">
+                        <Activity size={24} className="text-emerald-500 animate-spin" />
+                        <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest italic">Initializing Satellite Sync...</p>
+                     </div>
+                  )}
+               </div>
+
+               <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-[var(--bg-tertiary)] rounded-xl border border-[var(--border-subtle)]">
+                     <p className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1 italic">Last Location</p>
+                     <p className="text-[9px] font-black text-[var(--text-primary)] truncate">
+                        {focusedVehicle?.lastLocation || focusedVehicle?.location ? 
+                          `${(focusedVehicle.lastLocation || focusedVehicle.location).lat.toFixed(4)}° N, ${(focusedVehicle.lastLocation || focusedVehicle.location).lng.toFixed(4)}° E` 
+                          : 'Searching...'}
+                     </p>
+                  </div>
+                  <div className="p-3 bg-[var(--bg-tertiary)] rounded-xl border border-[var(--border-subtle)]">
+                     <p className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1 italic">Energy State</p>
+                     <p className="text-[9px] font-black text-emerald-500">
+                        {focusedVehicle?.battery !== undefined ? `${focusedVehicle.battery}%` : '--'}
+                     </p>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      {/* Details Modal / Drawer (Optional but kept for functionality) */}
       <AnimatePresence>
         {selectedVehicle && (
           <>
@@ -220,7 +378,7 @@ export default function FleetManagement() {
                      </button>
                      <div className="h-4 w-px bg-[var(--border-subtle)]" />
                      <button 
-                        onClick={() => navigate(`/franchise/fleet/${selectedVehicle.id}`)}
+                        onClick={() => navigate(`/franchise/fleet/${selectedVehicle.id || selectedVehicle._id}`)}
                         className="text-[7.5px] font-black uppercase tracking-[0.2em] italic text-emerald-500 hover:text-emerald-400 group flex items-center gap-1"
                      >
                         DETAILED_PROFILE <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
@@ -277,7 +435,7 @@ export default function FleetManagement() {
                      </div>
                   </div>
 
-                  {/* Logs Section */}
+                  {/* History Section */}
                   <div className="space-y-4">
                      <div className="flex items-center gap-6 border-b border-[var(--border-subtle)]">
                         <button className="px-1 py-2 text-[7.5px] font-black uppercase tracking-[0.2em] italic text-emerald-500 border-b-2 border-emerald-500 flex gap-2"><History size={10}/> MAINT_ACTIVITY</button>
@@ -285,7 +443,7 @@ export default function FleetManagement() {
                      </div>
 
                      <div className="space-y-2">
-                        {selectedVehicle.maintenanceLogs.length > 0 ? (
+                        {selectedVehicle.maintenanceLogs?.length > 0 ? (
                           selectedVehicle.maintenanceLogs.map((log, i) => (
                             <div key={i} className="flex gap-3 p-3 bg-[var(--bg-tertiary)]/10 border border-[var(--border-subtle)] rounded-xl group hover:border-emerald-500/20 transition-all shadow-inner">
                                <div className="w-8 h-8 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] shadow-inner flex items-center justify-center shrink-0">

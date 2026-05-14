@@ -20,9 +20,7 @@ messaging.onBackgroundMessage((payload) => {
     body: payload.notification.body,
     icon: "/logo3.png",
     badge: "/logo3.png",
-    data: {
-      url: window.location.origin + '/admin/security'
-    }
+    data: payload.data
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);

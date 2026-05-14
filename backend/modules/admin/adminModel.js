@@ -25,6 +25,10 @@ const adminSchema = new mongoose.Schema({
   },
   avatar: {
     type: String
+  },
+  fcmToken: {
+    type: String,
+    default: null
   }
 }, {
   timestamps: true

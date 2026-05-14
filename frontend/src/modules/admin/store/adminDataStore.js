@@ -228,6 +228,21 @@ export const useAdminDataStore = create((set, get) => ({
     }
   },
 
+  updateKycReferences: async (id, data) => {
+    try {
+      const res = await api.patch(`/admin/kyc/${id}/references`, data);
+      if (res.data.success) {
+        set(state => ({
+          kycRecords: state.kycRecords.map(r => (r.id === id || r._id === id) ? { ...r, details: { ...r.details, ...data } } : r)
+        }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to update references:", err);
+      return { success: false, message: err.response?.data?.message || err.message };
+    }
+  },
+
   uploadKycCertificate: async (id, certificateBase64) => {
     try {
       const res = await api.post(`/admin/kyc/${id}/certificate`, { certificate: certificateBase64 });
@@ -353,6 +368,7 @@ export const useAdminDataStore = create((set, get) => ({
   },
 
   geofences: [],
+  allRiders: [],
   fetchGeofences: async (filters = {}) => {
     try {
       const params = new URLSearchParams();
@@ -362,6 +378,7 @@ export const useAdminDataStore = create((set, get) => ({
       if (res.data.success) {
         set({ 
           geofences: res.data.geofences,
+          allRiders: res.data.allRiders || [],
           networkStats: {
             ...get().networkStats,
             geofenceStats: res.data.stats
@@ -481,6 +498,45 @@ export const useAdminDataStore = create((set, get) => ({
       }
     } catch (err) {
       console.error("Failed to fetch inventory data:", err);
+    }
+  },
+  
+  addBill: async (billData) => {
+    try {
+      const res = await api.post('/admin/billing', billData);
+      if (res.data.success) {
+        get().fetchInventoryData();
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to add bill:", err);
+      return { success: false, message: err.message };
+    }
+  },
+
+  updateBill: async (id, billData) => {
+    try {
+      const res = await api.put(`/admin/billing/${id}`, billData);
+      if (res.data.success) {
+        get().fetchInventoryData();
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to update bill:", err);
+      return { success: false, message: err.message };
+    }
+  },
+
+  removeBill: async (id) => {
+    try {
+      const res = await api.delete(`/admin/billing/${id}`);
+      if (res.data.success) {
+        get().fetchInventoryData();
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to remove bill:", err);
+      return { success: false, message: err.message };
     }
   },
 

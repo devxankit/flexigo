@@ -103,7 +103,7 @@ export default function SubscriberRegistryPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
          <AdminStatCard title="Total Users" value={subscriberStats.totalUsers} icon={Users} color="emerald" subtitle="Active nodes" />
-         <AdminStatCard title="Daily Riders" value={subscriberStats.dailyRiders} icon={Activity} color="blue" subtitle="Active today" />
+         <AdminStatCard title="Approved Riders" value={subscriberStats.dailyRiders} icon={UserCheck} color="blue" subtitle="Verified Fleet" />
          <AdminStatCard title="KYC Verified" value={subscriberStats.kycVerified} icon={ShieldCheck} color="emerald" subtitle="Identity sync" />
       </div>
 

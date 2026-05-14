@@ -6,11 +6,14 @@ import {
   getFleetDistribution,
   getKycRecords,
   updateKycStatus,
+  updateKycReferences,
   createHub,
   getFranchiseById,
   getHubVehicles,
   updateHub,
   deleteHub,
+  creditFranchiseWallet,
+  updateFranchisePayoutStatus,
   getGeofences,
   createGeofence,
   updateGeofence,
@@ -24,6 +27,9 @@ import {
   getMonthlyAttendanceReport,
   getFinanceData,
   getInventoryData,
+  createBill,
+  updateBill,
+  deleteBill,
   getFranchiseOpsData,
   getComplianceData,
   getEngagementData,
@@ -126,12 +132,18 @@ router.post('/staff/verify-aadhaar-otp', verifyStaffAadhaarOTP);
 // KYC Routes
 router.get('/kyc', protectAdmin, authorize('KYC', 'read'), getKycRecords);
 router.patch('/kyc/:id', protectAdmin, authorize('KYC', 'update'), updateKycStatus);
+router.patch('/kyc/:id/references', protectAdmin, authorize('KYC', 'update'), updateKycReferences);
 router.post('/kyc/:id/certificate', protectAdmin, authorize('KYC', 'update'), uploadKycCertificate);
 
 // Finance Management
 router.get('/finance', getFinanceData);
 router.get('/inventory', getInventoryData);
+router.post('/billing', createBill);
+router.put('/billing/:id', updateBill);
+router.delete('/billing/:id', deleteBill);
 router.get('/franchise-ops', getFranchiseOpsData);
+router.post('/franchise/:id/credit', creditFranchiseWallet);
+router.patch('/franchise/payout/:id', updateFranchisePayoutStatus);
 router.get('/compliance', getComplianceData);
 router.get('/engagement', getEngagementData);
 router.get('/security', getSecurityData);

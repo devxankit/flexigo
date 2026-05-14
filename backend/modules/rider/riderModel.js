@@ -31,6 +31,8 @@ const RiderSchema = new mongoose.Schema({
     ekycVerified: { type: Boolean, default: false },
     ekycData: Object,
     certificate: String,
+    referenceName: { type: String, default: '' },
+    referenceNumber: { type: String, default: '' },
   },
   name: String,
   email: String,

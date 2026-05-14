@@ -20,7 +20,8 @@ import {
   User,
   ArrowRight,
   ChevronRight,
-  Activity
+  Activity,
+  Save
 } from 'lucide-react';
 import AdminStatCard from '../components/AdminStatCard';
 import OpsFilter from '../components/OpsFilter';
@@ -369,6 +370,67 @@ export default function KycOnboardingPage() {
                            </div>
                         </div>
                      </div>
+                  </div>
+
+                  {/* Reference Details Section */}
+                  <div className="pt-4 border-t border-[var(--border-subtle)] space-y-4">
+                     <h4 className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-1.5 italic leading-none">
+                        <User size={10} className="text-emerald-500" /> Reference Details
+                     </h4>
+                     <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                           <label className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Reference Name</label>
+                           <input 
+                              value={selectedRecord.details?.referenceName || ''}
+                              onChange={(e) => {
+                                 setSelectedRecord(prev => ({
+                                    ...prev,
+                                    details: { ...prev.details, referenceName: e.target.value }
+                                 }));
+                              }}
+                              placeholder="ENTER NAME"
+                              className="w-full px-3 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-bold tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all placeholder:text-[var(--text-tertiary)]/30"
+                           />
+                        </div>
+                        <div className="space-y-1.5">
+                           <label className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Reference Number</label>
+                           <div className="relative">
+                              <input 
+                                 value={selectedRecord.details?.referenceNumber || ''}
+                                 onChange={(e) => {
+                                    const val = e.target.value.replace(/\D/g, '');
+                                    if (val.length <= 10) {
+                                       setSelectedRecord(prev => ({
+                                          ...prev,
+                                          details: { ...prev.details, referenceNumber: val }
+                                       }));
+                                    }
+                                 }}
+                                 placeholder="10-DIGIT MOBILE"
+                                 className="w-full px-3 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all placeholder:text-[var(--text-tertiary)]/30"
+                              />
+                              {selectedRecord.details?.referenceNumber?.length === 10 && (
+                                 <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                    <ShieldCheck size={12} className="text-emerald-500" />
+                                 </div>
+                              )}
+                           </div>
+                        </div>
+                     </div>
+                     <button 
+                        onClick={async () => {
+                           const id = selectedRecord.id || selectedRecord._id;
+                           const res = await useAdminDataStore.getState().updateKycReferences(id, {
+                              referenceName: selectedRecord.details?.referenceName,
+                              referenceNumber: selectedRecord.details?.referenceNumber
+                           });
+                           if (res?.success) alert("References Saved!");
+                           else alert(res?.message || "Failed to save references");
+                        }}
+                        className="w-full py-2 bg-emerald-600/10 text-emerald-500 border border-emerald-500/20 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-emerald-600/20 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                     >
+                        <Save size={12} /> SAVE
+                     </button>
                   </div>
 
                   <div className="flex gap-2.5 pt-6 border-t border-[var(--border-subtle)] relative z-10">

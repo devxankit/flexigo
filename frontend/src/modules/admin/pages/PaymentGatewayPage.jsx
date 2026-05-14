@@ -30,6 +30,7 @@ const Gateways = [
 export default function PaymentGatewayPage() {
   const { financeTransactions, financeStats, fetchFinanceData } = useAdminDataStore();
   const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
+  const [searchQuery, setSearchQuery] = useState('');
 
   React.useEffect(() => {
     fetchFinanceData(activeFilters);
@@ -40,6 +41,11 @@ export default function PaymentGatewayPage() {
     fetchFinanceData(newFilters);
     console.log('Payment Gateway Sync:', newFilters);
   };
+
+  const filteredTransactions = financeTransactions.filter(txn => 
+    (txn.id || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (txn.user || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="space-y-6 pb-12">
@@ -77,8 +83,10 @@ export default function PaymentGatewayPage() {
                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--text-tertiary)] group-focus-within:text-emerald-500 transition-colors" />
                <input 
                  type="text" 
+                 value={searchQuery}
+                 onChange={(e) => setSearchQuery(e.target.value)}
                  placeholder="Search Ref ID..." 
-                 className="pl-8 pr-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all w-32 text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50 italic"
+                 className="pl-8 pr-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-black tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all w-32 text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50 italic"
                />
             </div>
          </div>
@@ -92,7 +100,7 @@ export default function PaymentGatewayPage() {
                   </tr>
                </thead>
                <tbody className="divide-y divide-[var(--border-subtle)]">
-                  {financeTransactions.map((txn) => (
+                  {filteredTransactions.map((txn) => (
                      <tr key={txn.id} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
                         <td className="py-2 px-4 font-medium  text-[var(--text-tertiary)]">{txn.id}</td>
                         <td className="py-2 px-4">

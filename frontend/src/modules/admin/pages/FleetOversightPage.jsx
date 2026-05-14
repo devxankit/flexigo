@@ -1,4 +1,5 @@
 import React from 'react';
+import * as XLSX from 'xlsx';
 import { 
   Truck, 
   MapPin, 
@@ -59,25 +60,49 @@ export default function FleetOversightPage() {
     const reader = new FileReader();
     reader.onload = async (event) => {
       try {
-        const text = event.target.result;
-        const rows = text.split('\n').map(r => r.trim()).filter(r => r !== '');
-        if (rows.length < 2) throw new Error('CSV file is empty or missing headers');
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        
+        // Get the first sheet
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        
+        // Convert to JSON with headers
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        
+        if (jsonData.length < 2) throw new Error('File is empty or missing headers');
 
-        const headers = rows[0].split(',').map(h => h.trim());
-        const vehiclesToUpload = rows.slice(1).map(row => {
-          const values = row.split(',').map(v => v.trim());
+        // Extract headers and clean them
+        const headers = jsonData[0].map(h => 
+          String(h || '').trim().toLowerCase().replace(/^["']|["']$/g, '')
+        );
+
+        console.log("DEBUG: Detected Headers ->", headers);
+
+        const vehiclesToUpload = jsonData.slice(1).map((row) => {
           const obj = {};
           headers.forEach((header, index) => {
-            if (header && values[index]) obj[header] = values[index];
+            if (header && row[index] !== undefined) {
+              let key = header;
+              if (key === 'franshise' || key === 'hub' || key === 'branch') key = 'franchise';
+              obj[key] = String(row[index]).trim();
+            }
           });
           return obj;
-        });
+        }).filter(v => (v.plate || v.plate_number) && (v.vin || v.chassis_number));
+
+        if (vehiclesToUpload.length === 0) {
+          throw new Error(`No valid records found. System detected these headers: [${headers.join(', ')}]. Please ensure your file has "Plate" and "VIN" columns.`);
+        }
+
+        console.log("DEBUG: Final Payload ->", vehiclesToUpload);
 
         const res = await bulkAddVehicles(vehiclesToUpload);
         if (res.success) {
-          alert(`Success: ${res.message}`);
           setIsBulkModalOpen(false);
-          fetchAllVehicles(activeFilters);
+          // Re-fetch data to show the new vehicles in the list immediately
+          await fetchAllVehicles(activeFilters);
+          alert(`Success: ${res.message}`);
         } else {
           alert(`Error: ${res.message}`);
         }
@@ -89,7 +114,7 @@ export default function FleetOversightPage() {
         e.target.value = ''; // Reset input
       }
     };
-    reader.readAsText(file);
+    reader.readAsArrayBuffer(file);
   };
 
   const filteredVehicles = (vehicles || []).filter(v => {
@@ -110,7 +135,7 @@ export default function FleetOversightPage() {
             <div className="flex items-center gap-2">
                <div className="w-1 h-5 bg-emerald-600 rounded-full" />
                <h1 className="text-xl font-black tracking-tighter text-[var(--text-primary)] uppercase italic">
-                  Fleet <span className="text-emerald-500">Oversight</span>
+                  Fleet <span className="text-emerald-500">Addition</span>
                </h1>
             </div>
             <p className="text-[8px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] ml-3">
@@ -187,9 +212,15 @@ export default function FleetOversightPage() {
                   {filteredVehicles.map((vehicle, vIdx) => (
                      <tr key={vehicle._id} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
                         <td className="py-2 px-4 whitespace-nowrap">
-                           <div className="flex flex-col gap-0">
-                              <span className="font-medium text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{vehicle.plate}</span>
-                              <span className="font-medium text-[var(--text-tertiary)]">{vehicle.model || 'Flexigo Pro v2'}</span>
+                           <div className="flex flex-col gap-0.5">
+                              <span className="font-bold text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors leading-none">{vehicle.plate}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold text-[var(--text-tertiary)]">{vehicle.model || 'Flexigo Pro v2'}</span>
+                                <span className="text-[8px] px-1.5 py-0.5 bg-emerald-500/5 border border-emerald-500/10 rounded text-emerald-500/70 font-black tracking-widest uppercase italic">VIN: {vehicle.vin}</span>
+                              </div>
+                              <span className="text-[8px] font-black uppercase tracking-tighter text-[var(--text-tertiary)] opacity-60 italic">
+                                FRANCHISE: <span className="text-emerald-500/80">{vehicle.franchise?.hubName || 'Global Fleet'}</span>
+                              </span>
                            </div>
                         </td>
                         <td className="py-2 px-4">
@@ -262,7 +293,7 @@ export default function FleetOversightPage() {
                   <div className="w-16 h-16 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-tertiary)] mb-4 group-hover:scale-110 group-hover:text-emerald-500 transition-all duration-500 shadow-xl">
                     <Zap size={24} className={isUploading ? 'animate-bounce' : ''} />
                   </div>
-                  <h4 className="text-xs font-black text-[var(--text-primary)] uppercase tracking-widest mb-1 italic">Drop CSV Registry</h4>
+                  <h4 className="text-xs font-black text-[var(--text-primary)] uppercase tracking-widest mb-1 italic">Drop CSV / Excel Registry</h4>
                   <p className="text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest mb-6 opacity-60">Columns: plate, vin, model, franchise</p>
                   
                   <label className="cursor-pointer">
@@ -271,7 +302,7 @@ export default function FleetOversightPage() {
                     </span>
                     <input 
                       type="file" 
-                      accept=".csv" 
+                      accept=".csv, .xlsx, .xls" 
                       className="hidden" 
                       onChange={handleCsvUpload}
                       disabled={isUploading}

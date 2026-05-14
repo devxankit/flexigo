@@ -147,7 +147,7 @@ export const getVehicles = async (req, res) => {
       ? { ...dateFilter, franchise: resolvedFranchiseId } 
       : (fId ? { ...dateFilter, franchise: null } : { ...dateFilter });
     
-    let vehicles = await Vehicle.find(query).sort('-createdAt').lean();
+    let vehicles = await Vehicle.find(query).sort('-createdAt').populate('franchise', 'hubName ownerName businessDetails').lean();
 
     // Attach live location and rider name from assignments
     for (let vehicle of vehicles) {
@@ -165,6 +165,17 @@ export const getVehicles = async (req, res) => {
                 vehicle.riderPhone = rider.phone;
                 vehicle.lastLocation = rider.lastLocation;
                 vehicle.currentSpeed = rider.currentSpeed;
+             }
+          }
+
+          // Fallback: If no rider location, use Franchise location (Hub location)
+          if (!vehicle.lastLocation && vehicle.franchise && vehicle.franchise.businessDetails) {
+             const bd = vehicle.franchise.businessDetails;
+             if (bd.latitude && bd.longitude) {
+                vehicle.lastLocation = {
+                   lat: bd.latitude,
+                   lng: bd.longitude
+                };
              }
           }
        } catch (err) {

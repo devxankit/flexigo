@@ -22,7 +22,8 @@ import {
   Plus,
   Pencil,
   X,
-  Save
+  Save,
+  Wallet
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
@@ -39,6 +40,9 @@ export default function HubDetailsPage() {
   const [vehicles, setVehicles] = useState([]);
   const [loadingVehicles, setLoadingVehicles] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [isCrediting, setIsCrediting] = useState(false);
+  const [creditAmount, setCreditAmount] = useState('');
+  const [creditDesc, setCreditDesc] = useState('');
   const [editData, setEditData] = useState({});
 
   useEffect(() => {
@@ -150,6 +154,12 @@ export default function HubDetailsPage() {
             className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-secondary)] border border-blue-500/30 text-blue-400 rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-blue-500/10 transition-all active:scale-95"
           >
             <Pencil size={13} /> Edit Franchise
+          </button>
+          <button
+            onClick={() => setIsCrediting(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/30 text-amber-500 rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-amber-500/20 transition-all active:scale-95"
+          >
+            <Wallet size={13} /> Credit Wallet
           </button>
           <button
             onClick={() => navigate(`/admin/fleet/add?hubId=${hubId}`)}
@@ -495,6 +505,83 @@ export default function HubDetailsPage() {
                   className="w-full py-4 bg-blue-600 text-white rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-3 mt-4"
                 >
                   <Save size={16} /> Save Changes
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Credit Wallet Modal */}
+      <AnimatePresence>
+        {isCrediting && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="w-full max-w-md bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-[2.5rem] p-10 shadow-2xl space-y-6"
+            >
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <h2 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tighter italic">
+                    Credit <span className="text-amber-500">Wallet</span>
+                  </h2>
+                  <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">Inject liquidity into node</p>
+                </div>
+                <button onClick={() => setIsCrediting(false)} className="p-2 hover:bg-rose-600/10 hover:text-rose-500 transition-all rounded-xl">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form 
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  try {
+                    const res = await (await import('../../../lib/axios')).default.post(`/admin/franchise/${hubId}/credit`, {
+                      amount: creditAmount,
+                      description: creditDesc,
+                      type: 'Bonus'
+                    });
+                    if (res.data.success) {
+                      alert(`Successfully credited ₹${creditAmount}`);
+                      setIsCrediting(false);
+                      setCreditAmount('');
+                      setCreditDesc('');
+                      // Refresh hub data
+                      setHub(prev => ({ ...prev, revenue: (prev.revenue || 0) + Number(creditAmount) }));
+                    }
+                  } catch (err) {
+                    alert(err.response?.data?.message || 'Credit failed');
+                  }
+                }} 
+                className="space-y-4"
+              >
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Amount (₹)</label>
+                  <input
+                    type="number"
+                    required
+                    value={creditAmount}
+                    onChange={e => setCreditAmount(e.target.value)}
+                    placeholder="Enter amount"
+                    className="w-full px-5 py-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-lg font-black italic tracking-widest focus:ring-1 focus:ring-amber-500/20 focus:border-amber-500/40 outline-none transition-all placeholder:text-[var(--text-tertiary)]/30"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Description</label>
+                  <textarea
+                    value={creditDesc}
+                    onChange={e => setCreditDesc(e.target.value)}
+                    placeholder="Reason for credit..."
+                    className="w-full px-5 py-3 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-widest focus:ring-1 focus:ring-amber-500/20 focus:border-amber-500/40 outline-none transition-all min-h-[100px] resize-none placeholder:text-[var(--text-tertiary)]/50"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full py-4 bg-amber-500 text-white rounded-[1.5rem] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl shadow-amber-500/20 hover:bg-amber-600 transition-all active:scale-95 flex items-center justify-center gap-3 mt-4"
+                >
+                  <Save size={16} /> Authorize Credit
                 </button>
               </form>
             </motion.div>
