@@ -15,7 +15,12 @@ if (serviceAccount) {
   admin.initializeApp({
     credential: admin.credential.cert({
       ...serviceAccount,
-      private_key: serviceAccount.private_key.replace(/\\n/g, '\n')
+      private_key: serviceAccount.private_key
+        .replace(/\\n/g, '\n')
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .join('\n')
     })
   });
   console.log('✅ Firebase Initialized');
