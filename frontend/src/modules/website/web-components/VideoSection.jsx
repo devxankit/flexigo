@@ -1,8 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-
-// Upload video to Cloudinary and replace this URL
-const PROJECT_VIDEO_URL = 'YOUR_CLOUDINARY_VIDEO_URL_HERE';
+import projectVideo from '../../../assets/Clean_brand-focused_ending(flexigo)._202604081303.mp4';
 
 const VideoSection = () => {
   const videoRef = useRef(null);
@@ -12,7 +10,7 @@ const VideoSection = () => {
   useEffect(() => {
     let observer;
     const loadVideo = () => {
-      setVideoSrc(PROJECT_VIDEO_URL);
+      setVideoSrc(projectVideo);
     };
 
     if (typeof IntersectionObserver !== 'undefined') {
