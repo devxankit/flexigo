@@ -2,7 +2,7 @@ import admin from 'firebase-admin';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-const serviceAccountPath = join(process.cwd(), 'config', 'flexigo-74574-firebase-adminsdk-fbsvc-7ea86115da.json');
+const serviceAccountPath = join(process.cwd(), 'config', 'firebase-key.json');
 try {
   const content = readFileSync(serviceAccountPath, 'utf8');
   const serviceAccount = JSON.parse(content);

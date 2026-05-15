@@ -2,19 +2,19 @@ import admin from 'firebase-admin';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
-const serviceAccountPath = join(process.cwd(), 'config', 'flexigo-74574-firebase-adminsdk-fbsvc-7ea86115da.json');
-
-let serviceAccount = null;
+const serviceAccountName = 'firebase-key.json';
+const serviceAccountPath = existsSync(join(process.cwd(), 'config', serviceAccountName))
+  ? join(process.cwd(), 'config', serviceAccountName)
+  : join(process.cwd(), 'backend', 'config', serviceAccountName);
 
 if (existsSync(serviceAccountPath)) {
-  serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
-  console.log('🚀 Initializing Firebase with Service Account File...');
+  console.log('🚀 Initializing Firebase with:', serviceAccountPath);
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccountPath)
   });
-  console.log('✅ Firebase Initialized');
+  console.log('✅ Firebase Initialized Successfully');
 } else {
-  console.log('❌ Firebase Service Account file not found at:', serviceAccountPath);
+  console.log('❌ CRITICAL: Firebase Service Account file NOT FOUND at:', serviceAccountPath);
 }
 
 // Allowed Platforms Configuration
