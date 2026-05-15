@@ -203,17 +203,18 @@ export const getAllHubs = async (req, res) => {
 
       // Best available display name from DB
       const displayName =
+        f.hubName ||
         (f.businessDetails?.name && f.businessDetails.name.length < 40
           ? f.businessDetails.name
           : null) ||
         f.ownerName ||
-        f.phone ||
-        'Unknown Hub';
+        (f.phone ? `Partner ${f.phone.slice(-4)}` : 'Unknown Hub');
 
       const displayCity =
+        f.city ||
         f.businessDetails?.location ||
         f.businessDetails?.address ||
-        '-';
+        '—';
 
       return {
         id: f._id,

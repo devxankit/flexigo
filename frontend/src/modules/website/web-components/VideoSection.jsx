@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import projectVideo from '../../../assets/Clean_brand-focused_ending(flexigo)._202604081303.mp4';
+// Upload video to Cloudinary and replace this URL
+const PROJECT_VIDEO_URL = 'YOUR_CLOUDINARY_VIDEO_URL_HERE';
 
 const VideoSection = () => {
   const videoRef = useRef(null);
@@ -27,9 +28,9 @@ const VideoSection = () => {
           playsInline 
           className="absolute inset-0 w-full h-full object-cover"
         >
-          <source 
-            src={projectVideo} 
-            type="video/mp4" 
+          <source
+            src={PROJECT_VIDEO_URL}
+            type="video/mp4"
           />
           {/* Fallback if the path still fails to resolve */}
           Your browser does not support the video tag.

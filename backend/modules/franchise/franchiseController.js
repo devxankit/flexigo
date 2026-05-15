@@ -437,24 +437,30 @@ export const verifyAadhaarOTP = async (req, res) => {
 // @route   POST /api/v1/franchise/fleet/add
 export const addVehicle = async (req, res) => {
   try {
-    const { rcImage, ...vehicleData } = req.body;
+    const { rcImage, insuranceDocImage, pucDocImage, ...vehicleData } = req.body;
     const franchiseId = req.franchise._id;
 
-    // Force the franchise ID to be the logged-in franchise admin's ID
     vehicleData.franchise = franchiseId;
 
-    // Handle RC Image upload if provided
-    let rcUrl = '';
-    if (rcImage && rcImage.startsWith('data:image')) {
-      const result = await cloudinary.uploader.upload(rcImage, {
-        folder: `flexigo/vehicles/rc/${franchiseId}`,
+    const uploadDoc = async (base64, folder) => {
+      if (!base64 || !base64.startsWith('data:image')) return '';
+      const result = await cloudinary.uploader.upload(base64, {
+        folder: `flexigo/vehicles/${folder}/${franchiseId}`,
       });
-      rcUrl = result.secure_url;
-    }
+      return result.secure_url;
+    };
+
+    const [rcUrl, insuranceDocUrl, pucDocUrl] = await Promise.all([
+      uploadDoc(rcImage, 'rc'),
+      uploadDoc(insuranceDocImage, 'insurance'),
+      uploadDoc(pucDocImage, 'puc'),
+    ]);
 
     const vehicle = await Vehicle.create({
       ...vehicleData,
-      rcUrl,
+      ...(rcUrl && { rcUrl }),
+      ...(insuranceDocUrl && { insuranceDocUrl }),
+      ...(pucDocUrl && { pucDocUrl }),
     });
 
     res.status(201).json({

@@ -1,3 +1,8 @@
+# Large media files (host on CDN instead)
+*.mp4
+*.mov
+*.avi
+
 # Logs
 logs
 *.log

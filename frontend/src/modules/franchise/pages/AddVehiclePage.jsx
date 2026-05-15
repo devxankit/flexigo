@@ -1,14 +1,39 @@
 import React, { useState } from 'react';
-import { 
-  Zap, 
-  ArrowLeft, 
-  Upload, 
-  CheckCircle, 
-  FileText, 
-  Plus, 
+import {
+  Zap,
+  ArrowLeft,
+  Upload,
+  CheckCircle,
+  FileText,
+  Plus,
   ChevronRight,
   ArrowRight
 } from 'lucide-react';
+
+function DocUpload({ label, value, onChange, accent = 'emerald' }) {
+  const colors = {
+    emerald: { border: 'border-emerald-500', bg: 'bg-emerald-600/5', icon: 'bg-emerald-600 text-white', idle: 'text-emerald-500 bg-emerald-600/10 border border-emerald-500/20' },
+    blue: { border: 'border-blue-500', bg: 'bg-blue-600/5', icon: 'bg-blue-600 text-white', idle: 'text-blue-500 bg-blue-600/10 border border-blue-500/20' },
+    amber: { border: 'border-amber-500', bg: 'bg-amber-600/5', icon: 'bg-amber-600 text-white', idle: 'text-amber-500 bg-amber-600/10 border border-amber-500/20' },
+  };
+  const c = colors[accent] || colors.emerald;
+  return (
+    <label className={`w-full p-5 border-2 border-dashed rounded-2xl flex items-center gap-5 group transition-all cursor-pointer ${value ? `${c.border} ${c.bg}` : 'border-[var(--border-subtle)] hover:border-[var(--text-tertiary)]/30'}`}>
+      <input type="file" accept="image/*,application/pdf" onChange={onChange} className="hidden" />
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${value ? c.icon : c.idle}`}>
+        {value ? <CheckCircle size={20} /> : <Upload size={20} />}
+      </div>
+      <div>
+        <p className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-widest italic">
+          {value ? `${label} ✓` : label}
+        </p>
+        <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest opacity-60 mt-0.5">
+          {value ? 'Image ready — click to replace' : 'JPG, PNG or PDF'}
+        </p>
+      </div>
+    </label>
+  );
+}
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useFleetStore } from '../store/fleetStore';
@@ -32,7 +57,9 @@ export default function AddVehiclePage() {
     insuranceExpiry: '',
     pUCNumber: '',
     pUCExpiry: '',
-    rcImage: ''
+    rcImage: '',
+    insuranceDocImage: '',
+    pucDocImage: ''
   });
 
   const nextStep = () => setStep(prev => prev + 1);
@@ -47,11 +74,11 @@ export default function AddVehiclePage() {
     });
   };
 
-  const handleImageUpload = async (e) => {
+  const handleImageUpload = async (e, field) => {
     const file = e.target.files[0];
     if (file) {
       const base64 = await fileToBase64(file);
-      setFormData({ ...formData, rcImage: base64 });
+      setFormData(prev => ({ ...prev, [field]: base64 }));
     }
   };
 
@@ -191,81 +218,79 @@ export default function AddVehiclePage() {
             )}
 
             {step === 2 && (
-              <motion.div 
-                initial={{ opacity: 0, x: 20 }} 
-                animate={{ opacity: 1, x: 0 }} 
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
                 className="space-y-8"
               >
                 <div className="space-y-1">
                    <h3 className="text-lg font-black text-[var(--text-primary)] uppercase italic tracking-tight">Compliance Payload</h3>
                    <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">RTO Documentation & Legal Assets</p>
                 </div>
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="col-span-2">
-                    <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">RC Certificate Sync</label>
-                    <label className={`mt-3 w-full p-8 border-2 border-dashed rounded-3xl flex flex-col items-center gap-4 group transition-all cursor-pointer ${
-                        formData.rcImage ? 'border-emerald-500 bg-emerald-600/5' : 'border-[var(--border-subtle)] hover:border-emerald-500/40 hover:bg-emerald-600/5'
-                    }`}>
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={handleImageUpload} 
-                        className="hidden" 
+
+                {/* RC Certificate */}
+                <div className="space-y-2">
+                  <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">RC Certificate</label>
+                  <DocUpload label="RC Certificate" value={formData.rcImage} onChange={e => handleImageUpload(e, 'rcImage')} />
+                </div>
+
+                {/* Insurance */}
+                <div className="pt-2 border-t border-[var(--border-subtle)] space-y-4">
+                  <p className="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-2">Insurance Details</p>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Policy No.</label>
+                      <input
+                        required
+                        value={formData.insurancePolicy}
+                        onChange={(e) => setFormData({...formData, insurancePolicy: e.target.value})}
+                        placeholder="POL_7788-99"
+                        className="w-full px-6 py-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all placeholder:text-[var(--text-tertiary)]/50 italic text-[var(--text-secondary)]"
                       />
-                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform ${
-                          formData.rcImage ? 'bg-emerald-600 text-white' : 'bg-emerald-600/10 border border-emerald-500/20 text-emerald-500 group-hover:scale-110'
-                      }`}>
-                         {formData.rcImage ? <CheckCircle size={24} /> : <Upload size={24} />}
-                      </div>
-                      <div className="text-center">
-                         <p className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-widest mb-1 italic">
-                            {formData.rcImage ? 'DOCUMENT_SYNCED_✓' : 'RC Certificate Sync'}
-                         </p>
-                         <p className="text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest opacity-60">
-                            {formData.rcImage ? 'IMAGE_PAYLOAD_READY' : 'Upload High-Res (Front & Back)'}
-                         </p>
-                      </div>
-                    </label>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Expiry Date</label>
+                      <input
+                        type="date"
+                        required
+                        value={formData.insuranceExpiry}
+                        onChange={(e) => setFormData({...formData, insuranceExpiry: e.target.value})}
+                        className="w-full px-6 py-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic text-[var(--text-secondary)]"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <DocUpload label="Insurance Certificate" value={formData.insuranceDocImage} onChange={e => handleImageUpload(e, 'insuranceDocImage')} accent="blue" />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Insurance Policy No.</label>
-                    <input 
-                      required
-                      value={formData.insurancePolicy}
-                      onChange={(e) => setFormData({...formData, insurancePolicy: e.target.value})}
-                      placeholder="POL_7788-99"
-                      className="w-full px-6 py-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all placeholder:text-[var(--text-tertiary)]/50 italic text-[var(--text-secondary)]"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Insurance Expiry</label>
-                    <input 
-                      type="date"
-                      required
-                      value={formData.insuranceExpiry}
-                      onChange={(e) => setFormData({...formData, insuranceExpiry: e.target.value})}
-                      className="w-full px-6 py-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic text-[var(--text-secondary)]"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">PUC Number</label>
-                    <input 
-                      required
-                      value={formData.pUCNumber}
-                      onChange={(e) => setFormData({...formData, pUCNumber: e.target.value})}
-                      placeholder="PUC_9900/88"
-                      className="w-full px-6 py-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all placeholder:text-[var(--text-tertiary)]/50 italic text-[var(--text-secondary)]"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">PUC Expiry</label>
-                    <input 
-                      type="date"
-                      required
-                      value={formData.pUCExpiry}
-                      onChange={(e) => setFormData({...formData, pUCExpiry: e.target.value})}
-                      className="w-full px-6 py-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic text-[var(--text-secondary)]"
-                    />
+                </div>
+
+                {/* PUC */}
+                <div className="pt-2 border-t border-[var(--border-subtle)] space-y-4">
+                  <p className="text-[9px] font-black text-amber-400 uppercase tracking-[0.2em] ml-2">PUC Certificate</p>
+                  <div className="grid grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">PUC Number</label>
+                      <input
+                        required
+                        value={formData.pUCNumber}
+                        onChange={(e) => setFormData({...formData, pUCNumber: e.target.value})}
+                        placeholder="PUC_9900/88"
+                        className="w-full px-6 py-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all placeholder:text-[var(--text-tertiary)]/50 italic text-[var(--text-secondary)]"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Expiry Date</label>
+                      <input
+                        type="date"
+                        required
+                        value={formData.pUCExpiry}
+                        onChange={(e) => setFormData({...formData, pUCExpiry: e.target.value})}
+                        className="w-full px-6 py-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic text-[var(--text-secondary)]"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <DocUpload label="PUC Certificate" value={formData.pucDocImage} onChange={e => handleImageUpload(e, 'pucDocImage')} accent="amber" />
+                    </div>
                   </div>
                 </div>
               </motion.div>

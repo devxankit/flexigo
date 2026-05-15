@@ -9,7 +9,8 @@ import {
   Signal,
   ArrowUpRight,
   Globe,
-  ChevronRight
+  ChevronRight,
+  MapPin
 } from 'lucide-react';
 import AdminStatCard from '../components/AdminStatCard';
 import OpsFilter from '../components/OpsFilter';
@@ -230,9 +231,11 @@ export default function AdminDashboard() {
                   {hubs.map((hub, idx) => (
                      <tr key={hub.id} className={`group/row hover:bg-[var(--bg-tertiary)]/30 transition-colors ${idx === 0 && hub.distanceKm !== null ? 'bg-emerald-500/[0.03]' : ''}`}>
                         <td className="py-2 px-4">
-                           <div className="flex flex-col gap-0">
-                              <span className="font-medium text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{hub.name}</span>
-                              <span className="font-medium text-[var(--text-tertiary)]">{hub.id}</span>
+                           <div className="flex items-center gap-2.5">
+                              <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
+                                 <MapPin size={14} />
+                              </div>
+                              <span className="font-bold text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors tracking-tight">{hub.name}</span>
                            </div>
                         </td>
                         <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]">{hub.city}</td>

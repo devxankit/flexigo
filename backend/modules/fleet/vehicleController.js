@@ -9,25 +9,24 @@ import cloudinary from '../../config/cloudinary.js';
 // @route   POST /api/v1/fleet/add
 export const addVehicle = async (req, res) => {
   try {
-    const { rcImage, ...vehicleData } = req.body;
+    const { rcImage, insuranceDocImage, pucDocImage, ...vehicleData } = req.body;
 
     // Robust franchise resolution
     if (vehicleData.franchise) {
       let fId = vehicleData.franchise;
       if (typeof fId === 'string') {
-        fId = fId.trim().replace(/^\(|\)$/g, ''); // Strip leading/trailing parentheses
+        fId = fId.trim().replace(/^\(|\)$/g, '');
       }
 
       if (mongoose.Types.ObjectId.isValid(fId)) {
         vehicleData.franchise = fId;
       } else {
-        // Try searching by hubName or ownerName as fallback if name was passed
-        const hub = await Franchise.findOne({ 
+        const hub = await Franchise.findOne({
           $or: [
-            { hubName: fId }, 
+            { hubName: fId },
             { "businessDetails.name": fId },
             { ownerName: fId }
-          ] 
+          ]
         });
         if (hub) {
           vehicleData.franchise = hub._id;
@@ -38,18 +37,23 @@ export const addVehicle = async (req, res) => {
       }
     }
 
-    // Handle RC Image upload if provided
-    let rcUrl = '';
-    if (rcImage && rcImage.startsWith('data:image')) {
-      const result = await cloudinary.uploader.upload(rcImage, {
-        folder: 'flexigo/vehicles/rc',
-      });
-      rcUrl = result.secure_url;
-    }
+    const uploadDoc = async (base64, folder) => {
+      if (!base64 || !base64.startsWith('data:image')) return '';
+      const result = await cloudinary.uploader.upload(base64, { folder: `flexigo/vehicles/${folder}` });
+      return result.secure_url;
+    };
+
+    const [rcUrl, insuranceDocUrl, pucDocUrl] = await Promise.all([
+      uploadDoc(rcImage, 'rc'),
+      uploadDoc(insuranceDocImage, 'insurance'),
+      uploadDoc(pucDocImage, 'puc'),
+    ]);
 
     const vehicle = await Vehicle.create({
       ...vehicleData,
-      rcUrl,
+      ...(rcUrl && { rcUrl }),
+      ...(insuranceDocUrl && { insuranceDocUrl }),
+      ...(pucDocUrl && { pucDocUrl }),
     });
 
     res.status(201).json({
