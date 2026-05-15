@@ -1427,6 +1427,21 @@ export const getNotificationsFeed = async (req, res) => {
   }
 };
 
+// @desc    Delete a security log / audit log
+// @route   DELETE /api/v1/admin/security/:id
+export const deleteSecurityLog = async (req, res) => {
+  try {
+    const log = await AuditLog.findById(req.params.id);
+    if (!log) {
+      return res.status(404).json({ success: false, message: 'Log entry not found' });
+    }
+    await log.deleteOne();
+    res.status(200).json({ success: true, message: 'Log entry deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const getSubscriberData = async (req, res) => {
   try {
     const { range } = req.query;

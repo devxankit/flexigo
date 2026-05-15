@@ -22,7 +22,7 @@ import { useAdminDataStore } from '../store/adminDataStore';
 import { onMessageListener } from '../../../lib/firebase';
 
 export default function AlertCenterPage() {
-  const { auditLogs, networkStats, securityStats, fetchSecurityData } = useAdminDataStore();
+  const { auditLogs, networkStats, securityStats, fetchSecurityData, removeSecurityLog } = useAdminDataStore();
   const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
   const [searchQuery, setSearchQuery] = React.useState('');
   
@@ -144,7 +144,13 @@ export default function AlertCenterPage() {
                            <button className="p-1.5 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-emerald-500 hover:border-emerald-500/30 transition-all">
                               <CheckCircle size={12}/>
                            </button>
-                           <button className="p-1.5 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-rose-500 hover:border-rose-500/30 transition-all">
+                           <button 
+                             onClick={(e) => {
+                               e.stopPropagation();
+                               removeSecurityLog(log.id);
+                             }}
+                             className="p-1.5 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-rose-500 hover:border-rose-500/30 transition-all"
+                           >
                               <Trash2 size={12}/>
                            </button>
                         </div>

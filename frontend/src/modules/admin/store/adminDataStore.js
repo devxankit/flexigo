@@ -618,6 +618,22 @@ export const useAdminDataStore = create((set, get) => ({
     }
   },
 
+  removeSecurityLog: async (id) => {
+    try {
+      const res = await api.delete(`/admin/security/${id}`);
+      if (res.data.success) {
+        set(state => ({
+          auditLogs: state.auditLogs.filter(log => (log.id || log._id) !== id),
+          notifications: state.notifications.filter(n => (n.id || n._id) !== id)
+        }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to delete security log:", err);
+      return { success: false, message: err.message };
+    }
+  },
+
   subscribers: [],
   subscriberStats: { totalUsers: '0', dailyRiders: '0', kycVerified: '0%', flagged: '0' },
   fetchSubscriberData: async (filters = {}) => {

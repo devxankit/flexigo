@@ -1,13 +1,26 @@
 import admin from 'firebase-admin';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
 const serviceAccountPath = join(process.cwd(), 'config', 'flexigo-74574-firebase-adminsdk-fbsvc-7ea86115da.json');
-const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
+let serviceAccount = null;
+
+if (existsSync(serviceAccountPath)) {
+  serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
+}
+
+if (serviceAccount) {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      ...serviceAccount,
+      private_key: serviceAccount.private_key.replace(/\\n/g, '\n')
+    })
+  });
+  console.log('✅ Firebase Initialized');
+} else {
+  console.log('❌ Firebase Service Account not found. Push notifications will fail.');
+}
 
 // Allowed Platforms Configuration
 export const ALLOWED_PLATFORMS = ["web", "app", "android", "ios"];

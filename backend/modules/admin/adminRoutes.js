@@ -52,7 +52,8 @@ import {
   getNotificationsFeed,
   getAdminProfile,
   updateAdminPassword,
-  uploadKycCertificate
+  uploadKycCertificate,
+  deleteSecurityLog
 } from './adminController.js';
 import {
   getWebsitePlans,
@@ -147,6 +148,7 @@ router.patch('/franchise/payout/:id', updateFranchisePayoutStatus);
 router.get('/compliance', getComplianceData);
 router.get('/engagement', getEngagementData);
 router.get('/security', getSecurityData);
+router.delete('/security/:id', deleteSecurityLog);
 router.get('/vehicle-stats', getVehicleStats);
 router.get('/rider-behaviour', getRiderBehaviour);
 
