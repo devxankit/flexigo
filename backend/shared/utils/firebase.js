@@ -8,24 +8,13 @@ let serviceAccount = null;
 
 if (existsSync(serviceAccountPath)) {
   serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
-}
-
-if (serviceAccount) {
-  console.log('🚀 Initializing Firebase with Key ID:', serviceAccount.private_key_id);
+  console.log('🚀 Initializing Firebase with Service Account File...');
   admin.initializeApp({
-    credential: admin.credential.cert({
-      ...serviceAccount,
-      private_key: serviceAccount.private_key
-        .replace(/\\n/g, '\n')
-        .split('\n')
-        .map(line => line.trim())
-        .filter(line => line.length > 0)
-        .join('\n')
-    })
+    credential: admin.credential.cert(serviceAccountPath)
   });
   console.log('✅ Firebase Initialized');
 } else {
-  console.log('❌ Firebase Service Account not found. Push notifications will fail.');
+  console.log('❌ Firebase Service Account file not found at:', serviceAccountPath);
 }
 
 // Allowed Platforms Configuration
