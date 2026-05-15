@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Zap, 
-  ArrowLeft, 
-  Upload, 
-  CheckCircle, 
-  AlertCircle, 
-  FileText, 
-  ShieldCheck, 
+import {
+  Zap,
+  ArrowLeft,
+  Upload,
+  CheckCircle,
+  AlertCircle,
+  FileText,
+  ShieldCheck,
   Truck,
   Plus,
   ChevronRight,
@@ -53,8 +53,7 @@ export default function AddVehiclePage() {
   const [searchParams] = useSearchParams();
   const preSelectedHubId = searchParams.get('hubId');
   const { addVehicle, hubs, fetchHubs } = useAdminDataStore();
-  
-  // Load persisted state on mount
+
   const [step, setStep] = useState(() => {
     const savedStep = localStorage.getItem('add_vehicle_step');
     return savedStep ? parseInt(savedStep) : 1;
@@ -62,23 +61,7 @@ export default function AddVehiclePage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [ownershipType, setOwnershipType] = useState('platform'); // 'platform' or 'franchise'
-<<<<<<< HEAD
-  
-  const [formData, setFormData] = useState({
-    plate: '',
-    vin: '',
-    model: 'FlexiGo Pro v2',
-    manufactureDate: '',
-    insurancePolicy: '',
-    insuranceExpiry: '',
-    pUCNumber: '',
-    pUCExpiry: '',
-    rcImage: '',
-    insuranceDocImage: '',
-    pucDocImage: '',
-    franchise: ''
-=======
+  const [ownershipType, setOwnershipType] = useState('platform');
 
   const [formData, setFormData] = useState(() => {
     const savedData = localStorage.getItem('add_vehicle_data');
@@ -92,13 +75,13 @@ export default function AddVehiclePage() {
       pUCNumber: '',
       pUCExpiry: '',
       rcImage: '',
+      insuranceDocImage: '',
+      pucDocImage: '',
       vehicleImages: [],
       franchise: ''
     };
->>>>>>> b8587a0b9246a36325c120634da153e6ec18fa8f
   });
 
-  // Persist state changes
   useEffect(() => {
     localStorage.setItem('add_vehicle_step', step.toString());
   }, [step]);
@@ -138,17 +121,17 @@ export default function AddVehiclePage() {
   const handleVehicleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
     const existingImages = formData.vehicleImages || [];
-    
+
     if (existingImages.length + files.length > 3) {
       alert("MAX_PAYLOAD_BREACH: Total limit is 3 images. You already have " + existingImages.length);
-      e.target.value = ''; 
+      e.target.value = '';
       return;
     }
 
     const base64Promises = files.map(file => fileToBase64(file));
     const base64s = await Promise.all(base64Promises);
     setFormData({ ...formData, vehicleImages: [...existingImages, ...base64s] });
-    e.target.value = ''; // Reset for same file re-selection
+    e.target.value = '';
   };
 
   const removeVehicleImage = (index) => {
@@ -158,30 +141,28 @@ export default function AddVehiclePage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (ownershipType === 'franchise' && !formData.franchise) {
       alert('Please select a franchise for this vehicle.');
       return;
     }
 
     setIsSubmitting(true);
-    
+
     try {
       const submissionData = {
         ...formData,
         franchise: ownershipType === 'platform' ? null : (formData.franchise || null)
       };
 
-      // Clean up franchise string if it's (sds) or similar
       if (submissionData.franchise && typeof submissionData.franchise === 'string') {
         submissionData.franchise = submissionData.franchise.trim().replace(/^\(|\)$/g, '');
       }
 
       const res = await addVehicle(submissionData);
-      
+
       if (res.success) {
         setIsSuccess(true);
-        // Clear persistence on success
         localStorage.removeItem('add_vehicle_step');
         localStorage.removeItem('add_vehicle_data');
       } else {
@@ -198,7 +179,7 @@ export default function AddVehiclePage() {
     <div className="max-w-3xl mx-auto pb-24">
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
-        <button 
+        <button
           onClick={() => navigate(-1)}
           className="p-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl text-[var(--text-tertiary)] hover:text-emerald-500 transition-all"
         >
@@ -215,7 +196,7 @@ export default function AddVehiclePage() {
       </div>
 
       {isSuccess ? (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="bg-[var(--bg-secondary)] border border-emerald-500/20 rounded-[3rem] p-16 text-center shadow-2xl relative overflow-hidden"
@@ -230,7 +211,7 @@ export default function AddVehiclePage() {
           <p className="text-xs text-[var(--text-tertiary)] font-bold uppercase tracking-widest leading-relaxed max-w-sm mx-auto mb-10 italic">
             Vehicle <span className="text-emerald-500 font-extrabold">{formData.plate}</span> has been successfully added to the {ownershipType === 'platform' ? 'Platform' : 'Franchise'} registry.
           </p>
-          <button 
+          <button
             onClick={() => navigate('/admin/fleet')}
             className="px-10 py-5 bg-emerald-600 text-white rounded-3xl text-[10px] font-black uppercase tracking-[.4em] shadow-xl shadow-emerald-950/40 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-3 mx-auto group"
           >
@@ -255,23 +236,23 @@ export default function AddVehiclePage() {
 
           <form onSubmit={handleSubmit} className="space-y-10">
             {step === 1 && (
-              <motion.div 
-                initial={{ opacity: 0, x: 20 }} 
-                animate={{ opacity: 1, x: 0 }} 
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
                 className="space-y-8"
               >
                 <div className="space-y-1">
                    <h3 className="text-lg font-black text-[var(--text-primary)] uppercase italic tracking-tight">Ownership Classification</h3>
                    <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">Define asset host assignment</p>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     type="button"
                     onClick={() => setOwnershipType('platform')}
                     className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 group ${
-                      ownershipType === 'platform' 
-                      ? 'border-emerald-500 bg-emerald-500/5' 
+                      ownershipType === 'platform'
+                      ? 'border-emerald-500 bg-emerald-500/5'
                       : 'border-[var(--border-subtle)] hover:border-emerald-500/20 bg-[var(--bg-tertiary)]'
                     }`}
                   >
@@ -290,8 +271,8 @@ export default function AddVehiclePage() {
                     type="button"
                     onClick={() => setOwnershipType('franchise')}
                     className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-3 group ${
-                      ownershipType === 'franchise' 
-                      ? 'border-emerald-500 bg-emerald-500/5' 
+                      ownershipType === 'franchise'
+                      ? 'border-emerald-500 bg-emerald-500/5'
                       : 'border-[var(--border-subtle)] hover:border-emerald-500/20 bg-[var(--bg-tertiary)]'
                     }`}
                   >
@@ -317,7 +298,7 @@ export default function AddVehiclePage() {
                     >
                       <div className="space-y-2">
                         <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Target Franchise / Hub</label>
-                        <select 
+                        <select
                           required
                           value={formData.franchise}
                           onChange={(e) => setFormData({...formData, franchise: e.target.value})}
@@ -338,9 +319,9 @@ export default function AddVehiclePage() {
             )}
 
             {step === 2 && (
-              <motion.div 
-                initial={{ opacity: 0, x: 20 }} 
-                animate={{ opacity: 1, x: 0 }} 
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
                 className="space-y-8"
               >
                 <div className="space-y-1">
@@ -350,7 +331,7 @@ export default function AddVehiclePage() {
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Number Plate</label>
-                    <input 
+                    <input
                       required
                       value={formData.plate}
                       onChange={(e) => setFormData({...formData, plate: e.target.value})}
@@ -360,7 +341,7 @@ export default function AddVehiclePage() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">VIN / Chassis Number</label>
-                    <input 
+                    <input
                       required
                       value={formData.vin}
                       onChange={(e) => setFormData({...formData, vin: e.target.value})}
@@ -370,7 +351,7 @@ export default function AddVehiclePage() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Vehicle Model</label>
-                    <select 
+                    <select
                       value={formData.model}
                       onChange={(e) => setFormData({...formData, model: e.target.value})}
                       className="w-full px-6 py-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all appearance-none cursor-pointer italic"
@@ -382,7 +363,7 @@ export default function AddVehiclePage() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Date of Manufacture</label>
-                    <input 
+                    <input
                       type="date"
                       required
                       value={formData.manufactureDate}
@@ -448,7 +429,6 @@ export default function AddVehiclePage() {
                       />
                     </div>
                   </div>
-<<<<<<< HEAD
                 </div>
 
                 {/* PUC */}
@@ -483,104 +463,62 @@ export default function AddVehiclePage() {
                         accent="amber"
                       />
                     </div>
-=======
-                  
-                  <div className="col-span-2">
-                    <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Real World Vehicle Photo (Rider View)</label>
-                    <label className={`mt-3 w-full p-8 border-2 border-dashed rounded-3xl flex flex-col items-center gap-4 group transition-all cursor-pointer ${
-                        formData.vehicleImages.length > 0 ? 'border-emerald-500 bg-emerald-600/5' : 'border-[var(--border-subtle)] hover:border-emerald-500/40 hover:bg-emerald-600/5'
-                    }`}>
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        multiple
-                        onChange={handleVehicleImageUpload} 
-                        className="hidden" 
-                      />
-                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform ${
-                          formData.vehicleImages.length > 0 ? 'bg-emerald-600 text-white' : 'bg-emerald-600/10 border border-emerald-500/20 text-emerald-500 group-hover:scale-110'
-                      }`}>
-                         {formData.vehicleImages.length > 0 ? <CheckCircle size={24} /> : <Truck size={24} />}
-                      </div>
-                      <div className="text-center">
-                         <p className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-widest mb-1 italic">
-                            {formData.vehicleImages.length > 0 ? `${formData.vehicleImages.length}_PHOTOS_SYNCED_✓` : 'Vehicle Photo Sync (Max 3)'}
-                         </p>
-                         <p className="text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest opacity-60">
-                            {formData.vehicleImages.length > 0 ? 'ARRAY_PAYLOAD_READY' : 'Select up to 3 Real-time Photos'}
-                         </p>
-                      </div>
-                    </label>
-                    {/* Previews with Remove Option */}
-                    {formData.vehicleImages.length > 0 && (
-                      <div className="flex gap-3 mt-6 overflow-x-auto pb-2 scrollbar-hide">
-                        {formData.vehicleImages.map((img, idx) => (
-                          <div key={idx} className="relative group shrink-0">
-                            <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-emerald-500/20 shadow-lg">
-                              <img src={img} className="w-full h-full object-cover" />
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => removeVehicleImage(idx)}
-                              className="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity active:scale-90"
-                            >
-                              <X size={12} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
+                </div>
 
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Insurance Policy No.</label>
-                    <input 
-                      required
-                      value={formData.insurancePolicy}
-                      onChange={(e) => setFormData({...formData, insurancePolicy: e.target.value})}
-                      placeholder="POL_7788-99"
-                      className="w-full px-6 py-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all placeholder:text-[var(--text-tertiary)]/50 italic text-[var(--text-secondary)]"
+                {/* Vehicle Photos */}
+                <div className="pt-2 border-t border-[var(--border-subtle)] space-y-4">
+                  <p className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.2em] ml-2">Vehicle Photos</p>
+                  <label className={`w-full p-8 border-2 border-dashed rounded-3xl flex flex-col items-center gap-4 group transition-all cursor-pointer ${
+                      (formData.vehicleImages || []).length > 0 ? 'border-emerald-500 bg-emerald-600/5' : 'border-[var(--border-subtle)] hover:border-emerald-500/40 hover:bg-emerald-600/5'
+                  }`}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleVehicleImageUpload}
+                      className="hidden"
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Insurance Expiry</label>
-                    <input 
-                      type="date"
-                      required
-                      value={formData.insuranceExpiry}
-                      onChange={(e) => setFormData({...formData, insuranceExpiry: e.target.value})}
-                      className="w-full px-6 py-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic text-[var(--text-secondary)]"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">PUC Number</label>
-                    <input 
-                      required
-                      value={formData.pUCNumber}
-                      onChange={(e) => setFormData({...formData, pUCNumber: e.target.value})}
-                      placeholder="PUC_9900/88"
-                      className="w-full px-6 py-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all placeholder:text-[var(--text-tertiary)]/50 italic text-[var(--text-secondary)]"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">PUC Expiry</label>
-                    <input 
-                      type="date"
-                      required
-                      value={formData.pUCExpiry}
-                      onChange={(e) => setFormData({...formData, pUCExpiry: e.target.value})}
-                      className="w-full px-6 py-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic text-[var(--text-secondary)]"
-                    />
->>>>>>> b8587a0b9246a36325c120634da153e6ec18fa8f
-                  </div>
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform ${
+                        (formData.vehicleImages || []).length > 0 ? 'bg-emerald-600 text-white' : 'bg-emerald-600/10 border border-emerald-500/20 text-emerald-500 group-hover:scale-110'
+                    }`}>
+                       {(formData.vehicleImages || []).length > 0 ? <CheckCircle size={24} /> : <Truck size={24} />}
+                    </div>
+                    <div className="text-center">
+                       <p className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-widest mb-1 italic">
+                          {(formData.vehicleImages || []).length > 0 ? `${formData.vehicleImages.length}_PHOTOS_SYNCED_✓` : 'Vehicle Photo Sync (Max 3)'}
+                       </p>
+                       <p className="text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest opacity-60">
+                          {(formData.vehicleImages || []).length > 0 ? 'ARRAY_PAYLOAD_READY' : 'Select up to 3 Real-time Photos'}
+                       </p>
+                    </div>
+                  </label>
+                  {(formData.vehicleImages || []).length > 0 && (
+                    <div className="flex gap-3 mt-6 overflow-x-auto pb-2 scrollbar-hide">
+                      {formData.vehicleImages.map((img, idx) => (
+                        <div key={idx} className="relative group shrink-0">
+                          <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-emerald-500/20 shadow-lg">
+                            <img src={img} className="w-full h-full object-cover" />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeVehicleImage(idx)}
+                            className="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity active:scale-90"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}
 
             {step === 4 && (
-              <motion.div 
-                initial={{ opacity: 0, x: 20 }} 
-                animate={{ opacity: 1, x: 0 }} 
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
                 className="space-y-8"
               >
                 <div className="space-y-1">
@@ -621,7 +559,7 @@ export default function AddVehiclePage() {
 
             <div className="flex gap-4 pt-10 border-t border-[var(--border-subtle)]">
                {step > 1 && (
-                  <button 
+                  <button
                     type="button"
                     onClick={prevStep}
                     className="px-10 py-5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] text-[var(--text-primary)] rounded-3xl text-[10px] font-black uppercase tracking-[.4em] hover:bg-[var(--bg-secondary)] transition-all active:scale-95 italic"
@@ -629,7 +567,7 @@ export default function AddVehiclePage() {
                     Back
                   </button>
                )}
-               <button 
+               <button
                  type={step === 4 ? 'submit' : 'button'}
                  onClick={step === 4 ? undefined : nextStep}
                  disabled={isSubmitting}

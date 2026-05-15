@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+
 // Upload video to Cloudinary and replace this URL
 const PROJECT_VIDEO_URL = 'YOUR_CLOUDINARY_VIDEO_URL_HERE';
 
@@ -11,7 +12,7 @@ const VideoSection = () => {
   useEffect(() => {
     let observer;
     const loadVideo = () => {
-      setVideoSrc(projectVideo);
+      setVideoSrc(PROJECT_VIDEO_URL);
     };
 
     if (typeof IntersectionObserver !== 'undefined') {
@@ -28,7 +29,6 @@ const VideoSection = () => {
         observer.observe(sectionRef.current);
       }
     } else {
-      // Fallback if IntersectionObserver is not supported
       if (document.readyState === 'complete') {
         loadVideo();
       } else {
@@ -54,50 +54,32 @@ const VideoSection = () => {
 
   return (
     <section ref={sectionRef} className="relative w-full h-[60vh] md:h-[80vh] overflow-hidden bg-black flex items-center justify-center">
-      
+
       {/* Edge-to-Edge Background Video (Project Source) */}
       <div className="absolute inset-0 w-full h-full">
-<<<<<<< HEAD
-        <video 
-          ref={videoRef}
-          autoPlay 
-          muted 
-          loop 
-          playsInline 
-          className="absolute inset-0 w-full h-full object-cover"
-        >
-          <source
-            src={PROJECT_VIDEO_URL}
-            type="video/mp4"
-          />
-          {/* Fallback if the path still fails to resolve */}
-          Your browser does not support the video tag.
-        </video>
-=======
         {videoSrc ? (
-          <video 
+          <video
             ref={videoRef}
-            autoPlay 
-            muted 
-            loop 
-            playsInline 
+            autoPlay
+            muted
+            loop
+            playsInline
             className="absolute inset-0 w-full h-full object-cover"
           >
-            <source 
-              src={videoSrc} 
-              type="video/mp4" 
+            <source
+              src={videoSrc}
+              type="video/mp4"
             />
             Your browser does not support the video tag.
           </video>
         ) : (
           <div className="absolute inset-0 bg-black" />
         )}
->>>>>>> b8587a0b9246a36325c120634da153e6ec18fa8f
 
         {/* Tactical Dark Overlay Gradients */}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40 z-10" />
         <div className="absolute inset-0 bg-flexigo-teal/5 mix-blend-overlay z-10" />
-        
+
         {/* Cinematic Scanline Overlay */}
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 pointer-events-none mix-blend-overlay" />
       </div>
@@ -117,8 +99,8 @@ const VideoSection = () => {
                   System Active • Real-Time Demo
                </span>
             </motion.div>
-            
-            <motion.h2 
+
+            <motion.h2
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -158,9 +140,9 @@ const VideoSection = () => {
          <div className="w-32 h-1 bg-flexigo-teal shadow-neon-sm ml-auto" />
          <div className="text-[8px] font-mono text-slate-400">STATE: ENERGIZED</div>
       </div>
-      
+
       {/* Animated Bottom Scan line */}
-      <motion.div 
+      <motion.div
          animate={{ opacity: [0.2, 0.5, 0.2] }}
          transition={{ duration: 3, repeat: Infinity }}
          className="absolute bottom-0 inset-x-0 h-4 bg-gradient-to-t from-flexigo-teal/20 to-transparent z-10"

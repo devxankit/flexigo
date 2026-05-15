@@ -10,13 +10,9 @@ import { sendPushNotification } from '../../shared/utils/firebase.js';
 // @route   POST /api/v1/fleet/add
 export const addVehicle = async (req, res) => {
   try {
-<<<<<<< HEAD
-    const { rcImage, insuranceDocImage, pucDocImage, ...vehicleData } = req.body;
+    const { rcImage, insuranceDocImage, pucDocImage, vehicleImages, ...vehicleData } = req.body;
 
-=======
-    const { rcImage, vehicleImages, ...vehicleData } = req.body;
-    
->>>>>>> b8587a0b9246a36325c120634da153e6ec18fa8f
+
     // Robust franchise resolution
     if (vehicleData.franchise) {
       let fId = vehicleData.franchise;
@@ -73,14 +69,10 @@ export const addVehicle = async (req, res) => {
 
     const vehicle = await Vehicle.create({
       ...vehicleData,
-<<<<<<< HEAD
       ...(rcUrl && { rcUrl }),
       ...(insuranceDocUrl && { insuranceDocUrl }),
       ...(pucDocUrl && { pucDocUrl }),
-=======
-      rcUrl,
       images: imageUrls,
->>>>>>> b8587a0b9246a36325c120634da153e6ec18fa8f
     });
 
     res.status(201).json({
