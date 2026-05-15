@@ -54,10 +54,16 @@ export default function AddVehiclePage() {
   const preSelectedHubId = searchParams.get('hubId');
   const { addVehicle, hubs, fetchHubs } = useAdminDataStore();
   
-  const [step, setStep] = useState(1);
+  // Load persisted state on mount
+  const [step, setStep] = useState(() => {
+    const savedStep = localStorage.getItem('add_vehicle_step');
+    return savedStep ? parseInt(savedStep) : 1;
+  });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [ownershipType, setOwnershipType] = useState('platform'); // 'platform' or 'franchise'
+<<<<<<< HEAD
   
   const [formData, setFormData] = useState({
     plate: '',
@@ -72,7 +78,34 @@ export default function AddVehiclePage() {
     insuranceDocImage: '',
     pucDocImage: '',
     franchise: ''
+=======
+
+  const [formData, setFormData] = useState(() => {
+    const savedData = localStorage.getItem('add_vehicle_data');
+    return savedData ? JSON.parse(savedData) : {
+      plate: '',
+      vin: '',
+      model: 'FlexiGo Pro v2',
+      manufactureDate: '',
+      insurancePolicy: '',
+      insuranceExpiry: '',
+      pUCNumber: '',
+      pUCExpiry: '',
+      rcImage: '',
+      vehicleImages: [],
+      franchise: ''
+    };
+>>>>>>> b8587a0b9246a36325c120634da153e6ec18fa8f
   });
+
+  // Persist state changes
+  useEffect(() => {
+    localStorage.setItem('add_vehicle_step', step.toString());
+  }, [step]);
+
+  useEffect(() => {
+    localStorage.setItem('add_vehicle_data', JSON.stringify(formData));
+  }, [formData]);
 
   useEffect(() => {
     fetchHubs();
@@ -102,6 +135,27 @@ export default function AddVehiclePage() {
     }
   };
 
+  const handleVehicleImageUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    const existingImages = formData.vehicleImages || [];
+    
+    if (existingImages.length + files.length > 3) {
+      alert("MAX_PAYLOAD_BREACH: Total limit is 3 images. You already have " + existingImages.length);
+      e.target.value = ''; 
+      return;
+    }
+
+    const base64Promises = files.map(file => fileToBase64(file));
+    const base64s = await Promise.all(base64Promises);
+    setFormData({ ...formData, vehicleImages: [...existingImages, ...base64s] });
+    e.target.value = ''; // Reset for same file re-selection
+  };
+
+  const removeVehicleImage = (index) => {
+    const updatedImages = formData.vehicleImages.filter((_, i) => i !== index);
+    setFormData({ ...formData, vehicleImages: updatedImages });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -127,6 +181,9 @@ export default function AddVehiclePage() {
       
       if (res.success) {
         setIsSuccess(true);
+        // Clear persistence on success
+        localStorage.removeItem('add_vehicle_step');
+        localStorage.removeItem('add_vehicle_data');
       } else {
         alert(res.message);
       }
@@ -391,6 +448,7 @@ export default function AddVehiclePage() {
                       />
                     </div>
                   </div>
+<<<<<<< HEAD
                 </div>
 
                 {/* PUC */}
@@ -425,6 +483,95 @@ export default function AddVehiclePage() {
                         accent="amber"
                       />
                     </div>
+=======
+                  
+                  <div className="col-span-2">
+                    <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Real World Vehicle Photo (Rider View)</label>
+                    <label className={`mt-3 w-full p-8 border-2 border-dashed rounded-3xl flex flex-col items-center gap-4 group transition-all cursor-pointer ${
+                        formData.vehicleImages.length > 0 ? 'border-emerald-500 bg-emerald-600/5' : 'border-[var(--border-subtle)] hover:border-emerald-500/40 hover:bg-emerald-600/5'
+                    }`}>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        multiple
+                        onChange={handleVehicleImageUpload} 
+                        className="hidden" 
+                      />
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform ${
+                          formData.vehicleImages.length > 0 ? 'bg-emerald-600 text-white' : 'bg-emerald-600/10 border border-emerald-500/20 text-emerald-500 group-hover:scale-110'
+                      }`}>
+                         {formData.vehicleImages.length > 0 ? <CheckCircle size={24} /> : <Truck size={24} />}
+                      </div>
+                      <div className="text-center">
+                         <p className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-widest mb-1 italic">
+                            {formData.vehicleImages.length > 0 ? `${formData.vehicleImages.length}_PHOTOS_SYNCED_✓` : 'Vehicle Photo Sync (Max 3)'}
+                         </p>
+                         <p className="text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest opacity-60">
+                            {formData.vehicleImages.length > 0 ? 'ARRAY_PAYLOAD_READY' : 'Select up to 3 Real-time Photos'}
+                         </p>
+                      </div>
+                    </label>
+                    {/* Previews with Remove Option */}
+                    {formData.vehicleImages.length > 0 && (
+                      <div className="flex gap-3 mt-6 overflow-x-auto pb-2 scrollbar-hide">
+                        {formData.vehicleImages.map((img, idx) => (
+                          <div key={idx} className="relative group shrink-0">
+                            <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-emerald-500/20 shadow-lg">
+                              <img src={img} className="w-full h-full object-cover" />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeVehicleImage(idx)}
+                              className="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity active:scale-90"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Insurance Policy No.</label>
+                    <input 
+                      required
+                      value={formData.insurancePolicy}
+                      onChange={(e) => setFormData({...formData, insurancePolicy: e.target.value})}
+                      placeholder="POL_7788-99"
+                      className="w-full px-6 py-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all placeholder:text-[var(--text-tertiary)]/50 italic text-[var(--text-secondary)]"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Insurance Expiry</label>
+                    <input 
+                      type="date"
+                      required
+                      value={formData.insuranceExpiry}
+                      onChange={(e) => setFormData({...formData, insuranceExpiry: e.target.value})}
+                      className="w-full px-6 py-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic text-[var(--text-secondary)]"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">PUC Number</label>
+                    <input 
+                      required
+                      value={formData.pUCNumber}
+                      onChange={(e) => setFormData({...formData, pUCNumber: e.target.value})}
+                      placeholder="PUC_9900/88"
+                      className="w-full px-6 py-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all placeholder:text-[var(--text-tertiary)]/50 italic text-[var(--text-secondary)]"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">PUC Expiry</label>
+                    <input 
+                      type="date"
+                      required
+                      value={formData.pUCExpiry}
+                      onChange={(e) => setFormData({...formData, pUCExpiry: e.target.value})}
+                      className="w-full px-6 py-4 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-2xl text-[11px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic text-[var(--text-secondary)]"
+                    />
+>>>>>>> b8587a0b9246a36325c120634da153e6ec18fa8f
                   </div>
                 </div>
               </motion.div>

@@ -11,6 +11,9 @@ import franchiseRoutes from './modules/franchise/franchiseRoutes.js';
 import fleetRoutes from './modules/fleet/vehicleRoutes.js';
 import staffRoutes from './modules/staff/staffRoutes.js';
 import adminRoutes from './modules/admin/adminRoutes.js';
+import { seedDefaultAdmin } from './shared/utils/seedAdmin.js';
+import { seedWebsiteData } from './modules/admin/websiteSeedController.js';
+
 
 // Load env vars
 dotenv.config();
@@ -33,7 +36,11 @@ if (process.env.SMSINDIAHUB_API_KEY) {
 }
 
 // Connect to database
-connectDB();
+connectDB().then(() => {
+  seedDefaultAdmin();
+  seedWebsiteData();
+});
+
 
 const app = express();
 

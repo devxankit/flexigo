@@ -6,7 +6,7 @@
   --color-flexigo-accent: #86EFAC;
   --color-flexigo-bg: #F0FDF4;
   --color-flexigo-dark: #052E16;
-  
+
   --font-heading: "Outfit", sans-serif;
   --font-body: "Inter", sans-serif;
 }
@@ -17,19 +17,25 @@
   --bg-secondary: #FFFFFF;
   --bg-tertiary: #F1F5F9;
   --text-primary: #0F172A;
-  --text-secondary: #0F172A; /* Slate 900 for absolute supreme legibility */
-  --text-tertiary: #334155;  /* Slate 700 for sharp metadata */
-  --border-subtle: #CBD5E1;  /* Slate 300 */
+  --text-secondary: #0F172A;
+  /* Slate 900 for absolute supreme legibility */
+  --text-tertiary: #334155;
+  /* Slate 700 for sharp metadata */
+  --border-subtle: #CBD5E1;
+  /* Slate 300 */
 
-  --accent-green: #10b981; 
-  --accent-blue: #3b82f6;  
+  --accent-green: #10b981;
+  --accent-blue: #3b82f6;
 }
 
 
 .dark {
-  --bg-primary: #020617;   /* Slate 950 */
-  --bg-secondary: #0F172A; /* Slate 900 */
-  --bg-tertiary: #1E293B;  /* Slate 800 */
+  --bg-primary: #020617;
+  /* Slate 950 */
+  --bg-secondary: #0F172A;
+  /* Slate 900 */
+  --bg-tertiary: #1E293B;
+  /* Slate 800 */
   --text-primary: #F8FAFC;
   --text-secondary: #94A3B8;
   --text-tertiary: #64748B;
@@ -40,22 +46,26 @@
   * {
     border-color: var(--border-subtle);
   }
-  
+
   *::selection {
-    background-color: rgba(16, 185, 129, 0.3); /* selection:bg-emerald-500/30 */
+    background-color: rgba(16, 185, 129, 0.3);
+    /* selection:bg-emerald-500/30 */
   }
-  
+
   ::view-transition-old(root),
   ::view-transition-new(root) {
     animation: none;
     mix-blend-mode: normal;
   }
 
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     box-sizing: border-box;
   }
 
-  html, body {
+  html,
+  body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
@@ -67,18 +77,26 @@
     max-width: 100vw;
     overflow-x: clip;
   }
-  
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-heading);
-    letter-spacing: -0.025em; /* tracking-tight */
+    letter-spacing: -0.025em;
+    /* tracking-tight */
   }
-  
-  button, a {
+
+  button,
+  a {
     outline: 2px solid transparent;
     outline-offset: 2px;
   }
-  
-  button:focus, a:focus {
+
+  button:focus,
+  a:focus {
     outline: 2px solid transparent;
     outline-offset: 2px;
   }
@@ -92,6 +110,7 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -100,24 +119,31 @@
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
   }
+
   .custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
   }
+
   .custom-scrollbar::-webkit-scrollbar-thumb {
     @apply bg-white/10 rounded-full;
   }
+
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     @apply bg-white/20;
   }
 
   .landing-page-theme {
-    --color-flexigo-primary: #1A2A6B; /* Navy Blue - from logo */
-    --color-flexigo-teal: #F97316;    /* Vivid Orange - from accents */
-    --color-flexigo-accent: #FFD700;  /* Yellow - from lightning icon */
+    --color-flexigo-primary: #1A2A6B;
+    /* Navy Blue - from logo */
+    --color-flexigo-teal: #F97316;
+    /* Vivid Orange - from accents */
+    --color-flexigo-accent: #FFD700;
+    /* Yellow - from lightning icon */
     --color-flexigo-bg: #FFFFFF;
     --color-flexigo-dark: #1C1C1C;
-    
+
     /* Selection color for landing page */
-    --selection-bg: rgba(249, 115, 22, 0.3); /* Orange selection */
+    --selection-bg: rgba(249, 115, 22, 0.3);
+    /* Orange selection */
   }
 }

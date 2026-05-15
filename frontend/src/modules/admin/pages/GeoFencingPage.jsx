@@ -63,7 +63,9 @@ const mapStyles = [
 export default function GeoFencingPage() {
   const { 
     geofences, 
+    allRiders,
     subscribers,
+    networkStats,
     fetchGeofences, 
     fetchSubscriberData,
     createGeofence, 
@@ -151,6 +153,7 @@ export default function GeoFencingPage() {
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
+    fetchGeofences(newFilters);
     console.log('Geo Fencing Sync:', newFilters);
   };
 
@@ -311,9 +314,28 @@ export default function GeoFencingPage() {
       </AnimatePresence>
 
       {/* KPI Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-         <AdminStatCard title="Active Zones" value={geofences.length} icon={MapIcon} color="emerald" subtitle="Monitored Nodes" />
-         <AdminStatCard title="Breaches" value={notifications.length > 0 ? `0${notifications.length}` : "00"} icon={AlertTriangle} color="rose" subtitle="Live Alerts" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+         <AdminStatCard 
+            title="Total Fleet" 
+            value={networkStats.geofenceStats?.totalRiders || allRiders.length} 
+            icon={User} 
+            color="blue" 
+            subtitle="Active Riders" 
+         />
+         <AdminStatCard 
+            title="Active Zones" 
+            value={networkStats.geofenceStats?.activeZones || geofences.filter(gf => gf.riderId).length} 
+            icon={MapIcon} 
+            color="emerald" 
+            subtitle="Monitored Nodes" 
+         />
+         <AdminStatCard 
+            title="Breaches" 
+            value={networkStats.geofenceStats?.breaches || (notifications.length > 0 ? `0${notifications.length}` : "00")} 
+            icon={AlertTriangle} 
+            color="rose" 
+            subtitle="Live Alerts" 
+         />
       </div>
 
       <AnimatePresence mode="wait">
@@ -346,61 +368,81 @@ export default function GeoFencingPage() {
                         </thead>
                         <tbody className="divide-y divide-[var(--border-subtle)]">
                            <AnimatePresence mode='popLayout'>
-                           {geofences.map((gf) => (
-                              <motion.tr 
-                                 layout
-                                 initial={{ opacity: 0 }}
-                                 animate={{ opacity: 1 }}
-                                 exit={{ opacity: 0 }}
-                                 key={gf._id || gf.id} 
-                                 onClick={() => setSelectedZone(gf)}
-                                 className={`group/row hover:bg-emerald-500/5 transition-all  cursor-pointer ${selectedZone?._id === gf._id ? 'bg-emerald-500/5' : ''}`}
-                              >
-                                 <td className="py-2 px-4 whitespace-nowrap">
-                                    <div className="flex flex-col">
-                                       <span className="font-medium text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{gf.riderId?.name || gf.name}</span>
-                                       <span className="font-medium text-[var(--text-tertiary)]   mt-1">{gf.riderId?.phone || 'ID: ' + (gf._id || gf.id).slice(-6)}</span>
-                                    </div>
-                                 </td>
-                                 <td className="py-2 px-4">
-                                    <span className={` font-medium  px-2 py-0.5 rounded border  ${
-                                       gf.type === 'exclusion' ? 'bg-rose-500/10 text-rose-500 border-rose-500/10' : 
-                                       gf.type === 'inclusion' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' :
-                                       'bg-blue-500/10 text-blue-500 border-blue-500/10'
-                                    }`}>
-                                       {gf.type}
-                                    </span>
-                                 </td>
-                                 <td className="py-2 px-4  font-medium text-[var(--text-primary)]">{gf.radius}</td>
-                                 <td className="py-2 px-4">
-                                    <div className={`inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded  font-medium   border  ${
-                                       gf.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-slate-500/10 text-slate-500 border-slate-500/10'
-                                    }`}>
-                                       <div className={`w-1 h-1 rounded-full ${gf.status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`} />
-                                       {gf.status}
-                                    </div>
-                                 </td>
-                                 <td className="py-2 px-4">
-                                    <span className={` font-medium   ${gf.alerts > 0 ? 'text-rose-500' : 'text-[var(--text-tertiary)]'}`}>{gf.alerts} FLUX</span>
-                                 </td>
-                                 <td className="py-2 px-4">
-                                    <div className="flex items-center gap-2">
-                                       <button 
-                                          onClick={(e) => { e.stopPropagation(); openEditModal(gf); }}
-                                          className="p-1.5 text-[var(--text-tertiary)] hover:text-emerald-500 hover:bg-emerald-500/5 rounded-lg transition-all"
-                                       >
-                                          <Edit size={14} />
-                                       </button>
-                                       <button 
-                                          onClick={(e) => { e.stopPropagation(); deleteZone(gf._id || gf.id); }}
-                                          className="p-1.5 text-[var(--text-tertiary)] hover:text-rose-500 hover:bg-rose-600/5 rounded-lg transition-all"
-                                       >
-                                          <X size={14} />
-                                       </button>
-                                    </div>
-                                 </td>
-                              </motion.tr>
-                           ))}
+                           {allRiders.map((rider) => {
+                              const gf = geofences.find(g => (g.riderId?._id || g.riderId) === (rider._id || rider.id));
+                              const isSelected = selectedZone?._id === gf?._id && gf !== undefined;
+                              
+                              return (
+                                 <motion.tr 
+                                    layout
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    key={rider._id || rider.id} 
+                                    onClick={() => {
+                                       if (gf) setSelectedZone(gf);
+                                       else if (rider.lastLocation) {
+                                          map?.panTo(rider.lastLocation);
+                                          map?.setZoom(16);
+                                       }
+                                    }}
+                                    className={`group/row hover:bg-emerald-500/5 transition-all cursor-pointer ${isSelected ? 'bg-emerald-500/5' : ''}`}
+                                 >
+                                    <td className="py-2 px-4 whitespace-nowrap">
+                                       <div className="flex flex-col">
+                                          <span className="font-medium text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{rider.name || 'Unnamed Rider'}</span>
+                                          <span className="font-medium text-[var(--text-tertiary)] mt-1">{rider.phone}</span>
+                                       </div>
+                                    </td>
+                                    <td className="py-2 px-4">
+                                       <span className={`font-medium px-2 py-0.5 rounded border ${
+                                          gf ? (gf.type === 'exclusion' ? 'bg-rose-500/10 text-rose-500 border-rose-500/10' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10') : 'bg-slate-500/10 text-slate-500 border-slate-500/10'
+                                       }`}>
+                                          {gf ? gf.type : 'No Zone'}
+                                       </span>
+                                    </td>
+                                    <td className="py-2 px-4 font-medium text-[var(--text-primary)]">{gf ? gf.radius : '--'}</td>
+                                    <td className="py-2 px-4">
+                                       <div className={`inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded font-medium border ${
+                                          gf?.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-slate-500/10 text-slate-500 border-slate-500/10'
+                                       }`}>
+                                          <div className={`w-1 h-1 rounded-full ${gf?.status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`} />
+                                          {gf ? gf.status : 'noactive'}
+                                       </div>
+                                    </td>
+                                    <td className="py-2 px-4">
+                                       <span className={`font-medium ${gf?.alerts > 0 ? 'text-rose-500' : 'text-[var(--text-tertiary)]'}`}>{gf ? gf.alerts : 0} FLUX</span>
+                                    </td>
+                                    <td className="py-2 px-4">
+                                       <div className="flex items-center gap-2">
+                                          {gf ? (
+                                             <>
+                                                <button 
+                                                   onClick={(e) => { e.stopPropagation(); openEditModal(gf); }}
+                                                   className="p-1.5 text-[var(--text-tertiary)] hover:text-emerald-500 hover:bg-emerald-500/5 rounded-lg transition-all"
+                                                >
+                                                   <Edit size={14} />
+                                                </button>
+                                                <button 
+                                                   onClick={(e) => { e.stopPropagation(); deleteZone(gf._id || gf.id); }}
+                                                   className="p-1.5 text-[var(--text-tertiary)] hover:text-rose-500 hover:bg-rose-600/5 rounded-lg transition-all"
+                                                >
+                                                   <X size={14} />
+                                                </button>
+                                             </>
+                                          ) : (
+                                             <button 
+                                                onClick={(e) => { e.stopPropagation(); openCreateModal(); setSelectedRider(rider._id || rider.id); }}
+                                                className="p-1.5 text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-all"
+                                                title="Create Zone"
+                                             >
+                                                <Plus size={14} strokeWidth={3} />
+                                             </button>
+                                          )}
+                                       </div>
+                                    </td>
+                                 </motion.tr>
+                              );
+                           })}
                            </AnimatePresence>
                         </tbody>
                      </table>
@@ -511,17 +553,45 @@ export default function GeoFencingPage() {
                                  );
                               })()}
                               
-                              {!selectedZone && !isModalOpen && geofences.map(gf => gf.center && (
-                                 <MarkerF 
+                              {/* Render All Zones */}
+                              {!isModalOpen && geofences.map(gf => gf.center && (
+                                 <CircleF 
                                     key={gf._id}
-                                    position={gf.center}
-                                    icon={{
-                                       path: window.google?.maps.SymbolPath.CIRCLE,
-                                       scale: 4,
-                                       fillColor: '#10b981',
-                                       fillOpacity: 0.8,
+                                    center={gf.center}
+                                    radius={parseFloat(gf.radius) * 1000}
+                                    options={{
+                                       strokeColor: gf.type === 'exclusion' ? '#f43f5e' : '#10b981',
+                                       strokeOpacity: 0.4,
                                        strokeWeight: 1,
-                                       strokeColor: 'white',
+                                       fillColor: gf.type === 'exclusion' ? '#f43f5e' : '#10b981',
+                                       fillOpacity: 0.05,
+                                    }}
+                                 />
+                              ))}
+
+                              {/* Render All Riders with lastLocation */}
+                              {!isModalOpen && allRiders.map(rider => rider.lastLocation && (
+                                 <MarkerF 
+                                    key={rider._id}
+                                    position={rider.lastLocation}
+                                    onClick={() => {
+                                      const gf = geofences.find(g => (g.riderId?._id || g.riderId) === (rider._id || rider.id));
+                                      if (gf) setSelectedZone(gf);
+                                      else {
+                                        map.panTo(rider.lastLocation);
+                                        map.setZoom(16);
+                                      }
+                                    }}
+                                    icon={{
+                                       url: 'https://maps.google.com/mapfiles/ms/icons/motorcycling.png',
+                                       scaledSize: new window.google.maps.Size(30, 30)
+                                    }}
+                                    label={{
+                                       text: rider.name || 'Rider',
+                                       color: '#10b981',
+                                       fontSize: '9px',
+                                       fontWeight: '900',
+                                       className: 'uppercase tracking-tighter mt-10'
                                     }}
                                  />
                               ))}
@@ -618,7 +688,17 @@ export default function GeoFencingPage() {
                                     </div>
                                  </div>
                               </div>
-                              <button className="p-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-emerald-500 transition-all">
+                              <button 
+                                onClick={() => {
+                                  const rider = allRiders.find(r => n.message.includes(r.name));
+                                  if (rider?.lastLocation) {
+                                    setActiveTab('registry');
+                                    map.panTo(rider.lastLocation);
+                                    map.setZoom(16);
+                                  }
+                                }}
+                                className="p-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-emerald-500 transition-all"
+                              >
                                  <Navigation size={14} />
                               </button>
                            </motion.div>

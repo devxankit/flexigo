@@ -21,14 +21,14 @@ import { useAdminDataStore } from '../store/adminDataStore';
 
 
 export default function SecurityAuditsPage() {
-  const { auditLogs, securityStats, fetchSecurityData, roles, fetchRoles, addRole } = useAdminDataStore();
+  const { auditLogs, securityStats, fetchSecurityData, roles, fetchRoles, togglePermission, addRole, updateRole } = useAdminDataStore();
   const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [newRole, setNewRole] = React.useState({ name: '', permissions: '' });
 
   useEffect(() => {
-    fetchSecurityData();
-    fetchRoles();
+    fetchSecurityData(activeFilters);
+    fetchRoles(activeFilters);
   }, []);
 
   const handleFilterChange = (newFilters) => {
@@ -39,9 +39,9 @@ export default function SecurityAuditsPage() {
 
   const handleAddRole = async (e) => {
     e.preventDefault();
-    if (!newRole.name || !newRole.permissions) return;
+    if (!newRole.name) return;
     
-    await addRole(newRole);
+    await addRole({ name: newRole.name });
     setNewRole({ name: '', permissions: '' });
     setIsModalOpen(false);
   };
@@ -120,45 +120,99 @@ export default function SecurityAuditsPage() {
             </div>
          </div>
 
-         {/* Role RBAC Panel */}
-         <div className="space-y-4">
-            <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-5 shadow-sm border-t-4 border-t-emerald-600">
-               <div className="flex items-center justify-between mb-6 pb-2 border-b border-[var(--border-subtle)]">
-                  <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-widest italic leading-none">RBAC Management</h3>
-                  <div className="flex items-center gap-1 text-[8px] font-black text-emerald-500 uppercase italic animate-pulse leading-none">
-                     <Lock size={10} /> Secure Node
+         {/* Role RBAC Matrix Panel */}
+         <div className="lg:col-span-3 space-y-4">
+            <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-6 shadow-sm border-t-4 border-t-emerald-600">
+               <div className="flex items-center justify-between mb-8 pb-3 border-b border-[var(--border-subtle)]">
+                  <div>
+                    <h3 className="text-[14px] font-black text-[var(--text-primary)] uppercase tracking-widest italic leading-none">Global Security Matrix</h3>
+                    <p className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] mt-1.5">Master Protocol & Access Configuration</p>
+                  </div>
+                  <div className="flex items-center gap-1 text-[9px] font-black text-emerald-500 uppercase italic animate-pulse leading-none bg-emerald-500/5 px-2 py-1 rounded-full border border-emerald-500/10">
+                     <Lock size={12} /> Secure Protocol Active
                   </div>
                </div>
 
-               <div className="space-y-3">
-                  {roles.map((role) => (
-                     <div key={role._id || role.id} className="p-3 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl group hover:border-emerald-500/30 transition-all cursor-pointer">
-                        <div className="flex items-center justify-between mb-1.5">
-                           <span className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-tight italic leading-none">{role.name}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-[7px] font-black uppercase tracking-widest italic leading-none opacity-50">
-                           <span>{role.permissions}</span>
-                           <span className="text-emerald-500">{role.users} Active</span>
-                        </div>
-                     </div>
-                  ))}
+               <div className="overflow-x-auto no-scrollbar">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr>
+                        <th className="p-3 text-left bg-[var(--bg-tertiary)]/30 border border-[var(--border-subtle)] rounded-tl-xl text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] italic">Role Designator</th>
+                        {['Dashboard', 'Hubs', 'Fleet', 'KYC', 'Plans', 'Subscribers', 'Geofencing', 'Finance', 'Inventory', 'Franchise', 'Compliance', 'Engagement', 'Security', 'Staff'].map(mod => (
+                          <th key={mod} className="p-3 text-center bg-[var(--bg-tertiary)]/20 border border-[var(--border-subtle)] text-[9px] font-black uppercase tracking-widest text-[var(--text-primary)] italic min-w-[100px]">{mod}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {roles.map((role) => (
+                        <tr key={role._id} className="hover:bg-[var(--bg-tertiary)]/10 transition-colors">
+                          <td className="p-3 border border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/10">
+                            <div className="flex items-center gap-2">
+                              <UserCircle size={14} className="text-emerald-500" />
+                              <span className="text-[11px] font-black text-[var(--text-primary)] uppercase italic">{role.name}</span>
+                            </div>
+                          </td>
+                          {['Dashboard', 'Hubs', 'Fleet', 'KYC', 'Plans', 'Subscribers', 'Geofencing', 'Finance', 'Inventory', 'Franchise', 'Compliance', 'Engagement', 'Security', 'Staff'].map(mod => (
+                            <td key={mod} className="p-3 border border-[var(--border-subtle)] relative z-10">
+                              <div className="grid grid-cols-1 gap-2">
+                                {['read', 'create', 'update', 'delete'].map(action => {
+                                  const isActive = role.permissions && role.permissions[mod] && role.permissions[mod][action];
+                                  return (
+                                    <button 
+                                      key={action} 
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        const roleId = role._id || role.id;
+                                        console.log(`Executing Atomic Toggle: ${mod} -> ${action}`);
+                                        togglePermission(roleId, mod, action);
+                                      }}
+                                      className="flex items-center gap-2 cursor-pointer group select-none py-1 px-1 rounded hover:bg-emerald-500/5 transition-all text-left w-full"
+                                    >
+                                      <div className={`w-3 h-3 rounded border transition-all flex items-center justify-center pointer-events-none ${isActive ? 'bg-emerald-600 border-emerald-600' : 'bg-[var(--bg-tertiary)] border-[var(--border-subtle)] group-hover:border-emerald-500/50'}`}>
+                                        {isActive && <ShieldCheck className="text-white w-2 h-2" />}
+                                      </div>
+                                      <span className={`text-[8px] font-black uppercase tracking-widest italic transition-colors pointer-events-none ${isActive ? 'text-emerald-500' : 'text-[var(--text-tertiary)] group-hover:text-emerald-500/70'}`}>
+                                        {action}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                </div>
 
-               <div className="mt-6 p-3 bg-emerald-600/5 border border-emerald-500/10 rounded-xl space-y-1.5 relative overflow-hidden group">
-                  <div className="absolute right-0 top-0 p-2 opacity-[0.05] pointer-events-none group-hover:scale-110 transition-transform">
-                     <ShieldAlert size={40} />
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                     <Activity size={10} className="text-emerald-600" />
-                     <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest italic leading-none">Protocol Guard</p>
-                  </div>
-                  <p className="text-[8.5px] text-[var(--text-tertiary)] font-bold leading-relaxed uppercase tracking-wider italic">
-                     Strict RBAC is enforced. Actions are cryptographically hashed.
-                  </p>
+               <div className="mt-8 flex items-center justify-between">
+                 <div className="p-3 bg-emerald-600/5 border border-emerald-500/10 rounded-xl space-y-1.5 relative overflow-hidden group max-w-md">
+                    <div className="absolute right-0 top-0 p-2 opacity-[0.05] pointer-events-none group-hover:scale-110 transition-transform">
+                       <ShieldAlert size={40} />
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                       <Activity size={10} className="text-emerald-600" />
+                       <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest italic leading-none">Security Protocol Guard</p>
+                    </div>
+                    <p className="text-[8px] text-[var(--text-tertiary)] font-bold leading-relaxed uppercase tracking-wider italic">
+                       RBAC Matrix is enforced via JWT claims. Any modification is logged to the Audit Registry with a cryptographic signature.
+                    </p>
+                 </div>
+                 
+                 <div className="flex items-center gap-3">
+                   <div className="flex flex-col items-end">
+                     <span className="text-[8px] font-black text-[var(--text-tertiary)] uppercase italic tracking-widest">Active System Nodes</span>
+                     <span className="text-[12px] font-black text-emerald-500 italic uppercase">14 Dynamic Modules</span>
+                   </div>
+                   <div className="w-10 h-10 rounded-xl bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
+                     <ShieldCheck size={20} />
+                   </div>
+                 </div>
                </div>
             </div>
-
-
          </div>
       </div>
       
@@ -209,15 +263,6 @@ function RoleModal({ isOpen, onClose, onSave, newRole, setNewRole }) {
                               value={newRole.name}
                               onChange={(e) => setNewRole({...newRole, name: e.target.value})}
                               placeholder="e.g. Lead Auditor"
-                              className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic"
-                           />
-                        </div>
-                        <div className="space-y-1.5">
-                           <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Permission Scope</label>
-                           <input 
-                              value={newRole.permissions}
-                              onChange={(e) => setNewRole({...newRole, permissions: e.target.value})}
-                              placeholder="e.g. Full Access, Read Only"
                               className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic"
                            />
                         </div>

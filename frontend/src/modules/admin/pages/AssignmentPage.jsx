@@ -31,11 +31,12 @@ export default function AssignmentPage() {
   } = useAdminDataStore();
 
   const [activeFilters, setActiveFilters] = useState({ range: 'Last 7 Days' });
+  const [searchQuery, setSearchQuery] = useState('');
 
   React.useEffect(() => {
-    fetchAssignments();
+    fetchAssignments(activeFilters);
     fetchSubscribers();
-  }, []);
+  }, [activeFilters]);
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
@@ -95,6 +96,16 @@ export default function AssignmentPage() {
          
          <div className="flex items-center gap-2">
             <OpsFilter onFilterChange={handleFilterChange} />
+            <div className="relative group">
+               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--text-tertiary)] group-focus-within:text-emerald-500 transition-colors" />
+               <input 
+                 type="text" 
+                 value={searchQuery}
+                 onChange={(e) => setSearchQuery(e.target.value)}
+                 placeholder="Search Rider/Vehicle No..." 
+                 className="pl-8 pr-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all w-48 text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50 italic"
+               />
+            </div>
             <button 
                onClick={() => { setActiveTab('qr'); setIsModalOpen(true); }}
                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95"
@@ -148,7 +159,15 @@ export default function AssignmentPage() {
                   </thead>
                   <tbody className="divide-y divide-[var(--border-subtle)]">
                      <AnimatePresence mode='popLayout'>
-                        {assignments.map((asgn) => (
+                        {assignments.filter(asgn => {
+                            const q = searchQuery.toLowerCase();
+                            return (
+                               (asgn.rider?.name || '').toLowerCase().includes(q) ||
+                               (asgn.rider?.phone || '').toLowerCase().includes(q) ||
+                               (asgn.vehicle?.plate || '').toLowerCase().includes(q) ||
+                               (asgn._id || '').toLowerCase().includes(q)
+                            );
+                        }).map((asgn) => (
                             <motion.tr 
                                layout
                                initial={{ opacity: 0 }}

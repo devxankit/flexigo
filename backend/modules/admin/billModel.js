@@ -2,7 +2,10 @@ import mongoose from 'mongoose';
 
 const VendorBillSchema = new mongoose.Schema({
   billId: { type: String, required: true, unique: true },
-  supplier: { type: String, required: true },
+  supplier: { type: String, default: 'Internal' },
+  vehicleNo: { type: String, required: true },
+  chasisNo: { type: String, required: true },
+  partsRepair: { type: String, required: true },
   amount: { type: Number, required: true },
   status: { 
     type: String, 

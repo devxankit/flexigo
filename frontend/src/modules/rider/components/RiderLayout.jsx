@@ -4,12 +4,21 @@ import { RiderHeader } from '../components/RiderHeader';
 import { BottomNav } from '../components/BottomNav';
 import { useThemeStore } from '../store/themeStore';
 import { useRideStore } from '../store/rideStore';
+import { useAuthStore } from '../store/authStore';
 import { reverseGeocode } from '../../../lib/googleMaps';
+import { getMessaging, onMessage } from 'firebase/messaging';
+import app, { requestForToken } from '../../../lib/firebase';
+import { useRiderNotificationStore } from '../store/notificationStore';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
+import { Bell, X, RefreshCw } from 'lucide-react';
 
 export function RiderLayout() {
   const { pathname } = useLocation();
   const { theme } = useThemeStore();
   const { setCurrentAddress } = useRideStore();
+  const { addNotification } = useRiderNotificationStore();
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     // Live Location Fetcher
@@ -28,6 +37,40 @@ export function RiderLayout() {
       return () => navigator.geolocation.clearWatch(watchId);
     }
   }, []);
+
+  useEffect(() => {
+    // Save FCM Token for real-time notifications
+    const saveToken = async () => {
+      const token = await requestForToken();
+      if (token) {
+        try {
+          const { user } = useAuthStore.getState();
+          const api = (await import('../../../lib/axios')).default;
+          await api.post('/rider/auth/save-fcm-token', { fcmToken: token });
+        } catch (err) {
+          console.error("Failed to save FCM token:", err);
+        }
+      }
+    };
+    saveToken();
+  }, []);
+
+  useEffect(() => {
+    const messaging = getMessaging(app);
+    const unsubscribe = onMessage(messaging, (payload) => {
+      console.log('🔔 Rider Notification:', payload);
+      const { title, body } = payload.notification;
+      
+      // Add to store
+      addNotification({ title, message: body });
+
+      // Show Toast
+      setToast({ title, body });
+      setTimeout(() => setToast(null), 5000);
+    });
+
+    return () => unsubscribe();
+  }, [addNotification]);
 
   useEffect(() => {
     // Reset scroll position immediately
@@ -98,6 +141,33 @@ export function RiderLayout() {
       <div className="absolute bottom-0 left-0 right-0 z-[60] pointer-events-auto">
         <BottomNav />
       </div>
+
+      {/* Real-time Toast Alert */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 20, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9, y: -20 }}
+            className="fixed top-24 left-6 right-6 z-[100] mx-auto max-w-sm"
+          >
+            <div className={`p-4 rounded-2xl border backdrop-blur-xl shadow-2xl flex gap-4 ${
+              theme === 'dark' ? 'bg-[#1A1F2C]/90 border-white/10' : 'bg-white/90 border-slate-200 shadow-slate-200/50'
+            }`}>
+              <div className="w-10 h-10 rounded-xl bg-flexigo-teal/10 flex items-center justify-center text-flexigo-teal shrink-0">
+                <RefreshCw size={20} strokeWidth={2.5} className="animate-spin-slow" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className={`text-xs font-black uppercase tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>{toast.title}</h4>
+                <p className={`text-[10px] font-bold uppercase tracking-wide mt-0.5 leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{toast.body}</p>
+              </div>
+              <button onClick={() => setToast(null)} className="text-slate-500 hover:text-rose-500 transition-colors">
+                <X size={14} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

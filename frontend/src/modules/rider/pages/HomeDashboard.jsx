@@ -9,6 +9,7 @@ import { useSubscriptionStore } from '../store/subscriptionStore';
 import { useThemeStore } from '../store/themeStore';
 import { useAuthStore } from '../store/authStore';
 import { useWalletStore } from '../store/walletStore';
+import { RefreshCw, MapPin, Zap, Info, ChevronRight, Share2, Shield } from 'lucide-react';
 import logo from '../../../assets/logo.png';
 
 // Mock data removed as we are going dynamic
@@ -50,13 +51,15 @@ export default function HomeDashboard() {
         // Fetch hubs again with coordinates for backend sorting
         fetchHubs(latitude, longitude);
         
-        // Reverse geocoding
-        const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (results, status) => {
-          if (status === 'OK' && results[0]) {
-            setCurrentAddress(results[0].formatted_address);
-          }
-        });
+        // Reverse geocoding - with safety check for Google Maps script
+        if (window.google && window.google.maps && window.google.maps.Geocoder) {
+          const geocoder = new window.google.maps.Geocoder();
+          geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (results, status) => {
+            if (status === 'OK' && results[0]) {
+              setCurrentAddress(results[0].formatted_address);
+            }
+          });
+        }
       }, (err) => {
         console.error("Location Error:", err);
       }, { enableHighAccuracy: true });
@@ -64,23 +67,24 @@ export default function HomeDashboard() {
   }, []);
 
   // Use Dynamic Hubs OR Fallback to Mocks if DB is empty after loading
-  const displayHubs = hubLoading ? [] : (hubs.length > 0 ? hubs : [
+  const displayHubs = hubLoading ? [] : (Array.isArray(hubs) && hubs.length > 0 ? hubs : [
     { id: 1, name: 'FlexiHub Koramangala', latitude: 12.9345, longitude: 77.6266, batteries: 14, status: 'Open', color: '#39FF14' },
     { id: 2, name: 'HSR Layout Station', latitude: 12.9128, longitude: 77.6388, batteries: 8, status: 'Open', color: '#39FF14' },
     { id: 3, name: 'Indiranagar Hub', latitude: 12.9716, longitude: 77.6412, batteries: 2, status: 'Limited', color: '#EAB308' },
   ]);
 
-  const processedHubs = displayHubs.map(hub => {
+  const processedHubs = (displayHubs || []).map(hub => {
+    if (!hub) return null;
     const dist = coords ? calculateDistance(coords.latitude, coords.longitude, hub.latitude, hub.longitude) : null;
     return {
       ...hub,
       distValue: dist === null ? 9999 : dist,
       distance: dist !== null ? (dist < 1 ? Math.round(dist * 1000) + ' m' : dist.toFixed(1) + ' km') : (hub.distance || 'Dist. Pending')
     };
-  }).sort((a, b) => a.distValue - b.distValue);
+  }).filter(Boolean).sort((a, b) => a.distValue - b.distValue);
 
   const filteredHubs = processedHubs.filter(hub => 
-    hub.name.toLowerCase().includes(searchQuery.toLowerCase())
+    hub?.name?.toLowerCase()?.includes(searchQuery?.toLowerCase() || '')
   );
 
   return (
@@ -100,7 +104,7 @@ export default function HomeDashboard() {
              <div className="flex items-center gap-2.5">
                <div className="w-1.5 h-6 bg-flexigo-teal rounded-full shadow-[0_0_12px_rgba(57,255,20,0.5)]" />
                <h1 className={`text-3xl font-heading font-black tracking-tighter transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                 Hello, <span className="text-flexigo-teal">{user?.name?.split(' ')[0] || 'Rider'}</span>!
+                 Hello, <span className="text-flexigo-teal">{user?.name?.split(' ')?.[0] || 'Rider'}</span>!
                </h1>
              </div>
              {activePlan && (
@@ -120,31 +124,7 @@ export default function HomeDashboard() {
            </div>
         </div>
 
-        {/* Search Bar Professional */}
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className={`backdrop-blur-3xl border transition-all duration-500 rounded-2xl p-4 flex items-center gap-4 shadow-xl relative group ${
-            isDark ? 'bg-slate-900/60 border-white/10 shadow-black/20' : 'bg-white border-slate-200 shadow-slate-200/50'
-          }`}
-        >
-          <div className="absolute inset-0 bg-flexigo-teal/[0.03] opacity-0 group-focus-within:opacity-100 transition-opacity rounded-2xl pointer-events-none" />
-          <svg viewBox="0 0 24 24" fill="none" stroke={isDark ? '#39FF14' : '#0F766E'} strokeWidth="3" className="w-5 h-5 opacity-70">
-            <circle cx="11" cy="11" r="8" />
-            <path d="M21 21l-4.35-4.35" />
-          </svg>
-          <input 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search for a battery franchise..." 
-            className={`bg-transparent border-none outline-none text-sm w-full font-bold placeholder:text-slate-500 transition-colors ${
-              isDark ? 'text-white' : 'text-slate-900'
-            }`}
-          />
-          <div className="w-px h-6 bg-slate-500/20" />
-          <svg className="w-5 h-5 text-slate-400 ml-1 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
-        </motion.div>
+
 
         {/* Quick Stats: Wallet & Subscription */}
         <div className="grid grid-cols-2 gap-4">
@@ -189,7 +169,14 @@ export default function HomeDashboard() {
                           <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                      </div>
-                     <div className="text-[9px] font-black text-[#00D4FF] uppercase tracking-tighter shadow-sm">Active</div>
+                     <div className="flex flex-col items-end">
+                       <div className="text-[9px] font-black text-[#00D4FF] uppercase tracking-tighter shadow-sm">Active</div>
+                       {activePlan?.expiresAt && (
+                         <div className="text-[7px] font-bold text-slate-500 uppercase mt-0.5">
+                           Due: {activePlan.expiresAt ? new Date(activePlan.expiresAt).toLocaleDateString([], { day: 'numeric', month: 'short' }) : 'N/A'}
+                         </div>
+                       )}
+                     </div>
                   </div>
                   <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>Current Plan</span>
                </GlassCard>
@@ -199,74 +186,36 @@ export default function HomeDashboard() {
       </div>
 
       <div className="px-6 space-y-6 pt-2">
-        {/* Hub List Section */}
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col">
-            <h2 className={`text-xl font-heading font-black tracking-tight transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>Nearest Franchises</h2>
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-0.5 truncate max-w-[200px]">Near: {currentAddress}</p>
-          </div>
-        </div>
+        {/* Pickup Location Card for new riders after payment */}
+        {vehicle?.model === 'Assignment Pending' && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            <GlassCard className={`p-5 border-2 border-flexigo-teal/30 bg-flexigo-teal/5 relative overflow-hidden group`}>
+               <div className="flex items-center gap-4 relative z-10">
+                 <div className="w-12 h-12 rounded-2xl bg-flexigo-teal flex items-center justify-center text-white shadow-[0_0_15px_rgba(57,255,20,0.4)] group-hover:rotate-6 transition-transform">
+                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-6 h-6"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" /></svg>
+                 </div>
+                 <div className="flex-1">
+                   <h3 className={`text-sm font-black transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>Pickup Your Vehicle</h3>
+                   <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Visit office to complete delivery</p>
+                 </div>
+                 <button 
+                   onClick={() => window.open('https://www.google.com/maps?q=18.566177368164062,73.7693099975586&z=17&hl=en', '_blank')}
+                   className="px-4 py-2 bg-flexigo-teal text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-emerald-950/40 hover:bg-emerald-400 transition-all active:scale-95"
+                 >
+                   Open Maps
+                 </button>
+               </div>
+               <div className="absolute top-0 right-0 p-4 opacity-[0.03] pointer-events-none -mr-4 -mt-4">
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-24 h-24 text-flexigo-teal"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
+               </div>
+            </GlassCard>
+          </motion.div>
+        )}
 
-        <div className="grid grid-cols-1 gap-8 pb-12">
-          {filteredHubs.map((hub, i) => (
-            <motion.div
-              key={hub.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-50px' }}
-              transition={{ delay: i * 0.05 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => navigate('/rider/hub/' + hub.id)}
-              className="cursor-pointer"
-            >
-              <GlassCard className="p-5 flex items-center gap-5 group hover:border-flexigo-teal/40 transition-all duration-500 hover:shadow-2xl">
-                <div 
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center border transition-all duration-700 shadow-lg group-hover:-rotate-6 shrink-0 relative overflow-hidden"
-                  style={{ 
-                    backgroundColor: isDark ? `${hub.color}22` : `${hub.color}15`, 
-                    borderColor: isDark ? `${hub.color}44` : `${hub.color}33`,
-                    boxShadow: isDark ? `0 8px 24px -12px ${hub.color}` : `0 8px 24px -10px ${hub.color}` 
-                  }}
-                >
-                  <img 
-                    src={logo} 
-                    alt="Flexigo" 
-                    className={`absolute w-full h-full object-contain transition-all duration-700 ${
-                      isDark ? 'brightness-0 invert opacity-40 group-hover:opacity-70' : 'brightness-0 opacity-80 group-hover:opacity-100'
-                    } scale-[1.45]`} 
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-transparent to-white/5" />
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <h3 className={`font-heading font-black tracking-tight truncate transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>{hub.name}</h3>
-                  <div className="flex items-center gap-2.5 mt-1">
-                    <div className={`flex items-center gap-1 transition-colors ${isDark ? 'text-slate-400' : 'text-slate-500 opacity-60'}`}>
-                      <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="3" /></svg>
-                      <span className="text-[10px] font-black uppercase tracking-widest">{hub.distance}</span>
-                    </div>
-                    <span className="w-1 h-1 rounded-full bg-slate-200" />
-                    <span className={`text-[10px] font-black uppercase tracking-widest`} style={{ color: hub.color }}>
-                      {hub.status}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex flex-col items-end gap-1">
-                  <div className={`text-xs font-black p-1 px-2.5 rounded-lg border ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-100 text-slate-800'}`}>
-                    {hub.batteries}
-                  </div>
-                  <span className="text-[8px] font-black text-gray-400/80 uppercase tracking-tighter">Batteries</span>
-                </div>
-              </GlassCard>
-            </motion.div>
-          ))}
-          
-          <div className="text-center py-10 opacity-30">
-            <div className="inline-block w-8 h-1 bg-flexigo-teal/40 rounded-full mb-3" />
-            <p className="text-[9px] font-black uppercase tracking-[0.4em]">End of results</p>
-          </div>
-        </div>
       </div>
     </PageWrapper>
 
@@ -279,14 +228,18 @@ export default function HomeDashboard() {
         {/* Main Status Card */}
         <GlassCard className="p-5 flex items-center gap-4 group">
           <div className="w-16 h-16 rounded-2xl bg-flexigo-teal/10 flex items-center justify-center overflow-hidden border border-flexigo-teal/20 transition-all group-hover:scale-105 duration-500">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="1.5" className="w-10 h-10">
-              <rect x="2" y="7" width="20" height="14" rx="2" />
-              <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
-            </svg>
+            {vehicle?.images?.length > 0 ? (
+              <img src={vehicle.images[0]} alt={vehicle.model} className="w-full h-full object-cover" />
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="1.5" className="w-10 h-10">
+                <rect x="2" y="7" width="20" height="14" rx="2" />
+                <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
+              </svg>
+            )}
           </div>
           <div className="flex-1">
-            <h3 className={`font-heading font-black text-xl transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>{vehicle.model}</h3>
-            <p className="text-gray-500 text-[10px] mt-1 uppercase tracking-[0.25em] font-black">{vehicle.plateNumber}</p>
+            <h3 className={`font-heading font-black text-xl transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>{vehicle?.model || 'No Vehicle'}</h3>
+            <p className="text-gray-500 text-[10px] mt-1 uppercase tracking-[0.25em] font-black">{vehicle?.plateNumber || 'N/A'}</p>
           </div>
           <div className="flex flex-col items-end gap-2">
             <div className="bg-flexigo-teal/20 text-flexigo-teal px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-[0_0_15px_#39FF1444]">
@@ -304,7 +257,7 @@ export default function HomeDashboard() {
             </div>
             <span className="text-[10px] tracking-[0.25em] uppercase font-black text-gray-500">Live Range</span>
             <div className="flex items-baseline gap-1">
-              <span className={`text-3xl font-heading font-black transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>{vehicle.range}</span>
+              <span className={`text-3xl font-heading font-black transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>{vehicle?.range || 0}</span>
               <span className="text-flexigo-teal text-xs font-black uppercase">KM</span>
             </div>
             <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
@@ -322,7 +275,7 @@ export default function HomeDashboard() {
             </div>
             <span className="text-[10px] tracking-[0.25em] uppercase font-black text-gray-500">Battery</span>
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-heading font-black text-flexigo-teal">{vehicle.battery}%</span>
+              <span className="text-3xl font-heading font-black text-flexigo-teal">{vehicle?.battery || 0}%</span>
             </div>
             <div className="flex gap-1.5">
               {Array.from({length: 5}).map((_, i) => (
@@ -340,6 +293,40 @@ export default function HomeDashboard() {
            <p className={`text-[11px] font-black uppercase tracking-wider leading-relaxed ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
              Impact: You've saved <span className="text-flexigo-teal font-black text-sm">12.5KG</span> of carbon footprint this week.
            </p>
+        </div>
+
+        {/* Operational Actions */}
+        <div className="space-y-3">
+          <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] ml-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Operational Actions</h4>
+          <GlassCard 
+            className={`p-4 border border-flexigo-teal/10 hover:border-flexigo-teal/30 transition-all group cursor-pointer`}
+            onClick={async () => {
+              if (window.confirm('Are you sure you want to request a vehicle handover?')) {
+                const { requestHandover } = useRideStore.getState();
+                const res = await requestHandover();
+                if (res.success) {
+                  alert('Handover request sent successfully. Please visit the office.');
+                } else {
+                  alert(res.message);
+                }
+              }
+            }}
+          >
+             <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                   <div className="w-10 h-10 rounded-xl bg-flexigo-teal/10 flex items-center justify-center text-flexigo-teal group-hover:rotate-180 transition-transform duration-700">
+                      <RefreshCw size={20} strokeWidth={2.5} />
+                   </div>
+                   <div className="space-y-0.5">
+                      <h4 className={`text-sm font-black uppercase tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Vehicle Handover</h4>
+                      <p className={`text-[8px] font-bold uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Initiate return protocol</p>
+                   </div>
+                </div>
+                <div className={`p-2 rounded-lg bg-flexigo-teal/5 text-flexigo-teal transition-all group-hover:translate-x-1`}>
+                   <ChevronRight size={14} strokeWidth={3} />
+                </div>
+             </div>
+          </GlassCard>
         </div>
       </div>
     </BottomSheet>

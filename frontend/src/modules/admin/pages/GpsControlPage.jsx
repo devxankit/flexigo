@@ -32,6 +32,7 @@ export default function GpsControlPage() {
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
+    fetchAllVehicles(newFilters);
     console.log('GPS Control Sync:', newFilters);
   };
 
@@ -77,9 +78,9 @@ export default function GpsControlPage() {
 
       {/* KPI Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <AdminStatCard title="Tracked Units" value={networkStats.activeFleet} icon={Navigation} color="emerald" subtitle="On Grid Alpha" />
-         <AdminStatCard title="In Motion" value="842" icon={Activity} color="blue" subtitle="Live Flux" />
-         <AdminStatCard title="Low Power" value="14" icon={Zap} color="rose" subtitle="Critical Swap" />
+         <AdminStatCard title="Tracked Units" value={vehicles.length} icon={Navigation} color="emerald" subtitle="On Grid Alpha" />
+         <AdminStatCard title="In Motion" value={vehicles.filter(v => v.status === 'in-motion' || v.currentSpeed > 0).length} icon={Activity} color="blue" subtitle="Live Flux" />
+         <AdminStatCard title="Low Power" value={vehicles.filter(v => v.battery < 20).length} icon={Zap} color="rose" subtitle="Critical Swap" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

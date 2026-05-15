@@ -65,6 +65,8 @@ const VehicleShowcaseSection = () => {
                     <img 
                       src={heroImage} 
                       alt="Flexigo V1 Scooter" 
+                      width="500"
+                      height="500"
                       className="w-full h-auto max-w-[260px] md:max-w-[500px] object-contain transition-transform duration-1000 group-hover/scooter:scale-[1.05] drop-shadow-[0_0_15px_rgba(249,115,22,0.4)]" 
                     />
                     

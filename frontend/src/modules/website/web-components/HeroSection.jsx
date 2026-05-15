@@ -58,14 +58,14 @@ const HeroSection = () => {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 w-full max-w-[280px] sm:max-w-none mx-auto lg:mx-0"
           >
-            <button className="w-full sm:w-auto px-8 py-4 bg-flexigo-primary hover:bg-flexigo-teal text-white rounded-full font-bold text-base transition-all duration-300 flex items-center justify-center gap-2 group shadow-xl shadow-flexigo-primary/20">
+            {/* <button className="w-full sm:w-auto px-8 py-4 bg-flexigo-primary hover:bg-flexigo-teal text-white rounded-full font-bold text-base transition-all duration-300 flex items-center justify-center gap-2 group shadow-xl shadow-flexigo-primary/20">
               Get Started
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
             <button className="w-full sm:w-auto px-8 py-4 bg-white hover:bg-slate-50 text-flexigo-primary border-2 border-slate-100 rounded-full font-bold text-base transition-all flex items-center justify-center gap-2 group">
               Explore Plans
               <ChevronRight className="w-5 h-5" />
-            </button>
+            </button> */}
           </motion.div>
         </motion.div>
 
@@ -83,9 +83,11 @@ const HeroSection = () => {
             <img
               src={heroImage}
               alt="Flexigo V1 Scooter"
-              fetchpriority="high"
+              fetchPriority="high"
               loading="eager"
               decoding="async"
+              width="600"
+              height="600"
               className="relative z-10 w-full h-auto object-contain drop-shadow-[0_15px_30px_rgba(0,0,0,0.1)]"
             />
           </div>
@@ -93,14 +95,14 @@ const HeroSection = () => {
       </div>
 
       {/* Scroll indicator */}
-      <motion.div
+      {/* <motion.div
         animate={{ y: [0, 10, 0] }}
         transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
         className="absolute bottom-10 left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center gap-2 opacity-50"
       >
         <span className="text-xs font-medium uppercase tracking-widest text-slate-500">Scroll</span>
         <div className="w-[1px] h-8 bg-slate-400" />
-      </motion.div>
+      </motion.div> */}
     </section>
   );
 };

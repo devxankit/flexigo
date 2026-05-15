@@ -31,16 +31,28 @@ import { useAdminDataStore } from '../store/adminDataStore';
 export default function FinancialCenterPage() {
   const { networkStats, revenueData, financeStats, financeTransactions, fetchFinanceData, fetchDashboardStats } = useAdminDataStore();
   const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
+  const [matrixView, setMatrixView] = React.useState('weekly');
 
   React.useEffect(() => {
-    fetchFinanceData();
-    fetchDashboardStats(); // For gross revenue
+    fetchFinanceData(activeFilters);
+    fetchDashboardStats(activeFilters); // For gross revenue
   }, []);
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
+    fetchFinanceData(newFilters);
+    fetchDashboardStats(newFilters);
     console.log('Financial Center Sync:', newFilters);
   };
+
+  const chartData = matrixView === 'weekly' ? revenueData : (networkStats.monthlyRevenue || revenueData);
+  const [searchQuery, setSearchQuery] = React.useState('');
+
+  const filteredTransactions = financeTransactions.filter(txn => 
+    txn.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    txn.hub?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    txn.user?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="space-y-6 pb-12">
@@ -65,7 +77,9 @@ export default function FinancialCenterPage() {
                <input 
                  type="text" 
                  placeholder="Search Txn..." 
-                 className="pl-8 pr-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all w-32 text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50"
+                 value={searchQuery}
+                 onChange={(e) => setSearchQuery(e.target.value)}
+                 className="pl-8 pr-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-black tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all w-32 text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50"
                />
             </div>
             </div>
@@ -73,7 +87,7 @@ export default function FinancialCenterPage() {
 
       {/* Financial KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <AdminStatCard title="Total Rev" value={`₹${((networkStats.grossRevenue || 0) / 100000).toFixed(1)}L`} icon={TrendingUp} color="emerald" subtitle="Gross Delta" />
+         <AdminStatCard title="Total Rev" value={`₹${(networkStats.grossRevenue || 0).toLocaleString()}`} icon={TrendingUp} color="emerald" subtitle="Gross Delta" />
          <AdminStatCard title="Settled" value={financeStats.settled} icon={ArrowDownLeft} color="blue" subtitle="Hub Pipeline" />
          <AdminStatCard title="Liability" value={financeStats.liability} icon={Activity} color="amber" subtitle="Pending Sync" />
          <AdminStatCard title="Unit Yield" value={financeStats.unitYield} icon={Layers} color="emerald" subtitle="/ Asset Avg" />
@@ -91,14 +105,24 @@ export default function FinancialCenterPage() {
                </div>
             </div>
             <div className="flex bg-[var(--bg-tertiary)] p-0.5 rounded-lg border border-[var(--border-subtle)]">
-               <button className="px-3 py-1 text-[8px] font-black uppercase tracking-widest bg-emerald-600 text-white rounded shadow-sm">Daily</button>
-               <button className="px-3 py-1 text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] hover:text-emerald-500 transition-colors">MTD</button>
+               <button 
+                 onClick={() => setMatrixView('weekly')}
+                 className={`px-3 py-1 text-[8px] font-black uppercase tracking-widest rounded transition-all ${matrixView === 'weekly' ? 'bg-emerald-600 text-white shadow-sm' : 'text-[var(--text-tertiary)] hover:text-emerald-500'}`}
+               >
+                 Weekly
+               </button>
+               <button 
+                 onClick={() => setMatrixView('monthly')}
+                 className={`px-3 py-1 text-[8px] font-black uppercase tracking-widest rounded transition-all ${matrixView === 'monthly' ? 'bg-emerald-600 text-white shadow-sm' : 'text-[var(--text-tertiary)] hover:text-emerald-500'}`}
+               >
+                 Monthly
+               </button>
             </div>
          </div>
 
          <div className="h-52 w-full">
             <ResponsiveContainer width="100%" height="100%">
-               <AreaChart data={revenueData}>
+               <AreaChart data={chartData}>
                   <defs>
                      <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
@@ -118,6 +142,7 @@ export default function FinancialCenterPage() {
                      contentStyle={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '12px' }}
                      itemStyle={{ fontSize: '8px', fontWeight: 900, textTransform: 'uppercase', color: '#10b981' }}
                      labelStyle={{ fontSize: '8px', fontWeight: 900, marginBottom: '4px', textTransform: 'uppercase' }}
+                     formatter={(value) => [`₹${(value * 100000).toLocaleString()}`, 'Revenue']}
                   />
                   <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
                </AreaChart>
@@ -149,7 +174,7 @@ export default function FinancialCenterPage() {
                   </tr>
                </thead>
                <tbody className="divide-y divide-[var(--border-subtle)]">
-                  {financeTransactions.map((txn) => (
+                  {filteredTransactions.map((txn) => (
                      <tr key={txn.id} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
                         <td className="py-2 px-4">
                            <div className="flex flex-col">

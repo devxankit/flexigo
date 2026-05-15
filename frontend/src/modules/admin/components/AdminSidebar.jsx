@@ -25,7 +25,13 @@ import {
   Briefcase,
   Layers,
   Settings,
-  Zap
+  Zap,
+  Activity,
+  Globe2,
+  CreditCardIcon,
+  Phone,
+  Info,
+  Newspaper
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAdminAuthStore as useAuthStore } from '../store/adminAuthStore';
@@ -37,7 +43,6 @@ const navigationGroups = [
     items: [
       { id: 'dashboard', label: 'Overview', icon: LayoutDashboard, path: '/admin/dashboard' },
       { id: 'analysis', label: 'Platform Analytics', icon: BarChart3, path: '/admin/analytics' },
-      { id: 'vehicle-analytics', label: 'Vehicle Stats', icon: Settings, path: '/admin/vehicle-analytics' },
       { id: 'rider-behaviour', label: 'Riders', icon: Target, path: '/admin/rider-behaviour' },
     ]
   },
@@ -45,16 +50,16 @@ const navigationGroups = [
     title: "Operations",
     items: [
       { id: 'hubs', label: 'Franchise Management', icon: Warehouse, path: '/admin/hubs' },
-      { id: 'fleet', label: 'Fleet Oversight', icon: Truck, path: '/admin/fleet' },
-      { id: 'gps-control', label: 'GPS & Control', icon: Navigation, path: '/admin/gps-control' },
+      { id: 'fleet', label: 'Fleet Addition', icon: Truck, path: '/admin/fleet' },
+
       { id: 'geofencing', label: 'Geo Fencing', icon: Map, path: '/admin/geofencing' },
-      { id: 'assignment', label: 'Assignment & QR', icon: QrCode, path: '/admin/assignment' },
     ]
   },
   {
     title: "People",
     items: [
       { id: 'subscribers', label: 'Subscribers', icon: Users, path: '/admin/subscribers' },
+      { id: 'rider-reports', label: 'Rider Reports', icon: Activity, path: '/admin/rider-reports' },
       { id: 'kyc', label: 'KYC & Onboard', icon: UserCheck, path: '/admin/kyc' },
       { id: 'hr', label: 'HR Management', icon: Briefcase, path: '/admin/hr' },
       { id: 'franchise-kyc', label: 'Franchise Onboard', icon: ShieldCheck, path: '/admin/franchise-kyc' },
@@ -77,6 +82,15 @@ const navigationGroups = [
       { id: 'engagement', label: 'Engagement & CRM', icon: Ticket, path: '/admin/engagement' },
       { id: 'security', label: 'Security & Audit', icon: Lock, path: '/admin/security' },
       { id: 'notifications', label: 'Notifications', icon: Bell, path: '/admin/notifications' },
+    ]
+  },
+  {
+    title: "Website",
+    items: [
+      { id: 'website-plans', label: 'Plans Page', icon: Zap, path: '/admin/website-plans' },
+      { id: 'website-contact', label: 'Contact Us', icon: Phone, path: '/admin/website-contact' },
+      { id: 'website-about', label: 'About Us', icon: Info, path: '/admin/website-about' },
+      { id: 'website-press', label: 'Press & Media', icon: Newspaper, path: '/admin/website-press' },
     ]
   }
 ];

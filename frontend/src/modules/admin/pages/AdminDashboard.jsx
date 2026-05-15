@@ -48,14 +48,16 @@ export default function AdminDashboard() {
   });
 
   React.useEffect(() => {
-    fetchDashboardStats();
-    fetchHubs();
-    fetchDistribution();
+    fetchDashboardStats(activeFilters);
+    fetchHubs(activeFilters);
+    fetchDistribution(activeFilters);
   }, []);
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
     fetchDashboardStats(newFilters);
+    fetchHubs(newFilters);
+    fetchDistribution(newFilters);
     console.log('Syncing Filters:', newFilters);
   };
 

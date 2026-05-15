@@ -20,19 +20,39 @@ import {
   User,
   ArrowRight,
   ChevronRight,
-  Activity
+  Activity,
+  Save
 } from 'lucide-react';
 import AdminStatCard from '../components/AdminStatCard';
 import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function KycOnboardingPage() {
-  const { kycRecords, fetchKycRecords, updateKycStatus } = useAdminDataStore();
-  const [activeTab, setActiveTab] = useState('all');
-  const [selectedRecord, setSelectedRecord] = useState(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const { kycRecords, fetchKycRecords, updateKycStatus, assignVehicle } = useAdminDataStore();
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('kyc_active_tab') || 'all');
+  const [selectedRecord, setSelectedRecord] = useState(() => {
+    const saved = localStorage.getItem('kyc_selected_record');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(() => localStorage.getItem('kyc_modal_open') === 'true');
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [assignmentData, setAssignmentData] = useState({ vehiclePlate: '', riderPhone: '', riderName: '' });
+  const [searchQuery, setSearchQuery] = useState(() => localStorage.getItem('kyc_search_query') || '');
   const [activeFilters, setActiveFilters] = useState({ range: 'Last 7 Days' });
+
+  React.useEffect(() => {
+    localStorage.setItem('kyc_active_tab', activeTab);
+  }, [activeTab]);
+
+  React.useEffect(() => {
+    localStorage.setItem('kyc_search_query', searchQuery);
+  }, [searchQuery]);
+
+  React.useEffect(() => {
+    localStorage.setItem('kyc_modal_open', isDetailModalOpen);
+    if (selectedRecord) localStorage.setItem('kyc_selected_record', JSON.stringify(selectedRecord));
+    else localStorage.removeItem('kyc_selected_record');
+  }, [isDetailModalOpen, selectedRecord]);
 
   React.useEffect(() => {
     fetchKycRecords();
@@ -40,13 +60,21 @@ export default function KycOnboardingPage() {
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
+    fetchKycRecords(newFilters);
     console.log('KYC Onboarding Sync:', newFilters);
   };
 
   const filteredRecords = kycRecords.filter(r => {
-    const matchesTab = activeTab === 'all' || r.role.toLowerCase() === activeTab.slice(0, -1);
-    const matchesSearch = r.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         r.id.toString().toLowerCase().includes(searchQuery.toLowerCase());
+    let matchesTab = activeTab === 'all';
+    if (activeTab === 'drivers') {
+      matchesTab = r.role.toLowerCase() === 'rider' || r.role.toLowerCase() === 'driver';
+    } else if (activeTab === 'franchises') {
+      matchesTab = r.role.toLowerCase() === 'franchise';
+    }
+    
+    const matchesSearch = (r.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         (r._id || r.id || '').toString().toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (r.vehiclePlate || '').toLowerCase().includes(searchQuery.toLowerCase());
     return matchesTab && matchesSearch;
   });
 
@@ -86,7 +114,7 @@ export default function KycOnboardingPage() {
                  type="text" 
                  value={searchQuery}
                  onChange={(e) => setSearchQuery(e.target.value)}
-                 placeholder="Search PAN/ID..." 
+                 placeholder="Search Name/Vehicle No/ID..." 
                  className="pl-8 pr-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all w-32 text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50"
                />
             </div>
@@ -98,14 +126,14 @@ export default function KycOnboardingPage() {
 
       {/* KPI Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-         <AdminStatCard title="Requests" value={kycRecords.length} icon={UserCheck} color="emerald" subtitle="Network Applications" />
-         <AdminStatCard title="Pending" value={kycRecords.filter(r => r.status === 'pending').length} icon={Clock} color="blue" subtitle="Awaiting Decision" />
-         <AdminStatCard title="Approved" value={kycRecords.filter(r => r.status === 'approved').length} icon={CheckCircle} color="emerald" subtitle="Cleared Node" />
+         <AdminStatCard title="Requests" value={filteredRecords.length} icon={UserCheck} color="emerald" subtitle={`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Applications`} />
+         <AdminStatCard title="Pending" value={filteredRecords.filter(r => r.status === 'pending').length} icon={Clock} color="blue" subtitle="Awaiting Decision" />
+         <AdminStatCard title="Approved" value={filteredRecords.filter(r => r.status === 'approved').length} icon={CheckCircle} color="emerald" subtitle="Cleared Node" />
       </div>
 
       {/* Tabbed Navigation */}
       <div className="flex border-b border-[var(--border-subtle)] gap-6">
-         {['all', 'drivers', 'consumers', 'franchises'].map((tab) => (
+         {['all', 'drivers', 'franchises'].map((tab) => (
             <button 
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -174,7 +202,22 @@ export default function KycOnboardingPage() {
                                 >
                                    <Eye size={12} />
                                 </button>
-                                 {/* Removed Quick Approve button as per request */}
+                                {record.status === 'approved' && record.role?.toLowerCase() === 'rider' && !record.vehicleId && (
+                                    <button 
+                                      onClick={() => {
+                                        setAssignmentData({
+                                          vehiclePlate: '',
+                                          riderPhone: record.phone || '',
+                                          riderName: record.name || ''
+                                        });
+                                        setIsAssignModalOpen(true);
+                                      }}
+                                      className="p-1.5 bg-emerald-600/10 border border-emerald-500/20 rounded-lg text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all ml-1.5"
+                                      title="Assign Vehicle"
+                                    >
+                                       <Zap size={12} fill="currentColor" />
+                                    </button>
+                                 )}
                              </div>
                           </td>
                        </motion.tr>
@@ -227,27 +270,75 @@ export default function KycOnboardingPage() {
                            {[
                               { label: 'Aadhaar Card', key: 'aadhaarFront', verified: selectedRecord.details?.ekycVerified },
                               { label: 'PAN Card', key: 'panCard' },
-                              { label: 'Driving License', key: 'drivingLicense' }
+                              { label: 'Driving License', key: 'drivingLicense' },
+                              { label: 'Certificate', key: 'certificate', isUploadable: true }
                            ].map(doc => {
                               const hasDoc = selectedRecord.details?.[doc.key];
                               return (
                                  <div 
                                     key={doc.label} 
-                                    onClick={() => hasDoc && window.open(hasDoc, '_blank')}
-                                    className={`p-2.5 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl flex items-center justify-between group transition-all ${hasDoc ? 'cursor-pointer hover:border-emerald-500/30' : 'opacity-50 cursor-not-allowed'}`}
+                                    className={`p-2.5 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl flex items-center justify-between group transition-all ${hasDoc ? 'cursor-pointer hover:border-emerald-500/30' : (doc.isUploadable ? 'cursor-pointer border-dashed border-emerald-500/30 hover:bg-emerald-500/5' : 'opacity-50 cursor-not-allowed')}`}
+                                    onClick={() => {
+                                       if (hasDoc) {
+                                         window.open(hasDoc, '_blank');
+                                       } else if (doc.isUploadable) {
+                                         document.getElementById('certificate-upload').click();
+                                       }
+                                    }}
                                  >
                                     <div className="flex items-center gap-2">
                                        <span className="text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest italic leading-none">{doc.label}</span>
                                        {doc.verified && <Check size={10} className="text-emerald-500" />}
                                     </div>
-                                    {hasDoc ? (
-                                       <Download size={10} className="text-[var(--text-tertiary)]/50 group-hover:text-emerald-500 transition-all" />
-                                    ) : (
-                                       <AlertCircle size={10} className="text-rose-500/50" />
-                                    )}
+                                    <div className="flex items-center gap-2">
+                                       {hasDoc ? (
+                                          <Download size={10} className="text-[var(--text-tertiary)]/50 group-hover:text-emerald-500 transition-all" />
+                                       ) : doc.isUploadable ? (
+                                          <Camera size={10} className="text-emerald-500 animate-pulse" />
+                                       ) : (
+                                          <AlertCircle size={10} className="text-rose-500/50" />
+                                       )}
+                                    </div>
                                  </div>
                               );
                            })}
+                           <input 
+                              type="file" 
+                              id="certificate-upload" 
+                              className="hidden" 
+                              accept="image/*"
+                              onChange={async (e) => {
+                                 const file = e.target.files[0];
+                                 if (!file) return;
+
+                                 const id = selectedRecord.id || selectedRecord._id;
+                                 if (!id) {
+                                    alert("Error: Record ID not found");
+                                    return;
+                                 }
+
+                                 const reader = new FileReader();
+                                 reader.onloadend = async () => {
+                                    try {
+                                       const res = await useAdminDataStore.getState().uploadKycCertificate(id, reader.result);
+                                       if (res?.success) {
+                                          setSelectedRecord(prev => ({
+                                             ...prev,
+                                             details: { ...prev.details, certificate: res.certificateUrl }
+                                          }));
+                                          alert("Certificate Uploaded Successfully!");
+                                       } else {
+                                          alert(res?.message || "Upload failed. Please try again.");
+                                       }
+                                    } catch (err) {
+                                       alert("Upload Error: " + err.message);
+                                    } finally {
+                                       e.target.value = ''; // Reset input
+                                    }
+                                 };
+                                 reader.readAsDataURL(file);
+                              }}
+                           />
                         </div>
                      </div>
 
@@ -281,36 +372,174 @@ export default function KycOnboardingPage() {
                      </div>
                   </div>
 
+                  {/* Reference Details Section */}
+                  <div className="pt-4 border-t border-[var(--border-subtle)] space-y-4">
+                     <h4 className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-1.5 italic leading-none">
+                        <User size={10} className="text-emerald-500" /> Reference Details
+                     </h4>
+                     <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                           <label className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Reference Name</label>
+                           <input 
+                              value={selectedRecord.details?.referenceName || ''}
+                              onChange={(e) => {
+                                 setSelectedRecord(prev => ({
+                                    ...prev,
+                                    details: { ...prev.details, referenceName: e.target.value }
+                                 }));
+                              }}
+                              placeholder="ENTER NAME"
+                              className="w-full px-3 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-bold tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all placeholder:text-[var(--text-tertiary)]/30"
+                           />
+                        </div>
+                        <div className="space-y-1.5">
+                           <label className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Reference Number</label>
+                           <div className="relative">
+                              <input 
+                                 value={selectedRecord.details?.referenceNumber || ''}
+                                 onChange={(e) => {
+                                    const val = e.target.value.replace(/\D/g, '');
+                                    if (val.length <= 10) {
+                                       setSelectedRecord(prev => ({
+                                          ...prev,
+                                          details: { ...prev.details, referenceNumber: val }
+                                       }));
+                                    }
+                                 }}
+                                 placeholder="10-DIGIT MOBILE"
+                                 className="w-full px-3 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all placeholder:text-[var(--text-tertiary)]/30"
+                              />
+                              {selectedRecord.details?.referenceNumber?.length === 10 && (
+                                 <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                    <ShieldCheck size={12} className="text-emerald-500" />
+                                 </div>
+                              )}
+                           </div>
+                        </div>
+                     </div>
+                     <button 
+                        onClick={async () => {
+                           const id = selectedRecord.id || selectedRecord._id;
+                           const res = await useAdminDataStore.getState().updateKycReferences(id, {
+                              referenceName: selectedRecord.details?.referenceName,
+                              referenceNumber: selectedRecord.details?.referenceNumber
+                           });
+                           if (res?.success) alert("References Saved!");
+                           else alert(res?.message || "Failed to save references");
+                        }}
+                        className="w-full py-2 bg-emerald-600/10 text-emerald-500 border border-emerald-500/20 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-emerald-600/20 transition-all active:scale-95 flex items-center justify-center gap-1.5"
+                     >
+                        <Save size={12} /> SAVE
+                     </button>
+                  </div>
+
                   <div className="flex gap-2.5 pt-6 border-t border-[var(--border-subtle)] relative z-10">
-                     {selectedRecord.status === 'pending' ? (
-                        <>
-                           <button 
-                              onClick={() => { handleAction(selectedRecord._id || selectedRecord.id, 'approved'); setIsDetailModalOpen(false); }}
-                              className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-950/20 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2"
-                           >
-                              <Zap size={14} fill="currentColor" /> Authorize Subscriber
-                           </button>
-                           <button 
-                              onClick={() => { handleAction(selectedRecord._id || selectedRecord.id, 'rejected'); setIsDetailModalOpen(false); }}
-                              className="px-5 py-3 bg-rose-600/10 text-rose-500 border border-rose-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-600/20 transition-all active:scale-95 italic"
-                           >
-                              Decline
-                           </button>
-                        </>
-                     ) : (
-                        <button 
-                           onClick={() => setIsDetailModalOpen(false)}
-                           className="w-full py-2.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[8px] font-black uppercase tracking-widest text-[var(--text-primary)] hover:border-emerald-500/30 transition-all font-black italic"
-                        >
-                           Close Registry Payload
-                        </button>
-                     )}
+                     <button 
+                        onClick={() => { handleAction(selectedRecord._id || selectedRecord.id, 'approved'); setIsDetailModalOpen(false); }}
+                        className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-[0.2em] shadow-lg shadow-emerald-950/20 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+                     >
+                        <Zap size={14} fill="currentColor" /> {selectedRecord.status === 'approved' ? 'Already Authorized' : 'Authorize Subscriber'}
+                     </button>
+                     <button 
+                        onClick={() => { handleAction(selectedRecord._id || selectedRecord.id, 'rejected'); setIsDetailModalOpen(false); }}
+                        className="px-5 py-3 bg-rose-600/10 text-rose-500 border border-rose-500/20 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-600/20 transition-all active:scale-95 italic"
+                     >
+                        {selectedRecord.status === 'rejected' ? 'Already Declined' : 'Decline'}
+                     </button>
                   </div>
                </motion.div>
             </div>
          )}
       </AnimatePresence>
 
+      {/* Vehicle Assignment Modal */}
+      <AnimatePresence>
+         {isAssignModalOpen && (
+            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+               <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="w-full max-w-md bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-8 shadow-2xl space-y-6"
+               >
+                  <div className="flex items-center justify-between">
+                     <div className="space-y-0.5">
+                        <h2 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-tighter italic leading-none">Vehicle <span className="text-emerald-500">Assignment</span></h2>
+                        <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">PROVISION_DISPATCH_PROTOCOL</p>
+                     </div>
+                     <button onClick={() => setIsAssignModalOpen(false)} className="p-1.5 hover:bg-rose-600/10 hover:text-rose-500 transition-all rounded-lg">
+                        <X size={16} />
+                     </button>
+                  </div>
+
+                  <form 
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      const res = await assignVehicle({
+                        vehiclePlate: assignmentData.vehiclePlate,
+                        riderPhone: assignmentData.riderPhone,
+                        type: 'Manual',
+                        hubName: 'KYC Hub'
+                      });
+                      if (res.success) {
+                        setIsAssignModalOpen(false);
+                        alert("Vehicle Assigned Successfully!");
+                      } else {
+                        alert(res.message || "Assignment Failed");
+                      }
+                    }} 
+                    className="space-y-6"
+                  >
+                     <div className="space-y-4">
+                        <div className="space-y-1.5">
+                           <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Rider Name</label>
+                           <input 
+                              value={assignmentData.riderName}
+                              onChange={(e) => setAssignmentData({...assignmentData, riderName: e.target.value})}
+                              placeholder="Rider Name"
+                              className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
+                           />
+                        </div>
+
+                        <div className="space-y-1.5">
+                           <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Mobile Number</label>
+                           <input 
+                              value={assignmentData.riderPhone}
+                              onChange={(e) => {
+                                 const val = e.target.value.replace(/\D/g, '');
+                                 if (val.length <= 10) {
+                                   setAssignmentData({...assignmentData, riderPhone: val});
+                                 }
+                              }}
+                              placeholder="Mobile Number"
+                              className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
+                           />
+                        </div>
+
+                        <div className="space-y-1.5">
+                           <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Vehicle Plate Number</label>
+                           <input 
+                              autoFocus
+                              required
+                              value={assignmentData.vehiclePlate}
+                              onChange={(e) => setAssignmentData({...assignmentData, vehiclePlate: e.target.value.toUpperCase()})}
+                              placeholder="e.g. DL 01 AB 1234"
+                              className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
+                           />
+                        </div>
+                     </div>
+
+                     <button 
+                        type="submit"
+                        className="w-full py-3 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-emerald-950/20 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+                     >
+                        <Zap size={14} fill="white" /> Save & Assign Vehicle
+                     </button>
+                  </form>
+               </motion.div>
+            </div>
+         )}
+      </AnimatePresence>
 
     </div>
   );

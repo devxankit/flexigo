@@ -26,6 +26,47 @@ import { useAdminDataStore } from '../store/adminDataStore';
 
 const emptyForm = { name: '', city: '', fleet: '', ownerName: '', phone: '', email: '', password: '' };
 
+const FormInput = ({ label, value, onChange, type = 'text', placeholder, required = false }) => (
+  <div className="space-y-2">
+    <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">{label}{required ? ' *' : ''}</label>
+    <input
+      type={type}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      required={required}
+      className="w-full px-5 py-3 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500/40 outline-none transition-all placeholder:text-[var(--text-tertiary)]/50"
+    />
+  </div>
+);
+
+const HubFormFields = ({ data, setData }) => (
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto max-h-[55vh] pr-1 custom-scrollbar">
+    <div className="md:col-span-2">
+      <FormInput label="Hub Name" value={data.name} onChange={e => setData({ ...data, name: e.target.value })} placeholder="e.g. Pune Central Hub" required />
+    </div>
+    <FormInput label="City / Location" value={data.city} onChange={e => setData({ ...data, city: e.target.value })} placeholder="e.g. Pune, MH" required />
+    <FormInput label="Fleet Capacity" value={data.fleet} onChange={e => setData({ ...data, fleet: e.target.value })} type="number" placeholder="e.g. 150" />
+    <div className="md:col-span-2 pt-2 border-t border-[var(--border-subtle)]">
+      <p className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.2em] ml-2 italic">Owner Credentials</p>
+    </div>
+    <FormInput label="Owner Name" value={data.ownerName} onChange={e => setData({ ...data, ownerName: e.target.value })} placeholder="Legal Name" required />
+    <div className="space-y-2">
+      <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Phone Number *</label>
+      <input
+        type="tel"
+        value={data.phone}
+        onChange={e => setData({ ...data, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+        placeholder="10-digit mobile"
+        required
+        className="w-full px-5 py-3 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500/40 outline-none transition-all placeholder:text-[var(--text-tertiary)]/50"
+      />
+    </div>
+    <FormInput label="Email Address" value={data.email} onChange={e => setData({ ...data, email: e.target.value })} type="email" placeholder="owner@flexigo.com" />
+    <FormInput label="Password" value={data.password} onChange={e => setData({ ...data, password: e.target.value })} type="password" placeholder="••••••••" />
+  </div>
+);
+
 export default function HubManagementPage() {
   const navigate = useNavigate();
   const { hubs, networkStats, fetchHubs, fetchDashboardStats, addHub, updateHub, removeHub } = useAdminDataStore();
@@ -122,47 +163,6 @@ export default function HubManagementPage() {
     }
   };
 
-  const FormInput = ({ label, value, onChange, type = 'text', placeholder, required = false }) => (
-    <div className="space-y-2">
-      <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">{label}{required ? ' *' : ''}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        required={required}
-        className="w-full px-5 py-3 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500/40 outline-none transition-all placeholder:text-[var(--text-tertiary)]/50"
-      />
-    </div>
-  );
-
-  const HubFormFields = ({ data, setData }) => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto max-h-[55vh] pr-1 custom-scrollbar">
-      <div className="md:col-span-2">
-        <FormInput label="Hub Name" value={data.name} onChange={e => setData({ ...data, name: e.target.value })} placeholder="e.g. Pune Central Hub" required />
-      </div>
-      <FormInput label="City / Location" value={data.city} onChange={e => setData({ ...data, city: e.target.value })} placeholder="e.g. Pune, MH" required />
-      <FormInput label="Fleet Capacity" value={data.fleet} onChange={e => setData({ ...data, fleet: e.target.value })} type="number" placeholder="e.g. 150" />
-      <div className="md:col-span-2 pt-2 border-t border-[var(--border-subtle)]">
-        <p className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.2em] ml-2 italic">Owner Credentials</p>
-      </div>
-      <FormInput label="Owner Name" value={data.ownerName} onChange={e => setData({ ...data, ownerName: e.target.value })} placeholder="Legal Name" required />
-      <div className="space-y-2">
-        <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] ml-2">Phone Number *</label>
-        <input
-          type="tel"
-          value={data.phone}
-          onChange={e => setData({ ...data, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
-          placeholder="10-digit mobile"
-          required
-          className="w-full px-5 py-3 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500/40 outline-none transition-all placeholder:text-[var(--text-tertiary)]/50"
-        />
-      </div>
-      <FormInput label="Email Address" value={data.email} onChange={e => setData({ ...data, email: e.target.value })} type="email" placeholder="owner@flexigo.com" />
-      <FormInput label="Password" value={data.password} onChange={e => setData({ ...data, password: e.target.value })} type="password" placeholder="••••••••" />
-    </div>
-  );
-
   return (
     <div className="space-y-6 pb-10">
       {/* Header */}
@@ -180,7 +180,10 @@ export default function HubManagementPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <OpsFilter onFilterChange={setActiveFilters} />
+          <OpsFilter onFilterChange={(newFilters) => {
+            setActiveFilters(newFilters);
+            fetchHubs(newFilters);
+          }} />
           <div className="relative group">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--text-tertiary)] group-focus-within:text-emerald-500 transition-colors" />
             <input
@@ -204,8 +207,8 @@ export default function HubManagementPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <AdminStatCard title="Total Franchises" value={hubs.length} icon={Warehouse} color="emerald" subtitle="Active nodes" />
         <AdminStatCard title="Utilization" value={networkStats.hubUtilization} icon={TrendingUp} color="blue" subtitle="Avg space" />
-        <AdminStatCard title="Connectivity" value="98.2%" icon={Signal} color="emerald" subtitle="Uptime" />
-        <AdminStatCard title="System Health" value="94%" icon={Activity} color="emerald" subtitle="Registry sync" />
+        <AdminStatCard title="Connectivity" value={networkStats.connectivity || "98.2%"} icon={Signal} color="emerald" subtitle="Uptime" />
+        <AdminStatCard title="System Health" value={networkStats.systemHealth || "94%"} icon={Activity} color="emerald" subtitle="Registry sync" />
       </div>
 
       {/* Hub Cards */}

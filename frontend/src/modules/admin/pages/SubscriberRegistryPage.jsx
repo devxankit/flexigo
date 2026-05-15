@@ -32,6 +32,7 @@ export default function SubscriberRegistryPage() {
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
+    fetchSubscriberData(newFilters);
     console.log('Subscriber Registry Sync:', newFilters);
   };
 
@@ -57,6 +58,7 @@ export default function SubscriberRegistryPage() {
       (s.phone || '').includes(q) ||
       (s.email?.toLowerCase() || '').includes(q) ||
       (s.persona?.toLowerCase() || '').includes(q) ||
+      (s.vehiclePlate?.toLowerCase() || '').includes(q) ||
       (s.id?.toLowerCase() || '').includes(q)
     );
   });
@@ -85,7 +87,7 @@ export default function SubscriberRegistryPage() {
                  type="text" 
                  value={searchQuery}
                  onChange={(e) => setSearchQuery(e.target.value)}
-                 placeholder="Search Persona/ID/Phone..." 
+                 placeholder="Search Persona/ID/Phone/Vehicle No..." 
                  className="pl-8 pr-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all w-48 text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50 italic"
                />
             </div>
@@ -101,7 +103,7 @@ export default function SubscriberRegistryPage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
          <AdminStatCard title="Total Users" value={subscriberStats.totalUsers} icon={Users} color="emerald" subtitle="Active nodes" />
-         <AdminStatCard title="Daily Riders" value={subscriberStats.dailyRiders} icon={Activity} color="blue" subtitle="Active today" />
+         <AdminStatCard title="Approved Riders" value={subscriberStats.dailyRiders} icon={UserCheck} color="blue" subtitle="Verified Fleet" />
          <AdminStatCard title="KYC Verified" value={subscriberStats.kycVerified} icon={ShieldCheck} color="emerald" subtitle="Identity sync" />
       </div>
 
@@ -116,7 +118,7 @@ export default function SubscriberRegistryPage() {
             <table className="w-full">
                <thead>
                      <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
-                     {['User identity', 'Contact Path', 'Assigned Persona', 'Network Locale', 'Status'].map((header) => (
+                     {['User identity', 'Contact Path', 'Assigned Persona', 'Status'].map((header) => (
                         <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                      ))}
                   </tr>
@@ -126,7 +128,7 @@ export default function SubscriberRegistryPage() {
                      <tr key={user.id} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
                         <td className="py-2 px-4 whitespace-nowrap">
                            <div className="flex flex-col">
-                              <span className="font-medium text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{user.phone}</span>
+                              <span className="font-medium text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{user.name || user.phone}</span>
                            </div>
                         </td>
                         <td className="py-2 px-4">
@@ -135,12 +137,12 @@ export default function SubscriberRegistryPage() {
                               <span className="font-medium text-[var(--text-tertiary)]/50">{user.phone}</span>
                            </div>
                         </td>
-                        <td className="py-2 px-4 font-medium text-[var(--text-primary)]">{user.persona}</td>
-                        <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]    whitespace-nowrap">{user.locale}</td>
+                        <td className="py-2 px-4 font-medium text-[var(--text-primary)] capitalize">{user.persona}</td>
                         <td className="py-2 px-4">
                            <div className={`inline-flex px-1.5 py-0.5 rounded  font-medium   border  ${
                               user.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 
                               user.status === 'active' ? 'bg-blue-500/10 text-blue-500 border-blue-500/10' :
+                              user.status === 'rejected' ? 'bg-rose-500/10 text-rose-500 border-rose-500/10' :
                               'bg-amber-500/10 text-amber-500 border-amber-500/10'
                            }`}>
                               {user.status}

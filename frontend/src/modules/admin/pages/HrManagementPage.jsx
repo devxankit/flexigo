@@ -154,6 +154,7 @@ export default function HrManagementPage() {
 
    const handleFilterChange = (newFilters) => {
       setActiveFilters(newFilters);
+      fetchStaff(newFilters);
    };
 
    const handleEditOpen = (emp) => {
@@ -590,7 +591,12 @@ export default function HrManagementPage() {
                                     <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Phone Number</label>
                                     <input
                                        value={newEmployee.phone}
-                                       onChange={(e) => setNewEmployee({ ...newEmployee, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                                       onChange={(e) => {
+                                          const val = e.target.value.replace(/\D/g, '');
+                                          if (val.length <= 10) {
+                                             setNewEmployee({ ...newEmployee, phone: val });
+                                          }
+                                       }}
                                        placeholder="+91 XXXXX XXXXX"
                                        className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic"
                                     />

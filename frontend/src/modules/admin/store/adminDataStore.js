@@ -32,7 +32,25 @@ export const useAdminDataStore = create((set, get) => ({
   subscribers: [],
   roles: [],
   campaigns: [],
+  notifications: [],
+  riderReport: [],
+  websitePlans: [],
+  websiteInquiries: [],
+  websiteAbout: null,
+  websiteContactInfo: null,
+  websitePressReleases: [],
   isLoading: false,
+
+  fetchNotifications: async () => {
+    try {
+      const res = await api.get('/admin/notifications-feed');
+      if (res.data.success) {
+        set({ notifications: res.data.notifications });
+      }
+    } catch (err) {
+      console.error("Failed to fetch notifications:", err);
+    }
+  },
 
   fetchDashboardStats: async (filters = {}) => {
     set({ isLoading: true });
@@ -54,24 +72,33 @@ export const useAdminDataStore = create((set, get) => ({
     }
   },
 
-  fetchHubs: async () => {
+  fetchHubs: async (filters = {}) => {
     try {
       // Get browser geolocation if available, then fetch hubs sorted by proximity
       const getCoords = () =>
         new Promise((resolve) => {
-          if (!navigator.geolocation) return resolve(null);
           navigator.geolocation.getCurrentPosition(
             (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-            () => resolve(null),
-            { timeout: 4000 }
+            () => resolve({ lat: null, lng: null }),
+            { timeout: 3000 }
           );
         });
 
-      const coords = await getCoords();
-      const params = coords ? `?lat=${coords.lat}&lng=${coords.lng}` : '';
-      const res = await api.get(`/admin/hubs${params}`);
+      const { lat, lng } = await getCoords();
+      const params = new URLSearchParams();
+      if (lat) params.append('lat', lat);
+      if (lng) params.append('lng', lng);
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/hubs?${params.toString()}`);
       if (res.data.success) {
-        set({ hubs: res.data.hubs });
+        set({ 
+          hubs: res.data.hubs,
+          networkStats: {
+            ...get().networkStats,
+            ...res.data.stats
+          }
+        });
       }
     } catch (err) {
       console.error("Failed to fetch hubs:", err);
@@ -140,9 +167,12 @@ export const useAdminDataStore = create((set, get) => ({
     }
   },
 
-  fetchDistribution: async () => {
+  fetchDistribution: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/distribution');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/distribution?${params.toString()}`);
       if (res.data.success) {
         set({ fleetDistribution: res.data.distribution });
       }
@@ -151,9 +181,12 @@ export const useAdminDataStore = create((set, get) => ({
     }
   },
 
-  fetchPlans: async () => {
+  fetchPlans: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/plans');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/plans?${params.toString()}`);
       if (res.data.success) {
         set({ plans: res.data.plans });
       }
@@ -163,9 +196,12 @@ export const useAdminDataStore = create((set, get) => ({
   },
 
   kycStats: { markets: 0, gstSync: '0%', integrity: '0%' },
-  fetchKycRecords: async () => {
+  fetchKycRecords: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/kyc');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/kyc?${params.toString()}`);
       if (res.data.success) {
         set({
           kycRecords: res.data.records,
@@ -182,13 +218,46 @@ export const useAdminDataStore = create((set, get) => ({
       const res = await api.patch(`/admin/kyc/${id}`, { status });
       if (res.data.success) {
         set(state => ({
-          kycRecords: state.kycRecords.map(r => r.id === id ? { ...r, status } : r)
+          kycRecords: state.kycRecords.map(r => (r.id === id || r._id === id) ? { ...r, status } : r)
         }));
+        // Re-fetch to ensure all modules are in sync
+        get().fetchKycRecords();
       }
     } catch (err) {
       console.error("Failed to update KYC status:", err);
     }
   },
+
+  updateKycReferences: async (id, data) => {
+    try {
+      const res = await api.patch(`/admin/kyc/${id}/references`, data);
+      if (res.data.success) {
+        set(state => ({
+          kycRecords: state.kycRecords.map(r => (r.id === id || r._id === id) ? { ...r, details: { ...r.details, ...data } } : r)
+        }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to update references:", err);
+      return { success: false, message: err.response?.data?.message || err.message };
+    }
+  },
+
+  uploadKycCertificate: async (id, certificateBase64) => {
+    try {
+      const res = await api.post(`/admin/kyc/${id}/certificate`, { certificate: certificateBase64 });
+      if (res.data.success) {
+        set(state => ({
+          kycRecords: state.kycRecords.map(r => r.id === id ? { ...r, details: { ...r.details, certificate: res.data.certificateUrl } } : r)
+        }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to upload KYC certificate:", err);
+      return { success: false, message: err.response?.data?.message || err.message };
+    }
+  },
+
 
   fetchSubscribers: async () => {
     try {
@@ -201,9 +270,12 @@ export const useAdminDataStore = create((set, get) => ({
     }
   },
 
-  fetchAllVehicles: async () => {
+  fetchAllVehicles: async (filters = {}) => {
     try {
-      const res = await api.get('/fleet'); // no franchiseId param = all
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+      
+      const res = await api.get(`/fleet?${params.toString()}`); // no franchiseId param = all
       if (res.data.success) {
         set({ vehicles: res.data.vehicles });
       }
@@ -224,6 +296,20 @@ export const useAdminDataStore = create((set, get) => ({
       return { success: false, message: err.response?.data?.message || err.message };
     }
   },
+
+  bulkAddVehicles: async (vehicles) => {
+    try {
+      const res = await api.post('/admin/fleet/bulk-add', { vehicles });
+      if (res.data.success) {
+        set(state => ({ vehicles: [...res.data.vehicles, ...state.vehicles] }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to bulk add vehicles:", err);
+      return { success: false, message: err.response?.data?.message || err.message };
+    }
+  },
+
 
   fetchHubVehicles: async (hubId) => {
     try {
@@ -282,11 +368,22 @@ export const useAdminDataStore = create((set, get) => ({
   },
 
   geofences: [],
-  fetchGeofences: async () => {
+  allRiders: [],
+  fetchGeofences: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/geofencing');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/geofencing?${params.toString()}`);
       if (res.data.success) {
-        set({ geofences: res.data.geofences });
+        set({ 
+          geofences: res.data.geofences,
+          allRiders: res.data.allRiders || [],
+          networkStats: {
+            ...get().networkStats,
+            geofenceStats: res.data.stats
+          }
+        });
       }
     } catch (err) {
       console.error("Failed to fetch geofences:", err);
@@ -339,7 +436,7 @@ export const useAdminDataStore = create((set, get) => ({
   assignments: [],
   fetchAssignments: async () => {
     try {
-      const res = await api.get('/admin/assignments');
+      const res = await api.get('/fleet/assignments');
       if (res.data.success) {
         set({ assignments: res.data.assignments });
       }
@@ -350,9 +447,12 @@ export const useAdminDataStore = create((set, get) => ({
 
   assignVehicle: async (data) => {
     try {
-      const res = await api.post('/admin/assignments', data);
+      const res = await api.post('/fleet/assignments', data);
       if (res.data.success) {
-        set(state => ({ assignments: [res.data.assignment, ...state.assignments] }));
+        set(state => ({ 
+          assignments: [res.data.assignment, ...state.assignments],
+          kycRecords: state.kycRecords.map(r => r.phone === data.riderPhone ? { ...r, vehicleId: res.data.assignment.vehicle } : r)
+        }));
         return res.data;
       }
     } catch (err) {
@@ -363,9 +463,12 @@ export const useAdminDataStore = create((set, get) => ({
 
   financeStats: { settled: '0L', liability: '0L', unitYield: '0k' },
   financeTransactions: [],
-  fetchFinanceData: async () => {
+  fetchFinanceData: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/finance');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/finance?${params.toString()}`);
       if (res.data.success) {
         set({
           financeTransactions: res.data.transactions,
@@ -380,9 +483,12 @@ export const useAdminDataStore = create((set, get) => ({
   inventory: [],
   billing: [],
   inventoryStats: { totalItems: 0, restockCount: '0', stockValue: '₹0L', unpaidAmount: '₹0L' },
-  fetchInventoryData: async () => {
+  fetchInventoryData: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/inventory');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/inventory?${params.toString()}`);
       if (res.data.success) {
         set({
           inventory: res.data.inventory,
@@ -394,12 +500,54 @@ export const useAdminDataStore = create((set, get) => ({
       console.error("Failed to fetch inventory data:", err);
     }
   },
+  
+  addBill: async (billData) => {
+    try {
+      const res = await api.post('/admin/billing', billData);
+      if (res.data.success) {
+        get().fetchInventoryData();
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to add bill:", err);
+      return { success: false, message: err.message };
+    }
+  },
+
+  updateBill: async (id, billData) => {
+    try {
+      const res = await api.put(`/admin/billing/${id}`, billData);
+      if (res.data.success) {
+        get().fetchInventoryData();
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to update bill:", err);
+      return { success: false, message: err.message };
+    }
+  },
+
+  removeBill: async (id) => {
+    try {
+      const res = await api.delete(`/admin/billing/${id}`);
+      if (res.data.success) {
+        get().fetchInventoryData();
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to remove bill:", err);
+      return { success: false, message: err.message };
+    }
+  },
 
   franchiseOps: [],
   franchiseOpsStats: { totalPartners: 0, activeNodes: 0, grossPayout: '₹0L', growth: '+0%' },
-  fetchFranchiseOpsData: async () => {
+  fetchFranchiseOpsData: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/franchise-ops');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/franchise-ops?${params.toString()}`);
       if (res.data.success) {
         set({
           franchiseOps: res.data.franchises,
@@ -413,9 +561,12 @@ export const useAdminDataStore = create((set, get) => ({
 
   complianceRecords: [],
   complianceStats: { activeFines: '0', autoSettled: '₹0K', complianceRate: '0%', apiStatus: 'Offline' },
-  fetchComplianceData: async () => {
+  fetchComplianceData: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/compliance');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/compliance?${params.toString()}`);
       if (res.data.success) {
         set({
           complianceRecords: res.data.challans,
@@ -469,9 +620,12 @@ export const useAdminDataStore = create((set, get) => ({
 
   subscribers: [],
   subscriberStats: { totalUsers: '0', dailyRiders: '0', kycVerified: '0%', flagged: '0' },
-  fetchSubscriberData: async () => {
+  fetchSubscriberData: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/subscribers');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/subscribers?${params.toString()}`);
       if (res.data.success) {
         set({
           subscribers: res.data.subscribers,
@@ -485,9 +639,12 @@ export const useAdminDataStore = create((set, get) => ({
 
   staff: [],
   staffStats: { totalStaff: 0, onDuty: 0, performance: '0%', leaves: '0' },
-  fetchStaff: async () => {
+  fetchStaff: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/staff');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/staff?${params.toString()}`);
       if (res.data.success) {
         set({
           staff: res.data.staff,
@@ -600,9 +757,12 @@ export const useAdminDataStore = create((set, get) => ({
     cleanup: '0%',
     behaviourAlerts: []
   },
-  fetchRiderBehaviour: async () => {
+  fetchRiderBehaviour: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/rider-behaviour');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/rider-behaviour?${params.toString()}`);
       if (res.data.success) {
         set({ riderBehaviour: res.data.stats });
       }
@@ -661,11 +821,17 @@ export const useAdminDataStore = create((set, get) => ({
 
   // --- RIDER MANAGEMENT ---
   riders: [],
-  fetchRiders: async () => {
+  fetchRiders: async (filters = {}) => {
     try {
-      const res = await api.get('/admin/riders');
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/riders?${params.toString()}`);
       if (res.data.success) {
-        set({ riders: res.data.riders });
+        set({ 
+          riders: res.data.riders,
+          riderBehaviour: res.data.stats || get().riderBehaviour
+        });
       }
     } catch (err) {
       console.error("Failed to fetch riders:", err);
@@ -710,5 +876,254 @@ export const useAdminDataStore = create((set, get) => ({
       console.error("Failed to delete rider:", err);
       return { success: false, message: err.response?.data?.message || err.message };
     }
-  }
+  },
+
+  fetchRiderReport: async (filters = {}) => {
+    set({ isLoading: true });
+    try {
+      const params = new URLSearchParams();
+      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+
+      const res = await api.get(`/admin/rider-report?${params.toString()}`);
+      if (res.data.success) {
+        set({ riderReport: res.data.report });
+      }
+    } catch (err) {
+      console.error("Failed to fetch rider report:", err);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  updateRole: async (id, roleData) => {
+    const originalRoles = get().roles;
+    const stringId = String(id);
+    set(state => ({
+      roles: state.roles.map(r => (String(r._id) === stringId || String(r.id) === stringId) ? { ...r, ...roleData } : r)
+    }));
+    try {
+      const res = await api.put(`/admin/roles/${id}`, roleData);
+      if (!res.data.success) set({ roles: originalRoles });
+    } catch (err) {
+      set({ roles: originalRoles });
+      console.error("Update Role Failed:", err);
+    }
+  },
+
+  togglePermission: async (roleId, module, action) => {
+    const stringId = String(roleId);
+    const originalRoles = get().roles;
+    
+    // 1. Find the role and toggle locally first
+    let newPermissions = {};
+    
+    set(state => ({
+      roles: state.roles.map(r => {
+        if (String(r._id) === stringId || String(r.id) === stringId) {
+          // Create a fresh clone of permissions
+          const currentPerms = r.permissions || {};
+          const modPerms = currentPerms[module] || { read: false, create: false, update: false, delete: false };
+          
+          // Toggle the specific action and spread everything to ensure React sees the change
+          newPermissions = {
+            ...currentPerms,
+            [module]: {
+              ...modPerms,
+              [action]: !modPerms[action]
+            }
+          };
+          
+          return { ...r, permissions: newPermissions };
+        }
+        return r;
+      })
+    }));
+
+    // 2. Sync with server
+    try {
+      const res = await api.put(`/admin/roles/${roleId}`, { permissions: newPermissions });
+      if (!res.data.success) {
+        set({ roles: originalRoles });
+      }
+    } catch (err) {
+      console.error("Permission sync failed:", err);
+      set({ roles: originalRoles });
+    }
+  },
+
+  // --- Website Plans ---
+  fetchWebsitePlans: async () => {
+    try {
+      const res = await api.get('/admin/web/plans');
+      if (res.data.success) set({ websitePlans: res.data.plans });
+    } catch (err) {
+      console.error("Failed to fetch website plans:", err);
+    }
+  },
+  addWebsitePlan: async (data) => {
+    try {
+      const res = await api.post('/admin/web/plans', data);
+      if (res.data.success) {
+        set(state => ({ websitePlans: [...state.websitePlans, res.data.plan].sort((a, b) => a.order - b.order) }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to add website plan:", err);
+      return { success: false, message: err.message };
+    }
+  },
+  updateWebsitePlan: async (id, data) => {
+    try {
+      const res = await api.patch(`/admin/web/plans/${id}`, data);
+      if (res.data.success) {
+        set(state => ({
+          websitePlans: state.websitePlans.map(p => p._id === id ? res.data.plan : p).sort((a, b) => a.order - b.order)
+        }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to update website plan:", err);
+      return { success: false, message: err.message };
+    }
+  },
+  deleteWebsitePlan: async (id) => {
+    try {
+      const res = await api.delete(`/admin/web/plans/${id}`);
+      if (res.data.success) {
+        set(state => ({ websitePlans: state.websitePlans.filter(p => p._id !== id) }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to delete website plan:", err);
+      return { success: false, message: err.message };
+    }
+  },
+
+  // --- Website Inquiries ---
+  fetchWebsiteInquiries: async () => {
+    try {
+      const res = await api.get('/admin/web/contact');
+      if (res.data.success) set({ websiteInquiries: res.data.inquiries });
+    } catch (err) {
+      console.error("Failed to fetch website inquiries:", err);
+    }
+  },
+  updateInquiryStatus: async (id, status) => {
+    try {
+      const res = await api.patch(`/admin/web/contact/${id}`, { status });
+      if (res.data.success) {
+        set(state => ({
+          websiteInquiries: state.websiteInquiries.map(i => i._id === id ? res.data.inquiry : i)
+        }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to update inquiry status:", err);
+      return { success: false, message: err.message };
+    }
+  },
+  deleteInquiry: async (id) => {
+    try {
+      const res = await api.delete(`/admin/web/contact/${id}`);
+      if (res.data.success) {
+        set(state => ({ websiteInquiries: state.websiteInquiries.filter(i => i._id !== id) }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to delete inquiry:", err);
+      return { success: false, message: err.message };
+    }
+  },
+
+  // --- Website Contact Info ---
+  fetchWebsiteContactInfo: async () => {
+    try {
+      const res = await api.get('/admin/web/contact-info');
+      if (res.data.success) set({ websiteContactInfo: res.data.info });
+    } catch (err) {
+      console.error("Failed to fetch website contact info:", err);
+    }
+  },
+  updateWebsiteContactInfo: async (data) => {
+    try {
+      const res = await api.put('/admin/web/contact-info', data);
+      if (res.data.success) {
+        set({ websiteContactInfo: res.data.info });
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to update website contact info:", err);
+      return { success: false, message: err.message };
+    }
+  },
+
+  // --- Website About ---
+  fetchWebsiteAbout: async () => {
+    try {
+      const res = await api.get('/admin/web/about');
+      if (res.data.success) set({ websiteAbout: res.data.about });
+    } catch (err) {
+      console.error("Failed to fetch website about:", err);
+    }
+  },
+  updateWebsiteAbout: async (data) => {
+    try {
+      const res = await api.put('/admin/web/about', data);
+      if (res.data.success) {
+        set({ websiteAbout: res.data.about });
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to update website about:", err);
+      return { success: false, message: err.message };
+    }
+  },
+
+  // --- Website Press Releases ---
+  fetchWebsitePressReleases: async () => {
+    try {
+      const res = await api.get('/admin/web/press');
+      if (res.data.success) set({ websitePressReleases: res.data.releases });
+    } catch (err) {
+      console.error("Failed to fetch website press releases:", err);
+    }
+  },
+  addPressRelease: async (data) => {
+    try {
+      const res = await api.post('/admin/web/press', data);
+      if (res.data.success) {
+        set(state => ({ websitePressReleases: [...state.websitePressReleases, res.data.release].sort((a, b) => a.order - b.order) }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to add press release:", err);
+      return { success: false, message: err.message };
+    }
+  },
+  updatePressRelease: async (id, data) => {
+    try {
+      const res = await api.patch(`/admin/web/press/${id}`, data);
+      if (res.data.success) {
+        set(state => ({
+          websitePressReleases: state.websitePressReleases.map(r => r._id === id ? res.data.release : r).sort((a, b) => a.order - b.order)
+        }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to update press release:", err);
+      return { success: false, message: err.message };
+    }
+  },
+  deletePressRelease: async (id) => {
+    try {
+      const res = await api.delete(`/admin/web/press/${id}`);
+      if (res.data.success) {
+        set(state => ({ websitePressReleases: state.websitePressReleases.filter(r => r._id !== id) }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to delete press release:", err);
+      return { success: false, message: err.message };
+    }
+  },
 }));

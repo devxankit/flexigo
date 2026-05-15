@@ -28,9 +28,30 @@ import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function FranchiseKycQueue() {
   const { kycRecords, kycStats, fetchKycRecords, updateKycStatus } = useAdminDataStore();
-  const [selectedRecord, setSelectedRecord] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeFilters, setActiveFilters] = useState({ range: 'Last 7 Days' });
+  const [selectedRecord, setSelectedRecord] = useState(() => {
+    const saved = localStorage.getItem('franchise_kyc_selected');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [isModalOpen, setIsModalOpen] = useState(() => localStorage.getItem('franchise_kyc_modal_open') === 'true');
+  const [searchQuery, setSearchQuery] = useState(() => localStorage.getItem('franchise_kyc_search') || '');
+  const [activeFilters, setActiveFilters] = useState(() => {
+    const saved = localStorage.getItem('franchise_kyc_filters');
+    return saved ? JSON.parse(saved) : { range: 'Last 7 Days' };
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem('franchise_kyc_search', searchQuery);
+  }, [searchQuery]);
+
+  React.useEffect(() => {
+    localStorage.setItem('franchise_kyc_filters', JSON.stringify(activeFilters));
+  }, [activeFilters]);
+
+  React.useEffect(() => {
+    localStorage.setItem('franchise_kyc_modal_open', isModalOpen);
+    if (selectedRecord) localStorage.setItem('franchise_kyc_selected', JSON.stringify(selectedRecord));
+    else localStorage.removeItem('franchise_kyc_selected');
+  }, [isModalOpen, selectedRecord]);
 
   React.useEffect(() => {
     fetchKycRecords();
@@ -38,11 +59,15 @@ export default function FranchiseKycQueue() {
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
+    fetchKycRecords(newFilters);
     console.log('Franchise KYC Sync:', newFilters);
   };
 
-  // Filter records to only show Franchises
-  const records = kycRecords.filter(r => r.role === 'Franchise');
+  // Filter records to only show Franchises and match search
+  const records = kycRecords.filter(r => 
+    r.role === 'Franchise' && 
+    (r.name || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleAction = async (id, newStatus) => {
     await updateKycStatus(id, newStatus);
@@ -77,11 +102,13 @@ export default function FranchiseKycQueue() {
             <OpsFilter onFilterChange={handleFilterChange} />
             <div className="relative group">
                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--text-tertiary)] group-focus-within:text-emerald-500 transition-colors" />
-               <input 
-                 type="text" 
-                 placeholder="Search Partner..." 
-                 className="pl-8 pr-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all w-32 text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50"
-               />
+                <input 
+                  type="text" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search Partner..." 
+                  className="pl-8 pr-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all w-32 text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50"
+                />
             </div>
          </div>
       </div>

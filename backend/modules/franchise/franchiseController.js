@@ -23,8 +23,9 @@ export const sendOTP = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please provide a phone number' });
     }
 
-    // Generate Dynamic 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate OTP (Static for test number, Dynamic otherwise)
+    const isTestNumber = phone === '9999999999';
+    const otp = isTestNumber ? '123456' : Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpire = new Date(Date.now() + 10 * 60 * 1000);
     console.log('[FRANCHISE AUTH] Generated OTP:', otp);
 
@@ -46,13 +47,16 @@ export const sendOTP = async (req, res) => {
 
     // Send SMS via SMSIndiaHub
     const message = `Welcome to the Flexigo powered by SMSINDIAHUB. Your OTP for registration is ${otp}`;
-    console.log('[FRANCHISE AUTH] Triggering SMS Service...');
-
-    try {
-      await sendSMS(phone, message);
-      console.log('[FRANCHISE AUTH] SMS sent successfully');
-    } catch (smsError) {
-      console.log('[FRANCHISE AUTH] SMS Sending FAILED:', smsError.message);
+    if (!isTestNumber) {
+      console.log('[FRANCHISE AUTH] Triggering SMS Service...');
+      try {
+        await sendSMS(phone, message);
+        console.log('[FRANCHISE AUTH] SMS sent successfully');
+      } catch (smsError) {
+        console.log('[FRANCHISE AUTH] SMS Sending FAILED:', smsError.message);
+      }
+    } else {
+      console.log('[FRANCHISE AUTH] Test Number Detected. Skipping SMS.');
     }
 
     res.status(200).json({
@@ -81,7 +85,7 @@ export const verifyOTP = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Franchise not found' });
     }
 
-    if (process.env.NODE_ENV !== 'development' && (franchise.otp !== otp || franchise.otpExpire < Date.now())) {
+    if (franchise.otp !== otp || franchise.otpExpire < Date.now()) {
       return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
     }
 
@@ -99,9 +103,9 @@ export const verifyOTP = async (req, res) => {
     
     if (isEkycDone) {
       if (franchise.kycStatus !== 'approved' || !franchise.isVerified) {
-        franchise.kycStatus = 'approved';
-        franchise.isVerified = true;
-        console.log(`[FRANCHISE AUTH] Forcing ${phone} to approved status (Aadhaar/Owner data found)`);
+        franchise.kycStatus = 'pending';
+        franchise.isVerified = false;
+        console.log(`[FRANCHISE AUTH] Setting ${phone} to pending status (Aadhaar/Owner data found, manual review required)`);
       }
     }
 
@@ -231,11 +235,11 @@ export const updateRegistration = async (req, res) => {
                          franchise.ownerName;
 
       if (isEkycDone) {
-        franchise.kycStatus = 'approved';
-        franchise.isVerified = true;
+        franchise.kycStatus = 'pending';
+        franchise.isVerified = false;
       } else {
-        franchise.kycStatus = hasAllDocs ? 'approved' : 'pending';
-        franchise.isVerified = hasAllDocs;
+        franchise.kycStatus = 'pending';
+        franchise.isVerified = false;
       }
     }
 
@@ -410,8 +414,8 @@ export const verifyAadhaarOTP = async (req, res) => {
         console.log('FRANCHISE QUICKEKYC: Updating Franchise DB');
         franchise.kycDetails.ekycVerified = true;
         franchise.kycDetails.ekycData = kycData;
-        franchise.kycStatus = 'approved';
-        franchise.isVerified = true; // Set isVerified to true as well
+        franchise.kycStatus = 'pending';
+        franchise.isVerified = false; // Set isVerified to false initially
         franchise.ownerName = kycData.full_name || kycData.name;
         console.log(`[FRANCHISE KYC] Updating status to approved and verified for phone: ${phone}`);
         await franchise.save();

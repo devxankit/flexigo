@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import api from '../../../lib/axios';
+import { useWalletStore } from './walletStore';
+import { useSubscriptionStore } from './subscriptionStore';
 
 export const useAuthStore = create(
   persist(
@@ -37,6 +39,20 @@ export const useAuthStore = create(
               token: res.data.token,
               kycStatus: res.data.rider.kycStatus 
             });
+            
+            // Sync with other stores
+            if (res.data.rider.walletBalance !== undefined) {
+              useWalletStore.setState({ balance: res.data.rider.walletBalance });
+            }
+            if (res.data.rider.subscriptionPlan) {
+              useSubscriptionStore.setState({ 
+                activePlan: { 
+                  ...res.data.rider.subscriptionPlan, 
+                  expiresAt: res.data.rider.subscriptionEnd 
+                } 
+              });
+            }
+            
             return { success: true, rider: res.data.rider };
           }
         } catch (error) {
@@ -86,6 +102,19 @@ export const useAuthStore = create(
           const res = await api.get(`/rider/profile/${user.phone}`);
           if (res.data.success) {
             set({ user: res.data.rider, kycStatus: res.data.rider.kycStatus });
+            
+            // Sync with other stores
+            if (res.data.rider.walletBalance !== undefined) {
+              useWalletStore.setState({ balance: res.data.rider.walletBalance });
+            }
+            if (res.data.rider.subscriptionPlan) {
+              useSubscriptionStore.setState({ 
+                activePlan: { 
+                  ...res.data.rider.subscriptionPlan, 
+                  expiresAt: res.data.rider.subscriptionEnd 
+                } 
+              });
+            }
           }
         } catch (error) {
           console.error("Failed to fetch profile:", error);

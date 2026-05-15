@@ -1,10 +1,14 @@
 import SubscriptionPlan from './subscriptionPlanModel.js';
+import { getDateFilter } from './adminController.js';
 
 // @desc    Get all subscription plans
 // @route   GET /api/v1/admin/plans
 export const getPlans = async (req, res) => {
   try {
-    const plans = await SubscriptionPlan.find().sort({ createdAt: -1 });
+    const { range } = req.query;
+    const dateFilter = getDateFilter(range, 'createdAt');
+
+    const plans = await SubscriptionPlan.find(dateFilter).sort({ createdAt: -1 });
     res.status(200).json({ success: true, plans });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

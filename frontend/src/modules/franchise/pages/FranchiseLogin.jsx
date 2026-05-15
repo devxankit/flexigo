@@ -198,13 +198,23 @@ export default function FranchiseLogin() {
             </button>
 
             {otpSent && (
-               <button 
-                  type="button"
-                  onClick={() => { setOtpSent(false); setOtp(''); }}
-                  className="text-[7px] font-black text-slate-500 hover:text-white uppercase italic tracking-widest text-center py-2 transition-colors"
-               >
-                  Use Different Number
-               </button>
+               <div className="flex flex-col gap-2">
+                  <button 
+                     type="button"
+                     onClick={handleSendOTP}
+                     disabled={loading}
+                     className="text-[7.5px] font-black text-emerald-500 hover:text-emerald-400 uppercase italic tracking-[0.2em] text-center py-1 transition-all flex items-center justify-center gap-2"
+                  >
+                     {loading ? 'SENDING...' : 'RESEND OTP'}
+                  </button>
+                  <button 
+                     type="button"
+                     onClick={() => { setOtpSent(false); setOtp(''); }}
+                     className="text-[7px] font-black text-slate-500 hover:text-white uppercase italic tracking-widest text-center py-1 transition-colors"
+                  >
+                     Use Different Number
+                  </button>
+               </div>
             )}
 
             <button 

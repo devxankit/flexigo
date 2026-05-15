@@ -16,7 +16,10 @@ const steps = [
 
 export default function OnboardingKYC() {
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(() => {
+    const savedStep = localStorage.getItem('onboarding_step');
+    return savedStep ? parseInt(savedStep) : 1;
+  });
   const [loading, setLoading] = useState(false);
   const [uploads, setUploads] = useState({
     selfie: null,
@@ -50,6 +53,10 @@ export default function OnboardingKYC() {
       setIsAadhaarVerified(true);
     }
   }, [user]);
+
+  useEffect(() => {
+    localStorage.setItem('onboarding_step', currentStep.toString());
+  }, [currentStep]);
 
   const fileToBase64 = (file) => {
     console.log(`UTIL: Converting file to base64: ${file?.name}`);
@@ -168,7 +175,7 @@ export default function OnboardingKYC() {
               selfie: await fileToBase64(uploads.selfie),
               aadhaarFront: await fileToBase64(uploads.aadhaarFront),
               aadhaarBack: await fileToBase64(uploads.aadhaarBack),
-              drivingLicense: await fileToBase64(uploads.license)
+              drivingLicense: uploads.license ? await fileToBase64(uploads.license) : null
           };
           console.log('ONBOARDING: kycData prepared. Files converted to Base64');
           console.log('ONBOARDING: Calling updateKYC store method');
@@ -176,6 +183,7 @@ export default function OnboardingKYC() {
           console.log('ONBOARDING: updateKYC result:', JSON.stringify(result));
           if (result.success) {
               console.log('ONBOARDING: Success! Navigating to /rider/plans');
+              localStorage.removeItem('onboarding_step');
               navigate('/rider/plans');
           } else {
               console.log('ONBOARDING: Failed result. message:', result.message);
@@ -353,6 +361,19 @@ export default function OnboardingKYC() {
                   >
                     {ekycLoading ? 'Wait...' : otpSent ? 'Verify OTP' : 'Send OTP'}
                   </NeonButton>
+                  
+                  {otpSent && (
+                    <button
+                      type="button"
+                      onClick={handleSendAadhaarOTP}
+                      disabled={ekycLoading}
+                      className={`w-full text-center text-[10px] font-black uppercase tracking-widest mt-2 transition-colors ${
+                        isDark ? 'text-flexigo-teal hover:text-white' : 'text-emerald-600 hover:text-emerald-800'
+                      }`}
+                    >
+                      Resend Aadhaar OTP
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="bg-[#39FF14]/10 border-2 border-[#39FF14] rounded-xl p-4 flex items-center gap-4">
@@ -497,6 +518,15 @@ export default function OnboardingKYC() {
                   {uploads.license ? 'License Uploaded ✓' : 'Upload License Copy'}
                 </span>
               </GlassCard>
+
+              <button 
+                onClick={handleNext}
+                className={`w-full py-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${
+                  isDark ? 'text-gray-500 hover:text-white' : 'text-slate-400 hover:text-slate-900'
+                }`}
+              >
+                Skip for now →
+              </button>
             </motion.div>
           )}
         </AnimatePresence>
@@ -507,9 +537,9 @@ export default function OnboardingKYC() {
           size="full"
           variant={canContinue() ? 'solid' : 'green'}
           onClick={handleNext}
-          disabled={loading || !canContinue()}
+          disabled={loading || (currentStep !== 3 && !canContinue())}
         >
-          {loading ? 'Processing...' : currentStep === 3 ? 'Finish & Verify' : 'Continue'}
+          {loading ? 'Processing...' : currentStep === 3 ? (uploads.license ? 'Finish & Verify' : 'Finish without License') : 'Continue'}
         </NeonButton>
       </div>
     </PageWrapper>

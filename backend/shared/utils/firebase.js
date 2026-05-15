@@ -32,8 +32,9 @@ export const sendPushNotification = async (token, title, body, data = {}) => {
     console.log('Successfully sent message:', response);
     return response;
   } catch (error) {
-    console.error('Error sending message:', error);
-    throw error;
+    console.error('Error sending message (FCM):', error.message);
+    // Do not throw, so the main operation (KYC/Assignment) can complete
+    return { success: false, error: error.message };
   }
 };
 

@@ -4,17 +4,55 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useThemeStore } from "../store/themeStore";
 import FranchiseSidebar from "./FranchiseSidebar";
 import FranchiseHeader from "./FranchiseHeader";
+import { useFranchiseNotificationStore } from "../store/notificationStore";
+import { useFranchiseWalletStore } from "../store/walletStore";
+import { getMessaging, onMessage } from "firebase/messaging";
+import app from "../../../lib/firebase";
+import { Bell, IndianRupee, X } from "lucide-react";
+import { useState } from "react";
 
 export default function FranchiseLayout() {
   const { theme } = useThemeStore();
+  const { addNotification } = useFranchiseNotificationStore();
+  const { fetchWallet } = useFranchiseWalletStore();
+  const [toast, setToast] = useState(null);
   
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
     root.classList.add(theme);
-    // Also set background color to match to prevent white overscroll
     root.style.backgroundColor = theme === 'dark' ? '#020617' : '#F8FAFC';
   }, [theme]);
+
+  useEffect(() => {
+    const messaging = getMessaging(app);
+    const unsubscribe = onMessage(messaging, (payload) => {
+      console.log('🔔 Real-time notification received:', payload);
+      
+      const { title, body } = payload.notification;
+      const data = payload.data || {};
+
+      // Add to store
+      const newNotif = {
+        title,
+        message: body,
+        severity: data.type === 'wallet_credit' ? 'success' : (data.type === 'geofence_breach' ? 'danger' : 'info'),
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+      addNotification(newNotif);
+
+      // Refresh wallet if it's a credit
+      if (data.type === 'wallet_credit' || data.type === 'payout_update') {
+        fetchWallet();
+      }
+
+      // Show Toast
+      setToast({ title, body, type: data.type });
+      setTimeout(() => setToast(null), 6000);
+    });
+
+    return () => unsubscribe();
+  }, [addNotification, fetchWallet]);
 
   return (
     <div className={`flex h-screen w-full bg-[var(--bg-primary)] overflow-hidden transition-colors duration-300 ${theme}`}>
@@ -52,6 +90,39 @@ export default function FranchiseLayout() {
         
         {/* Subtle Background Ambience Refinement */}
         <div className="absolute inset-x-0 bottom-0 h-[30vh] bg-gradient-to-t from-emerald-500/[0.02] to-transparent pointer-events-none -z-10" />
+
+        {/* Real-time Toast Notification */}
+        <AnimatePresence>
+          {toast && (
+            <motion.div
+              initial={{ opacity: 0, x: 100, scale: 0.9 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+              className="fixed bottom-6 right-6 z-[100] w-80 bg-[var(--bg-secondary)] border border-emerald-500/20 rounded-2xl shadow-2xl overflow-hidden shadow-emerald-500/10"
+            >
+              <div className="p-4 flex gap-4">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                  toast.type === 'wallet_credit' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-blue-500/10 text-blue-500'
+                }`}>
+                  {toast.type === 'wallet_credit' ? <IndianRupee size={20} /> : <Bell size={20} />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-[11px] font-black uppercase tracking-widest text-[var(--text-primary)] italic">{toast.title}</h4>
+                  <p className="text-[10px] font-medium text-[var(--text-tertiary)] mt-0.5 leading-relaxed">{toast.body}</p>
+                </div>
+                <button onClick={() => setToast(null)} className="text-[var(--text-tertiary)] hover:text-rose-500 transition-colors">
+                  <X size={14} />
+                </button>
+              </div>
+              <motion.div 
+                initial={{ width: "100%" }}
+                animate={{ width: "0%" }}
+                transition={{ duration: 6, ease: "linear" }}
+                className={`h-1 ${toast.type === 'wallet_credit' ? 'bg-emerald-500' : 'bg-blue-500'}`}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

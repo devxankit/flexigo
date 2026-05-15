@@ -21,6 +21,11 @@ const TransactionSchema = new mongoose.Schema({
     default: 'success',
   },
   description: String,
+  method: {
+    type: String,
+    enum: ['wallet', 'razorpay', 'upi', 'card', 'bank'],
+    default: 'razorpay'
+  },
   createdAt: {
     type: Date,
     default: Date.now,
