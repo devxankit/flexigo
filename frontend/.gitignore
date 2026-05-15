@@ -20,10 +20,7 @@ dist-ssr
 .env.local
 .env.*
 
-# Firebase / Secret Keys
-backend/config/*.json
-*.pem
-*.key
+
 
 # Editor directories and files
 .vscode/*
