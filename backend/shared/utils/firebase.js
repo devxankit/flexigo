@@ -11,6 +11,7 @@ if (existsSync(serviceAccountPath)) {
 }
 
 if (serviceAccount) {
+  console.log('🚀 Initializing Firebase with Key ID:', serviceAccount.private_key_id);
   admin.initializeApp({
     credential: admin.credential.cert({
       ...serviceAccount,
