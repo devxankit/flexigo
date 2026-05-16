@@ -8,11 +8,22 @@ const serviceAccountPath = existsSync(join(process.cwd(), 'config', serviceAccou
   : join(process.cwd(), 'backend', 'config', serviceAccountName);
 
 if (existsSync(serviceAccountPath)) {
-  console.log('🚀 Initializing Firebase with:', serviceAccountPath);
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccountPath)
-  });
-  console.log('✅ Firebase Initialized Successfully');
+  try {
+    if (!admin.apps.length) {
+      const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
+      console.log('🚀 Initializing Firebase for Project:', serviceAccount.project_id);
+      
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+      console.log('✅ Firebase Initialized Successfully');
+    } else {
+      console.log('ℹ️ Firebase already initialized');
+    }
+  } catch (error) {
+    console.error('❌ Failed to initialize Firebase:', error.message);
+    console.error('Path attempted:', serviceAccountPath);
+  }
 } else {
   console.log('❌ CRITICAL: Firebase Service Account file NOT FOUND at:', serviceAccountPath);
 }
@@ -20,7 +31,6 @@ if (existsSync(serviceAccountPath)) {
 // Allowed Platforms Configuration
 export const ALLOWED_PLATFORMS = ["web", "app", "android", "ios"];
 
-console.log('✅ Firebase Initialized');
 console.log('✅ Platforms Allowed:', ALLOWED_PLATFORMS.join(', '));
 
 export const sendPushNotification = async (token, title, body, data = {}) => {
@@ -41,7 +51,13 @@ export const sendPushNotification = async (token, title, body, data = {}) => {
     return response;
   } catch (error) {
     console.error('Error sending message (FCM):', error.message);
-    // Do not throw, so the main operation (KYC/Assignment) can complete
+    
+    if (error.message.includes('invalid_grant')) {
+      console.error('💡 PRO TIP: This usually means your service account key is revoked or your server time is out of sync.');
+      console.error('1. Check if you committed the key to GitHub (Google will revoke it automatically).');
+      console.error('2. Run "w32tm /resync" on Windows to sync your clock.');
+    }
+    
     return { success: false, error: error.message };
   }
 };
