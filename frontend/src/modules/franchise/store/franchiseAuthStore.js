@@ -59,6 +59,22 @@ export const useFranchiseAuthStore = create(
         }
       },
 
+      loginWithPassword: async (email, password) => {
+        try {
+          const res = await api.post('/franchise/auth/login', { email, password });
+          if (res.data.success) {
+            set({ 
+              isAuthenticated: true, 
+              user: res.data.franchise, 
+              token: res.data.token 
+            });
+            return { success: true, franchise: res.data.franchise };
+          }
+        } catch (error) {
+          return { success: false, message: error.response?.data?.message || 'Invalid Credentials' };
+        }
+      },
+
       updateRegistration: async (data) => {
         try {
           const { user, phone: storePhone } = get();

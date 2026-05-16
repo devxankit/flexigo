@@ -23,11 +23,12 @@ const filterTabs = [
 ];
 
 export default function NotificationsPage() {
-  const { notifications, readNotification, markAllRead } = useFranchiseNotificationStore();
+  const { notifications, readNotification, markAllRead, fetchNotifications, loading } = useFranchiseNotificationStore();
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
+    fetchNotifications();
     onMessageListener().then(payload => {
       console.log('🔔 Franchise Notification received:', payload);
       // You can trigger a local notification or update state here

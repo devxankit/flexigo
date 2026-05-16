@@ -138,6 +138,22 @@ export default function LiveGarage() {
                  Unlock Vehicle
               </NeonButton>
            </div>
+
+           <button 
+             onClick={async () => {
+               if (window.confirm('Are you sure you want to request vehicle handover? This will notify the admin.')) {
+                 const { requestHandover } = useRideStore.getState();
+                 const res = await requestHandover();
+                 if (res.success) alert('Handover request sent successfully. Visit the office.');
+                 else alert(res.message);
+               }
+             }}
+             className={`w-full py-4 text-[9px] font-black uppercase tracking-[0.3em] transition-all border-t border-[var(--border-subtle)] mt-2 ${
+               isDark ? 'text-slate-500 hover:text-rose-500' : 'text-slate-400 hover:text-rose-600'
+             }`}
+           >
+             Handover Vehicle & Exit
+           </button>
         </div>
       </div>
 

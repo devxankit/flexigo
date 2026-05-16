@@ -393,3 +393,33 @@ export const bulkAddVehicles = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Update vehicle attachment
+// @route   PATCH /api/v1/fleet/:id/attachment
+export const updateVehicleAttachment = async (req, res) => {
+  try {
+    const { attachment } = req.body; // base64
+    const vehicle = await Vehicle.findById(req.params.id);
+
+    if (!vehicle) {
+      return res.status(404).json({ success: false, message: 'Vehicle not found' });
+    }
+
+    if (attachment && attachment.startsWith('data:')) {
+      const result = await cloudinary.uploader.upload(attachment, {
+        folder: 'flexigo/vehicles/attachments',
+        resource_type: 'auto' // Important for PDFs/Docs
+      });
+      vehicle.attachmentUrl = result.secure_url;
+      await vehicle.save();
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Attachment synced successfully',
+      attachmentUrl: vehicle.attachmentUrl
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

@@ -50,6 +50,7 @@ const VehicleSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Franchise',
   },
+  attachmentUrl: String,
   createdAt: {
     type: Date,
     default: Date.now,

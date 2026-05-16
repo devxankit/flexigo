@@ -34,13 +34,13 @@ export default function FranchiseHeader() {
         {/* Profile Section */}
         <div className="flex items-center gap-3 pl-3 border-l border-[var(--border-subtle)] ml-1">
           <div className="hidden sm:flex flex-col items-end">
-            <span className="text-xs font-bold text-[var(--text-primary)]">{user?.name || 'Hub Manager'}</span>
+            <span className="text-xs font-bold text-[var(--text-primary)]">{user?.hubName || user?.name || 'Hub Manager'}</span>
             <div className="flex items-center gap-1">
               <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-wider">Sync Active</span>
             </div>
           </div>
           <div className="w-8 h-8 rounded-lg bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 font-bold text-xs shadow-sm uppercase">
-             {user?.name?.charAt(0) || 'M'}
+             {(user?.hubName || user?.name || 'M').charAt(0)}
           </div>
         </div>
       </div>

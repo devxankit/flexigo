@@ -17,7 +17,10 @@ import {
   Plus,
   FileUp,
   X,
-  CheckCircle2
+  CheckCircle2,
+  Paperclip,
+  Eye,
+  Download as FileDown
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -121,6 +124,7 @@ export default function FleetOversightPage() {
     const q = searchQuery.toLowerCase();
     return (
       (v.plate?.toLowerCase() || '').includes(q) || 
+      (v.vin?.toLowerCase() || '').includes(q) || 
       (v._id?.toLowerCase() || '').includes(q) ||
       (v.model?.toLowerCase() || '').includes(q) ||
       (v.rider?.toLowerCase() || '').includes(q)
@@ -162,7 +166,7 @@ export default function FleetOversightPage() {
                <input 
                  type="text" 
                  value={searchQuery}
-                 onChange={(e) => setSearchQuery(e.target.value)}
+                 onChange={(e) => setSearchQuery(e.target.value.toUpperCase())}
                  placeholder="Search Vehicle ID/Plate..." 
                  className="pl-8 pr-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all w-48 text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50"
                />
@@ -189,21 +193,13 @@ export default function FleetOversightPage() {
                    <p className="text-[7px] font-bold text-emerald-500 uppercase mt-0.5 tracking-widest animate-pulse italic">Real-time Feed</p>
                 </div>
             </div>
-            <div className="flex items-center gap-1.5">
-               <button className="p-1.5 text-[var(--text-tertiary)] hover:text-emerald-500 rounded-lg transition-all">
-                  <Filter size={14} />
-               </button>
-               <button className="p-1.5 text-[var(--text-tertiary)] hover:text-emerald-500 rounded-lg transition-all">
-                  <Terminal size={14} />
-               </button>
-            </div>
          </div>
          
          <div className="overflow-x-auto no-scrollbar">
             <table className="w-full">
                <thead>
                      <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
-                     {['Asset identity', 'Host Interface', 'Location', 'Energy Status', 'Grid Link', 'Sync'].map((header) => (
+                     {['Plate', 'VIN', 'Model', 'Franchise'].map((header) => (
                         <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                      ))}
                   </tr>
@@ -211,45 +207,65 @@ export default function FleetOversightPage() {
                <tbody className="divide-y divide-[var(--border-subtle)]">
                   {filteredVehicles.map((vehicle, vIdx) => (
                      <tr key={vehicle._id} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
-                        <td className="py-2 px-4 whitespace-nowrap">
-                           <div className="flex flex-col gap-0.5">
-                              <span className="font-bold text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors leading-none">{vehicle.plate}</span>
-                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-bold text-[var(--text-tertiary)]">{vehicle.model || 'Flexigo Pro v2'}</span>
-                                <span className="text-[8px] px-1.5 py-0.5 bg-emerald-500/5 border border-emerald-500/10 rounded text-emerald-500/70 font-black tracking-widest uppercase italic">VIN: {vehicle.vin}</span>
-                              </div>
-                              <span className="text-[8px] font-black uppercase tracking-tighter text-[var(--text-tertiary)] opacity-60 italic">
-                                FRANCHISE: <span className="text-emerald-500/80">{vehicle.franchise?.hubName || 'Global Fleet'}</span>
+                        <td className="py-4 px-4 whitespace-nowrap">
+                           <span className="font-bold text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{vehicle.plate}</span>
+                        </td>
+                        <td className="py-4 px-4 whitespace-nowrap">
+                           <span className="text-[10px] font-black text-emerald-500/70 uppercase tracking-widest italic">{vehicle.vin}</span>
+                        </td>
+                        <td className="py-4 px-4 whitespace-nowrap">
+                           <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase">{vehicle.model || 'Flexigo Pro v2'}</span>
+                        </td>
+                        <td className="py-4 px-4 whitespace-nowrap">
+                           <div className="flex items-center justify-between group/cell">
+                              <span className="text-[10px] font-black uppercase tracking-tighter text-emerald-500 italic">
+                                 {vehicle.franchise?.hubName || 'Global Fleet'}
                               </span>
-                           </div>
-                        </td>
-                        <td className="py-2 px-4">
-                           <div className="flex flex-col gap-0">
-                              <span className="font-medium text-[var(--text-primary)]">{vehicle.riderPhone || 'Unassigned'}</span>
-                              <span className="font-medium text-emerald-500/60 uppercase text-[8px] tracking-widest font-black italic">Active Subscriber</span>
-                           </div>
-                        </td>
-                        <td className="py-2 px-4">
-                           <div className="flex items-center gap-1.5">
-                              <MapPin size={10} className="text-emerald-500 opacity-60" />
-                              <span className="font-medium text-[var(--text-tertiary)]">{vehicle.location}</span>
-                           </div>
-                        </td>
-                        <td className="py-2 px-4">
-                           <div className="flex items-center gap-2">
-                              <div className="w-12 h-1 bg-[var(--bg-tertiary)] rounded-full overflow-hidden flex-shrink-0">
-                                 <div className={`h-full ${vehicle.battery < 20 ? 'bg-rose-500' : 'bg-emerald-500'}`} style={{ width: `${vehicle.battery}%` }} />
+                              <div className="flex items-center gap-2 transition-all">
+                                 {vehicle.attachmentUrl ? (
+                                    <div className="flex items-center gap-1.5">
+                                       <a 
+                                         href={vehicle.attachmentUrl} 
+                                         target="_blank" 
+                                         rel="noopener noreferrer"
+                                         className="p-1.5 bg-emerald-500/10 text-emerald-500 rounded-lg hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
+                                         title="View Document"
+                                       >
+                                          <Eye size={12} strokeWidth={3} />
+                                       </a>
+                                       <a 
+                                         href={vehicle.attachmentUrl.replace('/upload/', '/upload/fl_attachment/')} 
+                                         download
+                                         className="p-1.5 bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-all shadow-sm"
+                                         title="Download Document"
+                                       >
+                                          <FileDown size={12} strokeWidth={3} />
+                                       </a>
+                                    </div>
+                                 ) : (
+                                    <label className="p-1.5 bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] rounded-lg hover:text-emerald-500 hover:border-emerald-500/50 border border-transparent transition-all cursor-pointer shadow-sm">
+                                       <input 
+                                         type="file" 
+                                         className="hidden" 
+                                         accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
+                                         onChange={async (e) => {
+                                           const file = e.target.files[0];
+                                           if (!file) return;
+                                           const reader = new FileReader();
+                                           reader.onload = async (event) => {
+                                             const base64 = event.target.result;
+                                             await useAdminDataStore.getState().updateVehicleAttachment(vehicle._id, base64);
+                                             alert("Document synced with registry ✓");
+                                           };
+                                           reader.readAsDataURL(file);
+                                         }}
+                                       />
+                                       <Paperclip size={12} strokeWidth={3} />
+                                    </label>
+                                 )}
                               </div>
-                              <span className={` font-medium ${vehicle.battery < 20 ? 'text-rose-500' : 'text-[var(--text-primary)]'}`}>{vehicle.battery}%</span>
                            </div>
                         </td>
-                        <td className="py-2 px-4">
-                           <div className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full w-fit">
-                              <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-                              <span className="font-medium text-emerald-500">Linked</span>
-                           </div>
-                        </td>
-                        <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]">{vehicle.lastPing}</td>
                      </tr>
                   ))}
                </tbody>

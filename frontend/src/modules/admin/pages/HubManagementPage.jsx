@@ -142,6 +142,7 @@ export default function HubManagementPage() {
       ownerName: editFormData.ownerName,
       phone: editFormData.phone,
       email: editFormData.email,
+      password: editFormData.password,
     });
     if (result?.success) {
       setEditHub(null);

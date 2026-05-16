@@ -137,8 +137,8 @@ export default function FranchiseSidebar() {
                     exit={{ opacity: 0, width: 0 }}
                     className="flex-1 min-w-0"
                   >
-                     <p className="text-[10px] font-bold text-[var(--text-primary)] truncate">{user?.name || 'Hub Manager'}</p>
-                     <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-tighter truncate opacity-60">ID: KOR-01</p>
+                     <p className="text-[10px] font-bold text-[var(--text-primary)] truncate">{user?.hubName || user?.name || 'Hub Manager'}</p>
+                     <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-tighter truncate opacity-60">ID: {(user?.id || user?._id || '000000').slice(-6).toUpperCase()}</p>
                   </motion.div>
                 )}
               </AnimatePresence>

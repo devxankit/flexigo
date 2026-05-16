@@ -13,6 +13,7 @@ import Geofence from '../admin/geofenceModel.js';
 import { sendPushNotification } from '../../shared/utils/firebase.js';
 import AuditLog from '../admin/auditLogModel.js';
 import Admin from '../admin/adminModel.js';
+import FranchiseNotification from '../franchise/franchiseNotificationModel.js';
 
 // @desc    Send OTP to Rider
 export const sendOTP = async (req, res) => {
@@ -422,6 +423,17 @@ export const requestHandover = async (req, res) => {
           riderId: rider._id.toString()
         });
       }
+    }
+
+    // 3. Create Database Notification for Franchise App
+    if (rider.franchise) {
+      await FranchiseNotification.create({
+        franchiseId: rider.franchise,
+        title: 'Handover Request',
+        message: `Rider ${rider.name || rider.phone} has requested vehicle handover. Prepare exit formalities.`,
+        severity: 'warning',
+        type: 'handover'
+      });
     }
 
     // Also notify SuperAdmins

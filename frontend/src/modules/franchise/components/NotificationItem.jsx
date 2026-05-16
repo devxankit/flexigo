@@ -60,7 +60,7 @@ export default function NotificationItem({ notification, onRead }) {
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       transition={{ type: "spring", stiffness: 400, damping: 30 }}
-      onClick={() => onRead(notification.id)}
+      onClick={() => onRead(notification._id || notification.id)}
       className={`p-4 rounded-xl border flex items-start gap-4 transition-all duration-300 group cursor-pointer shadow-sm relative z-10 ${bgMap[notification.severity] || 'bg-[var(--bg-secondary)]'} ${!notification.read ? 'ring-1 ring-emerald-500/30' : 'opacity-70'} perspective-1000`}
     >
       <div 
@@ -75,7 +75,7 @@ export default function NotificationItem({ notification, onRead }) {
            <h4 className={`text-sm font-bold tracking-tight text-[var(--text-primary)] group-hover:text-emerald-600 transition-colors uppercase`}>{notification.title}</h4>
            <div className="flex items-center gap-1.5 text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-[0.2em] opacity-60">
               <Clock size={12} strokeWidth={2.5} />
-              {notification.time}
+              {notification.time || (notification.createdAt ? new Date(notification.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '')}
            </div>
         </div>
         <p className="text-[11px] font-medium text-[var(--text-secondary)] leading-relaxed line-clamp-2 uppercase tracking-wide">
