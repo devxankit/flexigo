@@ -309,6 +309,21 @@ export const useAdminDataStore = create((set, get) => ({
       return { success: false, message: err.response?.data?.message || err.message };
     }
   },
+  
+  updateVehicleAttachment: async (id, attachmentBase64) => {
+    try {
+      const res = await api.patch(`/admin/fleet/${id}/attachment`, { attachment: attachmentBase64 });
+      if (res.data.success) {
+        set(state => ({
+          vehicles: state.vehicles.map(v => (v._id === id || v.id === id) ? { ...v, attachmentUrl: res.data.attachmentUrl } : v)
+        }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to update vehicle attachment:", err);
+      return { success: false, message: err.response?.data?.message || err.message };
+    }
+  },
 
 
   fetchHubVehicles: async (hubId) => {

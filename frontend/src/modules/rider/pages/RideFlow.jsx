@@ -195,10 +195,33 @@ export default function RideFlow() {
           </div>
        </div>
 
-       <div className="pb-10">
-          <NeonButton variant="danger" size="xl" className="w-full h-20 text-xl font-black uppercase tracking-widest shadow-2xl" onClick={endRide}>
+       <div className="pb-10 space-y-4">
+          <NeonButton 
+            variant="danger" 
+            size="xl" 
+            className="w-full h-20 text-xl font-black uppercase tracking-widest shadow-2xl" 
+            onClick={async () => {
+               if (window.confirm('Are you sure you want to END RIDE and initiate handover?')) {
+                  await endRide();
+               }
+            }}
+          >
             HOLD TO END RIDE
           </NeonButton>
+          
+          <button 
+            onClick={() => {
+              if (window.confirm('Cancel this ride session? This will not end your subscription.')) {
+                resetRide();
+                navigate('/rider/home');
+              }
+            }}
+            className={`w-full py-4 text-[10px] font-black uppercase tracking-[0.3em] transition-all ${
+              isDark ? 'text-slate-500 hover:text-rose-500' : 'text-slate-400 hover:text-rose-600'
+            }`}
+          >
+            Cancel Current Session
+          </button>
        </div>
     </PageWrapper>
   );

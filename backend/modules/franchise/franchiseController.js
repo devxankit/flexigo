@@ -9,6 +9,7 @@ import generateToken from '../../shared/utils/generateToken.js';
 import { sendSMS } from '../../shared/utils/smsService.js';
 import cloudinary from '../../config/cloudinary.js';
 import axios from 'axios';
+import FranchiseNotification from './franchiseNotificationModel.js';
 
 // @desc    Send OTP to Franchise
 // @route   POST /api/v1/franchise/auth/send-otp
@@ -128,6 +129,41 @@ export const verifyOTP = async (req, res) => {
       franchise: {
         id: franchise._id,
         phone: franchise.phone,
+        isRegistered: franchise.isRegistered,
+        isVerified: franchise.isVerified,
+        kycStatus: franchise.kycStatus,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Franchise Login (Email/Password)
+// @route   POST /api/v1/franchise/auth/login
+export const franchiseLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Please provide email and password' });
+    }
+
+    // Find franchise by email
+    const franchise = await Franchise.findOne({ email }).select('+password');
+
+    if (!franchise || !(await franchise.matchPassword(password))) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+
+    res.status(200).json({
+      success: true,
+      token: generateToken(franchise._id),
+      franchise: {
+        id: franchise._id,
+        phone: franchise.phone,
+        email: franchise.email,
+        hubName: franchise.hubName,
         isRegistered: franchise.isRegistered,
         isVerified: franchise.isVerified,
         kycStatus: franchise.kycStatus,
@@ -472,6 +508,58 @@ export const addVehicle = async (req, res) => {
       message: 'Vehicle provisioned successfully',
       vehicle,
     });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get Franchise Notifications
+// @route   GET /api/v1/franchise/notifications
+export const getNotifications = async (req, res) => {
+  try {
+    const notifications = await FranchiseNotification.find({ 
+      franchiseId: req.franchise._id 
+    }).sort('-createdAt').limit(50);
+
+    res.status(200).json({
+      success: true,
+      notifications
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Mark Notification as Read
+// @route   PATCH /api/v1/franchise/notifications/:id/read
+export const markNotificationRead = async (req, res) => {
+  try {
+    const notification = await FranchiseNotification.findOneAndUpdate(
+      { _id: req.params.id, franchiseId: req.franchise._id },
+      { read: true },
+      { new: true }
+    );
+
+    if (!notification) {
+      return res.status(404).json({ success: false, message: 'Notification not found' });
+    }
+
+    res.status(200).json({ success: true, notification });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Mark All Notifications as Read
+// @route   PATCH /api/v1/franchise/notifications/mark-all-read
+export const markAllNotificationsRead = async (req, res) => {
+  try {
+    await FranchiseNotification.updateMany(
+      { franchiseId: req.franchise._id, read: false },
+      { read: true }
+    );
+
+    res.status(200).json({ success: true, message: 'All notifications marked as read' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

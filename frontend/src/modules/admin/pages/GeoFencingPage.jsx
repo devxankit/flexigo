@@ -327,7 +327,7 @@ export default function GeoFencingPage() {
             value={networkStats.geofenceStats?.activeZones || geofences.filter(gf => gf.riderId).length} 
             icon={MapIcon} 
             color="emerald" 
-            subtitle="Monitored Nodes" 
+            subtitle={networkStats.geofenceStats?.places || "Monitored Nodes"} 
          />
          <AdminStatCard 
             title="Breaches" 
@@ -389,6 +389,11 @@ export default function GeoFencingPage() {
                                  >
                                     <td className="py-2 px-4 whitespace-nowrap">
                                        <div className="flex flex-col">
+                                          {gf && (
+                                            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-tighter mb-0.5 italic">
+                                              {gf.name}
+                                            </span>
+                                          )}
                                           <span className="font-medium text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{rider.name || 'Unnamed Rider'}</span>
                                           <span className="font-medium text-[var(--text-tertiary)] mt-1">{rider.phone}</span>
                                        </div>

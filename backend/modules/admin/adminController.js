@@ -77,10 +77,10 @@ export const getAdminStats = async (req, res) => {
     const transFilter = getDateFilter(range, 'date');
 
     const totalHubs = await Franchise.countDocuments(dateFilter);
-    const activeFleet = await Vehicle.countDocuments({ ...dateFilter, status: { $ne: 'offline' } });
+    const activeFleet = await Vehicle.countDocuments({ ...dateFilter, status: { $in: ['assigned', 'in-transit'] } });
 
     // Calculate total subscribers (riders assigned to vehicles)
-    const activeSubscribers = await Vehicle.countDocuments({ ...dateFilter, status: 'assigned' });
+    const activeSubscribers = await Vehicle.countDocuments({ ...dateFilter, status: { $in: ['assigned', 'in-transit'] } });
 
     // Total Revenue (Sum of all completed franchise & rider transactions)
     const [frTxns, riderTxns] = await Promise.all([
@@ -113,7 +113,7 @@ export const getAdminStats = async (req, res) => {
       const dailySum = wFr.reduce((acc, t) => acc + t.amount, 0) + wRider.reduce((acc, t) => acc + t.amount, 0);
       revenueData.push({
         name: i === 0 ? 'Today' : start.toLocaleDateString('en-US', { weekday: 'short' }),
-        value: dailySum / 100000
+        value: dailySum
       });
     }
 
@@ -133,7 +133,7 @@ export const getAdminStats = async (req, res) => {
       const weekSum = wFr.reduce((acc, t) => acc + t.amount, 0) + wRider.reduce((acc, t) => acc + t.amount, 0);
       monthlyRevenue.push({
         name: i === 0 ? 'This Week' : `Wk -${i}`,
-        value: weekSum / 100000
+        value: weekSum
       });
     }
 
@@ -361,7 +361,7 @@ export const getFleetDistribution = async (req, res) => {
     const { range } = req.query;
     const dateFilter = getDateFilter(range, 'createdAt');
 
-    const inTransit = await Vehicle.countDocuments({ ...dateFilter, status: 'assigned' });
+    const inTransit = await Vehicle.countDocuments({ ...dateFilter, status: { $in: ['assigned', 'in-transit'] } });
     const atHub = await Vehicle.countDocuments({ ...dateFilter, status: 'available' });
     const maintenance = await Vehicle.countDocuments({ ...dateFilter, status: 'in-service' });
     const offline = await Vehicle.countDocuments({ ...dateFilter, status: 'quarantined' });
@@ -389,7 +389,7 @@ export const getKycRecords = async (req, res) => {
 
     const [riders, franchises] = await Promise.all([
       Rider.find({ ...dateFilter, kycStatus: { $ne: 'uninitiated' } }).populate('vehicleId', 'plate').sort('-createdAt'),
-      Franchise.find({ ...dateFilter }).sort('-createdAt')
+      Franchise.find(dateFilter).sort('-createdAt')
     ]);
 
     const records = [
@@ -665,6 +665,9 @@ export const getGeofences = async (req, res) => {
     const activeZones = validGeofences.length;
     const breaches = 0; // Placeholder until Breach model is implemented
 
+    // Get unique zone names (cities/places)
+    const uniquePlaces = [...new Set(validGeofences.map(gf => gf.name))].join(', ');
+
     res.status(200).json({
       success: true,
       geofences,
@@ -672,6 +675,7 @@ export const getGeofences = async (req, res) => {
       stats: {
         totalRiders: allRiders.length,
         activeZones: activeZones,
+        places: uniquePlaces || 'Global',
         breaches: "00"
       }
     });
@@ -1919,13 +1923,16 @@ export const getFranchiseById = async (req, res) => {
 // @route   PUT /api/v1/admin/hubs/:id
 export const updateHub = async (req, res) => {
   try {
-    const { name, ownerName, city, email, phone, fleet, status, address, latitude, longitude } = req.body;
+    const { name, ownerName, city, email, phone, fleet, status, address, latitude, longitude, password } = req.body;
 
     const franchise = await Franchise.findById(req.params.id);
     if (!franchise) {
       return res.status(404).json({ success: false, message: 'Franchise not found' });
     }
 
+    if (password !== undefined && password !== '') {
+      franchise.password = password;
+    }
     if (name !== undefined) {
       franchise.hubName = name;
       if (!franchise.businessDetails) franchise.businessDetails = {};

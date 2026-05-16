@@ -15,7 +15,10 @@ import {
   Settings,
   Battery,
   ShieldCheck,
-  MapPin
+  MapPin,
+  Eye,
+  Download as FileDown,
+  Paperclip
 } from 'lucide-react';
 import { GoogleMap, useJsApiLoader, MarkerF, CircleF } from '@react-google-maps/api';
 import { useFleetStore } from '../store/fleetStore';
@@ -134,25 +137,61 @@ export default function FleetManagement() {
       )
     },
     { 
-      header: 'Operator / Rider', 
-      accessor: 'rider', 
-      render: (row) => (
-        <div className="flex flex-col gap-0">
-          <span className={`text-[8px] font-black italic tracking-widest uppercase leading-tight ${row.status === 'assigned' ? 'text-emerald-500' : 'text-[var(--text-tertiary)] opacity-40'}`}>
-            {row.rider || '—'}
-          </span>
-          {row.status === 'assigned' && (
-            <span className="text-[6px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] italic opacity-40 leading-none">
-              ACTIVE_IN_FIELD
-            </span>
-          )}
-        </div>
-      )
-    },
-    { 
       header: 'VIN Number', 
       accessor: 'vin', 
       render: (row) => <span className="text-[7px] font-black text-[var(--text-tertiary)] font-mono tracking-[0.2em] italic uppercase opacity-60">{row.vin}</span>
+    },
+    { 
+      header: 'Compliance Registry', 
+      accessor: 'attachment', 
+      render: (row) => (
+        <div className="flex items-center gap-2">
+           {row.attachmentUrl ? (
+              <div className="flex items-center gap-1.5">
+                 <a 
+                   href={row.attachmentUrl} 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   className="p-1.5 bg-emerald-500/10 text-emerald-500 rounded-lg hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
+                   onClick={(e) => e.stopPropagation()}
+                 >
+                    <Eye size={12} strokeWidth={3} />
+                 </a>
+                 <a 
+                   href={row.attachmentUrl.replace('/upload/', '/upload/fl_attachment/')} 
+                   download
+                   className="p-1.5 bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-all shadow-sm"
+                   onClick={(e) => e.stopPropagation()}
+                 >
+                    <FileDown size={12} strokeWidth={3} />
+                 </a>
+              </div>
+           ) : (
+              <label 
+                className="p-1.5 bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] rounded-lg hover:text-emerald-500 hover:border-emerald-500/50 border border-transparent transition-all cursor-pointer shadow-sm"
+                onClick={(e) => e.stopPropagation()}
+              >
+                 <input 
+                   type="file" 
+                   className="hidden" 
+                   accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
+                   onChange={async (e) => {
+                     const file = e.target.files[0];
+                     if (!file) return;
+                     const reader = new FileReader();
+                     reader.onload = async (event) => {
+                       const base64 = event.target.result;
+                       await useFleetStore.getState().updateVehicleAttachment(row._id, base64);
+                       alert("Compliance document synced ✓");
+                     };
+                     reader.readAsDataURL(file);
+                   }}
+                 />
+                 <Paperclip size={12} strokeWidth={3} />
+              </label>
+           )}
+        </div>
+      )
     },
     { 
       header: 'Hub Status', 
@@ -167,7 +206,7 @@ export default function FleetManagement() {
           onClick={(e) => { 
             e.stopPropagation(); 
             setSelectedVehicle(row);
-            setFocusedVehicle(row); // Also focus on map when opening drawer
+            setFocusedVehicle(row);
           }}
           className="p-2 hover:bg-[var(--bg-tertiary)] rounded-lg transition-all text-[var(--text-tertiary)] hover:text-emerald-500"
         >

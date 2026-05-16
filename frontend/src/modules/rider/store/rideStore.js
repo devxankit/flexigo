@@ -37,19 +37,27 @@ export const useRideStore = create((set, get) => ({
       activeRide: state.activeRide ? { ...state.activeRide, distance } : null,
     })),
 
-  endRide: () => {
+  endRide: async () => {
     const state = get();
-    const completedRide = {
-      ...state.activeRide,
-      endTime: Date.now(),
-      finalBattery: state.vehicle.battery,
-      cost: Math.round(state.activeRide?.distance * 1.5) || 0,
-    };
-    set({
-      rideStatus: 'completed',
-      activeRide: completedRide,
-      rideHistory: [completedRide, ...state.rideHistory],
-    });
+    try {
+      // 1. Notify Backend / Admin about handover intent
+      await get().requestHandover();
+
+      // 2. Update local state
+      const completedRide = {
+        ...state.activeRide,
+        endTime: Date.now(),
+        finalBattery: state.vehicle.battery,
+        cost: Math.round(state.activeRide?.distance * 1.5) || 0,
+      };
+      set({
+        rideStatus: 'completed',
+        activeRide: completedRide,
+        rideHistory: [completedRide, ...state.rideHistory],
+      });
+    } catch (err) {
+      console.error("End ride notification failed:", err);
+    }
   },
 
   resetRide: () => set({ rideStatus: 'idle', activeRide: null }),

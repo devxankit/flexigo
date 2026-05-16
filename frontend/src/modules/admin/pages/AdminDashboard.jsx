@@ -67,7 +67,7 @@ export default function AdminDashboard() {
       return (
         <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] p-3 rounded-xl shadow-xl backdrop-blur-md">
           <p className="text-[10px] font-bold uppercase text-[var(--text-tertiary)] mb-1 tracking-wider">{label}</p>
-          <p className="text-sm font-bold text-emerald-500 tracking-tight">{payload[0].value}L</p>
+          <p className="text-sm font-bold text-emerald-500 tracking-tight">₹{(payload[0].value || 0).toLocaleString('en-IN')}</p>
         </div>
       );
     }
@@ -109,7 +109,7 @@ export default function AdminDashboard() {
 
       {/* Primary KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-         <AdminStatCard title="Revenue" value={`₹${((networkStats.grossRevenue || 0) / 100000).toFixed(1)}L`} trend="up" trendValue={networkStats.revenueTrend || "+0%"} icon={Zap} color="emerald" subtitle="Monthly Earnings" />
+         <AdminStatCard title="Revenue" value={`₹${(networkStats.grossRevenue || 0).toLocaleString('en-IN')}`} trend="up" trendValue={networkStats.revenueTrend || "+0%"} icon={Zap} color="emerald" subtitle="Monthly Earnings" />
          <AdminStatCard title="On Road" value={networkStats.activeFleet || 0} trend="up" trendValue="+0%" icon={Activity} color="blue" subtitle="Active Vehicles" />
          <AdminStatCard title="Total Franchises" value={networkStats.totalHubs || 0} icon={Warehouse} color="emerald" subtitle="Operational" />
       </div>
