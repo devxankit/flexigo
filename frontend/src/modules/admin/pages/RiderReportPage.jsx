@@ -15,17 +15,19 @@ import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function RiderReportPage() {
-  const { riderReport, fetchRiderReport, isLoading } = useAdminDataStore();
+  const { riderReport, fetchRiderReport, kycRecords, fetchKycRecords, isLoading } = useAdminDataStore();
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
+  const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 30 Days' });
 
   React.useEffect(() => {
-    fetchRiderReport(activeFilters);
+    fetchRiderReport({ range: 'Last 30 Days' });
+    fetchKycRecords();
   }, []);
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
     fetchRiderReport(newFilters);
+    fetchKycRecords();
   };
 
   const handleExport = () => {
@@ -51,15 +53,25 @@ export default function RiderReportPage() {
     a.click();
   };
 
-  const filteredReport = (riderReport || []).filter(r => {
-    const q = searchQuery.toLowerCase();
-    return (
-      (r.name?.toLowerCase() || '').includes(q) || 
-      (r.phone || '').includes(q) ||
-      (r.vehicleNumber?.toLowerCase() || '').includes(q) ||
-      (r.activePlan?.toLowerCase() || '').includes(q)
+  const filteredReport = React.useMemo(() => {
+    const approvedPhones = new Set(
+      (kycRecords || [])
+        .filter(record => record.status === 'approved' && (record.role?.toLowerCase() === 'rider' || record.role?.toLowerCase() === 'driver'))
+        .map(record => record.phone?.trim())
+        .filter(Boolean)
     );
-  });
+    const approvedRiders = (riderReport || []).filter(r => approvedPhones.has(r.phone?.trim()));
+
+    const q = searchQuery.toLowerCase();
+    return approvedRiders.filter(r => {
+      return (
+        (r.name?.toLowerCase() || '').includes(q) || 
+        (r.phone || '').includes(q) ||
+        (r.vehicleNumber?.toLowerCase() || '').includes(q) ||
+        (r.activePlan?.toLowerCase() || '').includes(q)
+      );
+    });
+  }, [riderReport, kycRecords, searchQuery]);
 
   return (
     <div className="space-y-6 pb-12">

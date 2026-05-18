@@ -66,6 +66,7 @@ export default function FranchiseKycQueue() {
   // Filter records to only show Franchises and match search
   const records = kycRecords.filter(r => 
     r.role === 'Franchise' && 
+    r.status === 'approved' &&
     (r.name || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 

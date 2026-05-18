@@ -60,9 +60,9 @@ export default function FranchiseOpsPage() {
          <AdminStatCard title="Growth" value={franchiseOpsStats.growth} icon={TrendingUp} color="emerald" subtitle="Quarterly" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6">
          {/* Franchise Ledger */}
-         <div className="lg:col-span-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-sm">
+         <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-sm">
             <div className="px-6 py-3 border-b border-[var(--border-subtle)] flex items-center justify-between bg-[var(--bg-tertiary)]/10">
                <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-wider">Performance Ledger</h3>
                <div className="text-emerald-500 text-[8px] font-black uppercase tracking-widest bg-emerald-600/5 px-2.5 py-1 rounded-lg border border-emerald-500/10 italic">
@@ -111,49 +111,6 @@ export default function FranchiseOpsPage() {
                      ))}
                   </tbody>
                </table>
-            </div>
-         </div>
-
-         {/* 3PL Integration Panel */}
-         <div className="space-y-6">
-            <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-6 shadow-sm border-t-4 border-t-emerald-600">
-               <div className="flex items-center justify-between mb-6 pb-2 border-b border-[var(--border-subtle)]">
-                  <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-widest">3PL Matrix</h3>
-                  <div className="flex items-center gap-1 text-[8px] font-black text-emerald-500 uppercase tracking-widest animate-pulse">
-                     <CheckCircle2 size={10} /> Active
-                  </div>
-               </div>
-
-               <div className="space-y-3">
-                  {[
-                     { name: 'Mehta Logistics', efficiency: '98%', status: 'high' },
-                     { name: 'Swift Delivery', efficiency: '84%', status: 'med' },
-                     { name: 'Eco Movers', efficiency: '92%', status: 'high' }
-                  ].map((integration) => (
-                     <div key={integration.name} className="p-3 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl group hover:border-emerald-500/30 transition-all">
-                        <div className="flex items-center justify-between mb-1.5">
-                           <span className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-tight italic">{integration.name}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-[8px] font-black uppercase tracking-widest">
-                           <span className="text-[var(--text-tertiary)] leading-none mt-0.5">S-Eff Score</span>
-                           <span className={integration.status === 'high' ? 'text-emerald-500' : 'text-amber-500'}>{integration.efficiency}</span>
-                        </div>
-                        <div className="mt-2 w-full h-1 bg-[var(--bg-tertiary)] rounded-full overflow-hidden shadow-inner">
-                           <div className={`h-full ${integration.status === 'high' ? 'bg-emerald-500' : 'bg-amber-500'} transition-all duration-1000`} style={{ width: integration.efficiency }} />
-                        </div>
-                     </div>
-                  ))}
-               </div>
-
-               <div className="mt-6 p-3 bg-emerald-600/5 border border-emerald-500/10 rounded-xl space-y-2">
-                  <div className="flex items-center gap-1.5">
-                     <BarChart3 size={12} className="text-emerald-600" />
-                     <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Revenue Audit</p>
-                  </div>
-                  <p className="text-[8px] text-[var(--text-tertiary)] font-bold uppercase leading-relaxed italic tracking-widest">
-                     Net payout tracking includes RTO & Commission splits.
-                  </p>
-               </div>
             </div>
          </div>
       </div>

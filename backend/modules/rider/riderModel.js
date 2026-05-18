@@ -33,6 +33,8 @@ const RiderSchema = new mongoose.Schema({
     certificate: String,
     referenceName: { type: String, default: '' },
     referenceNumber: { type: String, default: '' },
+    referenceName2: { type: String, default: '' },
+    referenceNumber2: { type: String, default: '' },
   },
   name: String,
   email: String,

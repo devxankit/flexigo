@@ -58,6 +58,19 @@ export default function KycOnboardingPage() {
     fetchKycRecords();
   }, []);
 
+  React.useEffect(() => {
+    if (selectedRecord && kycRecords.length > 0) {
+      const freshRecord = kycRecords.find(r => {
+        const rId = r.id || r._id;
+        const sId = selectedRecord.id || selectedRecord._id;
+        return rId && sId && rId.toString() === sId.toString();
+      });
+      if (freshRecord) {
+        setSelectedRecord(freshRecord);
+      }
+    }
+  }, [kycRecords]);
+
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
     fetchKycRecords(newFilters);
@@ -79,15 +92,62 @@ export default function KycOnboardingPage() {
   });
 
   const handleAction = async (id, newStatus) => {
-    await updateKycStatus(id, newStatus);
-    if (selectedRecord && selectedRecord.id === id) {
-      setSelectedRecord(prev => ({ ...prev, status: newStatus }));
+    const payload = {
+      status: newStatus,
+      referenceName: selectedRecord?.details?.referenceName,
+      referenceNumber: selectedRecord?.details?.referenceNumber,
+      referenceName2: selectedRecord?.details?.referenceName2,
+      referenceNumber2: selectedRecord?.details?.referenceNumber2
+    };
+    await updateKycStatus(id, payload);
+    if (selectedRecord && (selectedRecord.id === id || selectedRecord._id === id)) {
+      setSelectedRecord(prev => ({ 
+        ...prev, 
+        status: newStatus,
+        details: {
+          ...prev.details,
+          referenceName: payload.referenceName,
+          referenceNumber: payload.referenceNumber,
+          referenceName2: payload.referenceName2,
+          referenceNumber2: payload.referenceNumber2
+        }
+      }));
     }
   };
 
   const openDetails = (record) => {
     setSelectedRecord(record);
     setIsDetailModalOpen(true);
+  };
+
+  const handleExport = () => {
+    const headers = ['Record ID', 'Identity Identity', 'Phone', 'Persona', 'Liveness Check', 'Vehicle Plate', 'Registry Date', 'Status'];
+    
+    const rows = filteredRecords.map(r => [
+      r.id || r._id || '',
+      r.name || '',
+      r.phone || '',
+      r.role || '',
+      r.details?.ekycVerified ? 'LIVE_MATCH_OK' : 'UNVERIFIED',
+      r.vehiclePlate || 'N/A',
+      r.date ? new Date(r.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '',
+      r.status || ''
+    ]);
+    
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `kyc_onboarding_export_${new Date().toISOString().slice(0,10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -120,6 +180,12 @@ export default function KycOnboardingPage() {
             </div>
             <button className="p-1.5 bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-emerald-500 transition-all">
                <Filter size={14} />
+            </button>
+            <button 
+               onClick={handleExport}
+               className="px-3 py-1.5 bg-[#10b981] hover:bg-[#0f9f6e] text-white font-bold rounded-lg flex items-center gap-1.5 text-[9px] uppercase tracking-widest active:scale-95 transition-all"
+            >
+               <Download size={12} className="stroke-[3px]" /> EXPORT CSV
             </button>
          </div>
       </div>
@@ -412,7 +478,47 @@ export default function KycOnboardingPage() {
                               {selectedRecord.details?.referenceNumber?.length === 10 && (
                                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
                                     <ShieldCheck size={12} className="text-emerald-500" />
-                                 </div>
+                                  </div>
+                              )}
+                           </div>
+                        </div>
+                     </div>
+                     <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                           <label className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Reference Name 2</label>
+                           <input 
+                              value={selectedRecord.details?.referenceName2 || ''}
+                              onChange={(e) => {
+                                 setSelectedRecord(prev => ({
+                                    ...prev,
+                                    details: { ...prev.details, referenceName2: e.target.value }
+                                 }));
+                              }}
+                              placeholder="ENTER NAME"
+                              className="w-full px-3 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-bold tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all placeholder:text-[var(--text-tertiary)]/30"
+                           />
+                        </div>
+                        <div className="space-y-1.5">
+                           <label className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Reference Number 2</label>
+                           <div className="relative">
+                              <input 
+                                 value={selectedRecord.details?.referenceNumber2 || ''}
+                                 onChange={(e) => {
+                                    const val = e.target.value.replace(/\D/g, '');
+                                    if (val.length <= 10) {
+                                       setSelectedRecord(prev => ({
+                                          ...prev,
+                                          details: { ...prev.details, referenceNumber2: val }
+                                       }));
+                                    }
+                                 }}
+                                 placeholder="10-DIGIT MOBILE"
+                                 className="w-full px-3 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all placeholder:text-[var(--text-tertiary)]/30"
+                              />
+                              {selectedRecord.details?.referenceNumber2?.length === 10 && (
+                                 <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                    <ShieldCheck size={12} className="text-emerald-500" />
+                                  </div>
                               )}
                            </div>
                         </div>
@@ -422,9 +528,16 @@ export default function KycOnboardingPage() {
                            const id = selectedRecord.id || selectedRecord._id;
                            const res = await useAdminDataStore.getState().updateKycReferences(id, {
                               referenceName: selectedRecord.details?.referenceName,
-                              referenceNumber: selectedRecord.details?.referenceNumber
+                              referenceNumber: selectedRecord.details?.referenceNumber,
+                              referenceName2: selectedRecord.details?.referenceName2,
+                              referenceNumber2: selectedRecord.details?.referenceNumber2
                            });
-                           if (res?.success) alert("References Saved!");
+                           if (res?.success) {
+                              if (res.kycDetails) {
+                                 setSelectedRecord(prev => ({ ...prev, details: res.kycDetails }));
+                              }
+                              alert("References Saved!");
+                           }
                            else alert(res?.message || "Failed to save references");
                         }}
                         className="w-full py-2 bg-emerald-600/10 text-emerald-500 border border-emerald-500/20 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-emerald-600/20 transition-all active:scale-95 flex items-center justify-center gap-1.5"

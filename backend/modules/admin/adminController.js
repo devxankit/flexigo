@@ -76,8 +76,8 @@ export const getAdminStats = async (req, res) => {
     const dateFilter = getDateFilter(range, 'createdAt');
     const transFilter = getDateFilter(range, 'date');
 
-    const totalHubs = await Franchise.countDocuments(dateFilter);
-    const activeFleet = await Vehicle.countDocuments({ ...dateFilter, status: { $in: ['assigned', 'in-transit'] } });
+    const totalHubs = await Franchise.countDocuments({ ...dateFilter, kycStatus: 'approved' });
+    const activeFleet = await Rider.countDocuments({ ...dateFilter, kycStatus: 'approved' });
 
     // Calculate total subscribers (riders assigned to vehicles)
     const activeSubscribers = await Vehicle.countDocuments({ ...dateFilter, status: { $in: ['assigned', 'in-transit'] } });
@@ -269,7 +269,7 @@ export const getAllHubs = async (req, res) => {
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     };
 
-    const franchises = await Franchise.find(dateFilter).sort('-createdAt');
+    const franchises = await Franchise.find({ ...dateFilter, kycStatus: 'approved' }).sort('-createdAt');
 
     const hubs = await Promise.all(franchises.map(async (f) => {
       const fleetCount = await Vehicle.countDocuments({ franchise: f._id });
@@ -287,14 +287,8 @@ export const getAllHubs = async (req, res) => {
           ? parseFloat(getDistanceKm(userLat, userLng, hubLat, hubLng).toFixed(1))
           : null;
 
-      // Best available display name from DB
-      const displayName =
-        f.hubName ||
-        (f.businessDetails?.name && f.businessDetails.name.length < 40
-          ? f.businessDetails.name
-          : null) ||
-        f.ownerName ||
-        (f.phone ? `Partner ${f.phone.slice(-4)}` : 'Unknown Hub');
+      // Best available display name from DB (Matching getKycRecords exactly)
+      const displayName = f.hubName || f.ownerName || f.phone || 'Unknown Hub';
 
       const displayCity =
         f.city ||
@@ -312,7 +306,7 @@ export const getAllHubs = async (req, res) => {
         fleet: fleetCount,
         subs: fleetCount,
         revenue: totalRevenue,
-        status: f.status || 'active',
+        status: f.kycStatus === 'approved' ? 'approved' : (f.kycStatus === 'rejected' ? 'rejected' : (f.kycStatus || 'pending')),
         health: `${healthVal}%`,
         distanceKm,
         lat: hubLat || null,
@@ -442,26 +436,52 @@ export const getKycRecords = async (req, res) => {
 
 export const updateKycStatus = async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, referenceName, referenceNumber, referenceName2, referenceNumber2, kycDetails } = req.body;
     const id = req.params.id;
 
+    const updateFields = {};
+    if (status !== undefined) {
+      updateFields.kycStatus = status;
+      updateFields.status = status;
+    }
+
+    // Extract dynamic reference fields (checking flat fields first, then falling back to nested)
+    const refName = referenceName !== undefined ? referenceName : kycDetails?.referenceName;
+    const refNum = referenceNumber !== undefined ? referenceNumber : kycDetails?.referenceNumber;
+    const refName2 = referenceName2 !== undefined ? referenceName2 : kycDetails?.referenceName2;
+    const refNum2 = referenceNumber2 !== undefined ? referenceNumber2 : kycDetails?.referenceNumber2;
+
+    if (refName !== undefined) updateFields['kycDetails.referenceName'] = refName;
+    if (refNum !== undefined) updateFields['kycDetails.referenceNumber'] = refNum;
+    if (refName2 !== undefined) updateFields['kycDetails.referenceName2'] = refName2;
+    if (refNum2 !== undefined) updateFields['kycDetails.referenceNumber2'] = refNum2;
+
+    if (kycDetails) {
+      if (kycDetails.selfie !== undefined) updateFields['kycDetails.selfie'] = kycDetails.selfie;
+      if (kycDetails.aadhaarFront !== undefined) updateFields['kycDetails.aadhaarFront'] = kycDetails.aadhaarFront;
+      if (kycDetails.aadhaarBack !== undefined) updateFields['kycDetails.aadhaarBack'] = kycDetails.aadhaarBack;
+      if (kycDetails.panCard !== undefined) updateFields['kycDetails.panCard'] = kycDetails.panCard;
+      if (kycDetails.drivingLicense !== undefined) updateFields['kycDetails.drivingLicense'] = kycDetails.drivingLicense;
+      if (kycDetails.certificate !== undefined) updateFields['kycDetails.certificate'] = kycDetails.certificate;
+      if (kycDetails.ekycVerified !== undefined) updateFields['kycDetails.ekycVerified'] = kycDetails.ekycVerified;
+    }
+
+    const franchiseUpdateFields = { ...updateFields };
+    if (status !== undefined) {
+      franchiseUpdateFields.isVerified = status === 'approved';
+    }
+
     // Try updating Franchise first, then Rider
-    let updated = await Franchise.findByIdAndUpdate(id, {
-      kycStatus: status,
-      isVerified: status === 'approved',
-      status: status // Sync status for franchise
-    }, { new: true });
+    let updated = await Franchise.findByIdAndUpdate(id, { $set: franchiseUpdateFields }, { new: true, returnDocument: 'after' });
 
     if (!updated) {
-      updated = await Rider.findByIdAndUpdate(id, { 
-        kycStatus: status,
-        status: status // Sync status for rider
-      }, { new: true });
+      updated = await Rider.findByIdAndUpdate(id, { $set: updateFields }, { new: true, returnDocument: 'after' });
     }
 
     if (!updated) {
       return res.status(404).json({ success: false, message: 'Record not found' });
     }
+
     // Send Real-time FCM Notification on Approval
     if (status === 'approved') {
       const fcmToken = updated.fcmToken || updated.fcmTokenMobile;
@@ -475,11 +495,31 @@ export const updateKycStatus = async (req, res) => {
       }
     }
 
-
+    const isFranchise = updated.hubName !== undefined || updated.ownerName !== undefined;
+    const formattedRecord = {
+      id: updated._id,
+      name: updated.name || updated.hubName || updated.ownerName || updated.phone,
+      phone: updated.phone,
+      role: updated.role || (isFranchise ? 'Franchise' : 'Rider'),
+      type: isFranchise ? (updated.businessDetails?.type || 'Pvt Ltd') : 'Individual',
+      city: updated.city || updated.businessDetails?.location || 'N/A',
+      status: updated.kycStatus === 'approved' ? 'approved' : (updated.kycStatus === 'rejected' ? 'rejected' : (updated.status || updated.kycStatus || 'pending')),
+      date: updated.createdAt,
+      details: updated.kycDetails
+    };
+    if (!isFranchise) {
+      formattedRecord.vehicleId = updated.vehicleId?._id || updated.vehicleId;
+      formattedRecord.vehiclePlate = updated.vehicleId?.plate || 'N/A';
+    } else {
+      formattedRecord.hubs = 1;
+    }
 
     res.status(200).json({
       success: true,
-      status: updated.kycStatus
+      status: updated.kycStatus,
+      kycDetails: updated.kycDetails,
+      record: formattedRecord,
+      data: updated
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -489,30 +529,43 @@ export const updateKycStatus = async (req, res) => {
 export const updateKycReferences = async (req, res) => {
   try {
     const { id } = req.params;
-    const { referenceName, referenceNumber } = req.body;
+    const { referenceName, referenceNumber, referenceName2, referenceNumber2 } = req.body;
 
-    let updated = await Rider.findById(id);
-    if (updated) {
-      if (!updated.kycDetails) updated.kycDetails = {};
-      updated.kycDetails.referenceName = referenceName;
-      updated.kycDetails.referenceNumber = referenceNumber;
-      updated.markModified('kycDetails');
-      await updated.save();
-    } else {
-      updated = await Franchise.findById(id);
-      if (updated) {
-        if (!updated.kycDetails) updated.kycDetails = {};
-        updated.kycDetails.referenceName = referenceName;
-        updated.kycDetails.referenceNumber = referenceNumber;
-        updated.markModified('kycDetails');
-        await updated.save();
-      }
+    console.log(`[Admin KYC] DYNAMIC Reference Update Triggered! Target ID: ${id}`);
+    console.log(`[Admin KYC] Received payload:`, req.body);
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      console.log(`[Admin KYC] ERROR: Invalid MongoDB ObjectId format: ${id}`);
+      return res.status(400).json({ success: false, message: 'Invalid ID format' });
     }
 
-    if (!updated) return res.status(404).json({ success: false, message: 'Record not found' });
+    // Build update object dynamically to preserve existing data if some fields are not provided
+    const updateFields = {};
+    if (referenceName !== undefined) updateFields['kycDetails.referenceName'] = referenceName;
+    if (referenceNumber !== undefined) updateFields['kycDetails.referenceNumber'] = referenceNumber;
+    if (referenceName2 !== undefined) updateFields['kycDetails.referenceName2'] = referenceName2;
+    if (referenceNumber2 !== undefined) updateFields['kycDetails.referenceNumber2'] = referenceNumber2;
+
+    console.log(`[Admin KYC] DB Update Fields:`, updateFields);
+
+    let updated = await Rider.findByIdAndUpdate(id, { $set: updateFields }, { new: true, returnDocument: 'after' });
+
+    if (!updated) {
+      console.log(`[Admin KYC] Rider not found with ID ${id}. Trying Franchise...`);
+      updated = await Franchise.findByIdAndUpdate(id, { $set: updateFields }, { new: true, returnDocument: 'after' });
+    }
+
+    if (!updated) {
+      console.log(`[Admin KYC] ERROR: Record not found in either Rider or Franchise for ID: ${id}`);
+      return res.status(404).json({ success: false, message: 'Record not found' });
+    }
+
+    console.log(`[Admin KYC] SUCCESS! Dynamic DB Update Complete for ${updated.name || updated.phone} (${updated.role || 'franchise'}).`);
+    console.log(`[Admin KYC] Updated kycDetails in DB:`, updated.kycDetails);
 
     res.status(200).json({ success: true, message: 'References updated successfully', kycDetails: updated.kycDetails });
   } catch (error) {
+    console.error(`[Admin KYC] EXCEPTION in updateKycReferences:`, error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -542,12 +595,12 @@ export const uploadKycCertificate = async (req, res) => {
 
     let updated = await Franchise.findByIdAndUpdate(id, {
       'kycDetails.certificate': certificateUrl
-    }, { new: true });
+    }, { new: true, returnDocument: 'after' });
 
     if (!updated) {
       updated = await Rider.findByIdAndUpdate(id, {
         'kycDetails.certificate': certificateUrl
-      }, { new: true });
+      }, { new: true, returnDocument: 'after' });
     }
 
     if (!updated) {
@@ -1238,7 +1291,7 @@ export const getFranchiseOpsData = async (req, res) => {
     const dateFilter = getDateFilter(range, 'createdAt');
     const txnFilter = getDateFilter(range, 'date');
 
-    const franchises = await Franchise.find(dateFilter).sort('-createdAt');
+    const franchises = await Franchise.find({ ...dateFilter, kycStatus: 'approved' }).sort('-createdAt');
     const totalPartners = franchises.length;
 
     const txns = await Transaction.find({ ...txnFilter, status: 'completed' });
@@ -1248,7 +1301,7 @@ export const getFranchiseOpsData = async (req, res) => {
       const fleetCount = await Vehicle.countDocuments({ franchise: fr._id });
       return {
         id: fr._id,
-        name: fr.businessDetails?.name || fr.hubName || fr.ownerName || fr.phone,
+        name: fr.hubName || fr.ownerName || fr.phone || 'Unknown Hub',
         city: fr.businessDetails?.location || fr.city || 'N/A',
         hubs: 1,
         fleet: fleetCount,

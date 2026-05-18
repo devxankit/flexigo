@@ -213,12 +213,22 @@ export const useAdminDataStore = create((set, get) => ({
     }
   },
 
-  updateKycStatus: async (id, status) => {
+  updateKycStatus: async (id, statusData) => {
     try {
-      const res = await api.patch(`/admin/kyc/${id}`, { status });
+      const payload = typeof statusData === 'object' ? statusData : { status: statusData };
+      const res = await api.patch(`/admin/kyc/${id}`, payload);
       if (res.data.success) {
         set(state => ({
-          kycRecords: state.kycRecords.map(r => (r.id === id || r._id === id) ? { ...r, status } : r)
+          kycRecords: state.kycRecords.map(r => {
+            const rId = r.id || r._id;
+            return (rId && id && rId.toString() === id.toString())
+              ? { 
+                  ...r, 
+                  status: payload.status,
+                  details: res.data.kycDetails || { ...r.details, ...payload }
+                }
+              : r;
+          })
         }));
         // Re-fetch to ensure all modules are in sync
         get().fetchKycRecords();
@@ -233,7 +243,12 @@ export const useAdminDataStore = create((set, get) => ({
       const res = await api.patch(`/admin/kyc/${id}/references`, data);
       if (res.data.success) {
         set(state => ({
-          kycRecords: state.kycRecords.map(r => (r.id === id || r._id === id) ? { ...r, details: { ...r.details, ...data } } : r)
+          kycRecords: state.kycRecords.map(r => {
+            const rId = r.id || r._id;
+            return (rId && id && rId.toString() === id.toString())
+              ? { ...r, details: res.data.kycDetails || { ...r.details, ...data } }
+              : r;
+          })
         }));
         return res.data;
       }

@@ -43,7 +43,6 @@ const navigationGroups = [
     items: [
       { id: 'dashboard', label: 'Overview', icon: LayoutDashboard, path: '/admin/dashboard' },
       { id: 'analysis', label: 'Platform Analytics', icon: BarChart3, path: '/admin/analytics' },
-      { id: 'rider-behaviour', label: 'Riders', icon: Target, path: '/admin/rider-behaviour' },
     ]
   },
   {
@@ -58,7 +57,6 @@ const navigationGroups = [
   {
     title: "People",
     items: [
-      { id: 'subscribers', label: 'Subscribers', icon: Users, path: '/admin/subscribers' },
       { id: 'rider-reports', label: 'Rider Reports', icon: Activity, path: '/admin/rider-reports' },
       { id: 'kyc', label: 'KYC & Onboard', icon: UserCheck, path: '/admin/kyc' },
       { id: 'hr', label: 'HR Management', icon: Briefcase, path: '/admin/hr' },

@@ -243,15 +243,43 @@ export const updateRegistration = async (req, res) => {
       return result.secure_url;
     };
 
+    // Extract dynamic reference fields (checking flat fields, then falling back to nested)
+    const refName = updateData.referenceName !== undefined ? updateData.referenceName : updateData.kycDetails?.referenceName;
+    const refNum = updateData.referenceNumber !== undefined ? updateData.referenceNumber : updateData.kycDetails?.referenceNumber;
+    const refName2 = updateData.referenceName2 !== undefined ? updateData.referenceName2 : updateData.kycDetails?.referenceName2;
+    const refNum2 = updateData.referenceNumber2 !== undefined ? updateData.referenceNumber2 : updateData.kycDetails?.referenceNumber2;
+
     if (updateData.kycDetails) {
       if (updateData.kycDetails.selfie) updateData.kycDetails.selfie = await uploadToCloudinary(updateData.kycDetails.selfie, 'kyc');
       if (updateData.kycDetails.aadhaarFront) updateData.kycDetails.aadhaarFront = await uploadToCloudinary(updateData.kycDetails.aadhaarFront, 'kyc');
       if (updateData.kycDetails.aadhaarBack) updateData.kycDetails.aadhaarBack = await uploadToCloudinary(updateData.kycDetails.aadhaarBack, 'kyc');
       if (updateData.kycDetails.panCard) updateData.kycDetails.panCard = await uploadToCloudinary(updateData.kycDetails.panCard, 'kyc');
       if (updateData.kycDetails.businessLicense) updateData.kycDetails.businessLicense = await uploadToCloudinary(updateData.kycDetails.businessLicense, 'kyc');
+
+      // Copy kycDetails fields individually to avoid overwriting existing fields in the database subdocument
+      if (!franchise.kycDetails) franchise.kycDetails = {};
+      for (const [key, val] of Object.entries(updateData.kycDetails)) {
+        if (val !== undefined) {
+          franchise.kycDetails[key] = val;
+        }
+      }
+      delete updateData.kycDetails;
     }
 
-    // Use franchise.set() to correctly merge nested objects
+    // Assign reference fields dynamically
+    if (!franchise.kycDetails) franchise.kycDetails = {};
+    if (refName !== undefined) franchise.kycDetails.referenceName = refName;
+    if (refNum !== undefined) franchise.kycDetails.referenceNumber = refNum;
+    if (refName2 !== undefined) franchise.kycDetails.referenceName2 = refName2;
+    if (refNum2 !== undefined) franchise.kycDetails.referenceNumber2 = refNum2;
+
+    // Remove flat reference properties so set() doesn't fail or create extra fields
+    if (updateData.referenceName !== undefined) delete updateData.referenceName;
+    if (updateData.referenceNumber !== undefined) delete updateData.referenceNumber;
+    if (updateData.referenceName2 !== undefined) delete updateData.referenceName2;
+    if (updateData.referenceNumber2 !== undefined) delete updateData.referenceNumber2;
+
+    // Use franchise.set() to correctly merge remaining nested objects
     franchise.set(updateData);
 
     // If it's the final review step or mark as registered

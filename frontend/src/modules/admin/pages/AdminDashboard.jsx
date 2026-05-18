@@ -110,7 +110,7 @@ export default function AdminDashboard() {
       {/* Primary KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
          <AdminStatCard title="Revenue" value={`₹${(networkStats.grossRevenue || 0).toLocaleString('en-IN')}`} trend="up" trendValue={networkStats.revenueTrend || "+0%"} icon={Zap} color="emerald" subtitle="Monthly Earnings" />
-         <AdminStatCard title="On Road" value={networkStats.activeFleet || 0} trend="up" trendValue="+0%" icon={Activity} color="blue" subtitle="Active Vehicles" />
+         <AdminStatCard title="Total Riders" value={networkStats.activeFleet || 0} trend="up" trendValue="+0%" icon={Activity} color="blue" subtitle="Active Vehicles" />
          <AdminStatCard title="Total Franchises" value={networkStats.totalHubs || 0} icon={Warehouse} color="emerald" subtitle="Operational" />
       </div>
 

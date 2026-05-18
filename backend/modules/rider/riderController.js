@@ -91,7 +91,17 @@ export const saveFcmToken = async (req, res) => {
 // @desc    Update KYC Details
 export const updateKYC = async (req, res) => {
   try {
-    const { phone, selfie, aadhaarFront, aadhaarBack, drivingLicense } = req.body;
+    const { 
+      phone, 
+      selfie, 
+      aadhaarFront, 
+      aadhaarBack, 
+      drivingLicense,
+      referenceName,
+      referenceNumber,
+      referenceName2,
+      referenceNumber2
+    } = req.body;
     const rider = await Rider.findOne({ phone });
     if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
 
@@ -105,6 +115,17 @@ export const updateKYC = async (req, res) => {
     if (aadhaarFront) rider.kycDetails.aadhaarFront = await upload(aadhaarFront, 'aadhaar');
     if (aadhaarBack) rider.kycDetails.aadhaarBack = await upload(aadhaarBack, 'aadhaar');
     if (drivingLicense) rider.kycDetails.drivingLicense = await upload(drivingLicense, 'license');
+
+    // Extract dynamic reference fields (checking flat fields first, then falling back to nested)
+    const refName = referenceName !== undefined ? referenceName : req.body.kycDetails?.referenceName;
+    const refNum = referenceNumber !== undefined ? referenceNumber : req.body.kycDetails?.referenceNumber;
+    const refName2 = referenceName2 !== undefined ? referenceName2 : req.body.kycDetails?.referenceName2;
+    const refNum2 = referenceNumber2 !== undefined ? referenceNumber2 : req.body.kycDetails?.referenceNumber2;
+
+    if (refName !== undefined) rider.kycDetails.referenceName = refName;
+    if (refNum !== undefined) rider.kycDetails.referenceNumber = refNum;
+    if (refName2 !== undefined) rider.kycDetails.referenceName2 = refName2;
+    if (refNum2 !== undefined) rider.kycDetails.referenceNumber2 = refNum2;
 
     rider.kycStatus = 'pending';
     rider.status = rider.kycStatus;
