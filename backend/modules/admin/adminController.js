@@ -76,8 +76,13 @@ export const getAdminStats = async (req, res) => {
     const dateFilter = getDateFilter(range, 'createdAt');
     const transFilter = getDateFilter(range, 'date');
 
+<<<<<<< HEAD
     const totalHubs = await Franchise.countDocuments({ ...dateFilter, kycStatus: 'approved' });
     const activeFleet = await Rider.countDocuments({ ...dateFilter, kycStatus: 'approved' });
+=======
+    const totalHubs = await Franchise.countDocuments(dateFilter);
+    const activeFleet = await Vehicle.countDocuments({ ...dateFilter, status: { $in: ['assigned', 'in-transit'] } });
+>>>>>>> afb1d4fb3fe5313b5ad2287dfac849d098115847
 
     // Calculate total subscribers (riders assigned to vehicles)
     const activeSubscribers = await Vehicle.countDocuments({ ...dateFilter, status: { $in: ['assigned', 'in-transit'] } });
