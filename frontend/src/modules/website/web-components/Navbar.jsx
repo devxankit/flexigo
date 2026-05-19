@@ -4,8 +4,10 @@ import { Menu, X, ChevronDown, ChevronUp, MapPin, Phone, Mail, MessageCircle } f
 import { Link } from 'react-router-dom';
 import { cn } from '../../../lib/utils';
 import logo from '../../../assets/logo.png';
+import { useLenis } from '@studio-freight/react-lenis';
 
 const Navbar = () => {
+  const lenis = useLenis();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeAccordion, setActiveAccordion] = useState(null); // 'product' | 'company' | 'contact' | null
@@ -103,7 +105,15 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ) : (
-              <a key={link.name} href={link.href} className={className}>
+              <a 
+                key={link.name} 
+                href={link.href} 
+                className={className}
+                onClick={(e) => {
+                  e.preventDefault();
+                  lenis?.scrollTo(link.href);
+                }}
+              >
                 {link.name}
               </a>
             );
@@ -155,7 +165,11 @@ const Navbar = () => {
                       <Link
                         to={link.href}
                         className={className}
-                        onClick={() => setMobileMenuOpen(false)}
+                        onClick={() => {
+                          setTimeout(() => {
+                            setMobileMenuOpen(false);
+                          }, 50);
+                        }}
                       >
                         {link.name}
                       </Link>
@@ -163,7 +177,13 @@ const Navbar = () => {
                       <a
                         href={link.href}
                         className={className}
-                        onClick={() => setMobileMenuOpen(false)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          lenis?.scrollTo(link.href);
+                          setTimeout(() => {
+                            setMobileMenuOpen(false);
+                          }, 100);
+                        }}
                       >
                         {link.name}
                       </a>
@@ -202,7 +222,11 @@ const Navbar = () => {
                           key={link.name}
                           to={link.path}
                           className="text-base text-slate-600 hover:text-flexigo-teal transition-colors font-semibold py-1"
-                          onClick={() => setMobileMenuOpen(false)}
+                          onClick={() => {
+                            setTimeout(() => {
+                              setMobileMenuOpen(false);
+                            }, 50);
+                          }}
                         >
                           {link.name}
                         </Link>
@@ -239,7 +263,11 @@ const Navbar = () => {
                           key={link.name}
                           to={link.path}
                           className="text-base text-slate-600 hover:text-flexigo-teal transition-colors font-semibold py-1"
-                          onClick={() => setMobileMenuOpen(false)}
+                          onClick={() => {
+                            setTimeout(() => {
+                              setMobileMenuOpen(false);
+                            }, 50);
+                          }}
                         >
                           {link.name}
                         </Link>
@@ -285,7 +313,11 @@ const Navbar = () => {
                         <a
                           href="tel:+919922968093"
                           className="text-slate-600 text-sm font-semibold hover:text-flexigo-teal transition-colors"
-                          onClick={() => setMobileMenuOpen(false)}
+                          onClick={() => {
+                            setTimeout(() => {
+                              setMobileMenuOpen(false);
+                            }, 50);
+                          }}
                         >
                           +91 99229 68093
                         </a>
@@ -299,7 +331,11 @@ const Navbar = () => {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-slate-600 text-sm font-semibold hover:text-flexigo-teal transition-colors"
-                          onClick={() => setMobileMenuOpen(false)}
+                          onClick={() => {
+                            setTimeout(() => {
+                              setMobileMenuOpen(false);
+                            }, 50);
+                          }}
                         >
                           +91 99229 68093 (WhatsApp)
                         </a>
@@ -311,7 +347,11 @@ const Navbar = () => {
                         <a
                           href="mailto:support@flexigoemobility.com"
                           className="text-slate-600 text-sm font-semibold hover:text-flexigo-teal transition-colors"
-                          onClick={() => setMobileMenuOpen(false)}
+                          onClick={() => {
+                            setTimeout(() => {
+                              setMobileMenuOpen(false);
+                            }, 50);
+                          }}
                         >
                           support@flexigoemobility.com
                         </a>

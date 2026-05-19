@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Zap, Check, Plus, Pencil, Trash2, Star, IndianRupee, X, Loader2 } from 'lucide-react';
+import { Zap, Check, Plus, Pencil, Trash2, Star, IndianRupee, X, Loader2, RefreshCw } from 'lucide-react';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function WebsitePlansPage() {
@@ -70,13 +70,22 @@ export default function WebsitePlansPage() {
             Website · Pricing Plans Management
           </p>
         </div>
-        <button 
-          onClick={() => openModal()}
-          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
-        >
-          <Plus size={14} />
-          Add New Plan
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => window.location.reload()}
+            className="flex items-center justify-center w-8 h-8 md:w-9 md:h-9 border border-[var(--border-subtle)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)]/50 text-[var(--text-secondary)] rounded-xl transition-all shadow-sm active:scale-95"
+            title="Refresh Page"
+          >
+            <RefreshCw size={14} />
+          </button>
+          <button 
+            onClick={() => openModal()}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
+          >
+            <Plus size={14} />
+            Add New Plan
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
