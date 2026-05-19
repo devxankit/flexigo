@@ -20,6 +20,31 @@ export const protectFranchise = async (req, res, next) => {
   if (!token) res.status(401).json({ success: false, message: 'No Token' });
 };
 
+export const protectFranchiseOrAdmin = async (req, res, next) => {
+  let token;
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    try {
+      token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      
+      req.franchise = await Franchise.findById(decoded.id).select('-otp -otpExpire');
+      if (req.franchise) {
+        return next();
+      }
+      
+      req.admin = await Admin.findById(decoded.id).select('-password');
+      if (req.admin) {
+        return next();
+      }
+      
+      return res.status(401).json({ success: false, message: 'Authorized user not found' });
+    } catch (error) {
+      res.status(401).json({ success: false, message: 'Invalid Token' });
+    }
+  }
+  if (!token) res.status(401).json({ success: false, message: 'No Token' });
+};
+
 export const protectRider = async (req, res, next) => {
   let token;
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {

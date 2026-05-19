@@ -1837,6 +1837,7 @@ export const getRiderDetailedReport = async (req, res) => {
     const riders = await Rider.find(dateFilter)
       .populate('subscriptionPlan')
       .populate('vehicleId', 'plate model')
+      .populate('franchise', 'name')
       .sort('-createdAt')
       .lean();
 
@@ -1855,6 +1856,7 @@ export const getRiderDetailedReport = async (req, res) => {
         name: r.name || 'Unnamed',
         phone: r.phone,
         email: r.email || 'N/A',
+        franchiseName: r.franchise?.name || 'FLEXIGO',
         vehicleNumber: r.vehicleId?.plate || 'N/A',
         vehicleModel: r.vehicleId?.model || 'N/A',
         activePlan: r.subscriptionPlan?.name || 'No Plan',

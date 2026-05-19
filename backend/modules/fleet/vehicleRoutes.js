@@ -7,11 +7,11 @@ import {
   getAssignments,
   createAssignment
 } from './vehicleController.js';
-import { protectFranchise } from '../../shared/middleware/authMiddleware.js';
+import { protectFranchise, protectFranchiseOrAdmin } from '../../shared/middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.get('/', protectFranchise, getVehicles);
+router.get('/', protectFranchiseOrAdmin, getVehicles);
 router.get('/assignments', getAssignments);
 router.post('/assignments', createAssignment);
 router.post('/:id/maintenance', protectFranchise, addMaintenanceLog);

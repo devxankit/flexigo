@@ -42,7 +42,6 @@ const navigationGroups = [
     title: "Insights",
     items: [
       { id: 'dashboard', label: 'Overview', icon: LayoutDashboard, path: '/admin/dashboard' },
-      { id: 'analysis', label: 'Platform Analytics', icon: BarChart3, path: '/admin/analytics' },
     ]
   },
   {

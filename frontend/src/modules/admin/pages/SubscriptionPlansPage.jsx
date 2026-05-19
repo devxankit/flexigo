@@ -40,7 +40,18 @@ export default function SubscriptionPlansPage() {
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem('sub_plans_active_tab') || 'Rider');
   const [activeFilters, setActiveFilters] = React.useState(() => {
     const saved = localStorage.getItem('sub_plans_filters');
-    return saved ? JSON.parse(saved) : { range: 'Last 7 Days' };
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.range === 'Last 7 Days') {
+          return { range: 'All Time' };
+        }
+        return parsed;
+      } catch (e) {
+        return { range: 'All Time' };
+      }
+    }
+    return { range: 'All Time' };
   });
 
   React.useEffect(() => {

@@ -117,7 +117,7 @@ export default function AdminDashboard() {
 
          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Revenue Chart */}
-            <div className="lg:col-span-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-6 shadow-sm relative overflow-hidden">
+            <div className="lg:col-span-3 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-6 shadow-sm relative overflow-hidden">
                <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none">
                   <TrendingUp size={100} />
                </div>
@@ -156,51 +156,6 @@ export default function AdminDashboard() {
                         <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
                      </AreaChart>
                   </ResponsiveContainer>
-               </div>
-            </div>
-
-            {/* Distribution */}
-            <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-6 shadow-sm overflow-hidden flex flex-col">
-               <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-500">
-                     <Globe size={16} />
-                  </div>
-                  <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-wider">Asset Distribution</h3>
-               </div>
-
-               <div className="flex-1 min-h-[160px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                     <PieChart>
-                        <Pie
-                           data={fleetDistribution}
-                           innerRadius={50}
-                           outerRadius={65}
-                           paddingAngle={6}
-                           dataKey="value"
-                           stroke="none"
-                        >
-                           {fleetDistribution.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                           ))}
-                        </Pie>
-                        <Tooltip
-                           contentStyle={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '8px' }}
-                           itemStyle={{ fontSize: '8px', fontWeight: 900, textTransform: 'uppercase' }}
-                        />
-                     </PieChart>
-                  </ResponsiveContainer>
-               </div>
-
-               <div className="mt-4 grid grid-cols-2 gap-3">
-                  {fleetDistribution.map((item, idx) => (
-                     <div key={item.name} className="flex flex-col gap-0.5">
-                        <div className="flex items-center gap-1.5">
-                           <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: COLORS[idx] }} />
-                           <span className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-wider leading-none">{item.name}</span>
-                        </div>
-                        <span className="text-sm font-black text-[var(--text-primary)] ml-3 tracking-tight">{item.value}</span>
-                     </div>
-                  ))}
                </div>
             </div>
          </div>

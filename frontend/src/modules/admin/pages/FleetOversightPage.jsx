@@ -199,7 +199,7 @@ export default function FleetOversightPage() {
             <table className="w-full">
                <thead>
                      <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
-                     {['Plate', 'VIN', 'Model', 'Franchise'].map((header) => (
+                     {['Plate', 'VIN', 'Model', 'Franchise', 'Action'].map((header) => (
                         <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                      ))}
                   </tr>
@@ -217,53 +217,53 @@ export default function FleetOversightPage() {
                            <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase">{vehicle.model || 'Flexigo Pro v2'}</span>
                         </td>
                         <td className="py-4 px-4 whitespace-nowrap">
-                           <div className="flex items-center justify-between group/cell">
-                              <span className="text-[10px] font-black uppercase tracking-tighter text-emerald-500 italic">
-                                 {vehicle.franchise?.hubName || 'Global Fleet'}
-                              </span>
-                              <div className="flex items-center gap-2 transition-all">
-                                 {vehicle.attachmentUrl ? (
-                                    <div className="flex items-center gap-1.5">
-                                       <a 
-                                         href={vehicle.attachmentUrl} 
-                                         target="_blank" 
-                                         rel="noopener noreferrer"
-                                         className="p-1.5 bg-emerald-500/10 text-emerald-500 rounded-lg hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
-                                         title="View Document"
-                                       >
-                                          <Eye size={12} strokeWidth={3} />
-                                       </a>
-                                       <a 
-                                         href={vehicle.attachmentUrl.replace('/upload/', '/upload/fl_attachment/')} 
-                                         download
-                                         className="p-1.5 bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-all shadow-sm"
-                                         title="Download Document"
-                                       >
-                                          <FileDown size={12} strokeWidth={3} />
-                                       </a>
-                                    </div>
-                                 ) : (
-                                    <label className="p-1.5 bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] rounded-lg hover:text-emerald-500 hover:border-emerald-500/50 border border-transparent transition-all cursor-pointer shadow-sm">
-                                       <input 
-                                         type="file" 
-                                         className="hidden" 
-                                         accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
-                                         onChange={async (e) => {
-                                           const file = e.target.files[0];
-                                           if (!file) return;
-                                           const reader = new FileReader();
-                                           reader.onload = async (event) => {
-                                             const base64 = event.target.result;
-                                             await useAdminDataStore.getState().updateVehicleAttachment(vehicle._id, base64);
-                                             alert("Document synced with registry ✓");
-                                           };
-                                           reader.readAsDataURL(file);
-                                         }}
-                                       />
-                                       <Paperclip size={12} strokeWidth={3} />
-                                    </label>
-                                 )}
-                              </div>
+                           <span className="text-[10px] font-black uppercase tracking-tighter text-emerald-500 italic">
+                              {vehicle.franchise?.hubName || 'Global Fleet'}
+                           </span>
+                        </td>
+                        <td className="py-4 px-4 whitespace-nowrap">
+                           <div className="flex items-center gap-2">
+                              {vehicle.attachmentUrl ? (
+                                 <div className="flex items-center gap-1.5">
+                                    <a 
+                                      href={vehicle.attachmentUrl} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="p-1.5 bg-emerald-500/10 text-emerald-500 rounded-lg hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
+                                      title="View Document"
+                                    >
+                                       <Eye size={12} strokeWidth={3} />
+                                    </a>
+                                    <a 
+                                      href={vehicle.attachmentUrl.replace('/upload/', '/upload/fl_attachment/')} 
+                                      download
+                                      className="p-1.5 bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-all shadow-sm"
+                                      title="Download Document"
+                                    >
+                                       <FileDown size={12} strokeWidth={3} />
+                                    </a>
+                                 </div>
+                              ) : (
+                                 <label className="p-1.5 bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] rounded-lg hover:text-emerald-500 hover:border-emerald-500/50 border border-transparent transition-all cursor-pointer shadow-sm">
+                                    <input 
+                                      type="file" 
+                                      className="hidden" 
+                                      accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
+                                      onChange={async (e) => {
+                                        const file = e.target.files[0];
+                                        if (!file) return;
+                                        const reader = new FileReader();
+                                        reader.onload = async (event) => {
+                                          const base64 = event.target.result;
+                                          await useAdminDataStore.getState().updateVehicleAttachment(vehicle._id, base64);
+                                          alert("Document synced with registry ✓");
+                                        };
+                                        reader.readAsDataURL(file);
+                                      }}
+                                    />
+                                    <Paperclip size={12} strokeWidth={3} />
+                                 </label>
+                              )}
                            </div>
                         </td>
                      </tr>

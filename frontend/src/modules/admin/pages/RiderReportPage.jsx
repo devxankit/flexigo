@@ -31,12 +31,13 @@ export default function RiderReportPage() {
   };
 
   const handleExport = () => {
-    const headers = ['Name', 'Phone', 'Vehicle Number', 'Active Plan', 'Total Payments', 'Wallet Balance', 'Status'];
+    const headers = ['Name', 'Phone', 'Source Franchise', 'Vehicle Number', 'Active Plan', 'Total Payments', 'Wallet Balance', 'Status'];
     const csvContent = [
       headers.join(','),
       ...filteredReport.map(r => [
         r.name, 
         r.phone, 
+        r.franchiseName || 'FLEXIGO',
         r.vehicleNumber, 
         r.activePlan, 
         r.totalPayments, 
@@ -121,7 +122,7 @@ export default function RiderReportPage() {
             <table className="w-full text-left">
                <thead>
                   <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
-                     {['Rider Details', 'Vehicle Info', 'Active Plan', 'Distance (KM)', 'Total Payments', 'Wallet', 'Status'].map((header) => (
+                     {['Rider Details', 'Source', 'Vehicle Info', 'Active Plan', 'Distance (KM)', 'Total Payments', 'Wallet', 'Status'].map((header) => (
                         <th key={header} className="py-3 px-4 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest whitespace-nowrap">{header}</th>
                      ))}
                   </tr>
@@ -139,6 +140,14 @@ export default function RiderReportPage() {
                                  <span className="text-[9px] font-bold text-[var(--text-tertiary)]">{r.phone}</span>
                               </div>
                            </div>
+                        </td>
+                        <td className="py-3 px-4 whitespace-nowrap">
+                           <div className="flex items-center gap-2">
+                              <ShieldCheck size={12} className={r.franchiseName && r.franchiseName !== 'FLEXIGO' ? 'text-blue-400' : 'text-emerald-500'} />
+                              <span className={`text-[10px] font-black uppercase tracking-widest ${r.franchiseName && r.franchiseName !== 'FLEXIGO' ? 'text-blue-400' : 'text-emerald-500'}`}>
+                                 {r.franchiseName || 'FLEXIGO'}
+                               </span>
+                            </div>
                         </td>
                         <td className="py-3 px-4 whitespace-nowrap">
                            <div className="flex items-center gap-2">
@@ -184,7 +193,7 @@ export default function RiderReportPage() {
                   ))}
                   {filteredReport.length === 0 && !isLoading && (
                     <tr>
-                      <td colSpan="6" className="py-12 text-center">
+                      <td colSpan="8" className="py-12 text-center">
                         <div className="flex flex-col items-center gap-2 opacity-50">
                            <Activity size={24} className="text-[var(--text-tertiary)]" />
                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">No Records Found Registry</span>
