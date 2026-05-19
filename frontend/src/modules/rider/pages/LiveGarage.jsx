@@ -18,21 +18,7 @@ export default function LiveGarage() {
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
   const [showScanner, setShowScanner] = useState(false);
-  const { setCurrentAddress } = useRideStore();
 
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        const { latitude, longitude } = position.coords;
-        const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (results, status) => {
-          if (status === 'OK' && results[0]) {
-            setCurrentAddress(results[0].formatted_address);
-          }
-        });
-      });
-    }
-  }, []);
 
   const handleUnlockVehicle = () => {
     setUnlocking();

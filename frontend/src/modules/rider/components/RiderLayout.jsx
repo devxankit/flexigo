@@ -11,32 +11,90 @@ import app, { requestForToken } from '../../../lib/firebase';
 import { useRiderNotificationStore } from '../store/notificationStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { Bell, X, RefreshCw } from 'lucide-react';
+import { X, RefreshCw } from 'lucide-react';
 
 export function RiderLayout() {
   const { pathname } = useLocation();
   const { theme } = useThemeStore();
-  const { setCurrentAddress } = useRideStore();
+  const { applyLiveLocation, updateLocation } = useRideStore();
+  const { fetchProfile, user } = useAuthStore();
   const { addNotification } = useRiderNotificationStore();
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
-    // Live Location Fetcher
-    if ("geolocation" in navigator) {
-      const watchId = navigator.geolocation.watchPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          const address = await reverseGeocode(latitude, longitude);
-          if (address) {
-            setCurrentAddress(address);
-          }
-        },
-        (error) => console.error("Location Error:", error),
-        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-      );
-      return () => navigator.geolocation.clearWatch(watchId);
+    if (user?.phone) {
+      fetchProfile();
     }
-  }, []);
+  }, [user?.phone, fetchProfile]);
+
+  useEffect(() => {
+    // Live Location Fetcher with continuous polling
+    if ("geolocation" in navigator) {
+      const handleLocationSuccess = async (position) => {
+        try {
+          let { latitude, longitude } = position.coords;
+          
+          // Use actual GPS coordinates without any location override
+          console.log("✅ GPS Acquired:", latitude, longitude);
+          
+          // 1. Try reverse geocode but have fallback ready
+          let finalAddress = `GPS: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+          try {
+            const address = await reverseGeocode(latitude, longitude);
+            if (address) {
+              finalAddress = address;
+            }
+          } catch (geoErr) {
+            console.warn("Geocoding failed, using GPS fallback:", geoErr);
+          }
+          
+          applyLiveLocation({ latitude, longitude, address: finalAddress });
+          console.log("📍 Address updated:", finalAddress);
+          
+          // 2. Database update: sync coordinates so admin panels map immediately
+          try {
+            await updateLocation(latitude, longitude, finalAddress);
+            console.log("✅ Location synced to backend");
+          } catch (apiErr) {
+            console.error("❌ Backend location sync failed:", apiErr);
+          }
+        } catch (err) {
+          console.error("❌ Location processing error:", err);
+        }
+      };
+
+      const handleLocationError = (error) => {
+        console.error("❌ Location Acquisition Error:", error);
+        // Robust fallback: try acquiring location once using low-accuracy cellular/wifi
+        navigator.geolocation.getCurrentPosition(
+          handleLocationSuccess,
+          (err) => console.error("❌ Fallback Geolocation Error:", err),
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      };
+
+      // Watch position continuously with HIGH ACCURACY
+      const watchId = navigator.geolocation.watchPosition(
+        handleLocationSuccess,
+        handleLocationError,
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+      );
+
+      // ALSO poll every 5 seconds to ensure continuous updates
+      const pollInterval = setInterval(() => {
+        navigator.geolocation.getCurrentPosition(
+          handleLocationSuccess,
+          handleLocationError,
+          { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+        );
+      }, 5000);
+
+      return () => {
+        navigator.geolocation.clearWatch(watchId);
+        clearInterval(pollInterval);
+      };
+    }
+  }, [applyLiveLocation, updateLocation]);
 
   useEffect(() => {
     // Save FCM Token for real-time notifications

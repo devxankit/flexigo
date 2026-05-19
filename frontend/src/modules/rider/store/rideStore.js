@@ -8,16 +8,55 @@ export const useRideStore = create((set, get) => ({
     model: 'Flexigo S1 Pro',
     battery: 87,
     range: 94,
-    location: 'Hub A - Koramangala',
+    location: 'Detecting location...',
     plateNumber: 'KA 05 EV 1234',
   },
-  currentAddress: 'Detecting Location...',
+  currentAddress: 'Detecting location...',
+  currentCoords: null,
+  lastLocationUpdatedAt: 0,
   activeRide: null,
   rideHistory: [],
   hubs: [],
   hubLoading: true,
 
   setCurrentAddress: (address) => set({ currentAddress: address }),
+  applyLiveLocation: ({ latitude, longitude, address, updatedAt = Date.now() }) =>
+    set((state) => ({
+      currentAddress: address || state.currentAddress,
+      currentCoords:
+        latitude !== undefined && longitude !== undefined
+          ? { latitude, longitude }
+          : state.currentCoords,
+      lastLocationUpdatedAt: updatedAt,
+      vehicle: {
+        ...state.vehicle,
+        location: address || state.vehicle.location,
+      },
+    })),
+  syncProfileLocation: (location) => {
+    if (!location?.address) return;
+
+    const state = get();
+    const profileUpdatedAt = location.updatedAt ? new Date(location.updatedAt).getTime() : 0;
+
+    // Prefer the fresher live GPS location already captured on device.
+    if (state.lastLocationUpdatedAt && state.lastLocationUpdatedAt >= profileUpdatedAt) {
+      return;
+    }
+
+    set((currentState) => ({
+      currentAddress: location.address,
+      currentCoords:
+        location.lat !== undefined && location.lng !== undefined
+          ? { latitude: location.lat, longitude: location.lng }
+          : currentState.currentCoords,
+      lastLocationUpdatedAt: profileUpdatedAt || currentState.lastLocationUpdatedAt,
+      vehicle: {
+        ...currentState.vehicle,
+        location: location.address,
+      },
+    }));
+  },
 
   startRide: () => {
     const startTime = Date.now();
@@ -88,6 +127,64 @@ export const useRideStore = create((set, get) => ({
       }
     } catch (err) {
       console.error("Failed to fetch vehicle:", err);
+    }
+  },
+  
+  updateLocation: async (lat, lng, address) => {
+    try {
+      const riderAuth = localStorage.getItem('rider-auth');
+      if (!riderAuth) {
+        console.error('❌ No rider auth token found in localStorage');
+        return;
+      }
+      
+      console.log('📡 Sending location to backend:', { lat, lng, address });
+      
+      const requestTimestamp = Date.now();
+
+      // ALWAYS update UI with fresh GPS location first.
+      get().applyLiveLocation({
+        latitude: lat,
+        longitude: lng,
+        address,
+        updatedAt: requestTimestamp,
+      });
+      
+      const res = await api.patch('/rider/location', { latitude: lat, longitude: lng, address });
+      console.log('✅ Location update response:', res.data);
+      
+      // Log detailed response data
+      if (res.data.data) {
+        console.log('📍 Location Data:', res.data.data.location);
+        console.log('🚴 Total Distance:', res.data.data.totalDistance, 'km');
+        console.log('⚡ Current Speed:', res.data.data.currentSpeed, 'km/h');
+        
+        // Update store with backend response data
+        const latestState = get();
+        const responseTimestamp = res.data.data.location.updatedAt
+          ? new Date(res.data.data.location.updatedAt).getTime()
+          : requestTimestamp;
+        const latestCoords = latestState.currentCoords;
+        const isSameCoordinateSample =
+          latestCoords &&
+          Math.abs(latestCoords.latitude - lat) < 0.0001 &&
+          Math.abs(latestCoords.longitude - lng) < 0.0001;
+
+        // Ignore delayed/stale backend echoes if a newer live GPS sample already exists.
+        if (isSameCoordinateSample || latestState.lastLocationUpdatedAt <= responseTimestamp) {
+          latestState.applyLiveLocation({
+            latitude: lat,
+            longitude: lng,
+            address: res.data.data.location.address || address,
+            updatedAt: responseTimestamp,
+          });
+        }
+      }
+      
+      return res.data;
+    } catch (err) {
+      console.error("❌ Failed to update rider location:", err.message);
+      console.error("Full error:", err.response?.data || err);
     }
   },
   

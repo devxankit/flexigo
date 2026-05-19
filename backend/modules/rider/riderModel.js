@@ -77,6 +77,7 @@ const RiderSchema = new mongoose.Schema({
   lastLocation: {
     lat: Number,
     lng: Number,
+    address: String,
     updatedAt: Date
   },
   currentSpeed: {

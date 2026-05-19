@@ -191,6 +191,11 @@ export default function GeoFencingPage() {
     fetchGeofences();
     fetchSubscriberData();
     
+    // Real-time telemetry sync: poll database every 5 seconds for updated rider locations!
+    const pollInterval = setInterval(() => {
+       fetchGeofences();
+    }, 5000);
+    
     // Set map center to user's current location if available
     if (navigator.geolocation) {
        navigator.geolocation.getCurrentPosition((pos) => {
@@ -205,6 +210,8 @@ export default function GeoFencingPage() {
     if (Notification.permission === "default") {
        Notification.requestPermission();
     }
+    
+    return () => clearInterval(pollInterval);
   }, [map]);
 
   useEffect(() => {
@@ -723,6 +730,14 @@ export default function GeoFencingPage() {
                               {/* Render All Riders with liveLocation */}
                               {!isModalOpen && !selectedZone && allRiders.map(rider => {
                                  const gf = geofences.find(g => (g.riderId?._id || g.riderId) === (rider._id || rider.id));
+                                 
+                                 // Clean up the map: only render active riders that are geofenced or have a real live location!
+                                 const hasRealLocation = rider?.lastLocation && 
+                                    ((rider.lastLocation.lat !== undefined && rider.lastLocation.lat !== null && rider.lastLocation.lat !== 0) || 
+                                     (rider.lastLocation.latitude !== undefined && rider.lastLocation.latitude !== null && rider.lastLocation.latitude !== 0));
+                                 
+                                 if (!hasRealLocation && !gf) return null;
+                                 
                                  const riderLoc = getRiderLiveLocation(rider, gf);
                                  if (!riderLoc) return null;
                                  return (

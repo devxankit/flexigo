@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import api from '../../../lib/axios';
 import { useWalletStore } from './walletStore';
 import { useSubscriptionStore } from './subscriptionStore';
+import { useRideStore } from './rideStore';
 
 export const useAuthStore = create(
   persist(
@@ -102,6 +103,11 @@ export const useAuthStore = create(
           const res = await api.get(`/rider/profile/${user.phone}`);
           if (res.data.success) {
             set({ user: res.data.rider, kycStatus: res.data.rider.kycStatus });
+            
+            // Sync only if profile location is fresher than current live GPS state
+            if (res.data.rider.lastLocation && res.data.rider.lastLocation.address) {
+              useRideStore.getState().syncProfileLocation(res.data.rider.lastLocation);
+            }
             
             // Sync with other stores
             if (res.data.rider.walletBalance !== undefined) {

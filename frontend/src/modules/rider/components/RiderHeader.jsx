@@ -3,6 +3,7 @@ import logo from '../../../assets/logo.png';
 import { useRideStore } from '../store/rideStore';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
+import { useState } from 'react';
 
 export function RiderHeader() {
   const navigate = useNavigate();
@@ -10,6 +11,14 @@ export function RiderHeader() {
   const { user } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
   const { setDiagnosticsOpen, currentAddress, vehicle } = useRideStore();
+  const [isSimulating, setIsSimulating] = useState(localStorage.getItem('simulate_location') === 'true');
+
+  const handleToggleSimulation = async (e) => {
+     e.stopPropagation();
+     // Disable simulation toggle - always use real GPS location
+     console.warn('Location simulation disabled - using real GPS only');
+     return;
+  };
 
   const isVehicleAssigned = vehicle?.id && vehicle.id !== 'FLX-PENDING';
   const hasLowBattery = vehicle?.battery < 20 && isVehicleAssigned;
@@ -38,10 +47,16 @@ export function RiderHeader() {
           }`}>
             Flexi<span className="text-flexigo-teal">Go</span>
           </span>
-          <div className="flex items-center gap-1 mt-0.5">
-             <div className="w-1 h-1 rounded-full bg-flexigo-teal animate-pulse" />
+          <div 
+             onClick={handleToggleSimulation}
+             className="flex items-center gap-1 mt-0.5 cursor-pointer hover:opacity-85 active:scale-95 transition-all bg-white/5 border border-white/05 px-1.5 py-0.5 rounded-md hover:bg-emerald-500/10"
+             title="Real-time location tracking active"
+          >
+             <div className={`w-1 h-1 rounded-full animate-pulse ${
+                isSimulating ? 'bg-amber-400 shadow-[0_0_8px_#fbbf24]' : 'bg-flexigo-teal shadow-[0_0_8px_#39FF14]'
+             }`} />
              <span className="text-[7.5px] text-gray-400 font-black uppercase tracking-widest truncate max-w-[120px] italic">
-                {currentAddress}
+                {currentAddress} {isSimulating ? '• SIMULATED' : ''}
              </span>
           </div>
         </div>

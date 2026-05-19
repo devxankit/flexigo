@@ -32,7 +32,7 @@ export default function HomeDashboard() {
   const { user } = useAuthStore();
   const { activePlan } = useSubscriptionStore();
   const { balance } = useWalletStore();
-  const { vehicle, isDiagnosticsOpen, setDiagnosticsOpen, hubs, hubLoading, fetchHubs, currentAddress, setCurrentAddress, fetchMyVehicle } = useRideStore();
+  const { vehicle, isDiagnosticsOpen, setDiagnosticsOpen, hubs, hubLoading, fetchHubs, currentAddress, setCurrentAddress, fetchMyVehicle, updateLocation } = useRideStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [coords, setCoords] = useState(null);
   const isDark = theme === 'dark';
@@ -41,29 +41,6 @@ export default function HomeDashboard() {
     // Initial fetch
     fetchHubs();
     if (user?.phone) fetchMyVehicle(user.phone);
-    
-    // Get live location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        const { latitude, longitude } = position.coords;
-        setCoords({ latitude, longitude });
-        
-        // Fetch hubs again with coordinates for backend sorting
-        fetchHubs(latitude, longitude);
-        
-        // Reverse geocoding - with safety check for Google Maps script
-        if (window.google && window.google.maps && window.google.maps.Geocoder) {
-          const geocoder = new window.google.maps.Geocoder();
-          geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (results, status) => {
-            if (status === 'OK' && results[0]) {
-              setCurrentAddress(results[0].formatted_address);
-            }
-          });
-        }
-      }, (err) => {
-        console.error("Location Error:", err);
-      }, { enableHighAccuracy: true });
-    }
   }, []);
 
   // Use Dynamic Hubs OR Fallback to Mocks if DB is empty after loading

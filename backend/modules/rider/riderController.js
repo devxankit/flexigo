@@ -308,7 +308,7 @@ export const getMyVehicle = async (req, res) => {
         model: vehicle.model || 'Flexigo S1 Pro',
         battery: vehicle.battery || 0,
         range: vehicle.range || 0,
-        location: 'In Transit',
+        location: rider.lastLocation?.address || 'In Transit',
         plateNumber: vehicle.plate,
         images: vehicle.images,
         activeDuty: 142
@@ -375,7 +375,7 @@ export const verifyPayment = async (req, res) => {
 
 export const updateRiderLocation = async (req, res) => {
   try {
-    const { latitude, longitude, speed } = req.body;
+    const { latitude, longitude, speed, address } = req.body;
     const riderId = req.rider._id;
     const rider = await Rider.findById(riderId);
     if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
@@ -388,15 +388,22 @@ export const updateRiderLocation = async (req, res) => {
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     };
 
-    if (rider.lastLocation && rider.lastLocation.latitude) {
+    if (rider.lastLocation && (rider.lastLocation.lat || rider.lastLocation.latitude)) {
       const prev = rider.lastLocation;
-      const d = getDist(prev.latitude, prev.longitude, latitude, longitude);
+      const prevLat = prev.lat || prev.latitude;
+      const prevLng = prev.lng || prev.longitude;
+      const d = getDist(prevLat, prevLng, latitude, longitude);
       if (d > 0.01 && d < 5) { // Thresholds to avoid GPS noise and teleportation
         rider.totalDistance = (rider.totalDistance || 0) + d;
       }
     }
 
-    rider.lastLocation = { latitude, longitude, timestamp: new Date() };
+    rider.lastLocation = {
+      lat: latitude,
+      lng: longitude,
+      address: address || (rider.lastLocation?.address || ''),
+      updatedAt: new Date()
+    };
     if (speed !== undefined) rider.currentSpeed = speed;
     await rider.save();
 
@@ -413,7 +420,22 @@ export const updateRiderLocation = async (req, res) => {
         if (rider.fcmTokenMobile) await sendPushNotification(rider.fcmTokenMobile, 'Safety Alert', msg, { type: 'geofence_breach', fenceId: fence._id.toString() });
       }
     }
-    res.status(200).json({ success: true, message: 'Location updated' });
+    
+    res.status(200).json({ 
+      success: true, 
+      message: 'Location updated',
+      data: {
+        location: {
+          latitude: latitude,
+          longitude: longitude,
+          address: rider.lastLocation.address,
+          updatedAt: rider.lastLocation.updatedAt
+        },
+        totalDistance: rider.totalDistance,
+        currentSpeed: rider.currentSpeed,
+        riderId: rider._id
+      }
+    });
   } catch (error) { res.status(500).json({ success: false, message: error.message }); }
 };
 // @desc    Request Vehicle Handover
