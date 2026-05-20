@@ -702,6 +702,9 @@ export default function GeoFencingPage() {
                                         />
                                         <MarkerF 
                                            position={finalLoc}
+                                           onClick={() => {
+                                              window.open(`https://www.google.com/maps?q=${finalLoc.lat},${finalLoc.lng}`, '_blank');
+                                           }}
                                            icon={{
                                               url: 'https://maps.google.com/mapfiles/ms/icons/motorcycling.png'
                                            }}
