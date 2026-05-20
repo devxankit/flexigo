@@ -87,7 +87,10 @@ export default function FleetOversightPage() {
           headers.forEach((header, index) => {
             if (header && row[index] !== undefined) {
               let key = header;
-              if (key === 'franshise' || key === 'hub' || key === 'branch') key = 'franchise';
+              if (key === 'pate' || key === 'plate_number' || key === 'plate') key = 'plate';
+              if (key === 'franshise' || key === 'hub' || key === 'branch' || key === 'franchise') key = 'franchise';
+              if (key === 'chasis no' || key === 'chasis_no' || key === 'chassis number' || key === 'chassis_number' || key === 'chassis no' || key === 'chassis') key = 'chassisNo';
+              if (key === 'hsn number' || key === 'hsn_number' || key === 'hsn') key = 'hsnNumber';
               obj[key] = String(row[index]).trim();
             }
           });
@@ -199,7 +202,7 @@ export default function FleetOversightPage() {
             <table className="w-full">
                <thead>
                      <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
-                     {['Plate', 'VIN', 'Model', 'Franchise', 'Action'].map((header) => (
+                     {['Plate', 'VIN', 'Model', 'Franchise', 'Chassis No', 'HSN Number', 'Action'].map((header) => (
                         <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                      ))}
                   </tr>
@@ -220,6 +223,12 @@ export default function FleetOversightPage() {
                            <span className="text-[10px] font-black uppercase tracking-tighter text-emerald-500 italic">
                               {vehicle.franchise?.hubName || 'Global Fleet'}
                            </span>
+                        </td>
+                        <td className="py-4 px-4 whitespace-nowrap">
+                           <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase">{vehicle.chassisNo || '--'}</span>
+                        </td>
+                        <td className="py-4 px-4 whitespace-nowrap">
+                           <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase">{vehicle.hsnNumber || '--'}</span>
                         </td>
                         <td className="py-4 px-4 whitespace-nowrap">
                            <div className="flex items-center gap-2">
@@ -310,7 +319,7 @@ export default function FleetOversightPage() {
                     <Zap size={24} className={isUploading ? 'animate-bounce' : ''} />
                   </div>
                   <h4 className="text-xs font-black text-[var(--text-primary)] uppercase tracking-widest mb-1 italic">Drop CSV / Excel Registry</h4>
-                  <p className="text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest mb-6 opacity-60">Columns: plate, vin, model, franchise</p>
+                  <p className="text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest mb-6 opacity-60">Columns: plate, vin, model, franchise, chasis no, hsn number</p>
                   
                   <label className="cursor-pointer">
                     <span className="px-8 py-3 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-[0_10px_20px_-5px_rgba(16,185,129,0.4)] hover:bg-emerald-500 transition-all active:scale-95 block italic">

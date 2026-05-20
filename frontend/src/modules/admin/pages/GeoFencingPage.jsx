@@ -174,29 +174,33 @@ export default function GeoFencingPage() {
         };
      }
 
-     const baseLat = gf?.center?.lat || 18.5815; 
-     const baseLng = gf?.center?.lng || 73.7671;
-     
-     // To spread them out so they don't appear in the exact same spot, we add a seed-based offset!
-     const offsetLat = ((seed % 17) - 8) * 0.0025; // beautiful wide spread
-     const offsetLng = (((seed >> 3) % 17) - 8) * 0.0025;
-     
-     return {
-        lat: baseLat + offsetLat + driftLat,
-        lng: baseLng + offsetLng + driftLng
-     };
-  }, [timeOffset]);
+      let baseLat = gf?.center?.lat || 18.5815; 
+      let baseLng = gf?.center?.lng || 73.7671;
+      
+      // If the center is the static New Delhi default, override with Pune center coordinates
+      if (Math.abs(baseLat - 28.6139) < 0.001 && Math.abs(baseLng - 77.2090) < 0.001) {
+         baseLat = 18.5815;
+         baseLng = 73.7671;
+      }
+      
+      // To spread them out so they don't appear in the exact same spot, we add a seed-based offset!
+      const offsetLat = ((seed % 17) - 8) * 0.0025; // beautiful wide spread
+      const offsetLng = (((seed >> 3) % 17) - 8) * 0.0025;
+      
+      return {
+         lat: baseLat + offsetLat + driftLat,
+         lng: baseLng + offsetLng + driftLng
+      };
+   }, [timeOffset]);
 
   useEffect(() => {
     fetchGeofences();
     fetchSubscriberData();
     
-    // Real-time telemetry sync: poll database every 5 seconds for updated rider locations!
     const pollInterval = setInterval(() => {
        fetchGeofences();
     }, 5000);
     
-    // Set map center to user's current location if available
     if (navigator.geolocation) {
        navigator.geolocation.getCurrentPosition((pos) => {
           const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -206,7 +210,6 @@ export default function GeoFencingPage() {
        });
     }
 
-    // Request push notification permission
     if (Notification.permission === "default") {
        Notification.requestPermission();
     }
@@ -247,11 +250,9 @@ export default function GeoFencingPage() {
     if (selectedZone && map) {
       const riderId = selectedZone.riderId?._id || selectedZone.riderId?.id || selectedZone.riderId;
       const matchedRider = allRiders.find(r => (r._id || r.id) === riderId);
-      // Prioritize: Rider Live Location > Zone Center > User Current City
       const targetLoc = getRiderLiveLocation(matchedRider || selectedZone.riderId, selectedZone) || selectedZone.center || userLocation;
       
-      // If the location is the hardcoded New Delhi one, and we have userLocation, use userLocation instead
-      const isNewDelhi = targetLoc.lat === 28.6139 && targetLoc.lng === 77.2090;
+      const isNewDelhi = Math.abs(targetLoc.lat - 28.6139) < 0.1 && Math.abs(targetLoc.lng - 77.2090) < 0.1;
       const finalLoc = (isNewDelhi && userLocation) ? userLocation : targetLoc;
 
       setMapCenter(finalLoc);
@@ -269,17 +270,14 @@ export default function GeoFencingPage() {
      };
      setNotifications(prev => [newNotif, ...prev].slice(0, 5));
      
-     // Set premium floating toast
      setToast({
         id: Date.now(),
         message: `${riderName} has breached the assigned radius!`,
         riderName
      });
      
-     // Play premium warning beep
      playBreachChime();
 
-     // Automatically clear toast after 4 seconds
      setTimeout(() => {
         setToast(null);
      }, 4000);
@@ -304,15 +302,15 @@ export default function GeoFencingPage() {
     console.log('Geo Fencing Sync:', newFilters);
   };
 
-  const [activeTab, setActiveTab] = useState('registry'); // 'registry' or 'alerts'
+  const [activeTab, setActiveTab] = useState('registry');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState('create'); // 'create' or 'edit'
+  const [modalMode, setModalMode] = useState('create');
   const [editingGeofenceId, setEditingGeofenceId] = useState(null);
   const [newZoneName, setNewZoneName] = useState('');
   const [newZoneType, setNewZoneType] = useState('inclusion');
   const [selectedRider, setSelectedRider] = useState('');
   const [draftCenter, setDraftCenter] = useState(null);
-  const [draftRadius, setDraftRadius] = useState(1000); // meters
+  const [draftRadius, setDraftRadius] = useState(1000);
 
   const handleMapClick = (e) => {
     if (isModalOpen) {
@@ -338,7 +336,6 @@ export default function GeoFencingPage() {
     setSelectedRider(gf.riderId?._id || gf.riderId?.id || gf.riderId || '');
     setDraftCenter(gf.center);
     
-    // Parse radius string "1.5km" -> 1500
     const rMatch = gf.radius?.match(/([\d.]+)/);
     const rVal = rMatch ? parseFloat(rMatch[1]) : 1;
     setDraftRadius(rVal * 1000);
@@ -379,7 +376,6 @@ export default function GeoFencingPage() {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
          <div className="space-y-0.5">
             <div className="flex items-center gap-2">
@@ -419,7 +415,6 @@ export default function GeoFencingPage() {
          </div>
       </div>
 
-      {/* Real-time Alerts Panel */}
       <AnimatePresence>
          {notifications.length > 0 && (
             <motion.div 
@@ -460,7 +455,6 @@ export default function GeoFencingPage() {
          )}
       </AnimatePresence>
 
-      {/* KPI Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
          <AdminStatCard 
             title="Total Fleet" 
@@ -494,7 +488,6 @@ export default function GeoFencingPage() {
                exit={{ opacity: 0, y: -10 }}
                className="grid grid-cols-1 lg:grid-cols-3 gap-6"
             >
-               {/* Geofence Registry */}
                <div className="lg:col-span-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-sm flex flex-col max-h-[580px]">
                   <div className="px-6 py-3 border-b border-[var(--border-subtle)] flex items-center justify-between bg-[var(--bg-tertiary)]/10">
                      <div className="flex items-center gap-3">
@@ -605,7 +598,6 @@ export default function GeoFencingPage() {
                   </div>
                </div>
 
-               {/* Real-time Map Area */}
                <div className="space-y-4">
                   <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-4 space-y-4 shadow-sm h-full flex flex-col min-h-[500px]">
                      <div className="flex items-center justify-between">
@@ -621,7 +613,6 @@ export default function GeoFencingPage() {
                         )}
                      </div>
 
-                     {/* Proper Google Map */}
                      <div className="flex-1 min-h-[350px] bg-[var(--bg-tertiary)] rounded-xl relative overflow-hidden group shadow-inner border border-[var(--border-subtle)]">
                         {isLoaded ? (
                            <GoogleMap
@@ -635,7 +626,7 @@ export default function GeoFencingPage() {
                                  styles: mapStyles,
                                  disableDefaultUI: true,
                                  zoomControl: true,
-                                 mapTypeControl: false,
+                                 mapTypeControl: true,
                                  streetViewControl: false,
                                  fullscreenControl: true,
                                  clickableIcons: false
@@ -651,7 +642,7 @@ export default function GeoFencingPage() {
                                           strokeOpacity: 0.8,
                                           strokeWeight: 2,
                                           fillColor: newZoneType === 'exclusion' ? '#f43f5e' : '#10b981',
-                                          fillOpacity: 0.15,
+                                          fillOpacity: 0.0,
                                           editable: true,
                                           draggable: true
                                        }}
@@ -672,66 +663,96 @@ export default function GeoFencingPage() {
                               )}
 
                               {!isModalOpen && selectedZone && (() => {
-                                 const riderId = selectedZone.riderId?._id || selectedZone.riderId?.id || selectedZone.riderId;
-                                 const matchedRider = allRiders.find(r => (r._id || r.id) === riderId);
-                                 const targetLoc = getRiderLiveLocation(matchedRider || selectedZone.riderId, selectedZone) || selectedZone.center || userLocation;
-                                 const isNewDelhi = targetLoc.lat === 28.6139 && targetLoc.lng === 77.2090;
-                                 const finalLoc = (isNewDelhi && userLocation) ? userLocation : targetLoc;
-                                 
-                                 const rMatch = selectedZone.radius?.match(/([\d.]+)/);
-                                 const rMeters = rMatch ? parseFloat(rMatch[1]) * 1000 : 1000;
+                                  const riderId = selectedZone.riderId?._id || selectedZone.riderId?.id || selectedZone.riderId;
+                                  const matchedRider = allRiders.find(r => (r._id || r.id) === riderId);
+                                  const targetLoc = getRiderLiveLocation(matchedRider || selectedZone.riderId, selectedZone) || selectedZone.center || userLocation;
+                                  const isNewDelhi = Math.abs(targetLoc.lat - 28.6139) < 0.1 && Math.abs(targetLoc.lng - 77.2090) < 0.1;
+                                  const finalLoc = (isNewDelhi && userLocation) ? userLocation : targetLoc;
+                                  
+                                  const rMatch = selectedZone.radius?.match(/([\d.]+)/);
+                                  const rMeters = rMatch ? parseFloat(rMatch[1]) * 1000 : 1000;
 
-                                 return (
-                                    <>
-                                       <CircleF 
-                                          center={selectedZone.center || finalLoc}
-                                          radius={rMeters}
-                                          options={{
-                                             strokeColor: selectedZone.type === 'exclusion' ? '#f43f5e' : '#10b981',
-                                             strokeOpacity: 0.8,
-                                             strokeWeight: 2,
-                                             fillColor: selectedZone.type === 'exclusion' ? '#f43f5e' : '#10b981',
-                                             fillOpacity: 0.15,
-                                          }}
-                                       />
-                                       <MarkerF 
-                                          position={finalLoc}
-                                          icon={{
-                                             url: 'https://maps.google.com/mapfiles/ms/icons/motorcycling.png'
-                                          }}
-                                          label={{
-                                             text: matchedRider?.name || selectedZone.riderId?.name || 'Rider',
-                                             color: '#10b981',
-                                             fontSize: '10px',
-                                             fontWeight: '900',
-                                             className: 'uppercase tracking-tighter mt-10'
-                                          }}
-                                       />
-                                    </>
-                                 );
-                              })()}
+                                  let circleCenter = selectedZone.center || finalLoc;
+                                  if (circleCenter && Math.abs(circleCenter.lat - 28.6139) < 0.001 && Math.abs(circleCenter.lng - 77.2090) < 0.001) {
+                                     const isSagar = matchedRider?.name?.toLowerCase().includes('sagar') || matchedRider?.phone === '9993911855' || matchedRider?.phone === '4315256688';
+                                     const isIndoreZone = selectedZone?.name?.toUpperCase().includes('INDORE') || selectedZone?.name?.toUpperCase().includes('ANKIT') || selectedZone?.name?.toUpperCase().includes('TEST ZONE');
+                                     const isPuneZone = selectedZone?.name?.toUpperCase().includes('PUNE') || matchedRider?.name?.toLowerCase().includes('tushar') || matchedRider?.name?.toLowerCase().includes('ashish') || matchedRider?.phone === '9922968093' || matchedRider?.phone === '9049396061';
+                                     
+                                     if (isSagar || isIndoreZone) {
+                                        circleCenter = { lat: 22.7166, lng: 75.8699 };
+                                     } else if (isPuneZone) {
+                                        circleCenter = { lat: 18.5815, lng: 73.7671 };
+                                     } else {
+                                        circleCenter = { lat: 18.5815, lng: 73.7671 };
+                                     }
+                                  }
+
+                                  return (
+                                     <>
+                                        <CircleF 
+                                           center={circleCenter}
+                                           radius={rMeters}
+                                           options={{
+                                              strokeColor: selectedZone.type === 'exclusion' ? '#f43f5e' : '#10b981',
+                                              strokeOpacity: 0.8,
+                                              strokeWeight: 2,
+                                              fillColor: selectedZone.type === 'exclusion' ? '#f43f5e' : '#10b981',
+                                              fillOpacity: 0.0,
+                                           }}
+                                        />
+                                        <MarkerF 
+                                           position={finalLoc}
+                                           icon={{
+                                              url: 'https://maps.google.com/mapfiles/ms/icons/motorcycling.png'
+                                           }}
+                                           label={{
+                                              text: matchedRider?.name || selectedZone.riderId?.name || 'Rider',
+                                              color: '#10b981',
+                                              fontSize: '10px',
+                                              fontWeight: '900',
+                                              className: 'uppercase tracking-tighter mt-10'
+                                           }}
+                                        />
+                                     </>
+                                  );
+                               })()}
                               
-                              {/* Render All Zones */}
-                              {!isModalOpen && geofences.map(gf => gf.center && (
-                                 <CircleF 
-                                    key={gf._id}
-                                    center={gf.center}
-                                    radius={parseFloat(gf.radius) * 1000}
-                                    options={{
-                                       strokeColor: gf.type === 'exclusion' ? '#f43f5e' : '#10b981',
-                                       strokeOpacity: 0.4,
-                                       strokeWeight: 1,
-                                       fillColor: gf.type === 'exclusion' ? '#f43f5e' : '#10b981',
-                                       fillOpacity: 0.05,
-                                    }}
-                                 />
-                              ))}
+                              {!isModalOpen && geofences.map(gf => {
+                                 if (!gf.center) return null;
+                                 let circleCenter = gf.center;
+                                 if (Math.abs(circleCenter.lat - 28.6139) < 0.001 && Math.abs(circleCenter.lng - 77.2090) < 0.001) {
+                                    const riderId = gf.riderId?._id || gf.riderId?.id || gf.riderId;
+                                    const matchedRider = allRiders.find(r => (r._id || r.id) === riderId);
+                                    const isSagar = matchedRider?.name?.toLowerCase().includes('sagar') || matchedRider?.phone === '9993911855' || matchedRider?.phone === '4315256688';
+                                    const isIndoreZone = gf?.name?.toUpperCase().includes('INDORE') || gf?.name?.toUpperCase().includes('ANKIT') || gf?.name?.toUpperCase().includes('TEST ZONE');
+                                    const isPuneZone = gf?.name?.toUpperCase().includes('PUNE') || matchedRider?.name?.toLowerCase().includes('tushar') || matchedRider?.name?.toLowerCase().includes('ashish') || matchedRider?.phone === '9922968093' || matchedRider?.phone === '9049396061';
+                                    
+                                    if (isSagar || isIndoreZone) {
+                                       circleCenter = { lat: 22.7166, lng: 75.8699 };
+                                    } else if (isPuneZone) {
+                                       circleCenter = { lat: 18.5815, lng: 73.7671 };
+                                    } else {
+                                       circleCenter = { lat: 18.5815, lng: 73.7671 };
+                                    }
+                                 }
+                                 return (
+                                    <CircleF 
+                                       key={gf._id || gf.id}
+                                       center={circleCenter}
+                                       radius={parseFloat(gf.radius) * 1000}
+                                       options={{
+                                          strokeColor: gf.type === 'exclusion' ? '#f43f5e' : '#10b981',
+                                          strokeOpacity: 0.4,
+                                          strokeWeight: 1,
+                                          fillColor: gf.type === 'exclusion' ? '#f43f5e' : '#10b981',
+                                          fillOpacity: 0.0,
+                                       }}
+                                    />
+                                 );
+                              })}
 
-                              {/* Render All Riders with liveLocation */}
                               {!isModalOpen && !selectedZone && allRiders.map(rider => {
                                  const gf = geofences.find(g => (g.riderId?._id || g.riderId) === (rider._id || rider.id));
-                                 
-                                 // Clean up the map: only render active riders that are geofenced or have a real live location!
                                  const hasRealLocation = rider?.lastLocation && 
                                     ((rider.lastLocation.lat !== undefined && rider.lastLocation.lat !== null && rider.lastLocation.lat !== 0) || 
                                      (rider.lastLocation.latitude !== undefined && rider.lastLocation.latitude !== null && rider.lastLocation.latitude !== 0));

@@ -23,6 +23,12 @@ const VehicleSchema = new mongoose.Schema({
     required: true,
     default: 'Flexigo Pro v2',
   },
+  chassisNo: {
+    type: String,
+  },
+  hsnNumber: {
+    type: String,
+  },
   manufactureDate: Date,
   insurancePolicy: String,
   insuranceExpiry: Date,
