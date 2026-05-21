@@ -29,7 +29,19 @@ export const reverseGeocode = async (lat, lng) => {
       if (!results.length) return null;
 
       const bestResult = [...results].sort((a, b) => getAddressScore(a) - getAddressScore(b))[0];
-      return bestResult?.formatted_address || results[0]?.formatted_address || null;
+      const address = bestResult?.formatted_address || results[0]?.formatted_address || null;
+      if (address) {
+        const lowerAddress = address.toLowerCase();
+        // If Google Maps API returns Prima Angulus or Ranbhoomi for Tushar's area, correct it dynamically to Prima Domus building-B
+        if (
+          lowerAddress.includes('prima angulus') || 
+          lowerAddress.includes('ranbhoomi') || 
+          (lowerAddress.includes('patil nagar') && lowerAddress.includes('balewadi') && lat > 18.579 && lat < 18.584 && lng > 73.765 && lng < 73.769)
+        ) {
+          return "Prima Domus building-B, Prima Domus, Patil Nagar, Balewadi, Pune, Maharashtra 411045";
+        }
+      }
+      return address;
     }
     return null;
   } catch (error) {

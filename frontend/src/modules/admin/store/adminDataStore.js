@@ -512,6 +512,7 @@ export const useAdminDataStore = create((set, get) => ({
 
   inventory: [],
   billing: [],
+  parts: [],
   inventoryStats: { totalItems: 0, restockCount: '0', stockValue: '₹0L', unpaidAmount: '₹0L' },
   fetchInventoryData: async (filters = {}) => {
     try {
@@ -566,6 +567,57 @@ export const useAdminDataStore = create((set, get) => ({
       }
     } catch (err) {
       console.error("Failed to remove bill:", err);
+      return { success: false, message: err.message };
+    }
+  },
+
+  fetchParts: async () => {
+    try {
+      const res = await api.get('/admin/parts');
+      if (res.data.success) {
+        set({ parts: res.data.parts });
+      }
+    } catch (err) {
+      console.error("Failed to fetch parts:", err);
+    }
+  },
+
+  addPart: async (partData) => {
+    try {
+      const res = await api.post('/admin/parts', partData);
+      if (res.data.success) {
+        get().fetchParts();
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to add part:", err);
+      return { success: false, message: err.message };
+    }
+  },
+
+  updatePart: async (id, partData) => {
+    try {
+      const res = await api.put(`/admin/parts/${id}`, partData);
+      if (res.data.success) {
+        get().fetchParts();
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to update part:", err);
+      return { success: false, message: err.message };
+    }
+  },
+
+  removePart: async (id) => {
+    try {
+      const res = await api.delete(`/admin/parts/${id}`);
+      if (res.data.success) {
+        // Optimistically or directly update state to be super snappy!
+        set(state => ({ parts: state.parts.filter(p => p._id !== id) }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to remove part:", err);
       return { success: false, message: err.message };
     }
   },

@@ -32,11 +32,16 @@ export default function InventoryBillingPage() {
   const { 
     inventory, 
     billing, 
+    parts,
     inventoryStats, 
     fetchInventoryData,
+    fetchParts,
     addBill,
     updateBill,
-    removeBill 
+    removeBill,
+    addPart,
+    updatePart,
+    removePart
   } = useAdminDataStore();
   const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
   
@@ -48,15 +53,26 @@ export default function InventoryBillingPage() {
   const [billForm, setBillForm] = useState({
     vehicleNo: '',
     chasisNo: '',
+    partId: '',
     partsRepair: '',
     amount: '',
     supplier: ''
   });
 
+  const [isPartsModalOpen, setIsPartsModalOpen] = useState(searchParams.get('view') === 'parts');
+  const [newPartName, setNewPartName] = useState('');
+  const [editingPartId, setEditingPartId] = useState(null);
+  const [editingPartName, setEditingPartName] = useState('');
+  const [isPartSubmitting, setIsPartSubmitting] = useState(false);
+
   useEffect(() => {
     fetchInventoryData(activeFilters);
+    fetchParts();
     if (searchParams.get('modal') === 'add') {
       handleOpenAdd();
+    }
+    if (searchParams.get('view') === 'parts') {
+      setIsPartsModalOpen(true);
     }
   }, []);
 
@@ -69,6 +85,7 @@ export default function InventoryBillingPage() {
     setBillForm({
       vehicleNo: '',
       chasisNo: '',
+      partId: '',
       partsRepair: '',
       amount: '',
       supplier: 'Internal'
@@ -83,6 +100,7 @@ export default function InventoryBillingPage() {
     setBillForm({
       vehicleNo: bill.vehicleNo,
       chasisNo: bill.chasisNo,
+      partId: bill.partId || '',
       partsRepair: bill.partsRepair,
       amount: bill.amount,
       supplier: bill.supplier
@@ -113,6 +131,52 @@ export default function InventoryBillingPage() {
 
   const handleDelete = async (id) => {
     await removeBill(id);
+  };
+
+  const handleOpenPartsModal = () => {
+    setIsPartsModalOpen(true);
+    setSearchParams({ view: 'parts' });
+  };
+
+  const handleClosePartsModal = () => {
+    setIsPartsModalOpen(false);
+    setSearchParams({});
+    setNewPartName('');
+    setEditingPartId(null);
+    setEditingPartName('');
+  };
+
+  const handleAddPartSubmit = async (e) => {
+    e.preventDefault();
+    if (!newPartName.trim() || isPartSubmitting) return;
+    setIsPartSubmitting(true);
+    try {
+      await addPart({ name: newPartName.trim() });
+      setNewPartName('');
+    } catch (error) {
+      console.error("Failed to add part:", error);
+    } finally {
+      setIsPartSubmitting(false);
+    }
+  };
+
+  const handleUpdatePartSubmit = async (id) => {
+    if (!editingPartName.trim()) return;
+    try {
+      await updatePart(id, { name: editingPartName.trim() });
+      setEditingPartId(null);
+      setEditingPartName('');
+    } catch (error) {
+      console.error("Failed to update part:", error);
+    }
+  };
+
+  const handleDeletePart = async (id) => {
+    try {
+      await removePart(id);
+    } catch (error) {
+      console.error("Failed to delete part:", error);
+    }
   };
 
   return (
@@ -201,12 +265,20 @@ export default function InventoryBillingPage() {
                </div>
                <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-wider leading-none italic">Vehicle Repair Bills</h3>
             </div>
-            <button 
-               onClick={handleOpenAdd}
-               className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95"
-            >
-               <Plus size={14} /> Add Bill
-            </button>
+            <div className="flex items-center gap-2">
+               <button 
+                  onClick={handleOpenPartsModal}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95"
+               >
+                  <Wrench size={14} /> Manage Parts
+               </button>
+               <button 
+                  onClick={handleOpenAdd}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95"
+               >
+                  <Plus size={14} /> Add Bill
+               </button>
+            </div>
          </div>
          <div className="overflow-x-auto no-scrollbar">
             <table className="w-full">
@@ -229,8 +301,11 @@ export default function InventoryBillingPage() {
                               <span className="text-[10px] text-[var(--text-tertiary)] opacity-50">{bill.chasisNo}</span>
                            </div>
                         </td>
-                        <td className="py-2 px-4 font-medium text-[var(--text-primary)]">
-                           {bill.partsRepair}
+                        <td className="py-2 px-4 whitespace-nowrap">
+                           <div className="flex flex-col">
+                              <span className="font-bold text-emerald-500 text-sm tracking-tight">{bill.partName || 'N/A'}</span>
+                              <span className="text-[11px] text-[var(--text-tertiary)] mt-0.5">{bill.partsRepair}</span>
+                           </div>
                         </td>
                         <td className="py-2 px-4 font-black text-emerald-500">
                            {bill.formattedAmount}
@@ -306,14 +381,31 @@ export default function InventoryBillingPage() {
                      </div>
 
                      <div className="space-y-1.5">
-                        <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Parts & Repair Description</label>
-                        <textarea 
+                        <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Item Name</label>
+                        <select
                            required
+                           value={billForm.partId}
+                           onChange={(e) => setBillForm({...billForm, partId: e.target.value})}
+                           className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all text-[var(--text-primary)] cursor-pointer"
+                        >
+                           <option value="" disabled>Select Part</option>
+                           {parts.map(part => (
+                              <option key={part._id || part.id} value={part._id || part.id} className="bg-[var(--bg-secondary)] text-[var(--text-primary)]">
+                                 {part.name}
+                              </option>
+                           ))}
+                        </select>
+                     </div>
+
+                     <div className="space-y-1.5">
+                        <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Description</label>
+                        <input 
+                           required
+                           type="text"
                            value={billForm.partsRepair}
                            onChange={(e) => setBillForm({...billForm, partsRepair: e.target.value})}
                            placeholder="e.g. Battery Replacement, Brake Pad sync"
-                           rows={3}
-                           className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic text-[var(--text-primary)] resize-none"
+                           className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic text-[var(--text-primary)]"
                         />
                      </div>
 
@@ -350,6 +442,110 @@ export default function InventoryBillingPage() {
             </div>
          )}
       </AnimatePresence>
+
+      {/* Manage Parts Modal */}
+      <AnimatePresence>
+         {isPartsModalOpen && (
+            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+               <motion.div 
+                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                  className="w-full max-w-md bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-8 shadow-2xl space-y-6"
+               >
+                  <div className="flex items-center justify-between">
+                     <div className="space-y-0.5">
+                        <h2 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-tighter italic leading-none">
+                           Manage <span className="text-emerald-500">Spare Parts</span>
+                        </h2>
+                        <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">SECTION: SPARE_PARTS_REGISTRY_V1</p>
+                     </div>
+                     <button onClick={handleClosePartsModal} className="p-1.5 hover:bg-rose-600/10 hover:text-rose-500 transition-all rounded-lg text-[var(--text-tertiary)]">
+                        <X size={18} />
+                     </button>
+                  </div>
+
+                  {/* Add Part Form */}
+                  <form onSubmit={handleAddPartSubmit} className="flex gap-2 items-center">
+                     <input 
+                        required
+                        value={newPartName}
+                        onChange={(e) => setNewPartName(e.target.value)}
+                        placeholder="ENTER NEW PART NAME..."
+                        className="flex-1 px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic text-[var(--text-primary)]"
+                     />
+                     <button
+                        type="submit"
+                        disabled={isPartSubmitting}
+                        className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-md h-full"
+                     >
+                        <Plus size={12} /> ADD
+                     </button>
+                  </form>
+
+                  {/* Parts List */}
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 no-scrollbar border-t border-[var(--border-subtle)]/50 pt-4">
+                     {parts.length === 0 ? (
+                        <div className="text-center py-6 text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">
+                           No parts found. Add one above!
+                        </div>
+                     ) : (
+                        parts.map((part) => (
+                           <div 
+                              key={part._id || part.id} 
+                              className="flex items-center justify-between p-3 bg-[var(--bg-tertiary)]/20 border border-[var(--border-subtle)] rounded-xl group/item hover:border-emerald-500/30 transition-all"
+                           >
+                              {editingPartId === (part._id || part.id) ? (
+                                 <div className="flex-1 flex gap-2 items-center">
+                                    <input 
+                                       required
+                                       value={editingPartName}
+                                       onChange={(e) => setEditingPartName(e.target.value)}
+                                       className="flex-1 px-3 py-1 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic text-[var(--text-primary)]"
+                                    />
+                                    <button 
+                                       onClick={() => handleUpdatePartSubmit(part._id || part.id)}
+                                       className="px-2.5 py-1.5 bg-emerald-600 text-white rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all"
+                                    >
+                                       SAVE
+                                    </button>
+                                    <button 
+                                       onClick={() => { setEditingPartId(null); setEditingPartName(''); }}
+                                       className="px-2.5 py-1.5 bg-[var(--bg-tertiary)] text-[var(--text-secondary)] rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-[var(--bg-tertiary)]/80 border border-[var(--border-subtle)] transition-all"
+                                    >
+                                       CANCEL
+                                    </button>
+                                 </div>
+                              ) : (
+                                 <>
+                                    <span className="text-[10px] font-black tracking-widest text-[var(--text-primary)] pl-1">
+                                       {part.name}
+                                    </span>
+                                    <div className="flex items-center gap-1 opacity-80 group-hover/item:opacity-100 transition-opacity">
+                                       <button 
+                                          onClick={() => { setEditingPartId(part._id || part.id); setEditingPartName(part.name); }}
+                                          className="p-1.5 text-[var(--text-tertiary)] hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-all"
+                                       >
+                                          <Edit size={12} />
+                                       </button>
+                                       <button 
+                                          onClick={() => handleDeletePart(part._id || part.id)}
+                                          className="p-1.5 text-[var(--text-tertiary)] hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all"
+                                       >
+                                          <Trash2 size={12} />
+                                       </button>
+                                    </div>
+                                 </>
+                              )}
+                           </div>
+                        ))
+                     )}
+                  </div>
+               </motion.div>
+            </div>
+         )}
+      </AnimatePresence>
     </div>
   );
 }
+

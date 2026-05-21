@@ -5,6 +5,7 @@ const VendorBillSchema = new mongoose.Schema({
   supplier: { type: String, default: 'Internal' },
   vehicleNo: { type: String, required: true },
   chasisNo: { type: String, required: true },
+  partId: { type: mongoose.Schema.Types.ObjectId, ref: 'Part', required: true },
   partsRepair: { type: String, required: true },
   amount: { type: Number, required: true },
   status: { 

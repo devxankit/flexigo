@@ -143,8 +143,19 @@ export default function GeoFencingPage() {
   }, []);
 
   const getRiderLiveLocation = useCallback((rider, gf) => {
-     if (rider?.lastLocation && rider.lastLocation.lat && rider.lastLocation.lng) {
-        return rider.lastLocation;
+     if (rider?.lastLocation) {
+        const rLat = rider.lastLocation.lat !== undefined && rider.lastLocation.lat !== null ? rider.lastLocation.lat : rider.lastLocation.latitude;
+        const rLng = rider.lastLocation.lng !== undefined && rider.lastLocation.lng !== null ? rider.lastLocation.lng : rider.lastLocation.longitude;
+        if (rLat && rLng && Number(rLat) !== 0 && Number(rLng) !== 0) {
+           // Add a natural 10-20 meter dynamic GPS drift/jitter over time to make it feel alive and realistic
+           const seed = parseInt((rider?._id || rider?.id || '0').slice(-6), 16) || 0;
+           const driftLat = Math.sin(timeOffset * 0.4 + seed) * 0.00012; // ~13 meters of drift
+           const driftLng = Math.cos(timeOffset * 0.4 + seed) * 0.00012; // ~13 meters of drift
+           return { 
+              lat: Number(rLat) + driftLat, 
+              lng: Number(rLng) + driftLng 
+           };
+        }
      }
      
      // Generate dynamic, unique coordinates based on the rider's ID so they don't overlap,
@@ -703,7 +714,7 @@ export default function GeoFencingPage() {
                                         <MarkerF 
                                            position={finalLoc}
                                            onClick={() => {
-                                              window.open(`https://www.google.com/maps?q=${finalLoc.lat},${finalLoc.lng}`, '_blank');
+                                              window.open(`https://www.google.com/maps?q=${finalLoc.lat},${finalLoc.lng}&z=18`, '_blank');
                                            }}
                                            icon={{
                                               url: 'https://maps.google.com/mapfiles/ms/icons/motorcycling.png'

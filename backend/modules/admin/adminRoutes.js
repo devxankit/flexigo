@@ -30,6 +30,10 @@ import {
   createBill,
   updateBill,
   deleteBill,
+  getParts,
+  createPart,
+  updatePart,
+  deletePart,
   getFranchiseOpsData,
   getComplianceData,
   getEngagementData,
@@ -144,6 +148,10 @@ router.get('/inventory', getInventoryData);
 router.post('/billing', createBill);
 router.put('/billing/:id', updateBill);
 router.delete('/billing/:id', deleteBill);
+router.get('/parts', getParts);
+router.post('/parts', createPart);
+router.put('/parts/:id', updatePart);
+router.delete('/parts/:id', deletePart);
 router.get('/franchise-ops', getFranchiseOpsData);
 router.post('/franchise/:id/credit', creditFranchiseWallet);
 router.patch('/franchise/payout/:id', updateFranchisePayoutStatus);

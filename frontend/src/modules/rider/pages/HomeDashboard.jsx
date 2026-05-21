@@ -35,6 +35,10 @@ export default function HomeDashboard() {
   const { vehicle, isDiagnosticsOpen, setDiagnosticsOpen, hubs, hubLoading, fetchHubs, currentAddress, setCurrentAddress, fetchMyVehicle, updateLocation } = useRideStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [coords, setCoords] = useState(null);
+  const [simulatingLoc, setSimulatingLoc] = useState(null);
+  const [customLat, setCustomLat] = useState('18.58082');
+  const [customLng, setCustomLng] = useState('73.76704');
+  const [customAddress, setCustomAddress] = useState('Prima Domus building-B, Prima Domus, Patil Nagar, Balewadi, Pune, Maharashtra 411045');
   const isDark = theme === 'dark';
 
   useEffect(() => {
@@ -270,6 +274,173 @@ export default function HomeDashboard() {
            <p className={`text-[11px] font-black uppercase tracking-wider leading-relaxed ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
              Impact: You've saved <span className="text-flexigo-teal font-black text-sm">12.5KG</span> of carbon footprint this week.
            </p>
+        </div>
+
+        {/* Testing / Developer Actions */}
+        <div className="space-y-3">
+          <h4 className={`text-[10px] font-black uppercase tracking-[0.2em] ml-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>GPS Location Simulator (Dev Mode)</h4>
+          
+          <GlassCard className="p-4 border border-emerald-500/20 hover:border-emerald-500/40 transition-all space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
+                <MapPin size={16} />
+              </div>
+              <div>
+                <h5 className={`text-xs font-black uppercase tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Simulate Dynamic Location</h5>
+                <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Push mock coords dynamically to MongoDB</p>
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-1">
+              {/* Preset Quick Links */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[8px] font-black uppercase text-slate-500 mr-1">Presets:</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomLat('18.58082');
+                    setCustomLng('73.76704');
+                    setCustomAddress('Prima Domus building-B, Prima Domus, Patil Nagar, Balewadi, Pune, Maharashtra 411045');
+                  }}
+                  className="px-2 py-0.5 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-[8px] font-bold uppercase transition-all"
+                >
+                  Prima Domus B
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomLat('18.58150');
+                    setCustomLng('73.76710');
+                    setCustomAddress('Balaji Bike Repair & Service Baner Pune, Patil Nagar, Balewadi, Pune, Maharashtra 411045');
+                  }}
+                  className="px-2 py-0.5 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-[8px] font-bold uppercase transition-all"
+                >
+                  Balaji Bike
+                </button>
+              </div>
+
+              {/* Grid Inputs */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-[8px] font-bold uppercase tracking-wider text-slate-500">Latitude</label>
+                  <input
+                    type="text"
+                    value={customLat}
+                    onChange={(e) => setCustomLat(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-white focus:outline-none focus:border-emerald-500/50"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[8px] font-bold uppercase tracking-wider text-slate-500">Longitude</label>
+                  <input
+                    type="text"
+                    value={customLng}
+                    onChange={(e) => setCustomLng(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-white focus:outline-none focus:border-emerald-500/50"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[8px] font-bold uppercase tracking-wider text-slate-500">Address String</label>
+                <textarea
+                  rows={2}
+                  value={customAddress}
+                  onChange={(e) => setCustomAddress(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-white focus:outline-none focus:border-emerald-500/50 resize-none"
+                />
+              </div>
+
+              {/* Dynamic Sync & Reset Action Buttons */}
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <button
+                  disabled={simulatingLoc !== null}
+                  onClick={async () => {
+                    setSimulatingLoc('custom');
+                    try {
+                      const latNum = parseFloat(customLat);
+                      const lngNum = parseFloat(customLng);
+                      if (isNaN(latNum) || isNaN(lngNum)) {
+                        alert("⚠️ Please enter valid numeric Latitude and Longitude values.");
+                        return;
+                      }
+                      sessionStorage.setItem('simulated_gps', 'true');
+                      await updateLocation(latNum, lngNum, customAddress);
+                      alert(`✅ Dynamically synced & locked coordinates to MongoDB!\nLat: ${latNum}, Lng: ${lngNum}\nAddress: ${customAddress}`);
+                    } catch (e) {
+                      alert("❌ Failed to sync: " + e.message);
+                    } finally {
+                      setSimulatingLoc(null);
+                    }
+                  }}
+                  className={`py-2 px-3 rounded-xl border text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
+                    simulatingLoc === 'custom'
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
+                      : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20'
+                  }`}
+                >
+                  {simulatingLoc === 'custom' ? (
+                    <RefreshCw size={11} className="animate-spin" />
+                  ) : (
+                    <span>⚡ Sync Custom Coords</span>
+                  )}
+                </button>
+
+                <button
+                  disabled={simulatingLoc !== null}
+                  onClick={async () => {
+                    setSimulatingLoc('realgps');
+                    try {
+                      sessionStorage.removeItem('simulated_gps');
+                      if ("geolocation" in navigator) {
+                        navigator.geolocation.getCurrentPosition(
+                          async (pos) => {
+                            const { latitude, longitude } = pos.coords;
+                            let finalAddress = `GPS: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+                            try {
+                              const { reverseGeocode } = await import('../../../lib/googleMaps');
+                              const address = await reverseGeocode(latitude, longitude);
+                              if (address) finalAddress = address;
+                            } catch (err) {
+                              console.warn("Geocoding failed, using GPS label:", err);
+                            }
+                            setCustomLat(latitude.toString());
+                            setCustomLng(longitude.toString());
+                            setCustomAddress(finalAddress);
+                            await updateLocation(latitude, longitude, finalAddress);
+                            alert(`✅ Device GPS Sync Complete!\nLocation: ${finalAddress}`);
+                            setSimulatingLoc(null);
+                          },
+                          (err) => {
+                            alert("⚠️ Failed to acquire device GPS: " + err.message);
+                            setSimulatingLoc(null);
+                          },
+                          { enableHighAccuracy: true, timeout: 10000 }
+                        );
+                      } else {
+                        alert("⚠️ Geolocation not supported in this browser context.");
+                        setSimulatingLoc(null);
+                      }
+                    } catch (e) {
+                      alert("❌ Failed to reset GPS: " + e.message);
+                      setSimulatingLoc(null);
+                    }
+                  }}
+                  className={`py-2 px-3 rounded-xl border text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
+                    simulatingLoc === 'realgps'
+                      ? 'bg-blue-500/10 border-blue-500/30 text-blue-500'
+                      : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:border-blue-500/20'
+                  }`}
+                >
+                  {simulatingLoc === 'realgps' ? (
+                    <RefreshCw size={11} className="animate-spin" />
+                  ) : (
+                    <span>📍 Use Device GPS</span>
+                  )}
+                </button>
+              </div>
+            </div>
+          </GlassCard>
         </div>
 
         {/* Operational Actions */}

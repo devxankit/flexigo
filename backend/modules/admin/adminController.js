@@ -9,6 +9,7 @@ import Geofence from './geofenceModel.js';
 import Staff from './staffModel.js';
 import Inventory from './inventoryModel.js';
 import VendorBill from './billModel.js';
+import Part from './partModel.js';
 import Challan from './challanModel.js';
 import SupportTicket from './ticketModel.js';
 import axios from 'axios';
@@ -1193,7 +1194,7 @@ export const getInventoryData = async (req, res) => {
 
     const [items, bills] = await Promise.all([
       Inventory.find(dateFilter).sort('name'),
-      VendorBill.find(billFilter).sort('-date').limit(20)
+      VendorBill.find(billFilter).populate('partId').sort('-date').limit(20)
     ]);
 
     const totalItems = items.reduce((acc, item) => acc + item.stock, 0);
@@ -1217,6 +1218,8 @@ export const getInventoryData = async (req, res) => {
       supplier: b.supplier,
       vehicleNo: b.vehicleNo,
       chasisNo: b.chasisNo,
+      partId: b.partId?._id || b.partId || '',
+      partName: b.partId?.name || 'N/A',
       partsRepair: b.partsRepair,
       amount: b.amount,
       formattedAmount: `₹${b.amount.toLocaleString()}`,
@@ -1248,12 +1251,13 @@ export const getInventoryData = async (req, res) => {
 
 export const createBill = async (req, res) => {
   try {
-    const { vehicleNo, chasisNo, partsRepair, amount, supplier } = req.body;
+    const { vehicleNo, chasisNo, partId, partsRepair, amount, supplier } = req.body;
     const billId = `BILL-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
     const newBill = await VendorBill.create({
       billId,
       vehicleNo,
       chasisNo,
+      partId,
       partsRepair,
       amount,
       supplier: supplier || 'Internal'
@@ -1279,6 +1283,53 @@ export const deleteBill = async (req, res) => {
     const bill = await VendorBill.findByIdAndDelete(req.params.id);
     if (!bill) return res.status(404).json({ success: false, message: 'Bill not found' });
     res.status(200).json({ success: true, message: 'Bill deleted' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+export const getParts = async (req, res) => {
+  try {
+    const parts = await Part.find().sort({ createdAt: -1 });
+    res.status(200).json({ success: true, parts });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createPart = async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ success: false, message: 'Part name is required' });
+    }
+    const newPart = await Part.create({ name });
+    res.status(201).json({ success: true, part: newPart });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updatePart = async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ success: false, message: 'Part name is required' });
+    }
+    const part = await Part.findByIdAndUpdate(req.params.id, { name }, { new: true });
+    if (!part) return res.status(404).json({ success: false, message: 'Part not found' });
+    res.status(200).json({ success: true, part });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const deletePart = async (req, res) => {
+  try {
+    const part = await Part.findByIdAndDelete(req.params.id);
+    if (!part) return res.status(404).json({ success: false, message: 'Part not found' });
+    res.status(200).json({ success: true, message: 'Part deleted' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

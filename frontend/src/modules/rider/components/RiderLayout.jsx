@@ -32,6 +32,10 @@ export function RiderLayout() {
     if ("geolocation" in navigator) {
       const handleLocationSuccess = async (position) => {
         try {
+          if (sessionStorage.getItem('simulated_gps') === 'true') {
+            console.log("⏳ Skipping browser physical GPS update because mock simulator is active.");
+            return;
+          }
           let { latitude, longitude } = position.coords;
           
           // Use actual GPS coordinates without any location override
@@ -65,19 +69,36 @@ export function RiderLayout() {
 
       const handleLocationError = (error) => {
         console.error("❌ Location Acquisition Error:", error);
-        // Robust fallback: try acquiring location once using low-accuracy cellular/wifi
+        
+        // Handle User Denying Geolocation Access
+        if (error.code === error.PERMISSION_DENIED) {
+          console.warn("⚠️ Geolocation permission denied by user.");
+          setToast({
+            title: "Location Permission Blocked",
+            body: "Please enable location services in your browser settings to track your live ride."
+          });
+          return;
+        }
+
+        // Robust fallback: try acquiring location once using low-accuracy cellular/wifi and cache
         navigator.geolocation.getCurrentPosition(
           handleLocationSuccess,
-          (err) => console.error("❌ Fallback Geolocation Error:", err),
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+          (err) => {
+            console.error("❌ Fallback Geolocation Error:", err);
+            setToast({
+              title: "GPS Sync Pending",
+              body: "Locked inside or weak GPS signal. Please step outdoors or turn on high accuracy."
+            });
+          },
+          { enableHighAccuracy: false, timeout: 15000, maximumAge: 30000 }
         );
       };
 
-      // Watch position continuously with HIGH ACCURACY
+      // Watch position continuously with HIGH ACCURACY and generous timeout/cache rules
       const watchId = navigator.geolocation.watchPosition(
         handleLocationSuccess,
         handleLocationError,
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
       );
 
       // ALSO poll every 5 seconds to ensure continuous updates
@@ -85,14 +106,34 @@ export function RiderLayout() {
         navigator.geolocation.getCurrentPosition(
           handleLocationSuccess,
           handleLocationError,
-          { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
         );
       }, 5000);
+
+      // Immediately sync location when app is returned to foreground
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'visible') {
+          console.log("📱 App became visible, syncing location immediately...");
+          navigator.geolocation.getCurrentPosition(
+            handleLocationSuccess,
+            handleLocationError,
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+          );
+        }
+      };
+      document.addEventListener('visibilitychange', handleVisibilityChange);
 
       return () => {
         navigator.geolocation.clearWatch(watchId);
         clearInterval(pollInterval);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
       };
+    } else {
+      console.warn("⚠️ Geolocation is NOT available in this browser context (possibly insecure HTTP connection).");
+      setToast({
+        title: "Insecure Connection (HTTP)",
+        body: "Live GPS tracking requires an HTTPS connection or localhost. Please check your URL."
+      });
     }
   }, [applyLiveLocation, updateLocation]);
 
