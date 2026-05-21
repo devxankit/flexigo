@@ -39,10 +39,10 @@ const Rider = mongoose.models.Rider || mongoose.model('Rider', RiderSchema);
 const run = async () => {
   await connectDB();
   
-  // Accept coordinates dynamically from command-line arguments (e.g., node update_tushar_location.js 18.58082 73.76704)
-  // Fallback to Prima Domus coordinates if no arguments are provided
-  const targetLat = process.argv[2] ? parseFloat(process.argv[2]) : 18.58082;
-  const targetLng = process.argv[3] ? parseFloat(process.argv[3]) : 73.76704;
+  // Accept coordinates dynamically from command-line arguments (e.g., node update_ashish_location.js 18.5755 73.7745)
+  // Fallback to Manipal Hospitals Baner coordinates if no arguments are provided
+  const targetLat = process.argv[2] ? parseFloat(process.argv[2]) : 18.5755;
+  const targetLng = process.argv[3] ? parseFloat(process.argv[3]) : 73.7745;
   
   let targetAddress = "Geocoding Fallback (Google API Offline)"; // Fallback if Google API call fails
 
@@ -62,11 +62,11 @@ const run = async () => {
     console.error('❌ Dynamic Geocoding failed, using fallback:', geoError.message);
   }
 
-  console.log(`📡 Updating Tushar's location to ${targetLat}, ${targetLng}...`);
+  console.log(`📡 Updating Ashish's location to ${targetLat}, ${targetLng}...`);
 
-  // Update both riders named Tushar to ensure correct test rider is updated
+  // Update riders named Ashish to ensure correct test rider is updated
   const updateResult = await Rider.updateMany(
-    { name: /Tushar/i },
+    { name: /Ashish/i },
     {
       $set: {
         lastLocation: {
@@ -85,7 +85,7 @@ const run = async () => {
   console.log('✅ Update Result:', updateResult);
 
   // Fetch and confirm current state in MongoDB
-  const updatedRiders = await Rider.find({ name: /Tushar/i });
+  const updatedRiders = await Rider.find({ name: /Ashish/i });
   console.log('\n=== CURRENT DATABASE STATE ===');
   updatedRiders.forEach(r => {
     console.log({
