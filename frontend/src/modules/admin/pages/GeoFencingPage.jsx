@@ -391,8 +391,8 @@ export default function GeoFencingPage() {
   };
 
   return (
-    <div className="space-y-6 pb-12">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-4 md:space-y-6 pb-12">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center justify-between">
          <div className="space-y-0.5">
             <div className="flex items-center gap-2">
                <div className="w-1 h-5 bg-emerald-600 rounded-full" />
@@ -405,7 +405,7 @@ export default function GeoFencingPage() {
             </p>
          </div>
          
-         <div className="flex items-center gap-2">
+         <div className="flex flex-wrap items-center gap-2">
             <div className="flex bg-[var(--bg-secondary)] border border-[var(--border-subtle)] p-1 rounded-xl">
                {['registry', 'alerts'].map((tab) => (
                   <button
@@ -471,7 +471,7 @@ export default function GeoFencingPage() {
          )}
       </AnimatePresence>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
          <AdminStatCard 
             title="Total Fleet" 
             value={networkStats.geofenceStats?.totalRiders || allRiders.length} 
@@ -502,9 +502,9 @@ export default function GeoFencingPage() {
                initial={{ opacity: 0, y: 10 }}
                animate={{ opacity: 1, y: 0 }}
                exit={{ opacity: 0, y: -10 }}
-               className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+               className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6"
             >
-               <div className="lg:col-span-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-sm flex flex-col max-h-[580px]">
+               <div className="lg:col-span-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-sm flex flex-col max-h-[400px] md:max-h-[580px]">
                   <div className="px-6 py-3 border-b border-[var(--border-subtle)] flex items-center justify-between bg-[var(--bg-tertiary)]/10">
                      <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-inner">
@@ -615,7 +615,7 @@ export default function GeoFencingPage() {
                </div>
 
                <div className="space-y-4">
-                  <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-4 space-y-4 shadow-sm h-full flex flex-col min-h-[500px]">
+                  <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-4 space-y-4 shadow-sm flex flex-col min-h-[300px] md:min-h-[500px] h-full">
                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                            <Target size={14} className="text-emerald-500" />
@@ -629,7 +629,7 @@ export default function GeoFencingPage() {
                         )}
                      </div>
 
-                     <div className="flex-1 min-h-[350px] bg-[var(--bg-tertiary)] rounded-xl relative overflow-hidden group shadow-inner border border-[var(--border-subtle)]">
+                     <div className="flex-1 min-h-[250px] md:min-h-[350px] bg-[var(--bg-tertiary)] rounded-xl relative overflow-hidden group shadow-inner border border-[var(--border-subtle)]">
                         {isLoaded ? (
                            <GoogleMap
                               mapContainerStyle={containerStyle}
@@ -942,12 +942,12 @@ export default function GeoFencingPage() {
       {/* Create Zone Modal */}
       <AnimatePresence>
          {isModalOpen && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
+            <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/80 backdrop-blur-sm">
                <motion.div 
                   initial={{ opacity: 0, scale: 0.95, y: 10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                  className="w-full max-w-md bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-[2rem] p-8 shadow-2xl space-y-6 overflow-hidden relative"
+                  className="w-full max-w-md bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-t-[2rem] sm:rounded-[2rem] p-6 sm:p-8 shadow-2xl space-y-6 overflow-y-auto max-h-[90vh] relative"
                >
                   <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none">
                      <MapIcon size={100} />

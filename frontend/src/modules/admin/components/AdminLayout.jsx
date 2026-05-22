@@ -4,7 +4,7 @@ import AdminSidebar from './AdminSidebar';
 import { useAdminAuthStore } from '../store/adminAuthStore';
 import { useAdminThemeStore } from '../store/themeStore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Bell, Settings, Command, Sun, Moon } from 'lucide-react';
+import { Search, Bell, Settings, Command, Sun, Moon, Menu, X as XIcon } from 'lucide-react';
 import { useAdminDataStore } from '../store/adminDataStore';
 import { onMessageListener, requestForToken } from '../../../lib/firebase';
 
@@ -14,6 +14,7 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const { notifications, fetchNotifications } = useAdminDataStore();
   const [isNotifOpen, setIsNotifOpen] = React.useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
   const dropdownRef = React.useRef(null);
   const processedMessages = React.useRef(new Set());
 
@@ -79,15 +80,39 @@ export default function AdminLayout() {
   return (
     <div className="flex h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] overflow-hidden font-sans selection:bg-emerald-500/30 transition-colors duration-300">
       
-      {/* Sidebar Command Center */}
-      <AdminSidebar />
+      {/* Mobile Sidebar Overlay */}
+      <AnimatePresence>
+        {isMobileSidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm md:hidden"
+            onClick={() => setIsMobileSidebarOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar — hidden on mobile, slide-in drawer on mobile */}
+      <div className={`fixed md:relative inset-y-0 left-0 z-[90] md:z-auto transition-transform duration-300 ${
+        isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+      }`}>
+        <AdminSidebar />
+      </div>
 
       {/* Main Orchestrator */}
       <div className="flex-1 flex flex-col min-w-0 relative">
         
         {/* Global Control Header */}
-        <header className="h-16 border-b border-[var(--border-subtle)] flex items-center justify-between px-8 bg-[var(--bg-secondary)]/80 backdrop-blur-md z-40 transition-colors duration-300">
-           <div className="flex items-center gap-6 flex-1">
+        <header className="h-16 border-b border-[var(--border-subtle)] flex items-center justify-between px-4 md:px-8 bg-[var(--bg-secondary)]/80 backdrop-blur-md z-40 transition-colors duration-300">
+           <div className="flex items-center gap-3 flex-1">
+             {/* Mobile Hamburger */}
+             <button
+               onClick={() => setIsMobileSidebarOpen(true)}
+               className="md:hidden p-2 text-[var(--text-tertiary)] hover:text-emerald-500 rounded-lg transition-all"
+             >
+               <Menu size={20} />
+             </button>
            </div>
 
            <div className="flex items-center gap-4">
@@ -223,7 +248,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Dynamic Viewport */}
-        <main className="flex-1 overflow-y-auto overscroll-y-none no-scrollbar pt-8 px-10 pb-20 relative bg-[var(--bg-primary)] transition-colors duration-300">
+        <main className="flex-1 overflow-y-auto overscroll-y-none no-scrollbar pt-6 px-4 md:px-10 pb-20 relative bg-[var(--bg-primary)] transition-colors duration-300">
            {/* Discrete Grid Pattern Backdrop */}
            <div className="absolute inset-0 bg-[radial-gradient(#10b981_0.5px,transparent_0.5px)] [background-size:24px_24px] opacity-[0.03] pointer-events-none" />
            

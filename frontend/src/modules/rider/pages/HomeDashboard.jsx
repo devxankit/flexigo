@@ -32,27 +32,121 @@ export default function HomeDashboard() {
   const { user } = useAuthStore();
   const { activePlan } = useSubscriptionStore();
   const { balance } = useWalletStore();
-  const { vehicle, isDiagnosticsOpen, setDiagnosticsOpen, hubs, hubLoading, fetchHubs, currentAddress, setCurrentAddress, fetchMyVehicle, updateLocation } = useRideStore();
+  const { 
+    vehicle, 
+    isDiagnosticsOpen, 
+    setDiagnosticsOpen, 
+    hubs, 
+    hubLoading, 
+    fetchHubs, 
+    currentAddress, 
+    setCurrentAddress, 
+    fetchMyVehicle, 
+    updateLocation,
+    currentCoords 
+  } = useRideStore();
   const [searchQuery, setSearchQuery] = useState('');
-  const [coords, setCoords] = useState(null);
   const [simulatingLoc, setSimulatingLoc] = useState(null);
-  const [customLat, setCustomLat] = useState('18.58082');
-  const [customLng, setCustomLng] = useState('73.76704');
-  const [customAddress, setCustomAddress] = useState('Prima Domus building-B, Prima Domus, Patil Nagar, Balewadi, Pune, Maharashtra 411045');
+  const [customLat, setCustomLat] = useState('');
+  const [customLng, setCustomLng] = useState('');
+  const [customAddress, setCustomAddress] = useState('');
   const isDark = theme === 'dark';
+
+  const coords = currentCoords || (customLat && customLng ? { latitude: parseFloat(customLat), longitude: parseFloat(customLng) } : null);
+
+  const [isAutoSimulating, setIsAutoSimulating] = useState(false);
+  const [simStep, setSimStep] = useState(0);
+  const [simInterval, setSimInterval] = useState(null);
+  const [simRouteType, setSimRouteType] = useState('circular');
+
+  useEffect(() => {
+    return () => {
+      if (simInterval) {
+        clearInterval(simInterval);
+      }
+    };
+  }, [simInterval]);
+
+  const toggleAutoSimulation = async () => {
+    if (isAutoSimulating) {
+      if (simInterval) {
+        clearInterval(simInterval);
+        setSimInterval(null);
+      }
+      setIsAutoSimulating(false);
+      sessionStorage.removeItem('simulated_gps');
+    } else {
+      const latNum = parseFloat(customLat);
+      const lngNum = parseFloat(customLng);
+      if (isNaN(latNum) || isNaN(lngNum)) {
+        alert("⚠️ Please enter or select a valid starting coordinate preset first!");
+        return;
+      }
+
+      sessionStorage.setItem('simulated_gps', 'true');
+      setIsAutoSimulating(true);
+      let step = 0;
+      
+      // Determine route name dynamically from the current address (GPS, preset, or custom input)
+      const activeAddress = (currentAddress || customAddress || '').trim();
+      const firstPart = activeAddress.split(',')[0].trim();
+      const baseRouteName = firstPart ? `${firstPart} Route` : 'FlexiGo Route';
+      
+      const runSimulationStep = async () => {
+        step += 1;
+        setSimStep(step);
+        
+        let newLat = latNum;
+        let newLng = lngNum;
+        
+        if (simRouteType === 'circular') {
+          // Circular motion: radius ~166 meters, angular speed 0.1 rad per step (moving ~16.6m per step)
+          const radiusDegrees = 0.0015;
+          const angle = step * 0.1;
+          newLat = latNum + Math.sin(angle) * radiusDegrees;
+          newLng = lngNum + Math.cos(angle) * radiusDegrees;
+        } else {
+          // Linear motion (zigzag) back and forth
+          const maxSteps = 20;
+          const progress = (step % (maxSteps * 2));
+          const factor = progress < maxSteps ? progress : (maxSteps * 2 - progress);
+          // Move ~20 meters per step in a North-East diagonal direction
+          newLat = latNum + (factor * 0.00018);
+          newLng = lngNum + (factor * 0.00018);
+        }
+        
+        const simulatedAddress = `${baseRouteName} - Live Simulating Route [Point ${step}] (${newLat.toFixed(5)}° N, ${newLng.toFixed(5)}° E)`;
+        
+        try {
+          await updateLocation(newLat, newLng, simulatedAddress);
+          setCustomLat(newLat.toString());
+          setCustomLng(newLng.toString());
+          setCustomAddress(simulatedAddress);
+        } catch (err) {
+          console.error("Simulation update error:", err);
+        }
+      };
+
+      await runSimulationStep();
+      const intervalId = setInterval(runSimulationStep, 3000);
+      setSimInterval(intervalId);
+    }
+  };
 
   useEffect(() => {
     // Initial fetch
     fetchHubs();
-    if (user?.phone) fetchMyVehicle(user.phone);
   }, []);
 
-  // Use Dynamic Hubs OR Fallback to Mocks if DB is empty after loading
-  const displayHubs = hubLoading ? [] : (Array.isArray(hubs) && hubs.length > 0 ? hubs : [
-    { id: 1, name: 'FlexiHub Koramangala', latitude: 12.9345, longitude: 77.6266, batteries: 14, status: 'Open', color: '#39FF14' },
-    { id: 2, name: 'HSR Layout Station', latitude: 12.9128, longitude: 77.6388, batteries: 8, status: 'Open', color: '#39FF14' },
-    { id: 3, name: 'Indiranagar Hub', latitude: 12.9716, longitude: 77.6412, batteries: 2, status: 'Limited', color: '#EAB308' },
-  ]);
+  useEffect(() => {
+    if (user?.phone) {
+      fetchMyVehicle(user.phone);
+    }
+  }, [user?.phone, fetchMyVehicle]);
+
+
+  // Use only real hubs from DB — no fake fallback data
+  const displayHubs = hubLoading ? [] : (Array.isArray(hubs) ? hubs : []);
 
   const processedHubs = (displayHubs || []).map(hub => {
     if (!hub) return null;
@@ -285,37 +379,173 @@ export default function HomeDashboard() {
               <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
                 <MapPin size={16} />
               </div>
-              <div>
+              <div className="flex-1">
                 <h5 className={`text-xs font-black uppercase tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>Simulate Dynamic Location</h5>
                 <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Push mock coords dynamically to MongoDB</p>
               </div>
             </div>
 
-            <div className="space-y-3 pt-1">
+            <div className="space-y-4 pt-1">
               {/* Preset Quick Links */}
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[8px] font-black uppercase text-slate-500 mr-1">Presets:</span>
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[8px] font-black uppercase text-slate-500">INDORE TESTING PRESETS (Sagar Kher):</span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    disabled={isAutoSimulating}
+                    onClick={() => {
+                      setCustomLat('22.71117');
+                      setCustomLng('75.90017');
+                      setCustomAddress('Pipliyahana Square, Pipliyahana Road, Indore, Madhya Pradesh 452016');
+                    }}
+                    className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase transition-all border ${
+                      isAutoSimulating 
+                        ? 'opacity-40 cursor-not-allowed bg-slate-500/10 border-transparent text-slate-500'
+                        : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
+                    }`}
+                  >
+                    Indore Pipliyahana
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isAutoSimulating}
+                    onClick={() => {
+                      setCustomLat('22.71660');
+                      setCustomLng('75.86990');
+                      setCustomAddress('Choti Gwaltoli, Indore, Madhya Pradesh 452001');
+                    }}
+                    className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase transition-all border ${
+                      isAutoSimulating 
+                        ? 'opacity-40 cursor-not-allowed bg-slate-500/10 border-transparent text-slate-500'
+                        : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/20'
+                    }`}
+                  >
+                    Indore Choti Gwaltoli
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[8px] font-black uppercase text-slate-500">PUNE TESTING PRESETS (Tushar / Ashish):</span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    disabled={isAutoSimulating}
+                    onClick={() => {
+                      setCustomLat('18.58082');
+                      setCustomLng('73.76704');
+                      setCustomAddress('Prima Domus building-B, Prima Domus, Patil Nagar, Balewadi, Pune, Maharashtra 411045');
+                    }}
+                    className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase transition-all border ${
+                      isAutoSimulating 
+                        ? 'opacity-40 cursor-not-allowed bg-slate-500/10 border-transparent text-slate-500'
+                        : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
+                    }`}
+                  >
+                    Prima Domus B
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isAutoSimulating}
+                    onClick={() => {
+                      setCustomLat('18.58150');
+                      setCustomLng('73.76710');
+                      setCustomAddress('Balaji Bike Repair & Service Baner Pune, Patil Nagar, Balewadi, Pune, Maharashtra 411045');
+                    }}
+                    className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase transition-all border ${
+                      isAutoSimulating 
+                        ? 'opacity-40 cursor-not-allowed bg-slate-500/10 border-transparent text-slate-500'
+                        : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
+                    }`}
+                  >
+                    Balaji Bike
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isAutoSimulating}
+                    onClick={() => {
+                      setCustomLat('18.59130');
+                      setCustomLng('73.73890');
+                      setCustomAddress('Hinjewadi Phase 1, Hinjewadi Rajiv Gandhi Infotech Park, Hinjawadi, Pune, Maharashtra 411057');
+                    }}
+                    className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase transition-all border ${
+                      isAutoSimulating 
+                        ? 'opacity-40 cursor-not-allowed bg-slate-500/10 border-transparent text-slate-500'
+                        : 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border-blue-500/20'
+                    }`}
+                  >
+                    Pune Hinjewadi
+                  </button>
+                </div>
+              </div>
+
+              {/* Dynamic Auto-Simulation Engine UI Box */}
+              <div className={`p-4 rounded-xl border transition-all space-y-3 ${
+                isAutoSimulating 
+                  ? 'bg-emerald-500/10 border-emerald-500/35 shadow-[0_0_15px_rgba(16,185,129,0.15)] shadow-emerald-500/10' 
+                  : 'bg-white/5 border-white/10'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${isAutoSimulating ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]' : 'bg-slate-500'}`} />
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Route Auto-Simulation</span>
+                  </div>
+                  {isAutoSimulating && (
+                    <span className="text-[8px] font-black text-emerald-500 bg-emerald-500/15 px-2.5 py-0.5 rounded uppercase tracking-widest italic animate-pulse">
+                      Step {simStep} • Active
+                    </span>
+                  )}
+                </div>
+
+                {/* Route Selector */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    disabled={isAutoSimulating}
+                    onClick={() => setSimRouteType('circular')}
+                    className={`py-1.5 px-2 rounded-lg border text-[8px] font-black uppercase tracking-wider transition-all text-center ${
+                      simRouteType === 'circular'
+                        ? 'bg-emerald-500/20 border-emerald-500/35 text-emerald-400'
+                        : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'
+                    }`}
+                  >
+                    🔄 Circular Route (200m)
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isAutoSimulating}
+                    onClick={() => setSimRouteType('linear')}
+                    className={`py-1.5 px-2 rounded-lg border text-[8px] font-black uppercase tracking-wider transition-all text-center ${
+                      simRouteType === 'linear'
+                        ? 'bg-emerald-500/20 border-emerald-500/35 text-emerald-400'
+                        : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'
+                    }`}
+                  >
+                    ⚡ Linear ZigZag (400m)
+                  </button>
+                </div>
+
+                {/* Start / Pause Simulation Trigger */}
                 <button
                   type="button"
-                  onClick={() => {
-                    setCustomLat('18.58082');
-                    setCustomLng('73.76704');
-                    setCustomAddress('Prima Domus building-B, Prima Domus, Patil Nagar, Balewadi, Pune, Maharashtra 411045');
-                  }}
-                  className="px-2 py-0.5 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-[8px] font-bold uppercase transition-all"
+                  onClick={toggleAutoSimulation}
+                  className={`w-full py-2 px-3 rounded-xl border text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                    isAutoSimulating
+                      ? 'bg-rose-500/10 border-rose-500/25 text-rose-400 hover:bg-rose-500/20'
+                      : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 shadow-[0_0_12px_rgba(16,185,129,0.15)] shadow-emerald-500/10'
+                  }`}
                 >
-                  Prima Domus B
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCustomLat('18.58150');
-                    setCustomLng('73.76710');
-                    setCustomAddress('Balaji Bike Repair & Service Baner Pune, Patil Nagar, Balewadi, Pune, Maharashtra 411045');
-                  }}
-                  className="px-2 py-0.5 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 text-[8px] font-bold uppercase transition-all"
-                >
-                  Balaji Bike
+                  {isAutoSimulating ? (
+                    <>
+                      <span className="w-1.5 h-1.5 bg-rose-400 rounded-full animate-ping" />
+                      <span>⏸️ Pause Simulation Loop</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping" />
+                      <span>🚀 Launch Auto-Route Simulation</span>
+                    </>
+                  )}
                 </button>
               </div>
 
@@ -325,18 +555,24 @@ export default function HomeDashboard() {
                   <label className="text-[8px] font-bold uppercase tracking-wider text-slate-500">Latitude</label>
                   <input
                     type="text"
+                    disabled={isAutoSimulating}
                     value={customLat}
                     onChange={(e) => setCustomLat(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-white focus:outline-none focus:border-emerald-500/50"
+                    className={`w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] font-semibold focus:outline-none focus:border-emerald-500/50 ${
+                      isAutoSimulating ? 'opacity-50 text-slate-400 cursor-not-allowed' : 'text-white'
+                    }`}
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[8px] font-bold uppercase tracking-wider text-slate-500">Longitude</label>
                   <input
                     type="text"
+                    disabled={isAutoSimulating}
                     value={customLng}
                     onChange={(e) => setCustomLng(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-white focus:outline-none focus:border-emerald-500/50"
+                    className={`w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] font-semibold focus:outline-none focus:border-emerald-500/50 ${
+                      isAutoSimulating ? 'opacity-50 text-slate-400 cursor-not-allowed' : 'text-white'
+                    }`}
                   />
                 </div>
               </div>
@@ -345,16 +581,19 @@ export default function HomeDashboard() {
                 <label className="text-[8px] font-bold uppercase tracking-wider text-slate-500">Address String</label>
                 <textarea
                   rows={2}
+                  disabled={isAutoSimulating}
                   value={customAddress}
                   onChange={(e) => setCustomAddress(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-white focus:outline-none focus:border-emerald-500/50 resize-none"
+                  className={`w-full bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] font-semibold focus:outline-none focus:border-emerald-500/50 resize-none ${
+                    isAutoSimulating ? 'opacity-50 text-slate-400 cursor-not-allowed' : 'text-white'
+                  }`}
                 />
               </div>
 
               {/* Dynamic Sync & Reset Action Buttons */}
               <div className="grid grid-cols-2 gap-2 pt-1">
                 <button
-                  disabled={simulatingLoc !== null}
+                  disabled={simulatingLoc !== null || isAutoSimulating}
                   onClick={async () => {
                     setSimulatingLoc('custom');
                     try {
@@ -374,9 +613,11 @@ export default function HomeDashboard() {
                     }
                   }}
                   className={`py-2 px-3 rounded-xl border text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
-                    simulatingLoc === 'custom'
-                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
-                      : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20'
+                    isAutoSimulating 
+                      ? 'opacity-40 cursor-not-allowed bg-slate-500/10 border-transparent text-slate-500'
+                      : simulatingLoc === 'custom'
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
+                        : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20'
                   }`}
                 >
                   {simulatingLoc === 'custom' ? (
@@ -387,7 +628,7 @@ export default function HomeDashboard() {
                 </button>
 
                 <button
-                  disabled={simulatingLoc !== null}
+                  disabled={simulatingLoc !== null || isAutoSimulating}
                   onClick={async () => {
                     setSimulatingLoc('realgps');
                     try {
@@ -427,9 +668,11 @@ export default function HomeDashboard() {
                     }
                   }}
                   className={`py-2 px-3 rounded-xl border text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${
-                    simulatingLoc === 'realgps'
-                      ? 'bg-blue-500/10 border-blue-500/30 text-blue-500'
-                      : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:border-blue-500/20'
+                    isAutoSimulating
+                      ? 'opacity-40 cursor-not-allowed bg-slate-500/10 border-transparent text-slate-500'
+                      : simulatingLoc === 'realgps'
+                        ? 'bg-blue-500/10 border-blue-500/30 text-blue-500'
+                        : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:border-blue-500/20'
                   }`}
                 >
                   {simulatingLoc === 'realgps' ? (
