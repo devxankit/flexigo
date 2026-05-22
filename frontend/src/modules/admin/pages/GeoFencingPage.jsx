@@ -243,6 +243,12 @@ export default function GeoFencingPage() {
         const matchedRider = allRiders.find(r => (r._id || r.id) === riderId);
         if (!matchedRider) return;
 
+        // Only check breach for riders with REAL GPS data — skip simulated/fake positions
+        const hasRealGPS = matchedRider?.lastLocation &&
+          ((matchedRider.lastLocation.lat !== undefined && matchedRider.lastLocation.lat !== null && Number(matchedRider.lastLocation.lat) !== 0) ||
+           (matchedRider.lastLocation.latitude !== undefined && matchedRider.lastLocation.latitude !== null && Number(matchedRider.lastLocation.latitude) !== 0));
+        if (!hasRealGPS) return;
+
         const loc = getRiderLiveLocation(matchedRider, gf);
         const dist = getDistance(loc.lat, loc.lng, gf.center.lat, gf.center.lng);
         const radius = parseFloat(gf.radius);
