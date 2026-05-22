@@ -5,23 +5,50 @@ import {
   UserCircle, 
   ShieldAlert, 
   Key, 
-  Search, 
   History,
   Terminal,
   Globe,
   ChevronRight,
   Activity,
   Plus,
-  Users
+  Users,
+  X,
+  Zap as ZapIcon
 } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
 import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
 
+const modules = [
+  'Overview',
+  'Franchise Management',
+  'Fleet Addition',
+  'Geo Fencing',
+  'Rider Reports',
+  'KYC & Onboard',
+  'HR Management',
+  'Franchise Onboard',
+  'Financial Center',
+  'Payment Gateway',
+  'Inventory & Billing',
+  'Franchise & 3PL',
+  'Subscription Plans',
+  'Compliance',
+  'Engagement & CRM',
+  'Security & Audit',
+  'Notifications',
+  'Plans Page',
+  'Contact Us',
+  'About Us',
+  'Press & Media'
+];
+
+
 
 
 export default function SecurityAuditsPage() {
-  const { auditLogs, securityStats, fetchSecurityData, roles, fetchRoles, togglePermission, addRole, updateRole } = useAdminDataStore();
+  const { securityStats, fetchSecurityData, roles, fetchRoles, togglePermission, addRole, updateRole } = useAdminDataStore();
   const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [newRole, setNewRole] = React.useState({ name: '', permissions: '' });
@@ -64,13 +91,6 @@ export default function SecurityAuditsPage() {
          
          <div className="flex items-center gap-2">
             <OpsFilter onFilterChange={handleFilterChange} />
-            <button 
-               onClick={() => setIsModalOpen(true)}
-               className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-md active:scale-95 flex items-center gap-1.5"
-            >
-               <Plus size={12} /> New Role
-            </button>
-
          </div>
       </div>
 
@@ -82,46 +102,9 @@ export default function SecurityAuditsPage() {
          <AdminStatCard title="Global Nodes" value={securityStats.globalNodes} icon={Globe} color="blue" subtitle="Whitelisted IP" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-         {/* Audit Trail Registry */}
-         <div className="lg:col-span-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-sm">
-            <div className="px-6 py-3 border-b border-[var(--border-subtle)] flex items-center justify-between bg-[var(--bg-tertiary)]/10">
-               <h3 className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-wider leading-none italic">Master Command Payload Registry</h3>
-               <div className="relative group">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-[var(--text-tertiary)] group-focus-within:text-emerald-500 transition-colors" />
-                  <input 
-                    type="text" 
-                    placeholder="Search Logs..." 
-                    className="pl-8 pr-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-black uppercase tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all w-32 text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)]/50 italic"
-                  />
-               </div>
-            </div>
-            <div className="overflow-x-auto no-scrollbar">
-               <table className="w-full">
-                  <thead>
-                     <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
-                        {['Identity', 'Action Profile', 'Object Target', 'Sync', 'Origin IP'].map((header) => (
-                           <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
-                        ))}
-                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--border-subtle)]">
-                     {auditLogs.map((log) => (
-                        <tr key={log.id} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
-                           <td className="py-2 px-4 font-medium text-[var(--text-primary)]">{log.identity}</td>
-                           <td className="py-2 px-4 font-medium text-[var(--text-tertiary)]">{log.action}</td>
-                           <td className="py-2 px-4 font-medium text-emerald-500">{log.target}</td>
-                           <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]">{new Date(log.time).toLocaleDateString()}</td>
-                           <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]   opacity-50">{log.ip}</td>
-                        </tr>
-                     ))}
-                  </tbody>
-               </table>
-            </div>
-         </div>
-
+      <div className="space-y-6">
          {/* Role RBAC Matrix Panel */}
-         <div className="lg:col-span-3 space-y-4">
+         <div className="space-y-4">
             <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-6 shadow-sm border-t-4 border-t-emerald-600">
                <div className="flex items-center justify-between mb-8 pb-3 border-b border-[var(--border-subtle)]">
                   <div>
@@ -133,13 +116,13 @@ export default function SecurityAuditsPage() {
                   </div>
                </div>
 
-               <div className="overflow-x-auto no-scrollbar">
+               <div className="overflow-x-auto custom-scrollbar-emerald pb-3">
                   <table className="w-full border-collapse">
                     <thead>
                       <tr>
                         <th className="p-3 text-left bg-[var(--bg-tertiary)]/30 border border-[var(--border-subtle)] rounded-tl-xl text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] italic">Role Designator</th>
-                        {['Dashboard', 'Hubs', 'Fleet', 'KYC', 'Plans', 'Subscribers', 'Geofencing', 'Finance', 'Inventory', 'Franchise', 'Compliance', 'Engagement', 'Security', 'Staff'].map(mod => (
-                          <th key={mod} className="p-3 text-center bg-[var(--bg-tertiary)]/20 border border-[var(--border-subtle)] text-[9px] font-black uppercase tracking-widest text-[var(--text-primary)] italic min-w-[100px]">{mod}</th>
+                        {modules.map(mod => (
+                          <th key={mod} className="p-3 text-center bg-[var(--bg-tertiary)]/20 border border-[var(--border-subtle)] text-[9px] font-black uppercase tracking-widest text-[var(--text-primary)] italic min-w-[150px]">{mod}</th>
                         ))}
                       </tr>
                     </thead>
@@ -152,7 +135,7 @@ export default function SecurityAuditsPage() {
                               <span className="text-[11px] font-black text-[var(--text-primary)] uppercase italic">{role.name}</span>
                             </div>
                           </td>
-                          {['Dashboard', 'Hubs', 'Fleet', 'KYC', 'Plans', 'Subscribers', 'Geofencing', 'Finance', 'Inventory', 'Franchise', 'Compliance', 'Engagement', 'Security', 'Staff'].map(mod => (
+                          {modules.map(mod => (
                             <td key={mod} className="p-3 border border-[var(--border-subtle)] relative z-10">
                               <div className="grid grid-cols-1 gap-2">
                                 {['read', 'create', 'update', 'delete'].map(action => {
@@ -187,31 +170,6 @@ export default function SecurityAuditsPage() {
                     </tbody>
                   </table>
                </div>
-
-               <div className="mt-8 flex items-center justify-between">
-                 <div className="p-3 bg-emerald-600/5 border border-emerald-500/10 rounded-xl space-y-1.5 relative overflow-hidden group max-w-md">
-                    <div className="absolute right-0 top-0 p-2 opacity-[0.05] pointer-events-none group-hover:scale-110 transition-transform">
-                       <ShieldAlert size={40} />
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                       <Activity size={10} className="text-emerald-600" />
-                       <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest italic leading-none">Security Protocol Guard</p>
-                    </div>
-                    <p className="text-[8px] text-[var(--text-tertiary)] font-bold leading-relaxed uppercase tracking-wider italic">
-                       RBAC Matrix is enforced via JWT claims. Any modification is logged to the Audit Registry with a cryptographic signature.
-                    </p>
-                 </div>
-                 
-                 <div className="flex items-center gap-3">
-                   <div className="flex flex-col items-end">
-                     <span className="text-[8px] font-black text-[var(--text-tertiary)] uppercase italic tracking-widest">Active System Nodes</span>
-                     <span className="text-[12px] font-black text-emerald-500 italic uppercase">14 Dynamic Modules</span>
-                   </div>
-                   <div className="w-10 h-10 rounded-xl bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500">
-                     <ShieldCheck size={20} />
-                   </div>
-                 </div>
-               </div>
             </div>
          </div>
       </div>
@@ -228,8 +186,6 @@ export default function SecurityAuditsPage() {
 }
 
 // Security Modal Implementation
-import { X, Zap as ZapIcon } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
 
 function RoleModal({ isOpen, onClose, onSave, newRole, setNewRole }) {
    return (

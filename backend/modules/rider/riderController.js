@@ -15,6 +15,8 @@ import AuditLog from '../admin/auditLogModel.js';
 import Admin from '../admin/adminModel.js';
 import FranchiseNotification from '../franchise/franchiseNotificationModel.js';
 
+const lastGeofenceAlertTimes = new Map();
+
 // @desc    Send OTP to Rider
 export const sendOTP = async (req, res) => {
   try {
@@ -375,10 +377,70 @@ export const verifyPayment = async (req, res) => {
 
 export const updateRiderLocation = async (req, res) => {
   try {
-    const { latitude, longitude, speed, address } = req.body;
+    const { latitude, longitude, speed, address, locationStatus } = req.body;
     const riderId = req.rider._id;
     const rider = await Rider.findById(riderId);
     if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
+
+    // Handle Location Disabled Event
+    if (locationStatus === 'disabled') {
+      const cacheKey = `${riderId.toString()}_location_disabled`;
+      const now = Date.now();
+      const lastAlertTime = lastGeofenceAlertTimes.get(cacheKey);
+
+      if (!lastAlertTime || (now - lastAlertTime) > 10 * 60 * 1000) {
+        lastGeofenceAlertTimes.set(cacheKey, now);
+
+        const msg = `Safety Alert: Location Services Disabled for Rider [${rider.name || rider.phone}]`;
+
+        // Notify Rider
+        try {
+          if (rider.fcmToken) await sendPushNotification(rider.fcmToken, 'Safety Alert', 'Please enable location services to keep your ride active.', { type: 'location_disabled' });
+        } catch (fcmErr) {
+          console.error("FCM Web Notification failed:", fcmErr.message);
+        }
+        try {
+          if (rider.fcmTokenMobile) await sendPushNotification(rider.fcmTokenMobile, 'Safety Alert', 'Please enable location services to keep your ride active.', { type: 'location_disabled' });
+        } catch (fcmErr) {
+          console.error("FCM Mobile Notification failed:", fcmErr.message);
+        }
+
+        // Notify Franchise Hub
+        if (rider.franchise) {
+          const franchise = await Franchise.findById(rider.franchise);
+          const frToken = franchise?.fcmToken || franchise?.fcmTokenMobile;
+          if (frToken) {
+            try {
+              await sendPushNotification(frToken, 'Safety Alert', msg, { type: 'location_disabled_admin', riderId: rider._id.toString() });
+            } catch (fcmErr) {
+              console.error("FCM Franchise Notification failed:", fcmErr.message);
+            }
+          }
+        }
+
+        // Notify SuperAdmins
+        const admins = await Admin.find({ role: 'SuperAdmin' });
+        for (const admin of admins) {
+          if (admin.fcmToken) {
+            try {
+              await sendPushNotification(admin.fcmToken, 'Safety Alert', msg, { type: 'location_disabled_admin', riderId: rider._id.toString() });
+            } catch (fcmErr) {
+              console.error("FCM Admin Notification failed:", fcmErr.message);
+            }
+          }
+        }
+
+        // Log Audit Event
+        await AuditLog.create({
+          identity: rider.phone || 'Unknown Rider',
+          actionProfile: 'LOCATION_DISABLED',
+          objectTarget: rider._id.toString(),
+          status: 'success'
+        });
+      }
+
+      return res.status(200).json({ success: true, message: 'Location status synced (disabled)' });
+    }
 
     const getDist = (lat1, lon1, lat2, lon2) => {
       const R = 6371;
@@ -412,12 +474,30 @@ export const updateRiderLocation = async (req, res) => {
       const dist = getDist(latitude, longitude, fence.center.lat, fence.center.lng);
       const radiusKm = parseFloat(fence.radius) || 1.0;
       let breached = (fence.type === 'inclusion' && dist > radiusKm) || (fence.type === 'exclusion' && dist < radiusKm);
+      
       if (breached) {
-        fence.alerts += 1;
-        await fence.save();
-        const msg = `Safety Alert: Geofence Breach [${fence.name}]`;
-        if (rider.fcmToken) await sendPushNotification(rider.fcmToken, 'Safety Alert', msg, { type: 'geofence_breach', fenceId: fence._id.toString() });
-        if (rider.fcmTokenMobile) await sendPushNotification(rider.fcmTokenMobile, 'Safety Alert', msg, { type: 'geofence_breach', fenceId: fence._id.toString() });
+        const cacheKey = `${riderId.toString()}_${fence._id.toString()}`;
+        const now = Date.now();
+        const lastAlertTime = lastGeofenceAlertTimes.get(cacheKey);
+
+        if (!lastAlertTime || (now - lastAlertTime) > 10 * 60 * 1000) {
+          lastGeofenceAlertTimes.set(cacheKey, now);
+
+          fence.alerts += 1;
+          await fence.save();
+          const msg = `Safety Alert: Geofence Breach [${fence.name}]`;
+          
+          try {
+            if (rider.fcmToken) await sendPushNotification(rider.fcmToken, 'Safety Alert', msg, { type: 'geofence_breach', fenceId: fence._id.toString() });
+          } catch (fcmErr) {
+            console.error("FCM Web Notification failed:", fcmErr.message);
+          }
+          try {
+            if (rider.fcmTokenMobile) await sendPushNotification(rider.fcmTokenMobile, 'Safety Alert', msg, { type: 'geofence_breach', fenceId: fence._id.toString() });
+          } catch (fcmErr) {
+            console.error("FCM Mobile Notification failed:", fcmErr.message);
+          }
+        }
       }
     }
     

@@ -19,8 +19,8 @@ const RiderSchema = new mongoose.Schema({
   },
   kycStatus: {
     type: String,
-    enum: ['uninitiated', 'pending', 'approved', 'rejected'],
-    default: 'uninitiated',
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending',
   },
   kycDetails: {
     selfie: String,

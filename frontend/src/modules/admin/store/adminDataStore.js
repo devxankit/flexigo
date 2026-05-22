@@ -403,6 +403,7 @@ export const useAdminDataStore = create((set, get) => ({
     try {
       const params = new URLSearchParams();
       if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+      params.append('_t', Date.now().toString()); // Bypass browser/proxy cache for live telemetry
 
       const res = await api.get(`/admin/geofencing?${params.toString()}`);
       if (res.data.success) {

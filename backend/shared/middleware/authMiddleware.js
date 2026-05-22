@@ -108,13 +108,31 @@ export const authorize = (module, action) => {
         });
       }
 
-      // 3. Verify permission
-      const hasPermission = role.permissions && role.permissions[module] && role.permissions[module][action];
+      // 3. Translate old permission modules to new sidebar labels
+      const moduleMap = {
+        'Dashboard': 'Overview',
+        'Hubs': 'Franchise Management',
+        'Fleet': 'Fleet Addition',
+        'Geofencing': 'Geo Fencing',
+        'Subscribers': 'Rider Reports',
+        'KYC': 'KYC & Onboard',
+        'Staff': 'HR Management',
+        'Franchise': 'Franchise Onboard',
+        'Finance': 'Financial Center',
+        'Plans': 'Subscription Plans',
+        'Compliance': 'Compliance',
+        'Engagement': 'Engagement & CRM',
+        'Security': 'Security & Audit'
+      };
+      const targetModule = moduleMap[module] || module;
+
+      // 4. Verify permission
+      const hasPermission = role.permissions && role.permissions[targetModule] && role.permissions[targetModule][action];
 
       if (!hasPermission) {
         return res.status(403).json({ 
           success: false, 
-          message: `Access Denied: No '${action}' permission for '${module}'.` 
+          message: `Access Denied: No '${action}' permission for '${targetModule}'.` 
         });
       }
 

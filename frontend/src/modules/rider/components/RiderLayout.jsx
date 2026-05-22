@@ -77,10 +77,23 @@ export function RiderLayout() {
             title: "Location Permission Blocked",
             body: "Please enable location services in your browser settings to track your live ride."
           });
+
+          // Sync location disabled status to backend
+          (async () => {
+            try {
+              const apiModule = await import('../../../lib/axios');
+              const api = apiModule.default;
+              await api.patch('/rider/location', { locationStatus: 'disabled' });
+              console.log("✅ Location status synced to backend (disabled)");
+            } catch (syncErr) {
+              console.error("❌ Failed to sync disabled location status to backend:", syncErr);
+            }
+          })();
+
           return;
         }
 
-        // Robust fallback: try acquiring location once using low-accuracy cellular/wifi and cache
+        // Robust fallback: try acquiring location once using low-accuracy cellular/wifi without cache
         navigator.geolocation.getCurrentPosition(
           handleLocationSuccess,
           (err) => {
@@ -89,24 +102,36 @@ export function RiderLayout() {
               title: "GPS Sync Pending",
               body: "Locked inside or weak GPS signal. Please step outdoors or turn on high accuracy."
             });
+
+            // Sync fallback disabled status to backend
+            (async () => {
+              try {
+                const apiModule = await import('../../../lib/axios');
+                const api = apiModule.default;
+                await api.patch('/rider/location', { locationStatus: 'disabled' });
+                console.log("✅ Fallback location status synced to backend (disabled)");
+              } catch (syncErr) {
+                console.error("❌ Failed to sync fallback disabled location status:", syncErr);
+              }
+            })();
           },
-          { enableHighAccuracy: false, timeout: 15000, maximumAge: 30000 }
+          { enableHighAccuracy: false, timeout: 15000, maximumAge: 0 }
         );
       };
 
-      // Watch position continuously with HIGH ACCURACY and generous timeout/cache rules
+      // Watch position continuously with HIGH ACCURACY and zero cache to capture real-time movement
       const watchId = navigator.geolocation.watchPosition(
         handleLocationSuccess,
         handleLocationError,
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
 
-      // ALSO poll every 5 seconds to ensure continuous updates
+      // ALSO poll every 5 seconds to ensure continuous updates without browser cache latency
       const pollInterval = setInterval(() => {
         navigator.geolocation.getCurrentPosition(
           handleLocationSuccess,
           handleLocationError,
-          { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
         );
       }, 5000);
 
@@ -117,7 +142,7 @@ export function RiderLayout() {
           navigator.geolocation.getCurrentPosition(
             handleLocationSuccess,
             handleLocationError,
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
           );
         }
       };

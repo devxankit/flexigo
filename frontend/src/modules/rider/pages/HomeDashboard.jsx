@@ -52,7 +52,17 @@ export default function HomeDashboard() {
   const [customAddress, setCustomAddress] = useState('');
   const isDark = theme === 'dark';
 
-  const coords = currentCoords || (customLat && customLng ? { latitude: parseFloat(customLat), longitude: parseFloat(customLng) } : null);
+  const coords = (sessionStorage.getItem('simulated_gps') === 'true' && customLat && customLng)
+    ? { latitude: parseFloat(customLat), longitude: parseFloat(customLng) }
+    : (currentCoords || (customLat && customLng ? { latitude: parseFloat(customLat), longitude: parseFloat(customLng) } : null));
+
+  useEffect(() => {
+    if (sessionStorage.getItem('simulated_gps') !== 'true') {
+      if (currentCoords?.latitude) setCustomLat(currentCoords.latitude.toString());
+      if (currentCoords?.longitude) setCustomLng(currentCoords.longitude.toString());
+      if (currentAddress && currentAddress !== 'Detecting location...') setCustomAddress(currentAddress);
+    }
+  }, [currentCoords, currentAddress]);
 
   const [isAutoSimulating, setIsAutoSimulating] = useState(false);
   const [simStep, setSimStep] = useState(0);
@@ -656,7 +666,7 @@ export default function HomeDashboard() {
                             alert("⚠️ Failed to acquire device GPS: " + err.message);
                             setSimulatingLoc(null);
                           },
-                          { enableHighAccuracy: true, timeout: 10000 }
+                          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
                         );
                       } else {
                         alert("⚠️ Geolocation not supported in this browser context.");

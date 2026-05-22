@@ -388,31 +388,37 @@ export const getKycRecords = async (req, res) => {
     ]);
 
     const records = [
-      ...riders.map(r => ({
-        id: r._id,
-        name: r.name || r.phone,
-        phone: r.phone,
-        role: r.role || 'Rider',
-        type: 'Individual',
-        city: r.city || 'N/A',
-        status: r.kycStatus === 'approved' ? 'approved' : (r.kycStatus === 'rejected' ? 'rejected' : (r.status || r.kycStatus || 'pending')),
-        vehicleId: r.vehicleId?._id || r.vehicleId,
-        vehiclePlate: r.vehicleId?.plate || 'N/A',
-        date: r.createdAt,
-        details: r.kycDetails
-      })),
-      ...franchises.map(f => ({
-        id: f._id,
-        name: f.hubName || f.ownerName || f.phone || 'Unknown Hub',
-        phone: f.phone,
-        role: 'Franchise',
-        type: f.businessDetails?.type || 'Pvt Ltd',
-        city: f.city || f.businessDetails?.location || 'N/A',
-        status: f.kycStatus === 'approved' ? 'approved' : (f.kycStatus === 'rejected' ? 'rejected' : (f.kycStatus || 'pending')),
-        date: f.createdAt,
-        details: f.kycDetails,
-        hubs: 1
-      }))
+      ...riders.map(r => {
+        const normalizedKycStatus = r.kycStatus === 'uninitiated' ? 'pending' : r.kycStatus;
+        return {
+          id: r._id,
+          name: r.name || r.phone,
+          phone: r.phone,
+          role: r.role || 'Rider',
+          type: 'Individual',
+          city: r.city || 'N/A',
+          status: normalizedKycStatus === 'approved' ? 'approved' : (normalizedKycStatus === 'rejected' ? 'rejected' : (r.status || 'pending')),
+          vehicleId: r.vehicleId?._id || r.vehicleId,
+          vehiclePlate: r.vehicleId?.plate || 'N/A',
+          date: r.createdAt,
+          details: r.kycDetails
+        };
+      }),
+      ...franchises.map(f => {
+        const normalizedKycStatus = f.kycStatus === 'uninitiated' ? 'pending' : f.kycStatus;
+        return {
+          id: f._id,
+          name: f.hubName || f.ownerName || f.phone || 'Unknown Hub',
+          phone: f.phone,
+          role: 'Franchise',
+          type: f.businessDetails?.type || 'Pvt Ltd',
+          city: f.city || f.businessDetails?.location || 'N/A',
+          status: normalizedKycStatus === 'approved' ? 'approved' : (normalizedKycStatus === 'rejected' ? 'rejected' : (f.status || 'pending')),
+          date: f.createdAt,
+          details: f.kycDetails,
+          hubs: 1
+        };
+      })
     ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
     // Stats Logic (Filtered by date as requested)
@@ -707,7 +713,9 @@ export const getGeofences = async (req, res) => {
     const { range } = req.query;
     const dateFilter = getDateFilter(range, 'createdAt');
 
-    const geofences = await Geofence.find(dateFilter)
+    // Geofences are permanent rules and should not be filtered by creation date by default.
+    // We fetch all geofences so that older perimeters do not disappear after 7 days.
+    const geofences = await Geofence.find()
       .populate('riderId', 'name phone lastLocation currentSpeed')
       .sort('-createdAt');
 
@@ -1597,7 +1605,30 @@ export const getSubscriberData = async (req, res) => {
 // @route   GET /api/v1/admin/roles
 export const getRoles = async (req, res) => {
   try {
-    const defaultModules = ['Dashboard', 'Hubs', 'Fleet', 'KYC', 'Plans', 'Subscribers', 'Geofencing', 'Finance', 'Inventory', 'Franchise', 'Compliance', 'Engagement', 'Security', 'Staff'];
+    const defaultModules = [
+      'Overview',
+      'Franchise Management',
+      'Fleet Addition',
+      'Geo Fencing',
+      'Rider Reports',
+      'KYC & Onboard',
+      'HR Management',
+      'Franchise Onboard',
+      'Financial Center',
+      'Payment Gateway',
+      'Inventory & Billing',
+      'Franchise & 3PL',
+      'Subscription Plans',
+      'Compliance',
+      'Engagement & CRM',
+      'Security & Audit',
+      'Notifications',
+      'Plans Page',
+      'Contact Us',
+      'About Us',
+      'Press & Media'
+    ];
+
     let roles = await Role.find().sort({ createdAt: -1 });
     
     // Seed if empty
@@ -1613,33 +1644,75 @@ export const getRoles = async (req, res) => {
         { name: 'Staff', permissions: initialPermissions }
       ]);
       roles = await Role.find().sort({ createdAt: -1 });
-    } else {
-      // Background Repair (Non-blocking)
-      roles.forEach(async (role) => {
-        let permissionsUpdated = false;
-        
-        // Deep Repair: Ensure permissions is a valid object and NOT a string
-        if (!role.permissions || typeof role.permissions !== 'object' || Array.isArray(role.permissions)) {
-          role.permissions = {};
+    }
+
+    // Dynamic Sync: Get all unique roles defined in HR Management (Staff collection)
+    const uniqueStaffRoles = await Staff.distinct('role');
+    let existingRoles = await Role.find();
+
+    // Dynamic Cleanup: Delete roles that are not default roles and no longer assigned to any active staff
+    const defaultRoleNamesLower = ['admin', 'manager', 'staff', 'superadmin'];
+    const activeStaffRolesLower = uniqueStaffRoles
+      .filter(r => r && r.trim())
+      .map(r => r.trim().toLowerCase());
+
+    const rolesToDelete = [];
+    for (const dbRole of existingRoles) {
+      const dbRoleNameLower = dbRole.name.trim().toLowerCase();
+      if (!defaultRoleNamesLower.includes(dbRoleNameLower) && !activeStaffRolesLower.includes(dbRoleNameLower)) {
+        rolesToDelete.push(dbRole._id);
+      }
+    }
+
+    if (rolesToDelete.length > 0) {
+      await Role.deleteMany({ _id: { $in: rolesToDelete } });
+      existingRoles = await Role.find(); // Re-fetch after deletion
+    }
+
+    const existingRoleNames = existingRoles.map(r => r.name.toLowerCase());
+
+    const rolesToCreate = [];
+    for (const staffRole of uniqueStaffRoles) {
+      if (staffRole && staffRole.trim() && !existingRoleNames.includes(staffRole.trim().toLowerCase())) {
+        const initialPermissions = {};
+        defaultModules.forEach(mod => {
+          initialPermissions[mod] = { read: true, create: false, update: false, delete: false };
+        });
+        rolesToCreate.push({ name: staffRole.trim(), permissions: initialPermissions });
+      }
+    }
+
+    if (rolesToCreate.length > 0) {
+      await Role.insertMany(rolesToCreate);
+    }
+
+    roles = await Role.find().sort({ createdAt: -1 });
+
+    // Background Repair (Non-blocking)
+    roles.forEach(async (role) => {
+      let permissionsUpdated = false;
+      
+      // Deep Repair: Ensure permissions is a valid object and NOT a string
+      if (!role.permissions || typeof role.permissions !== 'object' || Array.isArray(role.permissions)) {
+        role.permissions = {};
+        permissionsUpdated = true;
+      }
+
+      defaultModules.forEach(mod => {
+        if (!role.permissions[mod] || typeof role.permissions[mod] !== 'object') {
+          role.permissions[mod] = { read: true, create: false, update: false, delete: false };
           permissionsUpdated = true;
         }
-
-        defaultModules.forEach(mod => {
-          if (!role.permissions[mod] || typeof role.permissions[mod] !== 'object') {
-            role.permissions[mod] = { read: true, create: false, update: false, delete: false };
-            permissionsUpdated = true;
-          }
-        });
-
-        if (permissionsUpdated) {
-          try {
-            await Role.updateOne({ _id: role._id }, { $set: { permissions: role.permissions } });
-          } catch (err) {
-            console.error("Background Repair Failed:", err);
-          }
-        }
       });
-    }
+
+      if (permissionsUpdated) {
+        try {
+          await Role.updateOne({ _id: role._id }, { $set: { permissions: role.permissions } });
+        } catch (err) {
+          console.error("Background Repair Failed:", err);
+        }
+      }
+    });
 
     res.status(200).json({ success: true, roles });
   } catch (error) {
@@ -1653,7 +1726,29 @@ export const createRole = async (req, res) => {
   try {
     const { name, permissions } = req.body;
     // Default permissions if not provided
-    const defaultModules = ['Dashboard', 'Hubs', 'Fleet', 'KYC', 'Plans', 'Subscribers', 'Geofencing', 'Finance', 'Inventory', 'Franchise', 'Compliance', 'Engagement', 'Security', 'Staff'];
+    const defaultModules = [
+      'Overview',
+      'Franchise Management',
+      'Fleet Addition',
+      'Geo Fencing',
+      'Rider Reports',
+      'KYC & Onboard',
+      'HR Management',
+      'Franchise Onboard',
+      'Financial Center',
+      'Payment Gateway',
+      'Inventory & Billing',
+      'Franchise & 3PL',
+      'Subscription Plans',
+      'Compliance',
+      'Engagement & CRM',
+      'Security & Audit',
+      'Notifications',
+      'Plans Page',
+      'Contact Us',
+      'About Us',
+      'Press & Media'
+    ];
     const finalPermissions = permissions || {};
     defaultModules.forEach(mod => {
       if (!finalPermissions[mod]) {
@@ -1829,7 +1924,7 @@ export const createRider = async (req, res) => {
       phone,
       email,
       subscriptionPlan: plan || null,
-      kycStatus: 'uninitiated',
+      kycStatus: 'pending',
       status: status || 'pending'
     });
 

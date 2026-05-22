@@ -245,10 +245,12 @@ export default function KycOnboardingPage() {
                           </td>
                           <td className="py-2 px-4 font-medium text-[var(--text-tertiary)]">{record.role}</td>
                           <td className="py-2 px-4">
-                             <div className="flex items-center gap-1.5 px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full w-fit">
-                                <Camera size={8} className="text-emerald-500" />
-                                <span className="font-medium text-emerald-500">LIVE_MATCH_OK</span>
-                             </div>
+                             {(record.status === 'approved' || record.details?.ekycVerified) && !record.vehicleId ? (
+                               <div className="flex items-center gap-1.5 px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full w-fit">
+                                  <Camera size={8} className="text-emerald-500" />
+                                  <span className="font-medium text-emerald-500">LIVE_MATCH_OK</span>
+                               </div>
+                             ) : null}
                           </td>
                           <td className="py-2 px-4  font-medium text-[var(--text-tertiary)] whitespace-nowrap">{new Date(record.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</td>
                           <td className="py-2 px-4">

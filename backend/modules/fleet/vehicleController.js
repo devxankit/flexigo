@@ -6,6 +6,16 @@ import Franchise from '../franchise/franchiseModel.js';
 import cloudinary from '../../config/cloudinary.js';
 import { sendPushNotification } from '../../shared/utils/firebase.js';
 
+const normalizeVehicleStatus = (status) => {
+  if (status === 'unassigned') return 'available';
+  return status;
+};
+
+const isAssignableVehicleStatus = (status) => {
+  const normalized = normalizeVehicleStatus(status);
+  return !normalized || normalized === 'available';
+};
+
 // @desc    Add new vehicle
 // @route   POST /api/v1/fleet/add
 export const addVehicle = async (req, res) => {
@@ -171,6 +181,20 @@ export const getVehicles = async (req, res) => {
                 vehicle.lastLocation = rider.lastLocation;
                 vehicle.currentSpeed = rider.currentSpeed;
              }
+          } else {
+             // Reconcile legacy or manual assignment state using rider.vehicleId
+             const rider = await Rider.findOne({ vehicleId: vehicle._id }).select('name phone lastLocation currentSpeed').lean();
+             if (rider) {
+                vehicle.rider = rider.name || 'Assigned';
+                vehicle.riderPhone = rider.phone;
+                vehicle.lastLocation = rider.lastLocation;
+                vehicle.currentSpeed = rider.currentSpeed;
+
+                if (vehicle.status === 'unassigned') {
+                   vehicle.status = 'assigned';
+                   await Vehicle.findByIdAndUpdate(vehicle._id, { status: 'assigned' });
+                }
+             }
           }
 
           // Fallback: If no rider location, use Franchise location (Hub location)
@@ -277,8 +301,8 @@ export const createAssignment = async (req, res) => {
       return res.status(404).json({ success: false, message: `Rider with phone ${rPhone} not found` });
     }
 
-    // Allow if status is 'available' OR empty/null
-    if (vehicle.status && vehicle.status !== 'available') {
+    // Allow if status is 'available', 'unassigned', or empty/null
+    if (!isAssignableVehicleStatus(vehicle.status)) {
       return res.status(400).json({ success: false, message: `Vehicle ${vPlate} is currently ${vehicle.status}` });
     }
 

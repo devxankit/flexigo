@@ -132,6 +132,25 @@
     @apply bg-white/20;
   }
 
+  .custom-scrollbar-emerald::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+
+  .custom-scrollbar-emerald::-webkit-scrollbar-track {
+    background: rgba(16, 185, 129, 0.03);
+    border-radius: 9999px;
+  }
+
+  .custom-scrollbar-emerald::-webkit-scrollbar-thumb {
+    background: rgba(16, 185, 129, 0.3);
+    border-radius: 9999px;
+  }
+
+  .custom-scrollbar-emerald::-webkit-scrollbar-thumb:hover {
+    background: rgba(16, 185, 129, 0.5);
+  }
+
   .landing-page-theme {
     --color-flexigo-primary: #1A2A6B;
     /* Navy Blue - from logo */

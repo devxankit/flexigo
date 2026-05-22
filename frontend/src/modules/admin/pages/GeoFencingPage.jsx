@@ -33,10 +33,7 @@ const containerStyle = {
   height: '100%'
 };
 
-const defaultCenter = {
-  lat: 22.7196,
-  lng: 75.8577
-};
+const defaultCenter = null; // No hardcoded location — will be set from real GPS
 
 const getDistance = (lat1, lng1, lat2, lng2) => {
    const R = 6371; // km
@@ -123,6 +120,7 @@ export default function GeoFencingPage() {
 
   const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
   const [selectedZone, setSelectedZone] = useState(null);
+  const [lastSelectedZoneId, setLastSelectedZoneId] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [breachedRiders, setBreachedRiders] = useState({});
   const [toast, setToast] = useState(null);
@@ -136,8 +134,8 @@ export default function GeoFencingPage() {
     setMap(null);
   }, []);
 
-  const [userLocation, setUserLocation] = useState(defaultCenter);
-  const [mapCenter, setMapCenter] = useState(defaultCenter);
+  const [userLocation, setUserLocation] = useState(null);
+  const [mapCenter, setMapCenter] = useState(null);
   const [timeOffset, setTimeOffset] = useState(0);
 
   useEffect(() => {
@@ -210,20 +208,26 @@ export default function GeoFencingPage() {
    }, [timeOffset]);
 
   useEffect(() => {
-    fetchGeofences();
+    fetchGeofences(activeFilters);
     fetchSubscriberData();
     
     const pollInterval = setInterval(() => {
-       fetchGeofences();
+       fetchGeofences(activeFilters);
     }, 5000);
     
     if (navigator.geolocation) {
-       navigator.geolocation.getCurrentPosition((pos) => {
-          const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          setUserLocation(loc);
-          setMapCenter(loc);
-          if (!selectedZone && map) map.panTo(loc);
-       });
+       navigator.geolocation.getCurrentPosition(
+         (pos) => {
+           const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+           setUserLocation(loc);
+           setMapCenter(loc);
+           if (!selectedZone && map) map.panTo(loc);
+         },
+         (err) => {
+           console.warn('GeoFencing: GPS error, using first geofence center as fallback:', err.message);
+         },
+         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }  // maximumAge:0 = always fresh, no cache
+       );
     }
 
     if (Notification.permission === "default") {
@@ -231,7 +235,35 @@ export default function GeoFencingPage() {
     }
     
     return () => clearInterval(pollInterval);
-  }, [map]);
+  }, [map, activeFilters]);
+
+  // Keep the selectedZone state in sync with real-time updates from background polling
+  useEffect(() => {
+    if (selectedZone) {
+      const selectedRiderIdStr = (selectedZone.riderId?._id || selectedZone.riderId?.id || selectedZone.riderId || '').toString();
+      
+      // If it's a real geofence in our list, find and update it
+      const updatedZone = geofences.find(g => (g._id || g.id || '').toString() === (selectedZone._id || selectedZone.id || '').toString());
+      if (updatedZone) {
+        if (JSON.stringify(updatedZone) !== JSON.stringify(selectedZone)) {
+          setSelectedZone(updatedZone);
+        }
+      } else if (selectedZone._id?.startsWith('temp-')) {
+        // If it's a synthetic geofence, update the rider info from the fresh allRiders list
+        const freshRider = allRiders.find(r => (r._id || r.id || '').toString() === selectedRiderIdStr);
+        if (freshRider) {
+          const freshSynthetic = {
+            ...selectedZone,
+            center: freshRider.lastLocation || selectedZone.center,
+            riderId: freshRider
+          };
+          if (JSON.stringify(freshSynthetic) !== JSON.stringify(selectedZone)) {
+            setSelectedZone(freshSynthetic);
+          }
+        }
+      }
+    }
+  }, [geofences, allRiders]);
 
   useEffect(() => {
      if (geofences.length === 0) return;
@@ -240,7 +272,7 @@ export default function GeoFencingPage() {
         if (!gf.center || !gf.riderId || !gf.radius) return;
         
         const riderId = gf.riderId?._id || gf.riderId?.id || gf.riderId;
-        const matchedRider = allRiders.find(r => (r._id || r.id) === riderId);
+        const matchedRider = allRiders.find(r => (r._id || r.id || '').toString() === (riderId || '').toString());
         if (!matchedRider) return;
 
         // Only check breach for riders with REAL GPS data — skip simulated/fake positions
@@ -270,18 +302,22 @@ export default function GeoFencingPage() {
 
   useEffect(() => {
     if (selectedZone && map) {
-      const riderId = selectedZone.riderId?._id || selectedZone.riderId?.id || selectedZone.riderId;
-      const matchedRider = allRiders.find(r => (r._id || r.id) === riderId);
-      const targetLoc = getRiderLiveLocation(matchedRider || selectedZone.riderId, selectedZone) || selectedZone.center || userLocation;
-      
-      const isNewDelhi = Math.abs(targetLoc.lat - 28.6139) < 0.1 && Math.abs(targetLoc.lng - 77.2090) < 0.1;
-      const finalLoc = (isNewDelhi && userLocation) ? userLocation : targetLoc;
+      const currentId = (selectedZone._id || selectedZone.id || '').toString();
+      if (currentId !== lastSelectedZoneId) {
+        const riderId = selectedZone.riderId?._id || selectedZone.riderId?.id || selectedZone.riderId;
+        const matchedRider = allRiders.find(r => (r._id || r.id || '').toString() === (riderId || '').toString());
+        const targetLoc = getRiderLiveLocation(matchedRider || selectedZone.riderId, selectedZone) || selectedZone.center || userLocation;
+        
+        const isNewDelhi = Math.abs(targetLoc.lat - 28.6139) < 0.1 && Math.abs(targetLoc.lng - 77.2090) < 0.1;
+        const finalLoc = (isNewDelhi && userLocation) ? userLocation : targetLoc;
 
-      setMapCenter(finalLoc);
-      map.panTo(finalLoc);
-      map.setZoom(16);
+        setMapCenter(finalLoc);
+        map.panTo(finalLoc);
+        map.setZoom(16);
+        setLastSelectedZoneId(currentId);
+      }
     }
-  }, [selectedZone, map]);
+  }, [selectedZone, map, lastSelectedZoneId, allRiders, getRiderLiveLocation, userLocation]);
 
   const addNotification = (riderName) => {
      const newNotif = {
@@ -340,12 +376,29 @@ export default function GeoFencingPage() {
     }
   };
 
-  const openCreateModal = () => {
+  const openCreateModal = (riderObj = null) => {
     setModalMode('create');
     setNewZoneName('');
     setNewZoneType('inclusion');
-    setSelectedRider('');
-    setDraftCenter(userLocation);
+    
+    let baseCenter = userLocation;
+    if (riderObj) {
+      setSelectedRider(riderObj._id || riderObj.id || '');
+      const riderLoc = riderObj.lastLocation;
+      if (riderLoc) {
+        const rLat = riderLoc.lat !== undefined && riderLoc.lat !== null ? riderLoc.lat : riderLoc.latitude;
+        const rLng = riderLoc.lng !== undefined && riderLoc.lng !== null ? riderLoc.lng : riderLoc.longitude;
+        if (rLat && rLng && Number(rLat) !== 0 && Number(rLng) !== 0) {
+          baseCenter = { lat: Number(rLat), lng: Number(rLng) };
+        }
+      }
+    } else {
+      setSelectedRider('');
+    }
+    
+    // Use real GPS if available, else use first geofence center as a fallback
+    const fallbackCenter = geofences.find(gf => gf.center)?.center || null;
+    setDraftCenter(baseCenter || fallbackCenter);
     setDraftRadius(1000);
     setIsModalOpen(true);
   };
@@ -355,8 +408,24 @@ export default function GeoFencingPage() {
     setEditingGeofenceId(gf._id || gf.id);
     setNewZoneName(gf.name);
     setNewZoneType(gf.type);
-    setSelectedRider(gf.riderId?._id || gf.riderId?.id || gf.riderId || '');
-    setDraftCenter(gf.center);
+    
+    const rId = gf.riderId?._id || gf.riderId?.id || gf.riderId || '';
+    setSelectedRider(rId);
+    
+    // Auto-sync draft center with the rider's exact current location if available, otherwise fallback to saved center
+    const matchedRider = allRiders.find(r => (r._id || r.id || '').toString() === rId.toString());
+    const riderLoc = matchedRider?.lastLocation;
+    const hasRealGPS = riderLoc && 
+      ((riderLoc.lat !== undefined && riderLoc.lat !== null && Number(riderLoc.lat) !== 0) ||
+       (riderLoc.latitude !== undefined && riderLoc.latitude !== null && Number(riderLoc.latitude) !== 0));
+
+    if (hasRealGPS) {
+      const rLat = riderLoc.lat !== undefined && riderLoc.lat !== null ? riderLoc.lat : riderLoc.latitude;
+      const rLng = riderLoc.lng !== undefined && riderLoc.lng !== null ? riderLoc.lng : riderLoc.longitude;
+      setDraftCenter({ lat: Number(rLat), lng: Number(rLng) });
+    } else {
+      setDraftCenter(gf.center);
+    }
     
     const rMatch = gf.radius?.match(/([\d.]+)/);
     const rVal = rMatch ? parseFloat(rMatch[1]) : 1;
@@ -531,8 +600,9 @@ export default function GeoFencingPage() {
                         <tbody className="divide-y divide-[var(--border-subtle)]">
                            <AnimatePresence mode='popLayout'>
                            {allRiders.map((rider) => {
-                              const gf = geofences.find(g => (g.riderId?._id || g.riderId) === (rider._id || rider.id));
-                              const isSelected = selectedZone?._id === gf?._id && gf !== undefined;
+                              const gf = geofences.find(g => (g.riderId?._id || g.riderId || '').toString() === (rider._id || rider.id || '').toString());
+                              const syntheticGfId = `temp-${rider._id || rider.id}`;
+                              const isSelected = selectedZone && (selectedZone._id || selectedZone.id || '').toString() === (gf?._id || gf?.id || syntheticGfId).toString();
                               
                               return (
                                  <motion.tr 
@@ -541,14 +611,25 @@ export default function GeoFencingPage() {
                                     animate={{ opacity: 1 }}
                                     key={rider._id || rider.id} 
                                     onClick={() => {
-                                       requestNotificationPermission(); const riderLoc = getRiderLiveLocation(rider, gf);
-                                       if (gf) {
-                                          setSelectedZone(gf);
-                                       }
+                                       requestNotificationPermission();
+                                       const targetZone = gf || {
+                                          _id: syntheticGfId,
+                                          name: 'No Zone',
+                                          type: 'inclusion',
+                                          radius: '--',
+                                          status: 'inactive',
+                                          alerts: 0,
+                                          center: rider.lastLocation || { lat: 18.5815, lng: 73.7671 },
+                                          riderId: rider
+                                       };
+                                       setSelectedZone(targetZone);
+                                       
+                                       const riderLoc = getRiderLiveLocation(rider, gf);
                                        if (riderLoc && map) {
                                           setMapCenter(riderLoc);
-                                           map.panTo(riderLoc);
+                                          map.panTo(riderLoc);
                                           map.setZoom(16);
+                                          setLastSelectedZoneId(syntheticGfId);
                                        }
                                     }}
                                     className={`group/row hover:bg-emerald-500/5 transition-all cursor-pointer ${isSelected ? 'bg-emerald-500/5' : ''}`}
@@ -577,7 +658,7 @@ export default function GeoFencingPage() {
                                           gf?.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-slate-500/10 text-slate-500 border-slate-500/10'
                                        }`}>
                                           <div className={`w-1 h-1 rounded-full ${gf?.status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`} />
-                                          {gf ? gf.status : 'noactive'}
+                                          {gf ? gf.status : 'inactive'}
                                        </div>
                                     </td>
                                     <td className="py-2 px-4">
@@ -602,7 +683,7 @@ export default function GeoFencingPage() {
                                              </>
                                           ) : (
                                              <button 
-                                                onClick={(e) => { e.stopPropagation(); openCreateModal(); setSelectedRider(rider._id || rider.id); }}
+                                                onClick={(e) => { e.stopPropagation(); openCreateModal(rider); }}
                                                 className="p-1.5 text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-all"
                                                 title="Create Zone"
                                              >
@@ -636,7 +717,7 @@ export default function GeoFencingPage() {
                      </div>
 
                      <div className="flex-1 min-h-[250px] md:min-h-[350px] bg-[var(--bg-tertiary)] rounded-xl relative overflow-hidden group shadow-inner border border-[var(--border-subtle)]">
-                        {isLoaded ? (
+                        {isLoaded && (isModalOpen ? draftCenter : mapCenter) ? (
                            <GoogleMap
                               mapContainerStyle={containerStyle}
                               center={isModalOpen ? draftCenter : mapCenter}
@@ -686,13 +767,13 @@ export default function GeoFencingPage() {
 
                               {!isModalOpen && selectedZone && (() => {
                                   const riderId = selectedZone.riderId?._id || selectedZone.riderId?.id || selectedZone.riderId;
-                                  const matchedRider = allRiders.find(r => (r._id || r.id) === riderId);
+                                  const matchedRider = allRiders.find(r => (r._id || r.id || '').toString() === (riderId || '').toString());
                                   const targetLoc = getRiderLiveLocation(matchedRider || selectedZone.riderId, selectedZone) || selectedZone.center || userLocation;
                                   const isNewDelhi = Math.abs(targetLoc.lat - 28.6139) < 0.1 && Math.abs(targetLoc.lng - 77.2090) < 0.1;
                                   const finalLoc = (isNewDelhi && userLocation) ? userLocation : targetLoc;
                                   
                                   const rMatch = selectedZone.radius?.match(/([\d.]+)/);
-                                  const rMeters = rMatch ? parseFloat(rMatch[1]) * 1000 : 1000;
+                                  const rMeters = selectedZone.radius === '--' ? 0 : (rMatch ? parseFloat(rMatch[1]) * 1000 : 1000);
 
                                   let circleCenter = selectedZone.center || finalLoc;
                                   if (circleCenter && Math.abs(circleCenter.lat - 28.6139) < 0.001 && Math.abs(circleCenter.lng - 77.2090) < 0.001) {
@@ -711,17 +792,19 @@ export default function GeoFencingPage() {
 
                                   return (
                                      <>
-                                        <CircleF 
-                                           center={circleCenter}
-                                           radius={rMeters}
-                                           options={{
-                                              strokeColor: selectedZone.type === 'exclusion' ? '#f43f5e' : '#10b981',
-                                              strokeOpacity: 0.8,
-                                              strokeWeight: 2,
-                                              fillColor: selectedZone.type === 'exclusion' ? '#f43f5e' : '#10b981',
-                                              fillOpacity: 0.0,
-                                           }}
-                                        />
+                                        {rMeters > 0 && (
+                                           <CircleF 
+                                              center={circleCenter}
+                                              radius={rMeters}
+                                              options={{
+                                                 strokeColor: selectedZone.type === 'exclusion' ? '#f43f5e' : '#10b981',
+                                                 strokeOpacity: 0.8,
+                                                 strokeWeight: 2,
+                                                 fillColor: selectedZone.type === 'exclusion' ? '#f43f5e' : '#10b981',
+                                                 fillOpacity: 0.0,
+                                              }}
+                                           />
+                                        )}
                                         <MarkerF 
                                            position={finalLoc}
                                            onClick={() => {
@@ -747,7 +830,7 @@ export default function GeoFencingPage() {
                                  let circleCenter = gf.center;
                                  if (Math.abs(circleCenter.lat - 28.6139) < 0.001 && Math.abs(circleCenter.lng - 77.2090) < 0.001) {
                                     const riderId = gf.riderId?._id || gf.riderId?.id || gf.riderId;
-                                    const matchedRider = allRiders.find(r => (r._id || r.id) === riderId);
+                                    const matchedRider = allRiders.find(r => (r._id || r.id || '').toString() === (riderId || '').toString());
                                     const isSagar = matchedRider?.name?.toLowerCase().includes('sagar') || matchedRider?.phone === '9993911855' || matchedRider?.phone === '4315256688';
                                     const isIndoreZone = gf?.name?.toUpperCase().includes('INDORE') || gf?.name?.toUpperCase().includes('ANKIT') || gf?.name?.toUpperCase().includes('TEST ZONE');
                                     const isPuneZone = gf?.name?.toUpperCase().includes('PUNE') || matchedRider?.name?.toLowerCase().includes('tushar') || matchedRider?.name?.toLowerCase().includes('ashish') || matchedRider?.phone === '9922968093' || matchedRider?.phone === '9049396061';
@@ -777,7 +860,7 @@ export default function GeoFencingPage() {
                               })}
 
                               {!isModalOpen && !selectedZone && allRiders.map(rider => {
-                                 const gf = geofences.find(g => (g.riderId?._id || g.riderId) === (rider._id || rider.id));
+                                 const gf = geofences.find(g => (g.riderId?._id || g.riderId || '').toString() === (rider._id || rider.id || '').toString());
                                  const hasRealLocation = rider?.lastLocation && 
                                     ((rider.lastLocation.lat !== undefined && rider.lastLocation.lat !== null && rider.lastLocation.lat !== 0) || 
                                      (rider.lastLocation.latitude !== undefined && rider.lastLocation.latitude !== null && rider.lastLocation.latitude !== 0));
@@ -786,16 +869,32 @@ export default function GeoFencingPage() {
                                  
                                  const riderLoc = getRiderLiveLocation(rider, gf);
                                  if (!riderLoc) return null;
+                                 const syntheticGfId = `temp-${rider._id || rider.id}`;
                                  return (
                                     <MarkerF 
                                        key={rider._id || rider.id}
                                        position={riderLoc}
                                        onClick={() => {
-                                         if (gf) setSelectedZone(gf);
-                                         else {
-                                           setMapCenter(riderLoc);
-                                            map.panTo(riderLoc);
-                                           map.setZoom(16);
+                                         if (gf) {
+                                            setSelectedZone(gf);
+                                         } else {
+                                            const targetZone = {
+                                               _id: syntheticGfId,
+                                               name: 'No Zone',
+                                               type: 'inclusion',
+                                               radius: '--',
+                                               status: 'inactive',
+                                               alerts: 0,
+                                               center: rider.lastLocation || { lat: 18.5815, lng: 73.7671 },
+                                               riderId: rider
+                                            };
+                                            setSelectedZone(targetZone);
+                                            setMapCenter(riderLoc);
+                                            if (map) {
+                                               map.panTo(riderLoc);
+                                               map.setZoom(16);
+                                            }
+                                            setLastSelectedZoneId(syntheticGfId);
                                          }
                                        }}
                                        icon={{
@@ -826,7 +925,7 @@ export default function GeoFencingPage() {
                            <p className="text-[9px] font-black text-[var(--text-primary)]">
                               {selectedZone ? (() => {
                                  const riderId = selectedZone.riderId?._id || selectedZone.riderId?.id || selectedZone.riderId;
-                                 const matchedRider = allRiders.find(r => (r._id || r.id) === riderId);
+                                 const matchedRider = allRiders.find(r => (r._id || r.id || '').toString() === (riderId || '').toString());
                                  const loc = getRiderLiveLocation(matchedRider || selectedZone.riderId, selectedZone) || selectedZone.center || userLocation;
                                  const isNewDelhi = loc.lat === 28.6139 && loc.lng === 77.2090;
                                  const finalLoc = (isNewDelhi && userLocation) ? userLocation : loc;
@@ -851,7 +950,7 @@ export default function GeoFencingPage() {
                            <p className="text-[9px] font-black text-emerald-500">
                               {selectedZone ? (() => {
                                  const riderId = selectedZone.riderId?._id || selectedZone.riderId?.id || selectedZone.riderId;
-                                 const matchedRider = allRiders.find(r => (r._id || r.id) === riderId);
+                                 const matchedRider = allRiders.find(r => (r._id || r.id || '').toString() === (riderId || '').toString());
                                  const speed = matchedRider?.currentSpeed !== undefined ? matchedRider.currentSpeed : (selectedZone.riderId?.currentSpeed !== undefined ? selectedZone.riderId.currentSpeed : 24.5);
                                  return `${speed} km/h`;
                               })() : '0.0 km/h'}
@@ -986,7 +1085,21 @@ export default function GeoFencingPage() {
                            <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic leading-none">Select Target Rider</label>
                            <select 
                               value={selectedRider}
-                              onChange={(e) => setSelectedRider(e.target.value)}
+                              onChange={(e) => {
+                                 const rIdVal = e.target.value;
+                                 setSelectedRider(rIdVal);
+                                 if (rIdVal) {
+                                    const matchedRider = allRiders.find(r => (r._id || r.id || '').toString() === rIdVal.toString());
+                                    const riderLoc = matchedRider?.lastLocation;
+                                    if (riderLoc) {
+                                       const rLat = riderLoc.lat !== undefined && riderLoc.lat !== null ? riderLoc.lat : riderLoc.latitude;
+                                       const rLng = riderLoc.lng !== undefined && riderLoc.lng !== null ? riderLoc.lng : riderLoc.longitude;
+                                       if (rLat && rLng && Number(rLat) !== 0 && Number(rLng) !== 0) {
+                                          setDraftCenter({ lat: Number(rLat), lng: Number(rLng) });
+                                       }
+                                    }
+                                 }
+                              }}
                               className="w-full px-4 py-3 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-black tracking-widest focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500/40 outline-none transition-all italic text-[var(--text-primary)]"
                            >
                               <option value="">Choose Rider Node...</option>

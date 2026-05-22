@@ -109,6 +109,7 @@ export default function HrManagementPage() {
    };
 
    const [activeTab, setActiveTab] = useState('employees');
+   const [searchTerm, setSearchTerm] = useState('');
    const [isModalOpen, setIsModalOpen] = useState(false);
    const [modalType, setModalType] = useState('add'); // 'add', 'edit', 'payouts', or 'details'
    const [selectedStaff, setSelectedStaff] = useState(null);
@@ -121,6 +122,16 @@ export default function HrManagementPage() {
       aadhaarFront: null,
       aadhaarBack: null
    });
+
+   const defaultDepartments = ['Operations', 'Logistics', 'Technology', 'Maintenance', 'Admin'];
+   const departmentOptions = React.useMemo(() => {
+      const uniqueDepts = Array.from(new Set(staff.map((emp) => emp.dept).filter(Boolean)));
+      return uniqueDepts.length ? uniqueDepts.sort() : defaultDepartments;
+   }, [staff]);
+
+   const currentDeptSelectValue = departmentOptions.includes(newEmployee.dept)
+      ? newEmployee.dept
+      : '__custom__';
 
    const [weekOffset, setWeekOffset] = useState(0);
    const [jumpDate, setJumpDate] = useState(new Date());
@@ -147,6 +158,17 @@ export default function HrManagementPage() {
    }, [selectedStaff, weekOffset, jumpDate, modalType]);
 
    const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
+   const filteredStaff = React.useMemo(() => {
+      const query = searchTerm.trim().toLowerCase();
+      if (!query) return staff;
+      return staff.filter((emp) => {
+         const combined = [emp.name, emp.role, emp.dept, emp.phone, emp.employeeId]
+            .filter(Boolean)
+            .map((value) => String(value).toLowerCase())
+            .join(' ');
+         return combined.includes(query);
+      });
+   }, [staff, searchTerm]);
 
    React.useEffect(() => {
       fetchStaff();
@@ -321,6 +343,8 @@ export default function HrManagementPage() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" size={12} />
                   <input
                      type="text"
+                     value={searchTerm}
+                     onChange={(e) => setSearchTerm(e.target.value)}
                      placeholder="SEARCH PERSON"
                      className="bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl py-2 pl-9 pr-4 text-[9px] font-bold tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none w-48 transition-all"
                   />
@@ -339,7 +363,7 @@ export default function HrManagementPage() {
                      </thead>
                      <tbody className="divide-y divide-[var(--border-subtle)]">
                         <AnimatePresence mode='popLayout'>
-                           {staff.map((emp, idx) => (
+                           {filteredStaff.map((emp, idx) => (
                               <motion.tr
                                  layout
                                  initial={{ opacity: 0 }}
@@ -605,7 +629,7 @@ export default function HrManagementPage() {
 
                               <div className="grid grid-cols-2 gap-4">
                                  <div className="space-y-1.5">
-                                    <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">System Designation</label>
+                                    <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Role</label>
                                     <input
                                        value={newEmployee.role}
                                        onChange={(e) => setNewEmployee({ ...newEmployee, role: e.target.value })}
@@ -627,16 +651,30 @@ export default function HrManagementPage() {
                               <div className="space-y-1.5">
                                  <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Department Allocation</label>
                                  <select
-                                    value={newEmployee.dept}
-                                    onChange={(e) => setNewEmployee({ ...newEmployee, dept: e.target.value })}
+                                    value={currentDeptSelectValue}
+                                    onChange={(e) => {
+                                       const value = e.target.value;
+                                       if (value === '__custom__') {
+                                          setNewEmployee({ ...newEmployee, dept: '' });
+                                       } else {
+                                          setNewEmployee({ ...newEmployee, dept: value });
+                                       }
+                                    }}
                                     className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic text-[var(--text-primary)]"
                                  >
-                                    <option value="Operations">Operations</option>
-                                    <option value="Logistics">Logistics</option>
-                                    <option value="Technology">Technology</option>
-                                    <option value="Maintenance">Maintenance</option>
-                                    <option value="Admin">Admin</option>
+                                    {departmentOptions.map((deptOption) => (
+                                       <option key={deptOption} value={deptOption}>{deptOption}</option>
+                                    ))}
+                                    <option value="__custom__">Custom Department</option>
                                  </select>
+                                 {currentDeptSelectValue === '__custom__' && (
+                                    <input
+                                       value={newEmployee.dept}
+                                       onChange={(e) => setNewEmployee({ ...newEmployee, dept: e.target.value })}
+                                       placeholder="e.g. Quality Assurance"
+                                       className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic"
+                                    />
+                                 )}
                               </div>
 
                               <div className="grid grid-cols-2 gap-4">

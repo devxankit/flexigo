@@ -16,7 +16,7 @@ const tabs = [
   {
     id: 'garage',
     path: '/rider/garage',
-    label: 'Garage',
+    label: 'Hub',
     icon: (active, theme) => (
       <svg viewBox="0 0 24 24" fill="none" stroke={active ? '#39FF14' : (theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} strokeWidth="1.8" className="w-6 h-6">
         <rect x="2" y="7" width="20" height="14" rx="2" />
