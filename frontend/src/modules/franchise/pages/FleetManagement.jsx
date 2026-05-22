@@ -386,11 +386,25 @@ export default function FleetManagement() {
 
                <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 bg-[var(--bg-tertiary)] rounded-xl border border-[var(--border-subtle)]">
-                     <p className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1 italic">Last Location</p>
-                     <p className="text-[9px] font-black text-[var(--text-primary)] truncate">
-                        {focusedVehicle?.lastLocation || focusedVehicle?.location ? 
-                          `${(focusedVehicle.lastLocation || focusedVehicle.location).lat.toFixed(4)}° N, ${(focusedVehicle.lastLocation || focusedVehicle.location).lng.toFixed(4)}° E` 
-                          : 'Searching...'}
+                     <p className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1 italic">Current Location</p>
+                     <p className="text-[9px] font-black text-[var(--text-primary)]">
+                        {focusedVehicle ? (() => {
+                           const loc = focusedVehicle.lastLocation || focusedVehicle.location;
+                           if (!loc) return 'Searching...';
+                           const address = loc.address || focusedVehicle.address || '';
+                           return (
+                              <span className="flex flex-col gap-0.5">
+                                 <span className="truncate max-w-[200px] block" title={address || `${Number(loc.lat).toFixed(4)}° N, ${Number(loc.lng).toFixed(4)}° E`}>
+                                    {address || `${Number(loc.lat).toFixed(4)}° N, ${Number(loc.lng).toFixed(4)}° E`}
+                                 </span>
+                                 {address && (
+                                    <span className="text-[7px] font-bold text-[var(--text-tertiary)] block mt-0.5">
+                                       {Number(loc.lat).toFixed(4)}° N, {Number(loc.lng).toFixed(4)}° E
+                                    </span>
+                                 )}
+                              </span>
+                           );
+                        })() : 'Searching...'}
                      </p>
                   </div>
                   <div className="p-3 bg-[var(--bg-tertiary)] rounded-xl border border-[var(--border-subtle)]">

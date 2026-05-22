@@ -816,7 +816,7 @@ export default function GeoFencingPage() {
                      </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="p-3 bg-[var(--bg-tertiary)] rounded-xl border border-[var(--border-subtle)]">
-                           <p className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1 italic">Last Location</p>
+                           <p className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1 italic">Current Location</p>
                            <p className="text-[9px] font-black text-[var(--text-primary)]">
                               {selectedZone ? (() => {
                                  const riderId = selectedZone.riderId?._id || selectedZone.riderId?.id || selectedZone.riderId;
@@ -824,7 +824,19 @@ export default function GeoFencingPage() {
                                  const loc = getRiderLiveLocation(matchedRider || selectedZone.riderId, selectedZone) || selectedZone.center || userLocation;
                                  const isNewDelhi = loc.lat === 28.6139 && loc.lng === 77.2090;
                                  const finalLoc = (isNewDelhi && userLocation) ? userLocation : loc;
-                                 return `${finalLoc.lat.toFixed(4)}° N, ${finalLoc.lng.toFixed(4)}° E`;
+                                 const address = matchedRider?.lastLocation?.address || selectedZone.center?.address || matchedRider?.address || '';
+                                 return (
+                                    <span className="flex flex-col gap-0.5">
+                                       <span className="truncate max-w-[200px] block" title={address || `${finalLoc.lat.toFixed(4)}° N, ${finalLoc.lng.toFixed(4)}° E`}>
+                                          {address || `${finalLoc.lat.toFixed(4)}° N, ${finalLoc.lng.toFixed(4)}° E`}
+                                       </span>
+                                       {address && (
+                                          <span className="text-[7px] font-bold text-[var(--text-tertiary)] block mt-0.5">
+                                             {finalLoc.lat.toFixed(4)}° N, {finalLoc.lng.toFixed(4)}° E
+                                          </span>
+                                       )}
+                                    </span>
+                                 );
                               })() : 'India Node'}
                            </p>
                         </div>
