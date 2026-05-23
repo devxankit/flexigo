@@ -18,17 +18,38 @@ import RiderNotificationsScreen from '../pages/RiderNotificationsScreen';
 import { RiderLayout } from '../components/RiderLayout';
 import { useAuthStore } from '../store/authStore';
 
+const checkRiderAuth = () => {
+  try {
+    const stored = localStorage.getItem('rider-auth');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return parsed.state?.isAuthenticated && parsed.state?.token;
+    }
+  } catch (e) {
+    console.error('Error parsing rider auth:', e);
+  }
+  return false;
+};
+
 export default function RiderRoutes() {
   const { isAuthenticated, phone } = useAuthStore();
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
-  // Basic route protection
+  const isRiderAuth = isAuthenticated || checkRiderAuth();
+
+  // Basic route protection and auto-redirect for authenticated users
   useEffect(() => {
-    if (!isAuthenticated && pathname.includes('/rider') && !pathname.includes('/rider/auth') && pathname !== '/rider' && pathname !== '/rider/') {
-      navigate('/rider/auth/phone');
+    if (!isRiderAuth) {
+      if (pathname.includes('/rider') && !pathname.includes('/rider/auth') && pathname !== '/rider' && pathname !== '/rider/') {
+        navigate('/rider/auth/phone');
+      }
+    } else {
+      if (pathname === '/rider' || pathname === '/rider/' || pathname.includes('/rider/auth')) {
+        navigate('/rider/home');
+      }
     }
-  }, [isAuthenticated, pathname, navigate]);
+  }, [isRiderAuth, pathname, navigate]);
 
   return (
     <Routes>

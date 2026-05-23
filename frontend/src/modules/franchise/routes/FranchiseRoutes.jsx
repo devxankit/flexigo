@@ -15,16 +15,30 @@ import MaintenanceScheduler from '../pages/MaintenanceScheduler';
 import AddRiderPage from '../pages/AddRiderPage';
 import AddVehiclePage from '../pages/AddVehiclePage';
 
+const checkFranchiseAuth = () => {
+  try {
+    const stored = localStorage.getItem('franchise-auth');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return parsed.state?.isAuthenticated && parsed.state?.token;
+    }
+  } catch (e) {
+    console.error('Error parsing franchise auth:', e);
+  }
+  return false;
+};
+
 export default function FranchiseRoutes() {
   const { isAuthenticated } = useFranchiseAuthStore();
+  const isFranchiseAuth = isAuthenticated || checkFranchiseAuth();
 
   return (
     <Routes>
-      <Route path="/" element={isAuthenticated ? <Navigate to="/franchise/dashboard" replace /> : <FranchiseLogin />} />
+      <Route path="/" element={isFranchiseAuth ? <Navigate to="/franchise/dashboard" replace /> : <FranchiseLogin />} />
       <Route path="/onboarding" element={<FranchiseOnboarding />} />
       
       {/* Protected Layout Routes */}
-      <Route element={isAuthenticated ? <FranchiseLayout /> : <Navigate to="/franchise" replace />}>
+      <Route element={isFranchiseAuth ? <FranchiseLayout /> : <Navigate to="/franchise" replace />}>
         <Route path="/dashboard" element={<HubDashboard />} />
         <Route path="/fleet" element={<FleetManagement />} />
         <Route path="/fleet/add" element={<AddVehiclePage />} />
