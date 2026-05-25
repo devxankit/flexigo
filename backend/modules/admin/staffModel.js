@@ -10,7 +10,13 @@ const StaffSchema = new mongoose.Schema({
     required: true
   },
   email: {
-    type: String
+    type: String,
+    trim: true,
+    lowercase: true
+  },
+  password: {
+    type: String, // stored as bcrypt hash
+    default: null
   },
   role: {
     type: String,
@@ -63,6 +69,10 @@ const StaffSchema = new mongoose.Schema({
   },
   contractUrl: String,
   isContractAccepted: { type: Boolean, default: false },
+  assignedRole: {
+    type: String,
+    default: null  // matches Role.name in Security Matrix e.g. "Operations Lead"
+  },
   createdAt: {
     type: Date,
     default: Date.now

@@ -88,6 +88,14 @@ const RiderSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  activeDutyMinutes: {
+    type: Number,
+    default: 0
+  },
+  isBlocked: {
+    type: Boolean,
+    default: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

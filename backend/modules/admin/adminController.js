@@ -202,7 +202,7 @@ export const adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // 1. Check for admin
+    // 1. Check for admin first
     let admin = await Admin.findOne({ email });
     
     // Auto-seed if no admin exists at all (Development Safety)
@@ -215,31 +215,68 @@ export const adminLogin = async (req, res) => {
       });
     }
 
-    if (!admin) {
+    if (admin) {
+      // 2. Check admin password
+      const isMatch = await admin.matchPassword(password);
+      if (!isMatch) {
+        return res.status(401).json({ success: false, message: 'Invalid Credentials' });
+      }
+
+      // 3. Create Token
+      const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET, {
+        expiresIn: '30d'
+      });
+
+      return res.status(200).json({
+        success: true,
+        token,
+        admin: {
+          id: admin._id,
+          name: admin.name,
+          email: admin.email,
+          role: admin.role,
+          accountType: 'admin'
+        }
+      });
+    }
+
+    // 4. If not found in Admin, check Staff (HR-created staff members)
+    const staff = await Staff.findOne({ email: email.toLowerCase().trim() });
+    if (!staff) {
       return res.status(401).json({ success: false, message: 'Invalid Credentials' });
     }
 
-    // 2. Check password
-    const isMatch = await admin.matchPassword(password);
-    if (!isMatch) {
+    if (!staff.password) {
+      return res.status(401).json({ success: false, message: 'No password set for this account. Contact your administrator.' });
+    }
+
+    const staffPasswordMatch = await bcrypt.compare(password, staff.password);
+    if (!staffPasswordMatch) {
       return res.status(401).json({ success: false, message: 'Invalid Credentials' });
     }
 
-    // 3. Create Token
-    const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET, {
+    if (staff.status !== 'active') {
+      return res.status(403).json({ success: false, message: 'Your account is inactive. Contact your administrator.' });
+    }
+
+    // 5. Create Token for staff
+    const staffToken = jwt.sign({ id: staff._id, accountType: 'staff' }, process.env.JWT_SECRET, {
       expiresIn: '30d'
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      token,
+      token: staffToken,
       admin: {
-        id: admin._id,
-        name: admin.name,
-        email: admin.email,
-        role: admin.role
+        id: staff._id,
+        name: staff.name,
+        email: staff.email,
+        role: staff.assignedRole || staff.role, // assignedRole for RBAC, role as fallback
+        dept: staff.dept,
+        accountType: 'staff'
       }
     });
+
   } catch (error) {
     console.error("Login Error:", error);
     res.status(500).json({ success: false, message: 'Server Error' });
@@ -401,7 +438,8 @@ export const getKycRecords = async (req, res) => {
           vehicleId: r.vehicleId?._id || r.vehicleId,
           vehiclePlate: r.vehicleId?.plate || 'N/A',
           date: r.createdAt,
-          details: r.kycDetails
+          details: r.kycDetails,
+          isBlocked: r.isBlocked || false
         };
       }),
       ...franchises.map(f => {
@@ -416,7 +454,8 @@ export const getKycRecords = async (req, res) => {
           status: normalizedKycStatus === 'approved' ? 'approved' : (normalizedKycStatus === 'rejected' ? 'rejected' : (f.status || 'pending')),
           date: f.createdAt,
           details: f.kycDetails,
-          hubs: 1
+          hubs: 1,
+          isBlocked: f.isBlocked || false
         };
       })
     ].sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -573,6 +612,36 @@ export const updateKycReferences = async (req, res) => {
     res.status(200).json({ success: true, message: 'References updated successfully', kycDetails: updated.kycDetails });
   } catch (error) {
     console.error(`[Admin KYC] EXCEPTION in updateKycReferences:`, error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const toggleBlockKycRecord = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid ID format' });
+    }
+
+    let updated = await Rider.findById(id);
+    if (!updated) {
+      updated = await Franchise.findById(id);
+    }
+
+    if (!updated) {
+      return res.status(404).json({ success: false, message: 'Record not found' });
+    }
+
+    updated.isBlocked = !updated.isBlocked;
+    await updated.save();
+
+    res.status(200).json({
+      success: true,
+      message: `User ${updated.isBlocked ? 'blocked' : 'unblocked'} successfully`,
+      isBlocked: updated.isBlocked
+    });
+  } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -808,7 +877,15 @@ export const getAllStaff = async (req, res) => {
 
 export const createStaff = async (req, res) => {
   try {
-    const { name, role, dept, shift, phone, joiningDate, kycDetails } = req.body;
+    const { name, role, dept, shift, phone, joiningDate, kycDetails, email, password } = req.body;
+
+    // Email format validation
+    if (email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ success: false, message: 'Invalid email format' });
+      }
+    }
 
     const employeeId = req.body.employeeId || `STF-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
 
@@ -842,10 +919,19 @@ export const createStaff = async (req, res) => {
       }
     }
 
+    // Hash password with bcrypt if provided
+    let hashedPassword = null;
+    if (password && password.trim()) {
+      const salt = await bcrypt.genSalt(10);
+      hashedPassword = await bcrypt.hash(password.trim(), salt);
+    }
+
     const staff = await Staff.create({
       employeeId,
       name: (name || '').trim(),
       phone: phone || '',
+      email: email ? email.trim().toLowerCase() : undefined,
+      password: hashedPassword,
       role: (role || '').trim(),
       dept: dept || 'Operations',
       shift: shift || 'Regular',
@@ -864,8 +950,16 @@ export const createStaff = async (req, res) => {
 
 export const updateStaff = async (req, res) => {
   try {
-    const { name, role, dept, shift, phone, email, reportingManager, joiningDate, cityZone, status, kycDetails, workingHours, workDaysCount } = req.body;
+    const { name, role, dept, shift, phone, email, password, reportingManager, joiningDate, cityZone, status, kycDetails, workingHours, workDaysCount } = req.body;
     console.log("Updating Staff ID:", req.params.id, "with payload:", req.body);
+
+    // Email format validation
+    if (email !== undefined && email !== '') {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ success: false, message: 'Invalid email format' });
+      }
+    }
 
     const staff = await Staff.findById(req.params.id);
     if (!staff) {
@@ -897,13 +991,19 @@ export const updateStaff = async (req, res) => {
     if (dept !== undefined) staff.dept = dept;
     if (shift !== undefined) staff.shift = shift;
     if (phone !== undefined) staff.phone = phone;
-    if (email !== undefined) staff.email = email;
+    if (email !== undefined) staff.email = email ? email.trim().toLowerCase() : staff.email;
     if (reportingManager !== undefined) staff.reportingManager = reportingManager;
     if (joiningDate !== undefined) staff.joiningDate = joiningDate;
     if (cityZone !== undefined) staff.cityZone = cityZone;
     if (status !== undefined) staff.status = status;
     if (workingHours !== undefined) staff.workingHours = workingHours;
     if (workDaysCount !== undefined) staff.workDaysCount = workDaysCount;
+
+    // Hash new password with bcrypt if provided
+    if (password && password.trim()) {
+      const salt = await bcrypt.genSalt(10);
+      staff.password = await bcrypt.hash(password.trim(), salt);
+    }
 
     if (kycDetails) {
       console.log("Processing KYC Update Protocol...");

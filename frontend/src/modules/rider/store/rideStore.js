@@ -126,6 +126,19 @@ export const useRideStore = create((set, get) => ({
         set({ vehicle: res.data.vehicle });
       }
     } catch (err) {
+      // If no active subscription, reset vehicle to default (no access)
+      if (err.response?.data?.code === 'NO_ACTIVE_SUBSCRIPTION') {
+        set({
+          vehicle: {
+            id: null,
+            model: null,
+            battery: 0,
+            range: 0,
+            location: 'Detecting location...',
+            plateNumber: null,
+          }
+        });
+      }
       console.error("Failed to fetch vehicle:", err);
     }
   },

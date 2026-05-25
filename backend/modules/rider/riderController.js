@@ -294,6 +294,21 @@ export const getMyVehicle = async (req, res) => {
   try {
     const rider = await Rider.findOne({ phone: req.params.phone });
     if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
+
+    // Block access if no active subscription or subscription expired
+    const now = new Date();
+    const hasActiveSub = rider.subscriptionPlan &&
+      rider.subscriptionEnd &&
+      new Date(rider.subscriptionEnd) > now;
+
+    if (!hasActiveSub) {
+      return res.status(403).json({
+        success: false,
+        code: 'NO_ACTIVE_SUBSCRIPTION',
+        message: 'No active subscription. Please purchase a plan to access your vehicle.'
+      });
+    }
+
     const vehicle = await Vehicle.findById(rider.vehicleId);
     if (!vehicle) {
       return res.status(200).json({
@@ -302,6 +317,12 @@ export const getMyVehicle = async (req, res) => {
         vehicle: { id: 'FLX-PENDING', model: 'Assignment Pending', battery: 0, range: 0, location: 'Hub A', plateNumber: 'SEARCHING...' }
       });
     }
+
+    // Calculate active duty minutes from subscription start till now
+    const activeDutyMinutes = rider.subscriptionStart
+      ? Math.floor((Date.now() - new Date(rider.subscriptionStart).getTime()) / 60000)
+      : (rider.activeDutyMinutes || 0);
+
     res.status(200).json({
       success: true,
       hasVehicle: true,
@@ -313,7 +334,8 @@ export const getMyVehicle = async (req, res) => {
         location: rider.lastLocation?.address || 'In Transit',
         plateNumber: vehicle.plate,
         images: vehicle.images,
-        activeDuty: 142
+        activeDuty: activeDutyMinutes,
+        totalDistance: rider.totalDistance || 0
       }
     });
   } catch (error) { res.status(500).json({ success: false, message: error.message }); }

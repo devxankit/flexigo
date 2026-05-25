@@ -38,11 +38,11 @@ export default function AdminLogin() {
     
     // Simulate terminal-like delay
     setTimeout(async () => {
-       const success = await login(email, password);
-       if (success) {
+       const result = await login(email, password);
+       if (result === true) {
          navigate('/admin/dashboard');
        } else {
-         setError('Access Denied: Invalid admin credentials.');
+         setError(result?.message || 'Access Denied: Invalid credentials.');
          setIsLoading(false);
        }
     }, 1200);

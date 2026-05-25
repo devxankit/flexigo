@@ -52,7 +52,7 @@ export default function SubscriptionPlans() {
           setPaymentSuccess(false);
           selectPlan(null);
           window.location.reload();
-        }, 2000);
+        }, 4500);
       }
     } catch (err) {
       alert(err.response?.data?.message || "Wallet payment failed!");
@@ -100,7 +100,7 @@ export default function SubscriptionPlans() {
                 setPaymentSuccess(false);
                 selectPlan(null);
                 window.location.reload(); 
-              }, 2000);
+              }, 4500);
             }
           } catch (err) {
             alert("Payment Verification Failed!");
@@ -278,15 +278,82 @@ export default function SubscriptionPlans() {
                  }`}
                >
                   {paymentSuccess ? (
-                    <div className="text-center py-10 space-y-6">
-                       <div className="w-20 h-20 bg-flexigo-teal/20 border-2 border-flexigo-teal rounded-full flex items-center justify-center mx-auto shadow-neon-sm">
+                    <div className="text-center py-6 space-y-6">
+                       {/* Success Icon */}
+                       <motion.div
+                         initial={{ scale: 0 }}
+                         animate={{ scale: 1 }}
+                         transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                         className="w-20 h-20 bg-flexigo-teal/20 border-2 border-flexigo-teal rounded-full flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(57,255,20,0.3)]"
+                       >
                           <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="4" className="w-10 h-10">
                             <path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
-                       </div>
+                       </motion.div>
+
+                       {/* Thank You Text */}
                        <div className="space-y-1">
-                          <h3 className={`text-2xl font-heading font-black italic ${isDark ? 'text-white' : 'text-slate-900'}`}>PAYMENT_LOCKED</h3>
-                          <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${isDark ? 'text-gray-500' : 'text-slate-950 font-black'}`}>Subscription activated successfully</p>
+                          <h3 className={`text-2xl font-heading font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                            Thank You!
+                          </h3>
+                          <p className="text-flexigo-teal text-[11px] font-black uppercase tracking-[0.25em]">
+                            Payment Successful
+                          </p>
+                          <p className={`text-[10px] font-bold mt-1 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
+                            Thank you for your payment to{' '}
+                            <span className={`font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                              Flexigo Pvt. Limited
+                            </span>
+                          </p>
+                          <p className={`text-[10px] font-bold ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>
+                            Your subscription has been activated successfully.
+                          </p>
+                       </div>
+
+                       {/* Office Address Card */}
+                       <div className={`text-left rounded-2xl p-4 border space-y-2 ${
+                         isDark ? 'bg-white/[0.03] border-white/10' : 'bg-slate-50 border-slate-200'
+                       }`}>
+                          <div className="flex items-center gap-2 mb-1">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-4 h-4 shrink-0">
+                              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" />
+                            </svg>
+                            <span className="text-[9px] font-black uppercase tracking-widest text-flexigo-teal">Vehicle Pickup Office</span>
+                          </div>
+                          <p className={`text-[11px] font-bold leading-relaxed ${isDark ? 'text-gray-300' : 'text-slate-700'}`}>
+                            Phase 2, Shop Number 3, Baner Rd,<br />
+                            Behind Domino's, Veerbhadra Nagar,<br />
+                            Baner, Pune,<br />
+                            Maharashtra – 411069, India
+                          </p>
+                          <button
+                            onClick={() => window.open('https://www.google.com/maps/search/?api=1&query=Phase+2+Shop+Number+3+Baner+Rd+behind+Dominos+Veerbhadra+Nagar+Baner+Pune+Maharashtra+411069', '_blank')}
+                            className="mt-2 w-full py-2 bg-flexigo-teal text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-400 transition-all active:scale-95"
+                          >
+                            Open in Google Maps
+                          </button>
+                       </div>
+
+                       {/* Vehicle Handover Card */}
+                       <div className={`text-left rounded-2xl p-4 border-2 border-flexigo-teal/30 bg-flexigo-teal/5 space-y-3`}>
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-flexigo-teal flex items-center justify-center text-white shadow-[0_0_12px_rgba(57,255,20,0.4)] shrink-0">
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" />
+                              </svg>
+                            </div>
+                            <div>
+                              <h4 className={`text-sm font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                                Pickup Your Vehicle
+                              </h4>
+                              <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">
+                                Visit office to complete delivery
+                              </p>
+                            </div>
+                          </div>
+                          <p className={`text-[10px] font-bold leading-relaxed ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
+                            Please visit our office with a valid ID proof to collect your assigned Flexigo vehicle. Our team will complete the handover formalities.
+                          </p>
                        </div>
                     </div>
                   ) : showRazorpay ? (

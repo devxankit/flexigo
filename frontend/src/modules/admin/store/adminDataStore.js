@@ -238,6 +238,29 @@ export const useAdminDataStore = create((set, get) => ({
     }
   },
 
+  toggleBlockKycRecord: async (id) => {
+    try {
+      const res = await api.patch(`/admin/kyc/${id}/toggle-block`);
+      if (res.data.success) {
+        set(state => ({
+          kycRecords: state.kycRecords.map(r => {
+            const rId = r.id || r._id;
+            return (rId && id && rId.toString() === id.toString())
+              ? { ...r, isBlocked: res.data.isBlocked }
+              : r;
+          })
+        }));
+        // Re-fetch to ensure all modules are in sync
+        get().fetchKycRecords();
+        return { success: true, isBlocked: res.data.isBlocked };
+      }
+      return { success: false, message: "Toggle failed" };
+    } catch (err) {
+      console.error("Failed to toggle block status:", err);
+      return { success: false, message: err.response?.data?.message || err.message };
+    }
+  },
+
   updateKycReferences: async (id, data) => {
     try {
       const res = await api.patch(`/admin/kyc/${id}/references`, data);

@@ -237,7 +237,9 @@ export default function AdminLayout() {
               <div className="flex items-center gap-3 pl-2">
                  <div className="flex flex-col text-right hidden lg:flex">
                     <span className="text-xs font-black text-[var(--text-primary)] hover:text-emerald-500 cursor-pointer transition-colors leading-none">{user?.name || 'Admin Console'}</span>
-                    <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest leading-none mt-1">Administrator</span>
+                   <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest leading-none mt-1">
+                     {user?.accountType === 'staff' ? (user?.role || 'Staff Member') : 'Administrator'}
+                   </span>
                  </div>
                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 border border-white/10 flex items-center justify-center shadow-lg shadow-emerald-950/20 cursor-help group relative">
                     <span className="font-black text-xs text-white">RA</span>

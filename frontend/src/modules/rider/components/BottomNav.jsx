@@ -86,7 +86,7 @@ export function BottomNav() {
           backdropFilter: 'blur(20px)',
         }}
       >
-        {tabs.map((tab) => {
+        {tabs.filter(tab => tab.id !== 'garage').map((tab) => {
           const active = pathname === tab.path;
 
           return (

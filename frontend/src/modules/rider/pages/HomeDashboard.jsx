@@ -4,13 +4,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { PageWrapper } from '../components/PageWrapper';
 import { GlassCard } from '../components/GlassCard';
 import { BottomSheet } from '../components/BottomSheet';
+import { NeonButton } from '../components/NeonButton';
+import { BatteryIndicator } from '../components/BatteryIndicator';
+import { StatCard } from '../components/StatCard';
 import { useRideStore } from '../store/rideStore';
 import { useSubscriptionStore } from '../store/subscriptionStore';
 import { useThemeStore } from '../store/themeStore';
 import { useAuthStore } from '../store/authStore';
 import { useWalletStore } from '../store/walletStore';
-import { RefreshCw, MapPin, Zap, Info, ChevronRight, Share2, Shield } from 'lucide-react';
+import { RefreshCw, MapPin, Zap, Info, ChevronRight, Share2, Shield, Scan, X } from 'lucide-react';
 import logo from '../../../assets/logo.png';
+import scooterRender from '../../../assets/scooter_render.png';
 
 // Mock data removed as we are going dynamic
 const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -25,6 +29,146 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
 };
+
+// ── Vehicle Section Component (exact Hub page UI) ──
+function VehicleSection({ vehicle, currentAddress, isDark }) {
+  const [showScanner, setShowScanner] = useState(false);
+  const { setUnlocking } = useRideStore();
+
+  const handleUnlockVehicle = () => {
+    setUnlocking();
+    alert("Vehicle Unlocked! You can now start your work session.");
+  };
+
+  return (
+    <div className="px-6 pb-6 space-y-6 mt-2">
+      {/* Battery Visual */}
+      <div className="w-full max-w-[280px] mx-auto py-2 relative">
+        <BatteryIndicator percentage={vehicle?.battery || 0} size="lg" />
+        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-flexigo-teal/5 rounded-full blur-[100px] pointer-events-none transition-opacity duration-500 ${isDark ? 'opacity-100' : 'opacity-40'}`} />
+      </div>
+
+      {/* Scooter Image */}
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
+        className="relative w-full h-52 flex items-center justify-center"
+      >
+        <img
+          src={scooterRender}
+          alt="Flexigo Electric Scooter"
+          className="w-full h-full object-contain drop-shadow-2xl"
+        />
+        <div className={`absolute bottom-4 w-32 h-2 rounded-full blur-xl ${isDark ? 'bg-white/5' : 'bg-slate-900/10'}`} />
+      </motion.div>
+
+      {/* EST. RANGE + ACTIVE DUTY */}
+      <div className="grid grid-cols-2 gap-4">
+        <StatCard
+          label="Est. Range"
+          value={vehicle?.range || 0}
+          unit="KM"
+          icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4"><path d="M12 2v20M2 12h20" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+        />
+        <StatCard
+          label="Active Duty"
+          value={vehicle?.activeDuty || '0'}
+          unit="MINS"
+          color="#00D4FF"
+          icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+        />
+      </div>
+
+      {/* Current Hub */}
+      <GlassCard className="p-4">
+        <div className="flex justify-between items-center">
+          <div className="flex flex-col">
+            <span className={`text-[10px] uppercase font-black tracking-widest mb-1 ${isDark ? 'text-gray-500' : 'text-slate-500'}`}>Current Hub</span>
+            <span className={`font-black text-xs truncate max-w-[200px] ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              {currentAddress || vehicle?.location || 'Detecting location...'}
+            </span>
+          </div>
+          <button className={`p-2.5 rounded-xl border transition-all ${isDark ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200 shadow-sm'}`}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-5 h-5">
+              <path d="M12 22s-8-4.5-8-11.8A8 8 0 0112 2a8 8 0 018 8.2c0 7.3-8 11.8-8 11.8z" strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx="12" cy="10" r="3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        </div>
+      </GlassCard>
+
+      {/* QR SWAP + UNLOCK VEHICLE */}
+      <div className="flex gap-4">
+        <NeonButton variant="outline" className="flex-1" onClick={() => setShowScanner(true)}>
+          <div className="flex items-center gap-2">
+            <Scan size={16} /> QR Swap
+          </div>
+        </NeonButton>
+        <NeonButton variant="solid" className="flex-1" onClick={handleUnlockVehicle}>
+          Unlock Vehicle
+        </NeonButton>
+      </div>
+
+      {/* HANDOVER VEHICLE & EXIT */}
+      <button
+        onClick={async () => {
+          if (window.confirm('Are you sure you want to request vehicle handover? This will notify the admin.')) {
+            const { requestHandover } = useRideStore.getState();
+            const res = await requestHandover();
+            if (res.success) alert('Handover request sent successfully. Visit the office.');
+            else alert(res.message);
+          }
+        }}
+        className={`w-full py-4 text-[9px] font-black uppercase tracking-[0.3em] transition-all border-t ${isDark ? 'border-white/5 text-slate-500 hover:text-rose-500' : 'border-slate-100 text-slate-400 hover:text-rose-600'}`}
+      >
+        Handover Vehicle &amp; Exit
+      </button>
+
+      {/* QR Scanner Modal */}
+      <AnimatePresence>
+        {showScanner && (
+          <div className="fixed inset-0 z-[100] bg-black p-6 flex flex-col">
+            <div className="flex justify-between items-center mb-12">
+              <button onClick={() => setShowScanner(false)} className="p-3 rounded-full bg-white/10">
+                <X size={24} className="text-white" />
+              </button>
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Secure Scanner V2.4</span>
+              <div className="w-10" />
+            </div>
+            <div className="flex-1 flex flex-col items-center justify-center">
+              <div className="relative w-64 h-64">
+                <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-flexigo-teal rounded-tl-xl" />
+                <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-flexigo-teal rounded-tr-xl" />
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-flexigo-teal rounded-bl-xl" />
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-flexigo-teal rounded-br-xl" />
+                <motion.div
+                  animate={{ top: ['0%', '100%', '0%'] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                  className="absolute left-0 right-0 h-1 bg-flexigo-teal shadow-[0_0_15px_#39FF14] z-10"
+                />
+                <div className="absolute inset-0 bg-flexigo-teal/5 animate-pulse" />
+              </div>
+              <p className="mt-12 text-[10px] font-black uppercase tracking-[0.3em] text-flexigo-teal text-center leading-relaxed">
+                Align QR Code on the<br />Battery Unit to Start Swap
+              </p>
+            </div>
+            <div className="pb-10 grid grid-cols-2 gap-4">
+              <button className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center gap-2">
+                <Zap size={20} className="text-white/60" />
+                <span className="text-[8px] font-black uppercase text-white/40">Flash</span>
+              </button>
+              <button className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col items-center gap-2" onClick={() => setShowScanner(false)}>
+                <X size={20} className="text-white/60" />
+                <span className="text-[8px] font-black uppercase text-white/40">Cancel</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function HomeDashboard() {
   const navigate = useNavigate();
@@ -302,6 +446,36 @@ export default function HomeDashboard() {
         )}
 
       </div>
+
+      {/* ── Vehicle Section — only show if rider has active subscription ── */}
+      {activePlan ? (
+        <VehicleSection vehicle={vehicle} currentAddress={currentAddress} isDark={isDark} />
+      ) : (
+        <div className="px-6 pb-8 mt-2">
+          <div
+            onClick={() => navigate('/rider/plans')}
+            className={`cursor-pointer rounded-2xl p-5 border-2 border-dashed border-flexigo-teal/30 bg-flexigo-teal/5 flex flex-col items-center gap-3 text-center active:scale-[0.98] transition-all`}
+          >
+            <div className="w-14 h-14 rounded-2xl bg-flexigo-teal/10 flex items-center justify-center">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-7 h-7">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <div>
+              <h3 className={`text-sm font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                No Active Subscription
+              </h3>
+              <p className={`text-[9px] font-bold uppercase tracking-widest mt-1 ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>
+                Purchase a plan to access your vehicle
+              </p>
+            </div>
+            <div className="px-5 py-2 bg-flexigo-teal text-white text-[9px] font-black uppercase tracking-widest rounded-xl shadow-[0_0_15px_rgba(57,255,20,0.3)]">
+              View Plans →
+            </div>
+          </div>
+        </div>
+      )}
+
     </PageWrapper>
 
     <BottomSheet 
@@ -345,10 +519,11 @@ export default function HomeDashboard() {
               <span className={`text-3xl font-heading font-black transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>{vehicle?.range || 0}</span>
               <span className="text-flexigo-teal text-xs font-black uppercase">KM</span>
             </div>
+            {/* Range bar — dynamic width based on vehicle.range (max 150km assumed) */}
             <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
                <motion.div 
                  initial={{ width: 0 }} 
-                 animate={{ width: '85%' }} 
+                 animate={{ width: `${Math.min(((vehicle?.range || 0) / 150) * 100, 100)}%` }} 
                  className="h-full bg-flexigo-teal shadow-[0_0_10px_#39FF14]" 
                />
             </div>
@@ -362,21 +537,29 @@ export default function HomeDashboard() {
             <div className="flex items-baseline gap-1">
               <span className="text-3xl font-heading font-black text-flexigo-teal">{vehicle?.battery || 0}%</span>
             </div>
+            {/* Battery segments — dynamic based on vehicle.battery (each segment = 20%) */}
             <div className="flex gap-1.5">
-              {Array.from({length: 5}).map((_, i) => (
-                <div key={i} className={`h-1.5 flex-1 rounded-full ${i < 4 ? 'bg-flexigo-teal shadow-[0_0_8px_#39FF14]' : 'bg-gray-500/20'}`} />
-              ))}
+              {Array.from({length: 5}).map((_, i) => {
+                const segmentFilled = (vehicle?.battery || 0) >= (i + 1) * 20;
+                return (
+                  <div key={i} className={`h-1.5 flex-1 rounded-full ${segmentFilled ? 'bg-flexigo-teal shadow-[0_0_8px_#39FF14]' : 'bg-gray-500/20'}`} />
+                );
+              })}
             </div>
           </GlassCard>
         </div>
 
-        {/* Sustainability Insight */}
+        {/* Sustainability Insight — carbon saved = vehicle.totalDistance * 0.12 kg (avg petrol emission factor) */}
         <div className={`border border-flexigo-teal/20 rounded-2xl p-5 flex items-center gap-5 transition-all duration-500 ${isDark ? 'bg-flexigo-teal/5' : 'bg-flexigo-teal/[0.03]'}`}>
            <div className="w-12 h-12 rounded-2xl bg-flexigo-teal/10 flex items-center justify-center text-flexigo-teal shadow-inner">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-6 h-6"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
            </div>
            <p className={`text-[11px] font-black uppercase tracking-wider leading-relaxed ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
-             Impact: You've saved <span className="text-flexigo-teal font-black text-sm">12.5KG</span> of carbon footprint this week.
+             Impact: You've saved{' '}
+             <span className="text-flexigo-teal font-black text-sm">
+               {vehicle?.totalDistance ? (vehicle.totalDistance * 0.12).toFixed(1) : '0.0'}KG
+             </span>{' '}
+             of carbon footprint this week.
            </p>
         </div>
 

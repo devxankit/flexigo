@@ -57,7 +57,8 @@ import {
   getAdminProfile,
   updateAdminPassword,
   uploadKycCertificate,
-  deleteSecurityLog
+  deleteSecurityLog,
+  toggleBlockKycRecord
 } from './adminController.js';
 import {
   getWebsitePlans,
@@ -141,6 +142,7 @@ router.get('/kyc', protectAdmin, authorize('KYC', 'read'), getKycRecords);
 router.patch('/kyc/:id', protectAdmin, authorize('KYC', 'update'), updateKycStatus);
 router.patch('/kyc/:id/references', protectAdmin, authorize('KYC', 'update'), updateKycReferences);
 router.post('/kyc/:id/certificate', protectAdmin, authorize('KYC', 'update'), uploadKycCertificate);
+router.patch('/kyc/:id/toggle-block', protectAdmin, authorize('KYC', 'update'), toggleBlockKycRecord);
 
 // Finance Management
 router.get('/finance', getFinanceData);

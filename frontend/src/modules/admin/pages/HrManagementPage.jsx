@@ -118,10 +118,15 @@ export default function HrManagementPage() {
       role: '',
       dept: 'Operations',
       phone: '',
+      email: '',
+      password: '',
       joiningDate: new Date().toISOString().split('T')[0],
       aadhaarFront: null,
       aadhaarBack: null
    });
+
+   const [emailError, setEmailError] = useState('');
+   const [showPassword, setShowPassword] = useState(false);
 
    const defaultDepartments = ['Operations', 'Logistics', 'Technology', 'Maintenance', 'Admin'];
    const departmentOptions = React.useMemo(() => {
@@ -186,10 +191,13 @@ export default function HrManagementPage() {
          role: emp.role,
          dept: emp.dept,
          phone: emp.phone || '',
+         email: emp.email || '',
+         password: '', // never prefill password
          joiningDate: emp.joiningDate ? new Date(emp.joiningDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
          aadhaarFront: emp.kycDetails?.aadhaarFront || null,
          aadhaarBack: emp.kycDetails?.aadhaarBack || null
       });
+      setEmailError('');
       setModalType('edit');
       setIsModalOpen(true);
    };
@@ -204,6 +212,16 @@ export default function HrManagementPage() {
    const handleAddEmployee = async (e) => {
       e.preventDefault();
       if (!newEmployee.name || !newEmployee.role || newEmployee.phone.length !== 10 || isSubmitting) return;
+
+      // Email validation
+      if (newEmployee.email) {
+         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+         if (!emailRegex.test(newEmployee.email)) {
+            setEmailError('Please enter a valid email address');
+            return;
+         }
+      }
+      setEmailError('');
 
       setIsSubmitting(true);
       try {
@@ -227,10 +245,13 @@ export default function HrManagementPage() {
             role: '',
             dept: 'Operations',
             phone: '',
+            email: '',
+            password: '',
             joiningDate: new Date().toISOString().split('T')[0],
             aadhaarFront: null,
             aadhaarBack: null
          });
+         setEmailError('');
          setIsModalOpen(false);
          setSelectedStaff(null);
       } catch (error) {
@@ -675,6 +696,56 @@ export default function HrManagementPage() {
                                        className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic"
                                     />
                                  )}
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-4">
+                                 <div className="space-y-1.5">
+                                    <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Email Address</label>
+                                    <input
+                                       type="email"
+                                       value={newEmployee.email}
+                                       onChange={(e) => {
+                                          setNewEmployee({ ...newEmployee, email: e.target.value });
+                                          if (emailError) setEmailError('');
+                                       }}
+                                       placeholder="staff@flexigo.in"
+                                       className={`w-full px-4 py-2 bg-[var(--bg-tertiary)] border rounded-xl text-[10px] font-bold tracking-widest focus:ring-1 outline-none transition-all italic ${
+                                          emailError ? 'border-rose-500 focus:ring-rose-500/20' : 'border-[var(--border-subtle)] focus:ring-emerald-500/20'
+                                       }`}
+                                    />
+                                    {emailError && (
+                                       <p className="text-[8px] font-black text-rose-500 ml-1 mt-0.5">{emailError}</p>
+                                    )}
+                                 </div>
+                                 <div className="space-y-1.5">
+                                    <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">
+                                       Password {modalType === 'edit' && <span className="text-[7px] normal-case font-bold text-[var(--text-tertiary)]">(leave blank to keep)</span>}
+                                    </label>
+                                    <div className="relative">
+                                       <input
+                                          type={showPassword ? 'text' : 'password'}
+                                          value={newEmployee.password}
+                                          onChange={(e) => setNewEmployee({ ...newEmployee, password: e.target.value })}
+                                          placeholder="Min. 6 characters"
+                                          className="w-full px-4 py-2 pr-10 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic"
+                                       />
+                                       <button
+                                          type="button"
+                                          onClick={() => setShowPassword(!showPassword)}
+                                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-emerald-500 transition-colors"
+                                       >
+                                          {showPassword ? (
+                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
+                                                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" strokeLinecap="round"/><line x1="1" y1="1" x2="23" y2="23" strokeLinecap="round"/>
+                                             </svg>
+                                          ) : (
+                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+                                             </svg>
+                                          )}
+                                       </button>
+                                    </div>
+                                 </div>
                               </div>
 
                               <div className="grid grid-cols-2 gap-4">

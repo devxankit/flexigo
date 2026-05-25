@@ -28,7 +28,7 @@ import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function KycOnboardingPage() {
-  const { kycRecords, fetchKycRecords, updateKycStatus, assignVehicle } = useAdminDataStore();
+  const { kycRecords, fetchKycRecords, updateKycStatus, assignVehicle, toggleBlockKycRecord } = useAdminDataStore();
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem('kyc_active_tab') || 'all');
   const [selectedRecord, setSelectedRecord] = useState(() => {
     const saved = localStorage.getItem('kyc_selected_record');
@@ -240,7 +240,18 @@ export default function KycOnboardingPage() {
                        >
                           <td className="py-2 px-4 whitespace-nowrap">
                              <div className="flex flex-col">
-                                <span className="font-medium text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{record.name}</span>
+                                <span className={`font-medium transition-colors ${
+                                   record.isBlocked 
+                                      ? 'text-rose-500 line-through decoration-rose-500/50' 
+                                      : 'text-[var(--text-primary)] group-hover:text-emerald-500'
+                                }`}>
+                                   {record.name}
+                                   {record.isBlocked && (
+                                      <span className="ml-2 px-1.5 py-0.5 text-[8px] bg-rose-500/15 border border-rose-500/20 text-rose-500 rounded font-black uppercase tracking-wider select-none leading-none">
+                                         BLOCKED
+                                      </span>
+                                   )}
+                                </span>
                              </div>
                           </td>
                           <td className="py-2 px-4 font-medium text-[var(--text-tertiary)]">{record.role}</td>
@@ -270,6 +281,24 @@ export default function KycOnboardingPage() {
                                 >
                                    <Eye size={12} />
                                 </button>
+                                <button 
+                                    onClick={async () => {
+                                       const res = await toggleBlockKycRecord(record._id || record.id);
+                                       if (res?.success) {
+                                          // Zustand store handles updating state automatically
+                                       } else {
+                                          alert(res?.message || "Failed to toggle block status");
+                                       }
+                                    }}
+                                    className={`p-1.5 border rounded-lg transition-all ml-1.5 ${
+                                       record.isBlocked 
+                                          ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500 hover:text-white' 
+                                          : 'bg-rose-500/10 border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white'
+                                    }`}
+                                    title={record.isBlocked ? "Unblock User" : "Block User"}
+                                 >
+                                    {record.isBlocked ? <UserCheck size={12} /> : <UserX size={12} />}
+                                 </button>
                                 {record.status === 'approved' && record.role?.toLowerCase() === 'rider' && !record.vehicleId && (
                                     <button 
                                       onClick={() => {

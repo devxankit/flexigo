@@ -1,6 +1,29 @@
 import React, { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import AdminLayout from '../components/AdminLayout';
+import { useAdminAuthStore } from '../store/adminAuthStore';
+
+// Permission Guard Component
+function PermGuard({ pageId, children }) {
+  const { can } = useAdminAuthStore();
+  if (!can(pageId, 'read')) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-4 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f43f5e" strokeWidth="2.5" className="w-8 h-8">
+            <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" strokeLinecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <p className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-widest">Access Denied</p>
+          <p className="text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider mt-1">You don't have permission to view this module.</p>
+          <p className="text-[8px] font-bold text-rose-500 uppercase tracking-wider mt-0.5">Contact your administrator to request access.</p>
+        </div>
+      </div>
+    );
+  }
+  return children;
+}
 
 // Intelligence Group
 const AdminDashboard = lazy(() => import('../pages/AdminDashboard'));
@@ -58,46 +81,45 @@ export default function AdminRoutes() {
         <Route path="login" element={<AdminLogin />} />
         
         <Route element={<AdminLayout />}>
-          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="dashboard" element={<PermGuard pageId="dashboard"><AdminDashboard /></PermGuard>} />
           
           {/* Operations Group */}
-          <Route path="hubs" element={<HubManagementPage />} />
-          <Route path="hubs/:hubId" element={<HubDetailsPage />} />
-          <Route path="fleet" element={<FleetOversightPage />} />
-          <Route path="fleet/add" element={<AddVehiclePage />} />
-
-          <Route path="geofencing" element={<GeoFencingPage />} />
+          <Route path="hubs" element={<PermGuard pageId="hubs"><HubManagementPage /></PermGuard>} />
+          <Route path="hubs/:hubId" element={<PermGuard pageId="hubs"><HubDetailsPage /></PermGuard>} />
+          <Route path="fleet" element={<PermGuard pageId="fleet"><FleetOversightPage /></PermGuard>} />
+          <Route path="fleet/add" element={<PermGuard pageId="fleet"><AddVehiclePage /></PermGuard>} />
+          <Route path="geofencing" element={<PermGuard pageId="geofencing"><GeoFencingPage /></PermGuard>} />
           
           {/* People Group */}
-          <Route path="subscribers" element={<SubscriberRegistryPage />} />
-          <Route path="rider-reports" element={<RiderReportPage />} />
-          <Route path="kyc" element={<KycOnboardingPage />} />
-          <Route path="hr" element={<HrManagementPage />} />
-          <Route path="franchise-kyc" element={<FranchiseKycQueue />} />
+          <Route path="subscribers" element={<PermGuard pageId="subscribers"><SubscriberRegistryPage /></PermGuard>} />
+          <Route path="rider-reports" element={<PermGuard pageId="rider-reports"><RiderReportPage /></PermGuard>} />
+          <Route path="kyc" element={<PermGuard pageId="kyc"><KycOnboardingPage /></PermGuard>} />
+          <Route path="hr" element={<PermGuard pageId="hr"><HrManagementPage /></PermGuard>} />
+          <Route path="franchise-kyc" element={<PermGuard pageId="franchise-kyc"><FranchiseKycQueue /></PermGuard>} />
           
           {/* Finance Group */}
-          <Route path="financials" element={<FinancialCenterPage />} />
-          <Route path="payments" element={<PaymentGatewayPage />} />
-          <Route path="inventory" element={<InventoryBillingPage />} />
-          <Route path="franchise-ops" element={<FranchiseOpsPage />} />
-          <Route path="subscription-plans" element={<SubscriptionPlansPage />} />
+          <Route path="financials" element={<PermGuard pageId="financials"><FinancialCenterPage /></PermGuard>} />
+          <Route path="payments" element={<PermGuard pageId="payments"><PaymentGatewayPage /></PermGuard>} />
+          <Route path="inventory" element={<PermGuard pageId="inventory"><InventoryBillingPage /></PermGuard>} />
+          <Route path="franchise-ops" element={<PermGuard pageId="franchise-ops"><FranchiseOpsPage /></PermGuard>} />
+          <Route path="subscription-plans" element={<PermGuard pageId="subscription-plans"><SubscriptionPlansPage /></PermGuard>} />
           
           {/* Intelligence Group */}
-          <Route path="analytics" element={<DeepAnalyticsPage />} />
-          <Route path="rider-behaviour" element={<RiderBehaviourPage />} />
+          <Route path="analytics" element={<PermGuard pageId="analytics"><DeepAnalyticsPage /></PermGuard>} />
+          <Route path="rider-behaviour" element={<PermGuard pageId="rider-behaviour"><RiderBehaviourPage /></PermGuard>} />
           
           {/* Legal & Support Group */}
-          <Route path="compliance" element={<CompliancePage />} />
-          <Route path="engagement" element={<CustomerEngagementPage />} />
-          <Route path="security" element={<SecurityAuditsPage />} />
-          <Route path="notifications" element={<AlertCenterPage />} />
+          <Route path="compliance" element={<PermGuard pageId="compliance"><CompliancePage /></PermGuard>} />
+          <Route path="engagement" element={<PermGuard pageId="engagement"><CustomerEngagementPage /></PermGuard>} />
+          <Route path="security" element={<PermGuard pageId="security"><SecurityAuditsPage /></PermGuard>} />
+          <Route path="notifications" element={<PermGuard pageId="notifications"><AlertCenterPage /></PermGuard>} />
           <Route path="settings" element={<SettingsPage />} />
           
           {/* Website Management Group */}
-          <Route path="website-plans" element={<WebsitePlansPage />} />
-          <Route path="website-contact" element={<WebsiteContactUsPage />} />
-          <Route path="website-about" element={<WebsiteAboutUsPage />} />
-          <Route path="website-press" element={<WebsitePressMediaPage />} />
+          <Route path="website-plans" element={<PermGuard pageId="website-plans"><WebsitePlansPage /></PermGuard>} />
+          <Route path="website-contact" element={<PermGuard pageId="website-contact"><WebsiteContactUsPage /></PermGuard>} />
+          <Route path="website-about" element={<PermGuard pageId="website-about"><WebsiteAboutUsPage /></PermGuard>} />
+          <Route path="website-press" element={<PermGuard pageId="website-press"><WebsitePressMediaPage /></PermGuard>} />
           
           <Route path="" element={<Navigate to="dashboard" replace />} />
         </Route>

@@ -94,8 +94,9 @@ const navigationGroups = [
 
 export default function AdminSidebar() {
   const location = useLocation();
-  const { logout, user } = useAuthStore();
+  const { logout, user, can } = useAuthStore();
   const [collapsed, setCollapsed] = useState(false);
+  const isStaff = user?.accountType === 'staff';
 
   return (
     <aside 
@@ -129,7 +130,7 @@ export default function AdminSidebar() {
                 </div>
               )}
               <div className="space-y-0.5">
-                {group.items.map((item) => {
+                {group.items.filter(item => can(item.id, 'read')).map((item) => {
                   const isActive = location.pathname === item.path;
                   const Icon = item.icon;
                   return (
@@ -174,7 +175,9 @@ export default function AdminSidebar() {
               {!collapsed && (
                 <div className="flex-1 min-w-0">
                    <p className="text-[11px] font-bold text-[var(--text-primary)] truncate uppercase tracking-tight">{user?.name || 'Administrator'}</p>
-                   <p className="text-[8px] font-bold text-emerald-500 uppercase tracking-widest">Admin Account</p>
+                   <p className="text-[8px] font-bold text-emerald-500 uppercase tracking-widest">
+                     {user?.accountType === 'staff' ? (user?.role || 'Staff') : 'Admin Account'}
+                   </p>
                 </div>
               )}
               {!collapsed && (
