@@ -675,18 +675,21 @@ export default function GeoFencingPage() {
                                                 <button 
                                                    onClick={(e) => { e.stopPropagation(); deleteZone(gf._id || gf.id); }}
                                                    className="p-1.5 text-[var(--text-tertiary)] hover:text-rose-500 hover:bg-rose-600/5 rounded-lg transition-all"
+                                                   title="Delete Zone"
                                                 >
                                                    <X size={14} />
                                                 </button>
                                              </>
                                           ) : (
-                                             <button 
-                                                onClick={(e) => { e.stopPropagation(); openCreateModal(rider); }}
-                                                className="p-1.5 text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-all"
-                                                title="Create Zone"
-                                             >
-                                                <Plus size={14} strokeWidth={3} />
-                                             </button>
+                                             <>
+                                                <button 
+                                                   onClick={(e) => { e.stopPropagation(); openCreateModal(rider); }}
+                                                   className="p-1.5 text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-all"
+                                                   title="Create Zone"
+                                                >
+                                                   <Plus size={14} strokeWidth={3} />
+                                                </button>
+                                             </>
                                           )}
                                        </div>
                                     </td>

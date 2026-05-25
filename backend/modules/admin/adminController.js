@@ -788,8 +788,8 @@ export const getGeofences = async (req, res) => {
       .populate('riderId', 'name phone lastLocation currentSpeed')
       .sort('-createdAt');
 
-    // Fetch all riders to show in the registry list
-    const allRiders = await Rider.find().select('name phone lastLocation currentSpeed kycStatus');
+    // Fetch all riders to show in the registry list (exclude removed ones)
+    const allRiders = await Rider.find({ excludeFromGeofencing: { $ne: true } }).select('name phone lastLocation currentSpeed kycStatus');
 
     // Filter geofences to only those with valid riders
     const validGeofences = geofences.filter(gf => gf.riderId);
@@ -829,6 +829,25 @@ export const deleteGeofence = async (req, res) => {
   try {
     await Geofence.findByIdAndDelete(req.params.id);
     res.status(200).json({ success: true, message: 'Geofence deleted' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Remove rider from geofencing list
+// @route   DELETE /api/v1/admin/geofencing/rider/:riderId
+export const removeRiderFromGeofencing = async (req, res) => {
+  try {
+    const rider = await Rider.findById(req.params.riderId);
+    if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
+
+    rider.excludeFromGeofencing = true;
+    await rider.save();
+
+    // Also delete any geofence assigned to this rider
+    await Geofence.deleteMany({ riderId: req.params.riderId });
+
+    res.status(200).json({ success: true, message: 'Rider removed from geofencing' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
