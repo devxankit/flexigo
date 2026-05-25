@@ -48,7 +48,7 @@ function VehicleSection({ vehicle, currentAddress, isDark }) {
         <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-flexigo-teal/5 rounded-full blur-[100px] pointer-events-none transition-opacity duration-500 ${isDark ? 'opacity-100' : 'opacity-40'}`} />
       </div>
 
-      {/* Scooter Image */}
+      {/* Scooter Image — dynamic from DB, fallback to static */}
       <motion.div
         initial={{ scale: 0.8, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -56,8 +56,8 @@ function VehicleSection({ vehicle, currentAddress, isDark }) {
         className="relative w-full h-52 flex items-center justify-center"
       >
         <img
-          src={scooterRender}
-          alt="Flexigo Electric Scooter"
+          src={vehicle?.images?.length > 0 ? vehicle.images[0] : scooterRender}
+          alt={vehicle?.model || 'Flexigo Electric Scooter'}
           className="w-full h-full object-contain drop-shadow-2xl"
         />
         <div className={`absolute bottom-4 w-32 h-2 rounded-full blur-xl ${isDark ? 'bg-white/5' : 'bg-slate-900/10'}`} />
@@ -484,6 +484,19 @@ export default function HomeDashboard() {
       title="Vehicle Diagnostics"
     >
       <div className="px-6 pb-24 pt-4 space-y-6">
+        {/* Back to Home Button */}
+        <button
+          onClick={() => setDiagnosticsOpen(false)}
+          className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all active:scale-95 ${
+            isDark ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-slate-100 border-slate-200 text-slate-800 hover:bg-slate-200'
+          }`}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-4 h-4">
+            <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className="text-[9px] font-black uppercase tracking-widest">Back to Home</span>
+        </button>
+
         {/* Main Status Card */}
         <GlassCard className="p-5 flex items-center gap-4 group">
           <div className="w-16 h-16 rounded-2xl bg-flexigo-teal/10 flex items-center justify-center overflow-hidden border border-flexigo-teal/20 transition-all group-hover:scale-105 duration-500">
