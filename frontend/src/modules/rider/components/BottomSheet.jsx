@@ -27,7 +27,7 @@ export function BottomSheet({ isOpen, onClose, children, title, snapHeight = '70
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className={`fixed inset-0 backdrop-blur-[2px] z-40 transition-colors ${
+            className={`fixed inset-0 backdrop-blur-[2px] z-[70] transition-colors ${
               isDark ? 'bg-black/60' : 'bg-slate-900/40'
             }`}
             onClick={onClose}
@@ -44,7 +44,7 @@ export function BottomSheet({ isOpen, onClose, children, title, snapHeight = '70
               ease: [0.32, 0.72, 0, 1], // Custom performance ease
               opacity: { duration: 0.2 } 
             }}
-            className={`fixed bottom-0 left-0 right-0 z-50 rounded-t-[32px] overflow-hidden shadow-2xl border-t ${
+            className={`fixed bottom-0 left-0 right-0 z-[80] rounded-t-[32px] overflow-hidden shadow-2xl border-t ${
               isDark 
                 ? 'bg-[#14141E] border-white/10' 
                 : 'bg-white border-slate-200'

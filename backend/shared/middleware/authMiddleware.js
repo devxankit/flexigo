@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import Franchise from '../../modules/franchise/franchiseModel.js';
 import Rider from '../../modules/rider/riderModel.js';
 import Admin from '../../modules/admin/adminModel.js';
+import Staff from '../../modules/admin/staffModel.js';
 import Role from '../../modules/admin/roleModel.js';
 
 export const protectFranchise = async (req, res, next) => {
@@ -67,15 +68,30 @@ export const protectAdmin = async (req, res, next) => {
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
       token = req.headers.authorization.split(' ')[1];
-      console.log("DEBUG: Received Admin Token:", token);
-      
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+      // 1. Check Admin table first
       req.admin = await Admin.findById(decoded.id).select('-password');
-      
+
       if (!req.admin) {
-        console.log("DEBUG: Admin not found for ID:", decoded.id);
-        return res.status(401).json({ success: false, message: 'Admin not found' });
+        // 2. Not found in Admin — check Staff table (HR-created staff)
+        const staff = await Staff.findById(decoded.id).select('-password');
+        if (!staff) {
+          return res.status(401).json({ success: false, message: 'Authorized user not found' });
+        }
+        if (staff.status !== 'active') {
+          return res.status(403).json({ success: false, message: 'Account inactive' });
+        }
+        // Attach staff as req.admin so authorize() middleware works
+        req.admin = {
+          _id: staff._id,
+          name: staff.name,
+          email: staff.email,
+          role: staff.assignedRole || staff.role,
+          accountType: 'staff'
+        };
       }
+
       next();
     } catch (error) {
       console.error("DEBUG: JWT Verification Error:", error.message);
