@@ -460,9 +460,7 @@ export default function GeoFencingPage() {
   };
 
   const deleteZone = (id) => {
-    if (window.confirm('Are you sure you want to delete this zone?')) {
-        removeGeofence(id);
-    }
+    removeGeofence(id);
   };
 
   return (
