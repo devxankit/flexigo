@@ -198,6 +198,36 @@ router.get('/payments/pending-qr', protectAdmin, async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+
+router.get('/payments/due-alerts', protectAdmin, async (req, res) => {
+  try {
+    const now = new Date();
+    const Rider = (await import('../rider/riderModel.js')).default;
+    const SubscriptionPlan = (await import('./subscriptionPlanModel.js')).default;
+
+    // Find riders with expired subscriptions that were Weekly plans
+    const expiredRiders = await Rider.find({
+      subscriptionEnd: { $lt: now },
+      subscriptionPlan: { $ne: null },
+      status: { $in: ['active', 'approved'] }
+    }).populate('subscriptionPlan');
+
+    const dueRiders = expiredRiders
+      .filter(r => r.subscriptionPlan && r.subscriptionPlan.type === 'Weekly')
+      .map(r => ({
+        _id: r._id,
+        name: r.name,
+        phone: r.phone,
+        planName: r.subscriptionPlan.name,
+        amount: r.subscriptionPlan.price,
+        expiredAt: r.subscriptionEnd
+      }));
+
+    res.status(200).json({ success: true, riders: dueRiders });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 router.post('/payments/approve-qr', protectAdmin, approveQRPayment);
 router.post('/payments/reject-qr', protectAdmin, rejectQRPayment);
 router.delete('/parts/:id', deletePart);

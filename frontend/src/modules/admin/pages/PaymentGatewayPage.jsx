@@ -36,6 +36,7 @@ export default function PaymentGatewayPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [pendingPayments, setPendingPayments] = useState([]);
   const [loadingAction, setLoadingAction] = useState(null);
+  const [dueAlerts, setDueAlerts] = useState([]);
 
   const fetchPendingPayments = async () => {
     try {
@@ -48,10 +49,25 @@ export default function PaymentGatewayPage() {
     }
   };
 
+  const fetchDueAlerts = async () => {
+    try {
+      const res = await api.get('/admin/payments/due-alerts');
+      if (res.data.success) {
+        setDueAlerts(res.data.riders);
+      }
+    } catch (err) {
+      console.error("Failed to fetch due alerts:", err);
+    }
+  };
+
   React.useEffect(() => {
     fetchFinanceData(activeFilters);
     fetchPendingPayments();
-    const interval = setInterval(fetchPendingPayments, 10000);
+    fetchDueAlerts();
+    const interval = setInterval(() => {
+      fetchPendingPayments();
+      fetchDueAlerts();
+    }, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -176,6 +192,44 @@ export default function PaymentGatewayPage() {
                       <X size={12} /> Reject
                     </button>
                   </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Weekly Payment Due Alerts */}
+      {dueAlerts.length > 0 && (
+        <div className="bg-[var(--bg-secondary)] border-2 border-rose-500/20 rounded-2xl overflow-hidden shadow-sm">
+          <div className="px-6 py-3 border-b border-rose-500/10 flex items-center justify-between bg-rose-500/5">
+            <div className="flex items-center gap-2">
+              <AlertCircle size={14} className="text-rose-500" />
+              <h3 className="text-[11px] font-black text-rose-500 uppercase tracking-wider leading-none italic">
+                Weekly Payment Due ({dueAlerts.length})
+              </h3>
+            </div>
+            <span className="text-[8px] font-black text-rose-500/60 uppercase tracking-widest">Subscription Expired</span>
+          </div>
+          <div className="divide-y divide-[var(--border-subtle)]">
+            {dueAlerts.map((rider) => (
+              <div key={rider._id} className="px-6 py-4 flex items-center justify-between hover:bg-[var(--bg-tertiary)]/10 transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
+                    <AlertCircle size={18} className="text-rose-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-[var(--text-primary)] uppercase tracking-tight">
+                      {rider.name || 'Rider'}
+                    </p>
+                    <p className="text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">
+                      {rider.phone} • {rider.planName} • Expired: {new Date(rider.expiredAt).toLocaleDateString([], { day: 'numeric', month: 'short' })}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-lg font-black text-rose-500">₹{rider.amount}</span>
+                  <span className="text-[8px] font-black uppercase tracking-widest text-rose-500 bg-rose-500/10 px-2 py-1 rounded">DUE</span>
                 </div>
               </div>
             ))}
