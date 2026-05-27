@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CreditCard, 
   ExternalLink, 
@@ -14,12 +14,15 @@ import {
   RefreshCcw,
   Zap,
   ShieldCheck,
-  Activity
+  Activity,
+  Check,
+  X
 } from 'lucide-react';
 import AdminStatCard from '../components/AdminStatCard';
 import OpsFilter from '../components/OpsFilter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAdminDataStore } from '../store/adminDataStore';
+import api from '../../../lib/axios';
 
 const Gateways = [
   { name: 'RazorPay', status: 'active', speed: '99ms', type: 'Primary' },
@@ -31,6 +34,55 @@ export default function PaymentGatewayPage() {
   const { financeTransactions, financeStats, fetchFinanceData } = useAdminDataStore();
   const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
   const [searchQuery, setSearchQuery] = useState('');
+  const [pendingPayments, setPendingPayments] = useState([]);
+  const [loadingAction, setLoadingAction] = useState(null);
+
+  const fetchPendingPayments = async () => {
+    try {
+      const res = await api.get('/admin/payments/pending-qr');
+      if (res.data.success) {
+        setPendingPayments(res.data.payments);
+      }
+    } catch (err) {
+      console.error("Failed to fetch pending payments:", err);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchFinanceData(activeFilters);
+    fetchPendingPayments();
+    const interval = setInterval(fetchPendingPayments, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleApprove = async (transactionId) => {
+    setLoadingAction(transactionId);
+    try {
+      const res = await api.post('/admin/payments/approve-qr', { transactionId });
+      if (res.data.success) {
+        setPendingPayments(prev => prev.filter(p => p._id !== transactionId));
+        fetchFinanceData(activeFilters);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to approve');
+    } finally {
+      setLoadingAction(null);
+    }
+  };
+
+  const handleReject = async (transactionId) => {
+    setLoadingAction(transactionId);
+    try {
+      const res = await api.post('/admin/payments/reject-qr', { transactionId });
+      if (res.data.success) {
+        setPendingPayments(prev => prev.filter(p => p._id !== transactionId));
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to reject');
+    } finally {
+      setLoadingAction(null);
+    }
+  };
 
   React.useEffect(() => {
     fetchFinanceData(activeFilters);
@@ -74,6 +126,62 @@ export default function PaymentGatewayPage() {
          <AdminStatCard title="Success Rate" value={financeStats.successRate} icon={CheckCircle2} color="blue" subtitle="Fleet Conversions" />
          <AdminStatCard title="Pending" value={financeStats.pending} icon={Clock} color="amber" subtitle="Awaiting Bank" />
       </div>
+
+      {/* Pending QR Payments — Admin Approval Required */}
+      {pendingPayments.length > 0 && (
+        <div className="bg-[var(--bg-secondary)] border-2 border-amber-500/20 rounded-2xl overflow-hidden shadow-sm">
+          <div className="px-6 py-3 border-b border-amber-500/10 flex items-center justify-between bg-amber-500/5">
+            <div className="flex items-center gap-2">
+              <Clock size={14} className="text-amber-500" />
+              <h3 className="text-[11px] font-black text-amber-500 uppercase tracking-wider leading-none italic">
+                Pending QR Payments ({pendingPayments.length})
+              </h3>
+            </div>
+            <span className="text-[8px] font-black text-amber-500/60 uppercase tracking-widest animate-pulse">Awaiting Verification</span>
+          </div>
+          <div className="divide-y divide-[var(--border-subtle)]">
+            {pendingPayments.map((payment) => (
+              <div key={payment._id} className="px-6 py-4 flex items-center justify-between hover:bg-[var(--bg-tertiary)]/10 transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                    <Wallet size={18} className="text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-[var(--text-primary)] uppercase tracking-tight">
+                      {payment.riderId?.name || 'Rider'}
+                    </p>
+                    <p className="text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">
+                      {payment.riderId?.phone || 'N/A'} • {payment.description}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-lg font-black text-[var(--text-primary)]">₹{payment.amount}</span>
+                  <span className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase">
+                    {new Date(payment.createdAt).toLocaleDateString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleApprove(payment._id)}
+                      disabled={loadingAction === payment._id}
+                      className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-1"
+                    >
+                      <Check size={12} /> Approve
+                    </button>
+                    <button
+                      onClick={() => handleReject(payment._id)}
+                      disabled={loadingAction === payment._id}
+                      className="px-3 py-1.5 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-rose-500/20 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-1"
+                    >
+                      <X size={12} /> Reject
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Transaction Ledger */}
       <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-sm">

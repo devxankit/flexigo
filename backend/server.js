@@ -76,6 +76,36 @@ app.use('/api/v1/fleet', fleetRoutes);
 app.use('/api/v1/staff', staffRoutes);
 app.use('/api/v1/admin', adminRoutes);
 
+// App Version Check — used by rider & franchise apps for force update
+import AppVersion from './modules/admin/appVersionModel.js';
+app.get('/api/v1/app-version', async (req, res) => {
+  try {
+    const platform = req.query.platform || 'rider';
+    let record = await AppVersion.findOne({ platform });
+
+    // Auto-seed if not exists
+    if (!record) {
+      record = await AppVersion.create({
+        platform,
+        version: '1.0.0',
+        playStoreUrl: platform === 'rider'
+          ? 'https://play.google.com/store/apps/details?id=com.flexigo.rider'
+          : 'https://play.google.com/store/apps/details?id=com.flexigo.franchise',
+        forceUpdate: true
+      });
+    }
+
+    res.json({
+      success: true,
+      version: record.version,
+      playStoreUrl: record.playStoreUrl,
+      forceUpdate: record.forceUpdate
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {

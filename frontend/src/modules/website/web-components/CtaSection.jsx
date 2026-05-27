@@ -42,10 +42,24 @@ const CtaSection = () => {
              </p>
 
              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <button className="w-full sm:w-auto px-8 py-4 bg-flexigo-teal hover:bg-flexigo-primary text-white rounded-full font-bold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_30px_rgba(249,115,22,0.4)] flex items-center justify-center gap-2 group">
-                  Download App
+                <a 
+                  href="https://play.google.com/store/apps/details?id=com.flexigo.rider"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto px-8 py-4 bg-flexigo-teal hover:bg-flexigo-primary text-white rounded-full font-bold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-[0_0_30px_rgba(249,115,22,0.4)] flex items-center justify-center gap-2 group"
+                >
+                  Rider App
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </button>
+                </a>
+                <a 
+                  href="https://play.google.com/store/apps/details?id=com.flexigo.franchise"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto px-8 py-4 bg-white/10 border border-white/20 text-white rounded-full font-bold text-lg transition-all duration-300 transform hover:scale-105 hover:bg-white/20 flex items-center justify-center gap-2 group"
+                >
+                  Franchise App
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </a>
              </div>
           </div>
         </motion.div>

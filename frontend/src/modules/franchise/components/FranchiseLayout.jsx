@@ -8,14 +8,38 @@ import { useFranchiseNotificationStore } from "../store/notificationStore";
 import { useFranchiseWalletStore } from "../store/walletStore";
 import { getMessaging, onMessage } from "firebase/messaging";
 import app from "../../../lib/firebase";
-import { Bell, IndianRupee, X } from "lucide-react";
+import { Bell, IndianRupee, X, RefreshCw } from "lucide-react";
 import { useState } from "react";
+import api from "../../../lib/axios";
+
+const CURRENT_APP_VERSION = '1.0.0';
 
 export default function FranchiseLayout() {
   const { theme } = useThemeStore();
   const { addNotification } = useFranchiseNotificationStore();
   const { fetchWallet } = useFranchiseWalletStore();
   const [toast, setToast] = useState(null);
+  const [showUpdatePopup, setShowUpdatePopup] = useState(false);
+  const [latestVersion, setLatestVersion] = useState(null);
+
+  // Check for app update on mount
+  useEffect(() => {
+    const checkUpdate = async () => {
+      try {
+        const res = await api.get('/app-version?platform=franchise');
+        if (res.data.success && res.data.version !== CURRENT_APP_VERSION) {
+          setLatestVersion(res.data.version);
+          setShowUpdatePopup(true);
+          if (res.data.playStoreUrl) {
+            sessionStorage.setItem('franchise_playstore_url', res.data.playStoreUrl);
+          }
+        }
+      } catch (e) {
+        // silently fail
+      }
+    };
+    checkUpdate();
+  }, []);
   
   useEffect(() => {
     const root = window.document.documentElement;
@@ -56,6 +80,43 @@ export default function FranchiseLayout() {
 
   return (
     <div className={`flex h-screen w-full bg-[var(--bg-primary)] overflow-hidden transition-colors duration-300 ${theme}`}>
+      {/* App Update Popup */}
+      <AnimatePresence>
+        {showUpdatePopup && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="w-full max-w-sm bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-3xl p-8 text-center space-y-6 shadow-2xl"
+            >
+              <div className="w-16 h-16 bg-emerald-500/10 border-2 border-emerald-500/30 rounded-2xl flex items-center justify-center mx-auto">
+                <RefreshCw size={32} className="text-emerald-500" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-black text-[var(--text-primary)]">Update Available</h3>
+                <p className="text-[11px] font-bold text-[var(--text-tertiary)]">
+                  A new version ({latestVersion}) of Flexigo Franchise is available. Please update for the best experience.
+                </p>
+              </div>
+              <div className="space-y-3">
+                <button
+                  onClick={() => window.open(sessionStorage.getItem('franchise_playstore_url') || 'https://play.google.com/store/apps/details?id=com.flexigo.franchise', '_blank')}
+                  className="w-full py-3 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-emerald-700 transition-all active:scale-95"
+                >
+                  Update Now
+                </button>
+                <button
+                  onClick={() => setShowUpdatePopup(false)}
+                  className="w-full py-2 text-[9px] font-black uppercase tracking-widest text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-all"
+                >
+                  Later
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       {/* Sidebar with internal motion logic */}
       <FranchiseSidebar />
 

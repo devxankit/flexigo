@@ -153,6 +153,53 @@ router.delete('/billing/:id', deleteBill);
 router.get('/parts', getParts);
 router.post('/parts', createPart);
 router.put('/parts/:id', updatePart);
+
+// QR Payment Approval
+import { approveQRPayment, rejectQRPayment } from '../rider/riderController.js';
+import Transaction from '../rider/transactionModel.js';
+import AppVersion from './appVersionModel.js';
+
+// App Version Management (Admin)
+router.get('/app-versions', protectAdmin, async (req, res) => {
+  try {
+    let versions = await AppVersion.find();
+    // Auto-seed if empty
+    if (versions.length === 0) {
+      await AppVersion.create({ platform: 'rider', version: '1.0.0', playStoreUrl: 'https://play.google.com/store/apps/details?id=com.flexigo.rider' });
+      await AppVersion.create({ platform: 'franchise', version: '1.0.0', playStoreUrl: 'https://play.google.com/store/apps/details?id=com.flexigo.franchise' });
+      versions = await AppVersion.find();
+    }
+    res.json({ success: true, versions });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+router.put('/app-versions/:platform', protectAdmin, async (req, res) => {
+  try {
+    const { version, playStoreUrl, forceUpdate } = req.body;
+    const record = await AppVersion.findOneAndUpdate(
+      { platform: req.params.platform },
+      { version, playStoreUrl, forceUpdate, updatedAt: new Date() },
+      { new: true, upsert: true }
+    );
+    res.json({ success: true, version: record });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+router.get('/payments/pending-qr', protectAdmin, async (req, res) => {
+  try {
+    const payments = await Transaction.find({ method: 'upi_qr', status: 'pending' })
+      .populate('riderId', 'name phone')
+      .sort({ createdAt: -1 });
+    res.status(200).json({ success: true, payments });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+router.post('/payments/approve-qr', protectAdmin, approveQRPayment);
+router.post('/payments/reject-qr', protectAdmin, rejectQRPayment);
 router.delete('/parts/:id', deletePart);
 router.get('/franchise-ops', getFranchiseOpsData);
 router.post('/franchise/:id/credit', creditFranchiseWallet);

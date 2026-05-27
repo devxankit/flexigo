@@ -12,6 +12,9 @@ import { useRiderNotificationStore } from '../store/notificationStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { X, RefreshCw } from 'lucide-react';
+import api from '../../../lib/axios';
+
+const CURRENT_APP_VERSION = '1.0.0';
 
 export function RiderLayout() {
   const { pathname } = useLocation();
@@ -20,6 +23,27 @@ export function RiderLayout() {
   const { fetchProfile, user } = useAuthStore();
   const { addNotification } = useRiderNotificationStore();
   const [toast, setToast] = useState(null);
+  const [showUpdatePopup, setShowUpdatePopup] = useState(false);
+  const [latestVersion, setLatestVersion] = useState(null);
+
+  // Check for app update on mount
+  useEffect(() => {
+    const checkUpdate = async () => {
+      try {
+        const res = await api.get('/app-version?platform=rider');
+        if (res.data.success && res.data.version !== CURRENT_APP_VERSION) {
+          setLatestVersion(res.data.version);
+          setShowUpdatePopup(true);
+          if (res.data.playStoreUrl) {
+            sessionStorage.setItem('rider_playstore_url', res.data.playStoreUrl);
+          }
+        }
+      } catch (e) {
+        // silently fail — don't block app usage
+      }
+    };
+    checkUpdate();
+  }, []);
 
   useEffect(() => {
     if (user?.phone) {
@@ -245,6 +269,49 @@ export function RiderLayout() {
     <div className={`fixed inset-0 transition-colors duration-500 overflow-hidden overscroll-none touch-none ${
       theme === 'dark' ? 'bg-[#0A0A0F]' : 'bg-white'
     }`}>
+      {/* App Update Popup */}
+      <AnimatePresence>
+        {showUpdatePopup && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className={`w-full max-w-sm rounded-3xl p-8 text-center space-y-6 ${
+                theme === 'dark' ? 'bg-[#14141E] border border-white/10' : 'bg-white border border-slate-200 shadow-2xl'
+              }`}
+            >
+              <div className="w-16 h-16 bg-flexigo-teal/10 border-2 border-flexigo-teal/30 rounded-2xl flex items-center justify-center mx-auto">
+                <RefreshCw size={32} className="text-flexigo-teal" />
+              </div>
+              <div className="space-y-2">
+                <h3 className={`text-xl font-black ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+                  Update Available
+                </h3>
+                <p className={`text-[11px] font-bold ${theme === 'dark' ? 'text-gray-400' : 'text-slate-500'}`}>
+                  A new version ({latestVersion}) of Flexigo is available. Please update for the best experience.
+                </p>
+              </div>
+              <div className="space-y-3">
+                <button
+                  onClick={() => window.open(sessionStorage.getItem('rider_playstore_url') || 'https://play.google.com/store/apps/details?id=com.flexigo.rider', '_blank')}
+                  className="w-full py-3 bg-flexigo-teal text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-emerald-400 transition-all active:scale-95"
+                >
+                  Update Now
+                </button>
+                <button
+                  onClick={() => setShowUpdatePopup(false)}
+                  className={`w-full py-2 text-[9px] font-black uppercase tracking-widest transition-all ${
+                    theme === 'dark' ? 'text-gray-500 hover:text-white' : 'text-slate-400 hover:text-slate-900'
+                  }`}
+                >
+                  Later
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       {/* Header Layer */}
       {showHeader && (
         <div className={`absolute top-0 left-0 right-0 z-[60] transition-colors duration-500 ${

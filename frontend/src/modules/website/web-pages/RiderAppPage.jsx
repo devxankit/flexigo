@@ -42,9 +42,10 @@ const RiderAppPage = () => {
               <LogIn className="w-5 h-5" /> Open Rider Panel
             </Link>
             <button
+              onClick={() => window.open('https://play.google.com/store/apps/details?id=com.flexigo.rider', '_blank')}
               className="px-8 py-4 bg-white/10 border border-white/20 text-white rounded-full font-bold text-base hover:bg-white/20 transition-all duration-300 flex items-center justify-center gap-2"
             >
-              <Play className="w-5 h-5 fill-white" /> Download Android APK
+              <Play className="w-5 h-5 fill-white" /> Download from Play Store
             </button>
           </div>
         </div>

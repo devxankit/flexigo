@@ -13,6 +13,7 @@ import {
   createPaymentOrder,
   verifyPayment,
   payViaWallet,
+  requestQRPayment,
   generateAadhaarOTP,
   verifyAadhaarOTP,
   saveFcmToken,
@@ -39,6 +40,7 @@ router.get('/plans', getRiderPlans);
 router.post('/payments/create-order', createPaymentOrder);
 router.post('/payments/verify', verifyPayment);
 router.post('/payments/wallet', payViaWallet);
+router.post('/payments/qr-request', requestQRPayment);
 router.patch('/location', protectRider, updateRiderLocation);
 router.post('/handover/request', protectRider, requestHandover);
 

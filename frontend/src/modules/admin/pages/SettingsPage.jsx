@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Lock, User, Save, Key, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Shield, Lock, User, Save, Key, AlertCircle, CheckCircle2, RefreshCw, Smartphone } from 'lucide-react';
 import axios from 'axios';
+import api from '../../../lib/axios';
 
 const SettingsPage = () => {
   const [profile, setProfile] = useState(null);
@@ -13,6 +14,40 @@ const SettingsPage = () => {
   });
   const [status, setStatus] = useState({ type: '', message: '' });
   const [updating, setUpdating] = useState(false);
+  const [appVersions, setAppVersions] = useState([]);
+  const [versionSaving, setVersionSaving] = useState(null);
+
+  useEffect(() => {
+    const fetchAppVersions = async () => {
+      try {
+        const res = await api.get('/admin/app-versions');
+        if (res.data.success) setAppVersions(res.data.versions);
+      } catch (e) {
+        console.error('Failed to fetch app versions:', e);
+      }
+    };
+    fetchAppVersions();
+  }, []);
+
+  const handleVersionUpdate = async (platform) => {
+    const record = appVersions.find(v => v.platform === platform);
+    if (!record) return;
+    setVersionSaving(platform);
+    try {
+      const res = await api.put(`/admin/app-versions/${platform}`, {
+        version: record.version,
+        playStoreUrl: record.playStoreUrl,
+        forceUpdate: record.forceUpdate
+      });
+      if (res.data.success) {
+        setAppVersions(prev => prev.map(v => v.platform === platform ? res.data.version : v));
+      }
+    } catch (e) {
+      alert('Failed to update version');
+    } finally {
+      setVersionSaving(null);
+    }
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -189,6 +224,88 @@ const SettingsPage = () => {
           </form>
         </motion.div>
       </div>
+
+      {/* App Version Management */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-8 shadow-sm"
+      >
+        <div className="flex items-center gap-3 mb-8 pb-4 border-b border-[var(--border-subtle)]">
+          <Smartphone className="text-emerald-500" size={20} />
+          <div>
+            <h2 className="font-black text-[var(--text-primary)] uppercase tracking-wider">App Version Control</h2>
+            <p className="text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest mt-0.5">Manage Play Store update prompts for Rider & Franchise apps</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {['rider', 'franchise'].map(platform => {
+            const record = appVersions.find(v => v.platform === platform) || { version: '1.0.0', playStoreUrl: '', forceUpdate: true };
+            return (
+              <div key={platform} className="p-5 bg-[var(--bg-primary)] border border-[var(--border-subtle)] rounded-xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <RefreshCw size={14} className="text-emerald-500" />
+                    <span className="text-[11px] font-black uppercase tracking-widest text-[var(--text-primary)]">
+                      {platform === 'rider' ? 'Rider App' : 'Franchise App'}
+                    </span>
+                  </div>
+                  <span className="text-[8px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded">
+                    v{record.version}
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">Latest Version</label>
+                    <input
+                      type="text"
+                      value={record.version}
+                      onChange={(e) => setAppVersions(prev => prev.map(v => v.platform === platform ? { ...v, version: e.target.value } : v))}
+                      placeholder="e.g. 1.0.1"
+                      className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg py-2 px-3 text-sm font-bold outline-none focus:border-emerald-500 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">Play Store URL</label>
+                    <input
+                      type="text"
+                      value={record.playStoreUrl}
+                      onChange={(e) => setAppVersions(prev => prev.map(v => v.platform === platform ? { ...v, playStoreUrl: e.target.value } : v))}
+                      placeholder="https://play.google.com/store/apps/..."
+                      className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg py-2 px-3 text-[10px] font-bold outline-none focus:border-emerald-500 transition-all"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <label className="text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">Force Update</label>
+                    <button
+                      type="button"
+                      onClick={() => setAppVersions(prev => prev.map(v => v.platform === platform ? { ...v, forceUpdate: !v.forceUpdate } : v))}
+                      className={`w-10 h-5 rounded-full transition-all relative ${record.forceUpdate ? 'bg-emerald-500' : 'bg-[var(--border-subtle)]'}`}
+                    >
+                      <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${record.forceUpdate ? 'left-5' : 'left-0.5'}`} />
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => handleVersionUpdate(platform)}
+                  disabled={versionSaving === platform}
+                  className="w-full py-2.5 bg-emerald-500 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {versionSaving === platform ? (
+                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <><Save size={12} /> Save Version</>
+                  )}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </motion.div>
     </div>
   );
 };

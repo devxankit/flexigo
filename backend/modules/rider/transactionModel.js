@@ -23,8 +23,13 @@ const TransactionSchema = new mongoose.Schema({
   description: String,
   method: {
     type: String,
-    enum: ['wallet', 'razorpay', 'upi', 'card', 'bank'],
+    enum: ['wallet', 'razorpay', 'upi', 'upi_qr', 'card', 'bank'],
     default: 'razorpay'
+  },
+  planId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'SubscriptionPlan',
+    default: null
   },
   createdAt: {
     type: Date,

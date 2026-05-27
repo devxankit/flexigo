@@ -397,6 +397,150 @@ export const verifyPayment = async (req, res) => {
   } catch (error) { res.status(500).json({ success: false, message: error.message }); }
 };
 
+// @desc    Request QR/UPI Payment (pending until admin approves)
+// @route   POST /api/v1/rider/payments/qr-request
+export const requestQRPayment = async (req, res) => {
+  try {
+    const { planId, phone } = req.body;
+    const plan = await SubscriptionPlan.findById(planId);
+    if (!plan) return res.status(404).json({ success: false, message: 'Plan not found' });
+
+    const rider = await Rider.findOne({ phone });
+    if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
+
+    // Create a pending transaction
+    const transaction = await Transaction.create({
+      riderId: rider._id,
+      amount: plan.price,
+      type: 'debit',
+      status: 'pending',
+      description: `QR Payment: ${plan.name} (Awaiting Admin Approval)`,
+      method: 'upi_qr',
+      planId: plan._id
+    });
+
+    // Send real-time push notification to all SuperAdmins
+    const admins = await Admin.find({ role: 'SuperAdmin' });
+    for (const admin of admins) {
+      if (admin.fcmToken) {
+        try {
+          await sendPushNotification(
+            admin.fcmToken,
+            '💰 New QR Payment Request',
+            `${rider.name || rider.phone} paid ₹${plan.price} for ${plan.name}. Verify & approve.`,
+            { type: 'qr_payment_request', transactionId: transaction._id.toString(), riderId: rider._id.toString() }
+          );
+        } catch (e) {
+          console.error("Admin FCM notification failed:", e.message);
+        }
+      }
+    }
+
+    // Also notify franchise if rider has one
+    if (rider.franchise) {
+      const franchise = await Franchise.findById(rider.franchise);
+      const frToken = franchise?.fcmToken || franchise?.fcmTokenMobile;
+      if (frToken) {
+        try {
+          await sendPushNotification(
+            frToken,
+            '💰 QR Payment Request',
+            `Rider ${rider.name || rider.phone} submitted ₹${plan.price} payment. Awaiting verification.`,
+            { type: 'qr_payment_request', transactionId: transaction._id.toString() }
+          );
+        } catch (e) {
+          console.error("Franchise FCM notification failed:", e.message);
+        }
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Payment request submitted. Awaiting admin verification.',
+      transactionId: transaction._id
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Admin approves QR payment → activates subscription
+// @route   POST /api/v1/admin/payments/approve-qr
+export const approveQRPayment = async (req, res) => {
+  try {
+    const { transactionId } = req.body;
+    const transaction = await Transaction.findById(transactionId);
+    if (!transaction) return res.status(404).json({ success: false, message: 'Transaction not found' });
+    if (transaction.status === 'success') return res.status(400).json({ success: false, message: 'Already approved' });
+
+    const rider = await Rider.findById(transaction.riderId);
+    if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
+
+    const plan = await SubscriptionPlan.findById(transaction.planId);
+    if (!plan) return res.status(404).json({ success: false, message: 'Plan not found' });
+
+    // Activate subscription
+    const durationMs = plan.type === 'Daily' ? 86400000 : plan.type === 'Weekly' ? 604800000 : 2592000000;
+    const expiresAt = new Date(Date.now() + durationMs);
+
+    rider.status = 'active';
+    rider.subscriptionPlan = plan._id;
+    rider.subscriptionStart = new Date();
+    rider.subscriptionEnd = expiresAt;
+    await rider.save();
+
+    // Update transaction status
+    transaction.status = 'success';
+    transaction.description = `Plan Upgrade: ${plan.name} (QR Verified)`;
+    await transaction.save();
+
+    // Send SMS to rider
+    try {
+      const msg = `Flexigo: Your payment of ₹${plan.price} has been verified. Subscription activated.`;
+      await sendSMS(rider.phone, msg);
+    } catch (e) {}
+
+    // Send push notification to rider
+    const riderToken = rider.fcmToken || rider.fcmTokenMobile;
+    if (riderToken) {
+      try {
+        await sendPushNotification(riderToken, 'Payment Approved', `Your ₹${plan.price} payment has been verified. Subscription is now active.`, { type: 'payment_approved' });
+      } catch (e) {}
+    }
+
+    res.status(200).json({ success: true, message: 'Payment approved and subscription activated' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Admin rejects QR payment
+// @route   POST /api/v1/admin/payments/reject-qr
+export const rejectQRPayment = async (req, res) => {
+  try {
+    const { transactionId } = req.body;
+    const transaction = await Transaction.findById(transactionId);
+    if (!transaction) return res.status(404).json({ success: false, message: 'Transaction not found' });
+
+    transaction.status = 'failed';
+    transaction.description += ' (Rejected by Admin)';
+    await transaction.save();
+
+    // Notify rider
+    const rider = await Rider.findById(transaction.riderId);
+    const riderToken = rider?.fcmToken || rider?.fcmTokenMobile;
+    if (riderToken) {
+      try {
+        await sendPushNotification(riderToken, 'Payment Rejected', 'Your payment could not be verified. Please try again or contact support.', { type: 'payment_rejected' });
+      } catch (e) {}
+    }
+
+    res.status(200).json({ success: true, message: 'Payment rejected' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const updateRiderLocation = async (req, res) => {
   try {
     const { latitude, longitude, speed, address, locationStatus } = req.body;

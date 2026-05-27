@@ -59,9 +59,35 @@ export default function SubscriptionPlans() {
     }
   };
 
+  const [showQRCode, setShowQRCode] = useState(false);
+  const [qrSubmitted, setQrSubmitted] = useState(false);
+
+  const handleQRPayment = () => {
+    setShowQRCode(true);
+  };
+
+  const handleQRPaid = async () => {
+    try {
+      const res = await api.post('/rider/payments/qr-request', {
+        planId: selectedPlan.id,
+        phone: user.phone
+      });
+
+      if (res.data.success) {
+        setQrSubmitted(true);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to submit payment request.");
+    }
+  };
+
   const handleOpenRazorpay = async () => {
     if (selectedMethod === 'WALLET') {
       return handleWalletPayment();
+    }
+
+    if (selectedMethod === 'UPI_QR') {
+      return handleQRPayment();
     }
 
     try {
@@ -132,7 +158,7 @@ export default function SubscriptionPlans() {
 
   const paymentMethods = [
     { id: 'WALLET', label: 'Flexigo Wallet', sub: `Balance: ₹${balance}`, icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M21 18c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h9v1zm-9-10v6h9V8h-9zM3 13V6c0-.55.45-1 1-1h16c.55 0 1 .45 1 1v2h-9c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h9v2c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1v-2z"/></svg> },
-    { id: 'RAZORPAY', label: 'Razorpay UPI', sub: 'Instant Online Payment', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg> },
+    { id: 'UPI_QR', label: 'UPI QR Code', sub: 'Scan & Pay via any UPI App', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M3 11h2v2H3v-2zm0-4h2v2H3V7zm4 4h2v2H7v-2zm0-4h2v2H7V7zm0-4h2v2H7V3zm4 8h2v2h-2v-2zm0-4h2v2h-2V7zm0-4h2v2h-2V3zm4 8h2v2h-2v-2zm0-8h2v2h-2V3zm4 4h2v2h-2V7zm0 4h2v2h-2v-2zm0-8h2v2h-2V3zM3 3h2v2H3V3zm0 8h2v2H3v-2z"/></svg> },
   ];
 
   return (
@@ -355,6 +381,76 @@ export default function SubscriptionPlans() {
                             Please visit our office with a valid ID proof to collect your assigned Flexigo vehicle. Our team will complete the handover formalities.
                           </p>
                        </div>
+                    </div>
+                  ) : showQRCode ? (
+                    <div className="space-y-6 py-4">
+                       {qrSubmitted ? (
+                         <div className="text-center py-6 space-y-4">
+                           <div className="w-16 h-16 bg-amber-500/20 border-2 border-amber-500 rounded-full flex items-center justify-center mx-auto">
+                             <svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="3" className="w-8 h-8">
+                               <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" strokeLinecap="round" strokeLinejoin="round" />
+                             </svg>
+                           </div>
+                           <div className="space-y-1">
+                             <h3 className={`text-xl font-heading font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Payment Under Review</h3>
+                             <p className={`text-[10px] font-bold ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
+                               Your payment request has been submitted. Admin will verify and activate your subscription shortly.
+                             </p>
+                           </div>
+                           <button
+                             onClick={() => { setIsPaying(false); setShowQRCode(false); setQrSubmitted(false); }}
+                             className={`w-full py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
+                               isDark ? 'bg-white/5 border border-white/10 text-white' : 'bg-slate-100 text-slate-900'
+                             }`}
+                           >
+                             Close
+                           </button>
+                         </div>
+                       ) : (
+                         <>
+                           <div className="text-center space-y-2">
+                             <h3 className={`text-lg font-heading font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                               Scan & Pay <span className="text-flexigo-teal">₹{selectedPlan?.price}</span>
+                             </h3>
+                             <p className={`text-[9px] font-bold uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>
+                               Flexigo E-Mobility Private Limited
+                             </p>
+                           </div>
+
+                           {/* QR Code - UPI deep link */}
+                           <div className="flex justify-center">
+                             <div className={`p-4 rounded-2xl border ${isDark ? 'bg-white' : 'bg-white border-slate-200'}`}>
+                               <img
+                                 src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(`upi://pay?pa=MSFLEXIGOEMOBILITYPRIVATELIMITED.eazypay@icici&pn=Flexigo E-Mobility&am=${selectedPlan?.price}&cu=INR&tn=Plan:${selectedPlan?.label}`)}`}
+                                 alt="UPI QR Code"
+                                 className="w-[220px] h-[220px]"
+                               />
+                             </div>
+                           </div>
+
+                           <div className={`text-center space-y-1 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
+                             <p className="text-[9px] font-black uppercase tracking-widest">UPI ID</p>
+                             <p className={`text-[11px] font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                               MSFLEXIGOEMOBILITYPRIVATELIMITED.eazypay@icici
+                             </p>
+                           </div>
+
+                           <div className="space-y-3 pt-2">
+                             <button
+                               onClick={handleQRPaid}
+                               className="w-full py-3 bg-flexigo-teal text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-emerald-950/20 hover:bg-emerald-400 transition-all active:scale-95"
+                             >
+                               I Have Paid
+                             </button>
+                             <button
+                               onClick={() => { setShowQRCode(false); }}
+                               className={`w-full py-2 text-[9px] font-black uppercase tracking-widest transition-all ${isDark ? 'text-gray-500 hover:text-white' : 'text-slate-400 hover:text-slate-900'}`}
+                             >
+                               Go Back
+                             </button>
+                           </div>
+                         </>
+                       )}
                     </div>
                   ) : showRazorpay ? (
                     <div className="space-y-8 py-4">
