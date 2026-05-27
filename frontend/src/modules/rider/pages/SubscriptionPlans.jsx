@@ -430,9 +430,20 @@ export default function SubscriptionPlans() {
 
                            <div className={`text-center space-y-1 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
                              <p className="text-[9px] font-black uppercase tracking-widest">UPI ID</p>
-                             <p className={`text-[11px] font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                               MSFLEXIGOEMOBILITYPRIVATELIMITED.eazypay@icici
-                             </p>
+                             <div className="flex items-center justify-center gap-2">
+                               <p className={`text-[11px] font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                                 MSFLEXIGOEMOBILITYPRIVATELIMITED.eazypay@icici
+                               </p>
+                               <button
+                                 onClick={() => {
+                                   navigator.clipboard.writeText('MSFLEXIGOEMOBILITYPRIVATELIMITED.eazypay@icici');
+                                   alert('UPI ID copied!');
+                                 }}
+                                 className="px-2 py-1 bg-flexigo-teal/10 border border-flexigo-teal/20 rounded-lg text-[8px] font-black uppercase tracking-widest text-flexigo-teal hover:bg-flexigo-teal/20 transition-all active:scale-95"
+                               >
+                                 Copy
+                               </button>
+                             </div>
                            </div>
 
                            <div className="space-y-3 pt-2">
