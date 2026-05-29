@@ -28,7 +28,7 @@ import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function KycOnboardingPage() {
-  const { kycRecords, fetchKycRecords, updateKycStatus, assignVehicle, toggleBlockKycRecord } = useAdminDataStore();
+  const { kycRecords, fetchKycRecords, updateKycStatus, assignVehicle, toggleBlockKycRecord, vehicles, fetchAllVehicles } = useAdminDataStore();
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem('kyc_active_tab') || 'all');
   const [selectedRecord, setSelectedRecord] = useState(() => {
     const saved = localStorage.getItem('kyc_selected_record');
@@ -56,6 +56,7 @@ export default function KycOnboardingPage() {
 
   React.useEffect(() => {
     fetchKycRecords();
+    fetchAllVehicles();
   }, []);
 
   React.useEffect(() => {
@@ -662,14 +663,19 @@ export default function KycOnboardingPage() {
 
                         <div className="space-y-1.5">
                            <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Vehicle Plate Number</label>
-                           <input 
-                              autoFocus
+                           <select
                               required
                               value={assignmentData.vehiclePlate}
-                              onChange={(e) => setAssignmentData({...assignmentData, vehiclePlate: e.target.value.toUpperCase()})}
-                              placeholder="e.g. DL 01 AB 1234"
-                              className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
-                           />
+                              onChange={(e) => setAssignmentData({...assignmentData, vehiclePlate: e.target.value})}
+                              className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all text-[var(--text-primary)]"
+                           >
+                              <option value="">Select Vehicle Plate</option>
+                              {vehicles.filter(v => !v.assignedTo).map(v => (
+                                <option key={v._id || v.id} value={v.plate}>
+                                  {v.plate} — {v.model || 'Vehicle'}
+                                </option>
+                              ))}
+                           </select>
                         </div>
                      </div>
 
