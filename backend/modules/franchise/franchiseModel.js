@@ -63,6 +63,7 @@ const FranchiseSchema = new mongoose.Schema({
     referenceNumber2: { type: String, default: '' },
     ekycVerified: { type: Boolean, default: false },
     ekycData: Object,
+    attachments: { type: Array, default: [] },
   },
 
   kycStatus: {

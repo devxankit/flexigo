@@ -21,10 +21,12 @@ import {
   ArrowRight,
   ChevronRight,
   Activity,
-  Save
+  Save,
+  Paperclip
 } from 'lucide-react';
 import AdminStatCard from '../components/AdminStatCard';
 import OpsFilter from '../components/OpsFilter';
+import api from '../../../lib/axios';
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function KycOnboardingPage() {
@@ -300,6 +302,40 @@ export default function KycOnboardingPage() {
                                  >
                                     {record.isBlocked ? <UserCheck size={12} /> : <UserX size={12} />}
                                  </button>
+                                {/* Add Attachment Button */}
+                                <button
+                                  onClick={() => {
+                                    const input = document.createElement('input');
+                                    input.type = 'file';
+                                    input.accept = 'image/*,.pdf';
+                                    input.onchange = async (e) => {
+                                      const file = e.target.files[0];
+                                      if (!file) return;
+                                      const reader = new FileReader();
+                                      reader.onloadend = async () => {
+                                        try {
+                                          const res = await api.post(`/admin/kyc/${record._id || record.id}/attachment`, {
+                                            file: reader.result,
+                                            fileName: file.name
+                                          });
+                                          if (res.data.success) {
+                                            fetchKycRecords();
+                                          } else {
+                                            alert(res.data.message || 'Upload failed');
+                                          }
+                                        } catch (err) {
+                                          alert('Upload failed: ' + (err.response?.data?.message || err.message));
+                                        }
+                                      };
+                                      reader.readAsDataURL(file);
+                                    };
+                                    input.click();
+                                  }}
+                                  className="p-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-blue-500 hover:bg-blue-500 hover:text-white transition-all ml-1.5"
+                                  title="Add Attachment"
+                                >
+                                  <Paperclip size={12} />
+                                </button>
                                 {record.status === 'approved' && record.role?.toLowerCase() === 'rider' && !record.vehicleId && (
                                     <button 
                                       onClick={() => {
@@ -576,6 +612,61 @@ export default function KycOnboardingPage() {
                      >
                         <Save size={12} /> SAVE
                      </button>
+                  </div>
+
+                  <div className="flex gap-2.5 pt-6 border-t border-[var(--border-subtle)] relative z-10">
+                     {/* Uploaded Attachments */}
+                     {(selectedRecord.details?.attachments?.length > 0 || selectedRecord.kycDetails?.attachments?.length > 0) && (
+                       <div className="w-full mb-4">
+                         <p className="text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] mb-2">Attachments ({(selectedRecord.details?.attachments || selectedRecord.kycDetails?.attachments || []).length})</p>
+                         <div className="space-y-2">
+                           {(selectedRecord.details?.attachments || selectedRecord.kycDetails?.attachments || []).map((att, idx) => (
+                             <div key={idx} className="flex items-center justify-between p-2.5 bg-[var(--bg-tertiary)]/30 border border-[var(--border-subtle)] rounded-xl">
+                               <div className="flex items-center gap-2 min-w-0">
+                                 <Paperclip size={12} className="text-blue-500 shrink-0" />
+                                 <span className="text-[9px] font-bold text-[var(--text-primary)] truncate">{att.name || `Attachment ${idx + 1}`}</span>
+                               </div>
+                               <div className="flex items-center gap-1.5 shrink-0">
+                                 <button
+                                   onClick={() => window.open(att.url, '_blank')}
+                                   className="px-2 py-1 bg-blue-500/10 text-blue-500 border border-blue-500/20 rounded-lg text-[7px] font-black uppercase tracking-widest hover:bg-blue-500/20 transition-all"
+                                 >
+                                   View
+                                 </button>
+                                 <a
+                                   href={att.url}
+                                   download={att.name}
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   className="px-2 py-1 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-lg text-[7px] font-black uppercase tracking-widest hover:bg-emerald-500/20 transition-all"
+                                 >
+                                   Download
+                                 </a>
+                                 <button
+                                   onClick={async () => {
+                                     try {
+                                       const res = await api.delete(`/admin/kyc/${selectedRecord.id || selectedRecord._id}/attachment/${idx}`);
+                                       if (res.data.success) {
+                                         fetchKycRecords();
+                                         setSelectedRecord(prev => ({
+                                           ...prev,
+                                           details: { ...prev.details, attachments: (prev.details?.attachments || []).filter((_, i) => i !== idx) }
+                                         }));
+                                       }
+                                     } catch (err) {
+                                       alert('Delete failed');
+                                     }
+                                   }}
+                                   className="px-2 py-1 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-lg text-[7px] font-black uppercase tracking-widest hover:bg-rose-500/20 transition-all"
+                                 >
+                                   Delete
+                                 </button>
+                               </div>
+                             </div>
+                           ))}
+                         </div>
+                       </div>
+                     )}
                   </div>
 
                   <div className="flex gap-2.5 pt-6 border-t border-[var(--border-subtle)] relative z-10">

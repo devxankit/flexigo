@@ -692,6 +692,55 @@ export const uploadKycCertificate = async (req, res) => {
   }
 };
 
+// @desc    Upload Attachment (PDF/Image) for KYC Record
+// @route   POST /api/v1/admin/kyc/:id/attachment
+export const uploadKycAttachment = async (req, res) => {
+  try {
+    const { file, fileName } = req.body;
+    const id = req.params.id;
+
+    if (!file) {
+      return res.status(400).json({ success: false, message: 'No file data provided' });
+    }
+
+    // Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(file, {
+      folder: `flexigo/kyc-attachments/${id}`,
+      resource_type: 'auto',
+      public_id: fileName ? fileName.replace(/\.[^/.]+$/, '') : undefined
+    });
+
+    const attachmentUrl = result.secure_url;
+
+    // Save to rider or franchise kycDetails.attachments array
+    let updated = await Rider.findById(id);
+    if (updated) {
+      if (!updated.kycDetails) updated.kycDetails = {};
+      if (!updated.kycDetails.attachments) updated.kycDetails.attachments = [];
+      updated.kycDetails.attachments.push({ url: attachmentUrl, name: fileName, uploadedAt: new Date() });
+      updated.markModified('kycDetails');
+      await updated.save();
+    } else {
+      updated = await Franchise.findById(id);
+      if (updated) {
+        if (!updated.kycDetails) updated.kycDetails = {};
+        if (!updated.kycDetails.attachments) updated.kycDetails.attachments = [];
+        updated.kycDetails.attachments.push({ url: attachmentUrl, name: fileName, uploadedAt: new Date() });
+        updated.markModified('kycDetails');
+        await updated.save();
+      }
+    }
+
+    if (!updated) {
+      return res.status(404).json({ success: false, message: 'Record not found' });
+    }
+
+    res.status(200).json({ success: true, attachmentUrl, message: 'Attachment uploaded successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 
 // @desc    Create Hub (Franchise)
 // @route   POST /api/v1/admin/hubs

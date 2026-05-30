@@ -35,6 +35,7 @@ const RiderSchema = new mongoose.Schema({
     referenceNumber: { type: String, default: '' },
     referenceName2: { type: String, default: '' },
     referenceNumber2: { type: String, default: '' },
+    attachments: { type: Array, default: [] },
   },
   name: String,
   email: String,

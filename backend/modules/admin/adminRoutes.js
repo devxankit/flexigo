@@ -57,6 +57,7 @@ import {
   getAdminProfile,
   updateAdminPassword,
   uploadKycCertificate,
+  uploadKycAttachment,
   deleteSecurityLog,
   toggleBlockKycRecord
 } from './adminController.js';
@@ -142,6 +143,28 @@ router.get('/kyc', protectAdmin, authorize('KYC', 'read'), getKycRecords);
 router.patch('/kyc/:id', protectAdmin, authorize('KYC', 'update'), updateKycStatus);
 router.patch('/kyc/:id/references', protectAdmin, authorize('KYC', 'update'), updateKycReferences);
 router.post('/kyc/:id/certificate', protectAdmin, authorize('KYC', 'update'), uploadKycCertificate);
+router.post('/kyc/:id/attachment', protectAdmin, authorize('KYC', 'update'), uploadKycAttachment);
+router.delete('/kyc/:id/attachment/:index', protectAdmin, authorize('KYC', 'update'), async (req, res) => {
+  try {
+    const { id, index } = req.params;
+    const Rider = (await import('../rider/riderModel.js')).default;
+    const Franchise = (await import('../franchise/franchiseModel.js')).default;
+
+    let record = await Rider.findById(id);
+    if (!record) record = await Franchise.findById(id);
+    if (!record) return res.status(404).json({ success: false, message: 'Record not found' });
+
+    if (record.kycDetails?.attachments?.length > 0) {
+      record.kycDetails.attachments.splice(parseInt(index), 1);
+      record.markModified('kycDetails');
+      await record.save();
+    }
+
+    res.status(200).json({ success: true, message: 'Attachment deleted' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 router.patch('/kyc/:id/toggle-block', protectAdmin, authorize('KYC', 'update'), toggleBlockKycRecord);
 
 // Finance Management
