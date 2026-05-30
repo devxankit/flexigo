@@ -39,6 +39,9 @@ export default function KycOnboardingPage() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(() => localStorage.getItem('kyc_modal_open') === 'true');
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [assignmentData, setAssignmentData] = useState({ vehiclePlate: '', riderPhone: '', riderName: '' });
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editData, setEditData] = useState({ name: '', phone: '', status: '' });
+  const [editRecordId, setEditRecordId] = useState(null);
   const [searchQuery, setSearchQuery] = useState(() => localStorage.getItem('kyc_search_query') || '');
   const [activeFilters, setActiveFilters] = useState({ range: 'Last 7 Days' });
 
@@ -255,6 +258,9 @@ export default function KycOnboardingPage() {
                                       </span>
                                    )}
                                 </span>
+                                {record.phone && (
+                                  <span className="text-[10px] font-medium text-[var(--text-tertiary)] mt-0.5">{record.phone}</span>
+                                )}
                              </div>
                           </td>
                           <td className="py-2 px-4 font-medium text-[var(--text-tertiary)]">{record.role}</td>
@@ -283,6 +289,21 @@ export default function KycOnboardingPage() {
                                    className="p-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-emerald-500 hover:border-emerald-500/30 transition-all"
                                 >
                                    <Eye size={12} />
+                                </button>
+                                <button 
+                                   onClick={() => {
+                                     setEditRecordId(record.id || record._id);
+                                     setEditData({
+                                       name: record.name || '',
+                                       phone: record.phone || '',
+                                       status: record.status || 'pending'
+                                     });
+                                     setIsEditModalOpen(true);
+                                   }}
+                                   className="p-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-blue-500 hover:border-blue-500/30 transition-all"
+                                   title="Edit Details"
+                                >
+                                   <FileText size={12} />
                                 </button>
                                 <button 
                                     onClick={async () => {
@@ -370,14 +391,18 @@ export default function KycOnboardingPage() {
                   initial={{ opacity: 0, scale: 0.95, y: 10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                  className="w-full max-w-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-6 shadow-2xl relative overflow-hidden"
+                  className="w-full max-w-xl max-h-[90vh] bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl shadow-2xl relative overflow-hidden flex flex-col"
                >
                   <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none">
                      <UserCheck size={100} />
                   </div>
 
-                  <div className="flex items-center justify-between mb-6 pb-4 border-b border-[var(--border-subtle)] relative z-10">
+                  {/* Header with Back + Close */}
+                  <div className="flex items-center justify-between p-6 pb-4 border-b border-[var(--border-subtle)] relative z-10 shrink-0">
                      <div className="flex items-center gap-3">
+                        <button onClick={() => setIsDetailModalOpen(false)} className="p-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-emerald-500 hover:border-emerald-500/30 transition-all">
+                           <ArrowRight size={14} className="rotate-180" />
+                        </button>
                         <div className="w-10 h-10 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-tertiary)] overflow-hidden">
                            <User size={20} />
                         </div>
@@ -394,6 +419,9 @@ export default function KycOnboardingPage() {
                         <X size={18} />
                      </button>
                   </div>
+
+                  {/* Scrollable Content */}
+                  <div className="flex-1 overflow-y-auto p-6 pt-4 custom-scrollbar">
 
                   <div className="grid grid-cols-2 gap-6 mb-6 relative z-10">
                      <div className="space-y-4">
@@ -683,6 +711,7 @@ export default function KycOnboardingPage() {
                         {selectedRecord.status === 'rejected' ? 'Already Declined' : 'Decline'}
                      </button>
                   </div>
+                  </div>{/* End Scrollable Content */}
                </motion.div>
             </div>
          )}
@@ -761,7 +790,7 @@ export default function KycOnboardingPage() {
                               className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all text-[var(--text-primary)]"
                            >
                               <option value="">Select Vehicle Plate</option>
-                              {vehicles.filter(v => !v.assignedTo).map(v => (
+                              {vehicles.filter(v => !v.rider && v.status !== 'assigned').map(v => (
                                 <option key={v._id || v.id} value={v.plate}>
                                   {v.plate} — {v.model || 'Vehicle'}
                                 </option>
@@ -780,6 +809,86 @@ export default function KycOnboardingPage() {
                </motion.div>
             </div>
          )}
+      </AnimatePresence>
+
+      {/* Edit KYC Record Modal */}
+      <AnimatePresence>
+        {isEditModalOpen && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-md bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-8 shadow-2xl space-y-6"
+            >
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <h2 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-tighter italic leading-none">
+                    Edit <span className="text-emerald-500">Details</span>
+                  </h2>
+                  <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">MODIFY_RECORD_PROTOCOL</p>
+                </div>
+                <button onClick={() => setIsEditModalOpen(false)} className="p-1.5 hover:bg-rose-600/10 hover:text-rose-500 transition-all rounded-lg">
+                  <X size={16} />
+                </button>
+              </div>
+
+              <form onSubmit={async (e) => {
+                e.preventDefault();
+                try {
+                  const res = await api.patch(`/admin/kyc/${editRecordId}`, {
+                    status: editData.status,
+                    name: editData.name,
+                    phone: editData.phone
+                  });
+                  if (res.data.success) {
+                    setIsEditModalOpen(false);
+                    fetchKycRecords();
+                  } else {
+                    alert(res.data.message || 'Update failed');
+                  }
+                } catch (err) {
+                  alert(err.response?.data?.message || 'Update failed');
+                }
+              }} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Name</label>
+                  <input
+                    value={editData.name}
+                    onChange={(e) => setEditData({...editData, name: e.target.value})}
+                    className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Phone</label>
+                  <input
+                    value={editData.phone}
+                    onChange={(e) => setEditData({...editData, phone: e.target.value.replace(/\D/g, '').slice(0, 10)})}
+                    className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Status</label>
+                  <select
+                    value={editData.status}
+                    onChange={(e) => setEditData({...editData, status: e.target.value})}
+                    className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all text-[var(--text-primary)]"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </div>
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-emerald-950/20 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <Save size={14} /> Update Record
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
       </AnimatePresence>
 
     </div>
