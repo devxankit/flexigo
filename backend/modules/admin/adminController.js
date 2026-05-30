@@ -482,7 +482,7 @@ export const getKycRecords = async (req, res) => {
 
 export const updateKycStatus = async (req, res) => {
   try {
-    const { status, referenceName, referenceNumber, referenceName2, referenceNumber2, kycDetails } = req.body;
+    const { status, name, phone, referenceName, referenceNumber, referenceName2, referenceNumber2, kycDetails } = req.body;
     const id = req.params.id;
 
     const updateFields = {};
@@ -490,6 +490,8 @@ export const updateKycStatus = async (req, res) => {
       updateFields.kycStatus = status;
       updateFields.status = status;
     }
+    if (name !== undefined) updateFields.name = name;
+    if (phone !== undefined) updateFields.phone = phone;
 
     // Extract dynamic reference fields (checking flat fields first, then falling back to nested)
     const refName = referenceName !== undefined ? referenceName : kycDetails?.referenceName;
@@ -518,7 +520,10 @@ export const updateKycStatus = async (req, res) => {
     }
 
     // Try updating Franchise first, then Rider
-    let updated = await Franchise.findByIdAndUpdate(id, { $set: franchiseUpdateFields }, { new: true, returnDocument: 'after' });
+    const franchiseNameFields = {};
+    if (name !== undefined) franchiseNameFields.hubName = name;
+    if (phone !== undefined) franchiseNameFields.phone = phone;
+    let updated = await Franchise.findByIdAndUpdate(id, { $set: { ...franchiseUpdateFields, ...franchiseNameFields } }, { new: true, returnDocument: 'after' });
 
     if (!updated) {
       updated = await Rider.findByIdAndUpdate(id, { $set: updateFields }, { new: true, returnDocument: 'after' });
