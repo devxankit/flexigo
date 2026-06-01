@@ -63,8 +63,8 @@ export default function LiveGarage() {
           className="relative w-full h-56 mb-8 flex items-center justify-center p-4"
         >
           <img 
-            src={scooterRender} 
-            alt="Flexigo Electric Scooter" 
+            src={vehicle?.images?.length > 0 ? vehicle.images[0] : scooterRender} 
+            alt={vehicle?.model || "Flexigo Electric Scooter"} 
             className="w-full h-full object-contain drop-shadow-2xl transition-all duration-500"
           />
           {/* Subtle Dynamic Shadow */}

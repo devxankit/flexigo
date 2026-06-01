@@ -14,6 +14,16 @@ const tabs = [
     ),
   },
   {
+    id: 'batteries-hubs',
+    path: '/rider/batteries-hubs',
+    label: 'Batteries Hubs',
+    icon: (active, theme) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke={active ? '#39FF14' : (theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} strokeWidth="1.8" className="w-6 h-6">
+        <path d="M13 10V3L4 14h7v7l9-11h-7z" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+  },
+  {
     id: 'garage',
     path: '/rider/garage',
     label: 'Hub',

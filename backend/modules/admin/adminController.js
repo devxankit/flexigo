@@ -1316,7 +1316,7 @@ export const getFinanceData = async (req, res) => {
         hub: t.franchise?.hubName || 'Hub Network',
         user: t.franchise?.ownerName || t.subscriberName || 'Partner',
         amount: t.amount,
-        method: t.type === 'Subscription' ? 'UPI (RAZORPAY)' : 'CARD (PAYU)',
+        method: t.method ? t.method.toUpperCase() : (t.type === 'Subscription' ? 'RAZORPAY' : 'CARD'),
         status: (t.status === 'completed' || t.status === 'success') ? 'success' : t.status,
         date: t.date,
         rawStatus: t.status
@@ -1326,7 +1326,7 @@ export const getFinanceData = async (req, res) => {
         hub: 'Direct (Rider)',
         user: t.riderId?.name || t.riderId?.phone || 'Rider',
         amount: t.amount,
-        method: t.method === 'wallet' ? 'WALLET' : 'UPI',
+        method: t.method ? t.method.toUpperCase() : 'UPI',
         status: (t.status === 'success' || t.status === 'completed') ? 'success' : t.status,
         date: t.createdAt,
         rawStatus: t.status
@@ -2167,7 +2167,12 @@ export const getRiderDetailedReport = async (req, res) => {
         status: 'success'
       }).sort('-createdAt').lean();
 
-      const totalPayments = txns.reduce((acc, t) => acc + (t.type === 'credit' ? t.amount : 0), 0);
+      const totalPayments = txns.reduce((acc, t) => {
+        if (t.type === 'credit' || (t.type === 'debit' && t.method !== 'wallet')) {
+          return acc + t.amount;
+        }
+        return acc;
+      }, 0);
       const totalDebits = txns.reduce((acc, t) => acc + (t.type === 'debit' ? t.amount : 0), 0);
 
       return {

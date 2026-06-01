@@ -44,6 +44,7 @@ const Navbar = () => {
     { name: 'How It Works', href: '#how-it-works' },
     { name: 'Plans', href: '/pricing-plans' },
     { name: 'About Us', href: '/about' },
+    { name: 'Contact', href: '/contact' },
   ];
 
   const productLinks = [
@@ -55,7 +56,6 @@ const Navbar = () => {
     { name: 'Careers', path: '/careers' },
     { name: 'Press & Media', path: '/press' },
     { name: 'Sustainability', path: '/sustainability' },
-    { name: 'Contact', path: '/contact' },
   ];
 
   const toggleAccordion = (section) => {
@@ -307,39 +307,7 @@ const Navbar = () => {
                         </span>
                       </div>
                       
-                      {/* Phone */}
-                      <div className="flex items-center gap-3">
-                        <Phone className="w-5 h-5 text-flexigo-teal shrink-0" />
-                        <a
-                          href="tel:+919922968093"
-                          className="text-slate-600 text-sm font-semibold hover:text-flexigo-teal transition-colors"
-                          onClick={() => {
-                            setTimeout(() => {
-                              setMobileMenuOpen(false);
-                            }, 50);
-                          }}
-                        >
-                          +91 99229 68093
-                        </a>
-                      </div>
 
-                      {/* WhatsApp */}
-                      <div className="flex items-center gap-3">
-                        <MessageCircle className="w-5 h-5 text-flexigo-teal shrink-0" />
-                        <a
-                          href="https://wa.me/919922968093"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-slate-600 text-sm font-semibold hover:text-flexigo-teal transition-colors"
-                          onClick={() => {
-                            setTimeout(() => {
-                              setMobileMenuOpen(false);
-                            }, 50);
-                          }}
-                        >
-                          +91 99229 68093 (WhatsApp)
-                        </a>
-                      </div>
 
                       {/* Email */}
                       <div className="flex items-center gap-3">

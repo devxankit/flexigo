@@ -14,7 +14,6 @@ const FooterSection = () => {
     { name: 'Careers', path: '/careers' },
     { name: 'Press & Media', path: '/press' },
     { name: 'Sustainability', path: '/sustainability' },
-    { name: 'Contact', path: '/contact' },
   ];
 
   return (
@@ -98,18 +97,7 @@ const FooterSection = () => {
                   ‘Krushna Avenue’,  SR NO: 111/10/Baner Pune City Pune(CB) 411045.
                 </span>
               </li>
-              <li className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-flexigo-teal shrink-0" />
-                <a href="tel:+919922968093" className="text-slate-600 text-sm font-medium hover:text-flexigo-teal transition-colors">
-                  +91 99229 68093
-                </a>
-              </li>
-              <li className="flex items-center gap-3">
-                <MessageCircle className="w-5 h-5 text-flexigo-teal shrink-0" />
-                <a href="https://wa.me/919922968093" target="_blank" rel="noopener noreferrer" className="text-slate-600 text-sm font-medium hover:text-flexigo-teal transition-colors">
-                  +91 99229 68093 (WhatsApp)
-                </a>
-              </li>
+
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-flexigo-teal shrink-0" />
                 <a href="mailto:support@flexigoemobility.com" className="text-slate-600 text-sm font-medium hover:text-flexigo-teal transition-colors">
