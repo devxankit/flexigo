@@ -80,6 +80,8 @@ export default function OnboardingKYC() {
       setUploads(prev => ({ ...prev, [type]: file }));
       console.log(`FILE_CHANGE: State updated for [${type}]`);
     }
+    // Reset input so same file/photo can be re-captured if needed
+    e.target.value = '';
   };
 
   const handleSendAadhaarOTP = async () => {
@@ -280,6 +282,7 @@ export default function OnboardingKYC() {
                   accept="image/*"
                   capture="user" 
                   onChange={(e) => handleFileChange('selfie', e)} 
+                  onClick={(e) => { e.target.value = ''; }}
                 />
                 
                 <div 
