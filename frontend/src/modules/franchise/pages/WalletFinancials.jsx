@@ -19,11 +19,19 @@ import GlassTable from '../components/GlassTable';
 import StatusBadge from '../components/StatusBadge';
 
 export default function WalletFinancials() {
-   const { balance, ledger = [], fetchWallet, requestPayout } = useFranchiseWalletStore();
+   const { balance, ledger = [], fetchWallet, requestPayout, addFunds } = useFranchiseWalletStore();
    const payoutRequests = ledger.filter(t => t.type === 'Payout');
    const [isPayoutModalOpen, setPayoutModalOpen] = useState(false);
    const [payoutAmount, setPayoutAmount] = useState('');
    const [showSettlement, setShowSettlement] = useState(false);
+
+   // Add Funds State
+   const [isAddFundsModalOpen, setAddFundsModalOpen] = useState(false);
+   const [addFundsAmount, setAddFundsAmount] = useState('');
+   const [paymentMethod, setPaymentMethod] = useState('RAZORPAY');
+   const [isProcessingAddFunds, setIsProcessingAddFunds] = useState(false);
+   const [showQRCode, setShowQRCode] = useState(false);
+   const [qrSubmitted, setQrSubmitted] = useState(false);
 
    useEffect(() => {
       fetchWallet();
@@ -37,6 +45,42 @@ export default function WalletFinancials() {
          setPayoutModalOpen(false);
          setPayoutAmount('');
       }
+   };
+
+   const handleAddFunds = async (e) => {
+      e.preventDefault();
+      const amount = parseFloat(addFundsAmount);
+      if (amount > 0) {
+         if (paymentMethod === 'UPI_QR') {
+            setShowQRCode(true);
+            return;
+         }
+
+         setIsProcessingAddFunds(true);
+         const res = await addFunds(amount, paymentMethod);
+         setIsProcessingAddFunds(false);
+         if (res.success) {
+            setAddFundsModalOpen(false);
+            setAddFundsAmount('');
+            alert(`Successfully added ₹${amount} via Razorpay`);
+         }
+      }
+   };
+
+   const handleUPIConfirmation = async () => {
+      setQrSubmitted(true);
+      // Simulate backend review and approval after 2 seconds
+      setTimeout(async () => {
+         const amount = parseFloat(addFundsAmount);
+         const res = await addFunds(amount, 'UPI_QR');
+         if (res.success) {
+            setAddFundsModalOpen(false);
+            setAddFundsAmount('');
+            setShowQRCode(false);
+            setQrSubmitted(false);
+            alert(`Successfully added ₹${amount} via UPI QR`);
+         }
+      }, 2000);
    };
 
    const totalYield = ledger.filter(t => t.type === 'Subscription' || t.amount > 0).reduce((acc, t) => acc + t.amount, 0);
@@ -113,6 +157,12 @@ export default function WalletFinancials() {
                   className="p-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-emerald-500 hover:border-emerald-500/20 transition-all shadow-inner"
                >
                   <Download size={14} />
+               </button>
+               <button
+                  onClick={() => setAddFundsModalOpen(true)}
+                  className="px-3 py-1.5 bg-[var(--bg-secondary)] border border-emerald-500/30 text-emerald-500 rounded-xl text-[7.5px] font-black uppercase tracking-widest hover:bg-emerald-500/10 transition-all shadow-inner active:scale-95 italic flex items-center gap-1.5 leading-none"
+               >
+                  ADD_FUNDS <TrendingUp size={10} strokeWidth={3} />
                </button>
                <button
                   onClick={() => setPayoutModalOpen(true)}
@@ -249,6 +299,179 @@ export default function WalletFinancials() {
                         />
                         <button type="submit" className="w-full py-2.5 bg-emerald-600 text-white rounded-lg font-black uppercase italic">Authorize</button>
                      </form>
+                  </motion.div>
+               </>
+            )}
+
+            {isAddFundsModalOpen && (
+               <>
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => !isProcessingAddFunds && !showQRCode && setAddFundsModalOpen(false)} className="fixed inset-0 bg-slate-950/40 backdrop-blur-[2px] z-[70]" />
+                  <motion.div initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }} className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-6 z-[80] shadow-2xl flex flex-col gap-6">
+
+                     {showQRCode ? (
+                        qrSubmitted ? (
+                           <div className="text-center py-6 space-y-4">
+                              <div className="w-16 h-16 bg-amber-500/20 border-2 border-amber-500 rounded-full flex items-center justify-center mx-auto">
+                                 <svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="3" className="w-8 h-8">
+                                    <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" strokeLinecap="round" strokeLinejoin="round" />
+                                 </svg>
+                              </div>
+                              <div className="space-y-1">
+                                 <h3 className="text-xl font-black uppercase italic text-[var(--text-primary)]">Payment Under Review</h3>
+                                 <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest italic">
+                                    Your payment is being verified by the admin portal. Once verified, funds will reflect automatically.
+                                 </p>
+                              </div>
+                           </div>
+                        ) : (
+                           <div className="space-y-6">
+                              <div className="text-center space-y-2">
+                                 <h3 className="text-lg font-black text-[var(--text-primary)] uppercase italic">
+                                    Scan & Pay <span className="text-emerald-500">₹{addFundsAmount}</span>
+                                 </h3>
+                                 <p className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] italic">
+                                    Flexigo E-Mobility Private Limited
+                                 </p>
+                              </div>
+
+                              <div className="flex justify-center">
+                                 <div className="p-4 rounded-2xl bg-white border-2 border-[var(--border-subtle)] shadow-inner">
+                                    <img
+                                       src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(`upi://pay?pa=MSFLEXIGOEMOBILITYPRIVATELIMITED.eazypay@icici&pn=Flexigo E-Mobility&am=${addFundsAmount}&cu=INR&tn=FranchiseWalletRecharge`)}`}
+                                       alt="UPI QR Code"
+                                       className="w-[220px] h-[220px]"
+                                    />
+                                 </div>
+                              </div>
+
+                              <div className="text-center space-y-1 text-[var(--text-tertiary)]">
+                                 <p className="text-[9px] font-black uppercase tracking-widest italic">UPI ID</p>
+                                 <div className="flex items-center justify-center gap-2">
+                                    <p className="text-[11px] font-bold text-[var(--text-primary)]">
+                                       MSFLEXIGOEMOBILITYPRIVATELIMITED.eazypay@icici
+                                    </p>
+                                    <button
+                                       onClick={() => {
+                                          navigator.clipboard.writeText('MSFLEXIGOEMOBILITYPRIVATELIMITED.eazypay@icici');
+                                          alert('UPI ID copied!');
+                                       }}
+                                       className="px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-[8px] font-black uppercase tracking-widest text-emerald-500 hover:bg-emerald-500/20 transition-all active:scale-95 italic"
+                                    >
+                                       Copy
+                                    </button>
+                                 </div>
+                              </div>
+
+                              <div className="space-y-3 pt-2">
+                                 <button
+                                    onClick={handleUPIConfirmation}
+                                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black uppercase tracking-widest italic transition-all"
+                                 >
+                                    I HAVE PAID
+                                 </button>
+                                 <button
+                                    onClick={() => setShowQRCode(false)}
+                                    className="w-full text-[var(--text-tertiary)] hover:text-[var(--text-primary)] font-black text-[10px] uppercase tracking-widest transition-colors italic"
+                                 >
+                                    GO BACK
+                                 </button>
+                              </div>
+                           </div>
+                        )
+                     ) : (
+                        <>
+                           <div className="flex flex-col items-center text-center gap-3">
+                              <div className="w-12 h-12 rounded-xl bg-emerald-600/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 shadow-inner">
+                                 <TrendingUp size={20} strokeWidth={2} />
+                              </div>
+                              <div className="space-y-1 px-4">
+                                 <h3 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-tighter italic leading-none">ADD_FUNDS</h3>
+                                 <p className="text-[9px] font-black uppercase text-[var(--text-tertiary)] italic tracking-widest opacity-60">RECHARGE FRANCHISE WALLET</p>
+                              </div>
+                           </div>
+                           <form onSubmit={handleAddFunds} className="space-y-6">
+                              <div className="space-y-2 text-center">
+                                 <input
+                                    type="number"
+                                    value={addFundsAmount}
+                                    onChange={(e) => setAddFundsAmount(e.target.value)}
+                                    disabled={isProcessingAddFunds}
+                                    className="bg-transparent border-b border-[var(--border-subtle)] outline-none text-4xl font-black text-emerald-500 w-full text-center tracking-tighter"
+                                    placeholder="0.00"
+                                 />
+                                 <p className="text-[7.5px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] italic opacity-50">Amount in INR (₹)</p>
+                              </div>
+
+                              <div className="space-y-3">
+                                 <p className="text-[8px] font-black uppercase tracking-[0.3em] text-[var(--text-primary)] opacity-80">Secure Payment Channels</p>
+
+                                 {/* Razorpay Option */}
+                                 <div
+                                    onClick={() => !isProcessingAddFunds && setPaymentMethod('RAZORPAY')}
+                                    className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between ${paymentMethod === 'RAZORPAY'
+                                       ? 'border-blue-500 bg-blue-500/10 shadow-[0_0_15px_rgba(59,130,246,0.15)]'
+                                       : 'border-[var(--border-subtle)] bg-[var(--bg-tertiary)] hover:border-blue-500/50'
+                                       }`}
+                                 >
+                                    <div className="flex items-center gap-4">
+                                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${paymentMethod === 'RAZORPAY' ? 'bg-blue-500 text-white shadow-lg' : 'bg-[var(--bg-secondary)] text-[var(--text-tertiary)]'
+                                          }`}>
+                                          <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" /></svg>
+                                       </div>
+                                       <div>
+                                          <p className={`text-[10px] font-black uppercase tracking-widest ${paymentMethod === 'RAZORPAY' ? 'text-blue-500' : 'text-[var(--text-primary)]'}`}>Razorpay</p>
+                                          <p className="text-[7px] font-black italic text-[var(--text-tertiary)] opacity-60">Cards, Netbanking & Wallets</p>
+                                       </div>
+                                    </div>
+                                    <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center transition-all ${paymentMethod === 'RAZORPAY' ? 'border-blue-500 bg-blue-500' : 'border-[var(--border-subtle)]'
+                                       }`}>
+                                       {paymentMethod === 'RAZORPAY' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                    </div>
+                                 </div>
+
+                                 {/* UPI QR Option */}
+                                 <div
+                                    onClick={() => !isProcessingAddFunds && setPaymentMethod('UPI_QR')}
+                                    className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between ${paymentMethod === 'UPI_QR'
+                                       ? 'border-emerald-500 bg-emerald-500/10 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
+                                       : 'border-[var(--border-subtle)] bg-[var(--bg-tertiary)] hover:border-emerald-500/50'
+                                       }`}
+                                 >
+                                    <div className="flex items-center gap-4">
+                                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${paymentMethod === 'UPI_QR' ? 'bg-emerald-500 text-white shadow-lg' : 'bg-[var(--bg-secondary)] text-[var(--text-tertiary)]'
+                                          }`}>
+                                          <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M3 11h2v2H3v-2zm0-4h2v2H3V7zm4 4h2v2H7v-2zm0-4h2v2H7V7zm0-4h2v2H7V3zm4 8h2v2h-2v-2zm0-4h2v2h-2V7zm0-4h2v2h-2V3zm4 8h2v2h-2v-2zm0-8h2v2h-2V3zm4 4h2v2h-2V7zm0 4h2v2h-2v-2zm0-8h2v2h-2V3zM3 3h2v2H3V3zm0 8h2v2H3v-2z" /></svg>
+                                       </div>
+                                       <div>
+                                          <p className={`text-[10px] font-black uppercase tracking-widest ${paymentMethod === 'UPI_QR' ? 'text-emerald-500' : 'text-[var(--text-primary)]'}`}>UPI QR Code</p>
+                                          <p className="text-[7px] font-black italic text-[var(--text-tertiary)] opacity-60">Scan & Pay via any UPI App</p>
+                                       </div>
+                                    </div>
+                                    <div className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center transition-all ${paymentMethod === 'UPI_QR' ? 'border-emerald-500 bg-emerald-500' : 'border-[var(--border-subtle)]'
+                                       }`}>
+                                       {paymentMethod === 'UPI_QR' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                    </div>
+                                 </div>
+                              </div>
+
+                              <button
+                                 type="submit"
+                                 disabled={isProcessingAddFunds || !addFundsAmount || parseFloat(addFundsAmount) <= 0}
+                                 className="w-full py-3 bg-emerald-600 text-white rounded-xl font-black uppercase tracking-widest italic disabled:opacity-50 disabled:cursor-not-allowed hover:bg-emerald-500 transition-all flex items-center justify-center"
+                              >
+                                 {isProcessingAddFunds ? (
+                                    <span className="flex items-center gap-2">
+                                       <svg className="animate-spin h-3.5 w-3.5 text-white" viewBox="0 0 24 24">
+                                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
+                                          <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" className="opacity-75" />
+                                       </svg>
+                                       PROCESSING...
+                                    </span>
+                                 ) : `PROCEED ₹${addFundsAmount || '0'}`}
+                              </button>
+                           </form>
+                        </>
+                     )}
                   </motion.div>
                </>
             )}

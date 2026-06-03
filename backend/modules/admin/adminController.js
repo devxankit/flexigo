@@ -1305,7 +1305,7 @@ export const getFinanceData = async (req, res) => {
     const riderFilter = getDateFilter(range, 'createdAt');
 
     const [frTxns, riderTxns] = await Promise.all([
-      Transaction.find(frFilter).populate('franchise', 'hubName ownerName').lean(),
+      Transaction.find(frFilter).populate('franchiseId', 'hubName ownerName').lean(),
       RiderTransaction.find(riderFilter).populate('riderId', 'name phone').lean()
     ]);
 
@@ -1313,10 +1313,10 @@ export const getFinanceData = async (req, res) => {
     const combined = [
       ...frTxns.map(t => ({
         id: `TXN-${t._id.toString().slice(-4).toUpperCase()}`,
-        hub: t.franchise?.hubName || 'Hub Network',
-        user: t.franchise?.ownerName || t.subscriberName || 'Partner',
+        hub: t.franchiseId?.hubName || 'Hub Network',
+        user: t.franchiseId?.ownerName || t.subscriberName || 'Partner',
         amount: t.amount,
-        method: t.method ? t.method.toUpperCase() : (t.type === 'Subscription' ? 'RAZORPAY' : 'CARD'),
+        method: t.paymentMethod ? t.paymentMethod.toUpperCase() : (t.type === 'Subscription' ? 'RAZORPAY' : 'CARD'),
         status: (t.status === 'completed' || t.status === 'success') ? 'success' : t.status,
         date: t.date,
         rawStatus: t.status

@@ -43,6 +43,23 @@ export const useFranchiseWalletStore = create((set, get) => ({
     }));
   },
 
+  addFunds: async (amount, method) => {
+    try {
+      const res = await api.post('/franchise/wallet/add', { amount, method });
+      if (res.data.success) {
+        set((state) => ({
+          balance: res.data.walletBalance,
+          ledger: [res.data.transaction, ...state.ledger]
+        }));
+        return { success: true };
+      }
+      return { success: false };
+    } catch (error) {
+      console.error('Failed to add funds', error);
+      return { success: false, message: error.response?.data?.message || 'Failed to add funds' };
+    }
+  },
+
   requestPayout: async (amount) => {
     try {
       // In real app: await api.post('/franchise/payout', { amount });

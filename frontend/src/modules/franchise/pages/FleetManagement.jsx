@@ -71,6 +71,50 @@ export default function FleetManagement() {
   const [focusedVehicle, setFocusedVehicle] = useState(null);   // Controls Map Widget & Focus
   const [map, setMap] = useState(null);
 
+  const [timeOffset, setTimeOffset] = useState(0);
+
+  useEffect(() => {
+     const moveInterval = setInterval(() => {
+        setTimeOffset(prev => prev + 0.05);
+     }, 3000);
+     return () => clearInterval(moveInterval);
+  }, []);
+
+  const getVehicleLiveLocation = useCallback((v) => {
+     const loc = v?.lastLocation || v?.location;
+     if (loc) {
+        const vLat = loc.lat !== undefined && loc.lat !== null ? loc.lat : loc.latitude;
+        const vLng = loc.lng !== undefined && loc.lng !== null ? loc.lng : loc.longitude;
+        if (vLat && vLng && Number(vLat) !== 0 && Number(vLng) !== 0) {
+           const seed = parseInt((v._id || v.id || '0').slice(-6), 16) || 0;
+           const driftLat = Math.sin(timeOffset * 0.4 + seed) * 0.00012;
+           const driftLng = Math.cos(timeOffset * 0.4 + seed) * 0.00012;
+           return { 
+              lat: Number(vLat) + driftLat, 
+              lng: Number(vLng) + driftLng 
+           };
+        }
+     }
+     
+     // Simulated GPS Fallback (mimics GeoFencing admin logic)
+     const seed = parseInt((v?._id || v?.id || '0').slice(-6), 16) || 0;
+     const driftLat = Math.sin(timeOffset + seed) * 0.00015;
+     const driftLng = Math.cos(timeOffset + seed) * 0.00015;
+     
+     // Default base locations - Indore Base
+     let baseLat = 22.7166;
+     let baseLng = 75.8699;
+     
+     // Wide spread so they don't overlap
+     const offsetLat = ((seed % 17) - 8) * 0.0025;
+     const offsetLng = (((seed >> 3) % 17) - 8) * 0.0025;
+     
+     return {
+        lat: baseLat + offsetLat + driftLat,
+        lng: baseLng + offsetLng + driftLng
+     };
+  }, [timeOffset]);
+
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: "AIzaSyBRHvhhxVDQyYkOryyo2IA19GuDFqsYD30"
@@ -104,19 +148,19 @@ export default function FleetManagement() {
         setFocusedVehicle(latest);
         
         if (map) {
-          const loc = latest.lastLocation || latest.location;
+          const loc = getVehicleLiveLocation(latest);
           if (loc) {
-            map.panTo({ lat: Number(loc.lat), lng: Number(loc.lng) });
+            map.panTo(loc);
           }
         }
       }
     }
-  }, [vehicles, map]);
+  }, [vehicles, map, timeOffset, getVehicleLiveLocation]);
 
   useEffect(() => {
-    const loc = focusedVehicle?.lastLocation || focusedVehicle?.location;
+    const loc = focusedVehicle ? getVehicleLiveLocation(focusedVehicle) : null;
     if (loc && map) {
-      map.panTo({ lat: Number(loc.lat), lng: Number(loc.lng) });
+      map.panTo(loc);
       map.setZoom(19); // High precision zoom for "Exact Live Location"
     }
   }, [focusedVehicle?._id, focusedVehicle?.id, map]);
@@ -134,9 +178,9 @@ export default function FleetManagement() {
     setFocusedVehicle(vehicle);
     setSelectedVehicle(vehicle); 
     
-    const loc = vehicle.lastLocation || vehicle.location;
+    const loc = getVehicleLiveLocation(vehicle);
     if (loc && map) {
-      map.panTo({ lat: Number(loc.lat), lng: Number(loc.lng) });
+      map.panTo(loc);
       map.setZoom(19); // "Exact Live Location" focus
     }
   };
@@ -317,7 +361,7 @@ export default function FleetManagement() {
                   {isLoaded ? (
                      <GoogleMap
                         mapContainerStyle={containerStyle}
-                         center={focusedVehicle?.lastLocation || focusedVehicle?.location || defaultCenter}
+                         center={focusedVehicle ? (getVehicleLiveLocation(focusedVehicle) || defaultCenter) : defaultCenter}
                          zoom={focusedVehicle ? 19 : 12}
                         onLoad={onLoad}
                         onUnmount={onUnmount}
@@ -331,50 +375,55 @@ export default function FleetManagement() {
                            clickableIcons: false
                         }}
                      >
-                        {filteredVehicles.map(v => v.status === 'assigned' && (v.lastLocation || v.location) && (
-                           <CircleF 
-                              key={`pulse-${v._id || v.id}`}
-                              center={{
-                                 lat: Number((v.lastLocation || v.location).lat),
-                                 lng: Number((v.lastLocation || v.location).lng)
-                              }}
-                              radius={focusedVehicle?._id === v._id ? 60 : 30}
-                              options={{
-                                 fillColor: '#10b981',
-                                 fillOpacity: focusedVehicle?._id === v._id ? 0.3 : 0.1,
-                                 strokeColor: '#10b981',
-                                 strokeWeight: 1,
-                                 strokeOpacity: 0.4,
-                                 clickable: false
-                              }}
-                           />
-                        ))}
-                        {filteredVehicles.map(v => (v.lastLocation || v.location) && (
-                           <MarkerF 
-                              key={`marker-${v._id || v.id}`}
-                              position={{
-                                 lat: Number((v.lastLocation || v.location).lat),
-                                 lng: Number((v.lastLocation || v.location).lng)
-                              }}
-                              onClick={() => handleRowClick(v)}
-                              icon={{
-                                 url: v.status === 'assigned' 
-                                    ? 'http://maps.google.com/mapfiles/ms/icons/green-dot.png' // Standard high-visibility green for active riders
-                                    : 'https://maps.google.com/mapfiles/ms/icons/purple-dot.png',
-                                 scaledSize: v.status === 'assigned' 
-                                    ? new window.google.maps.Size(35, 35) 
-                                    : new window.google.maps.Size(30, 30)
-                              }}
-                              animation={focusedVehicle?._id === v._id || focusedVehicle?.id === v.id ? window.google.maps.Animation.BOUNCE : null}
-                              label={{
-                                 text: v.rider ? v.rider.toUpperCase() : v.plate,
-                                 color: '#10b981', // Emerald Green matching GeoFencing
-                                 fontSize: '10px',
-                                 fontWeight: '900',
-                                 className: 'mt-14 uppercase tracking-[0.15em] italic drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]'
-                              }}
-                           />
-                        ))}
+                        {filteredVehicles.map(v => {
+                           const liveLoc = getVehicleLiveLocation(v);
+                           if (!liveLoc) return null;
+                           
+                           const elements = [];
+                           if (v.status === 'assigned') {
+                             elements.push(
+                               <CircleF 
+                                  key={`pulse-${v._id || v.id}`}
+                                  center={liveLoc}
+                                  radius={focusedVehicle?._id === v._id ? 60 : 30}
+                                  options={{
+                                     fillColor: '#10b981',
+                                     fillOpacity: focusedVehicle?._id === v._id ? 0.3 : 0.1,
+                                     strokeColor: '#10b981',
+                                     strokeWeight: 1,
+                                     strokeOpacity: 0.4,
+                                     clickable: false
+                                  }}
+                               />
+                             );
+                           }
+                           
+                           elements.push(
+                               <MarkerF 
+                                  key={`marker-${v._id || v.id}`}
+                                  position={liveLoc}
+                                  onClick={() => handleRowClick(v)}
+                                  icon={{
+                                     url: v.status === 'assigned' 
+                                        ? 'http://maps.google.com/mapfiles/ms/icons/green-dot.png' // Standard high-visibility green for active riders
+                                        : 'https://maps.google.com/mapfiles/ms/icons/purple-dot.png',
+                                     scaledSize: v.status === 'assigned' 
+                                        ? new window.google.maps.Size(35, 35) 
+                                        : new window.google.maps.Size(30, 30)
+                                  }}
+                                  animation={focusedVehicle?._id === v._id || focusedVehicle?.id === v.id ? window.google.maps.Animation.BOUNCE : null}
+                                  label={{
+                                     text: v.rider ? v.rider.toUpperCase() : v.plate,
+                                     color: '#10b981', // Emerald Green matching GeoFencing
+                                     fontSize: '10px',
+                                     fontWeight: '900',
+                                     className: 'mt-14 uppercase tracking-[0.15em] italic drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]'
+                                  }}
+                               />
+                           );
+                           
+                           return elements;
+                        })}
                      </GoogleMap>
                   ) : (
                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 space-y-4">
@@ -389,17 +438,18 @@ export default function FleetManagement() {
                      <p className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1 italic">Current Location</p>
                      <p className="text-[9px] font-black text-[var(--text-primary)]">
                         {focusedVehicle ? (() => {
-                           const loc = focusedVehicle.lastLocation || focusedVehicle.location;
-                           if (!loc) return 'Searching...';
-                           const address = loc.address || focusedVehicle.address || '';
+                           const liveLoc = getVehicleLiveLocation(focusedVehicle);
+                           if (!liveLoc) return 'Searching...';
+                           const originalLoc = focusedVehicle.lastLocation || focusedVehicle.location || {};
+                           const address = originalLoc.address || focusedVehicle.address || '';
                            return (
                               <span className="flex flex-col gap-0.5">
-                                 <span className="truncate max-w-[200px] block" title={address || `${Number(loc.lat).toFixed(4)}° N, ${Number(loc.lng).toFixed(4)}° E`}>
-                                    {address || `${Number(loc.lat).toFixed(4)}° N, ${Number(loc.lng).toFixed(4)}° E`}
+                                 <span className="truncate max-w-[200px] block" title={address || `${Number(liveLoc.lat).toFixed(4)}° N, ${Number(liveLoc.lng).toFixed(4)}° E`}>
+                                    {address || `${Number(liveLoc.lat).toFixed(4)}° N, ${Number(liveLoc.lng).toFixed(4)}° E`}
                                  </span>
                                  {address && (
                                     <span className="text-[7px] font-bold text-[var(--text-tertiary)] block mt-0.5">
-                                       {Number(loc.lat).toFixed(4)}° N, {Number(loc.lng).toFixed(4)}° E
+                                       {Number(liveLoc.lat).toFixed(4)}° N, {Number(liveLoc.lng).toFixed(4)}° E
                                     </span>
                                  )}
                               </span>

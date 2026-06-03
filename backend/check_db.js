@@ -27,7 +27,7 @@ const Rider = mongoose.model('Rider', RiderSchema);
 
 const checkData = async () => {
   await connectDB();
-  
+
   const vehicles = await Vehicle.find({ plate: { $in: ['KA 03 CJ 1331', '2323'] } });
   console.log('\n--- Vehicles ---');
   console.log(vehicles);

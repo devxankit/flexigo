@@ -221,14 +221,48 @@ export const payViaWallet = async (req, res) => {
     const plan = await SubscriptionPlan.findById(planId);
     if (!plan) return res.status(404).json({ success: false, message: 'Plan not found' });
     
-    const rider = await Rider.findOne({ phone });
+    const rider = await Rider.findOne({ phone }).populate('franchise');
     if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
 
-    if (rider.walletBalance < plan.price) {
-      return res.status(400).json({ success: false, message: 'Insufficient wallet balance' });
+    let isFranchisePaid = false;
+
+    // Check if Rider belongs to a Franchise
+    if (rider.franchise) {
+      const Franchise = (await import('../franchise/franchiseModel.js')).default;
+      const FranchiseTransaction = (await import('../franchise/franchiseTransactionModel.js')).default;
+      
+      const franchiseToUpdate = await Franchise.findById(rider.franchise._id || rider.franchise);
+      
+      if (!franchiseToUpdate) {
+        return res.status(404).json({ success: false, message: 'Mapped Franchise not found' });
+      }
+
+      if ((franchiseToUpdate.walletBalance || 0) < plan.price) {
+        return res.status(400).json({ success: false, message: 'Franchise wallet balance insufficient to cover subscription' });
+      }
+
+      franchiseToUpdate.walletBalance -= plan.price;
+      await franchiseToUpdate.save();
+
+      await FranchiseTransaction.create({
+        franchiseId: franchiseToUpdate._id,
+        amount: plan.price,
+        type: 'Subscription',
+        status: 'completed',
+        subscriberName: rider.name || rider.phone,
+        description: `Subscription paid for rider ${rider.name || rider.phone}`,
+        paymentMethod: 'wallet'
+      });
+      
+      isFranchisePaid = true;
+    } else {
+      // Independent Rider Logic
+      if ((rider.walletBalance || 0) < plan.price) {
+        return res.status(400).json({ success: false, message: 'Insufficient wallet balance' });
+      }
+      rider.walletBalance -= plan.price;
     }
 
-    rider.walletBalance -= plan.price;
     const durationMs = plan.type === 'Daily' ? 86400000 : plan.type === 'Weekly' ? 604800000 : 2592000000;
     const expiresAt = new Date(Date.now() + durationMs);
 
@@ -243,12 +277,13 @@ export const payViaWallet = async (req, res) => {
       amount: plan.price,
       type: 'debit',
       status: 'success',
-      description: `Plan Upgrade: ${plan.name}`,
+      description: `Plan Upgrade: ${plan.name} ${isFranchisePaid ? '(Paid by Franchise)' : ''}`,
       method: 'wallet'
     });
 
-    res.status(200).json({ success: true, message: 'Subscription activated via wallet' });
+    res.status(200).json({ success: true, message: isFranchisePaid ? 'Subscription activated via Franchise Wallet' : 'Subscription activated via wallet' });
   } catch (error) {
+    console.error('Wallet Payment Error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

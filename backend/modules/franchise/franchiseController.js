@@ -336,6 +336,51 @@ export const getWalletData = async (req, res) => {
   }
 };
 
+// @desc    Add Funds to Franchise Wallet
+// @route   POST /api/v1/franchise/wallet/add
+export const addWalletFunds = async (req, res) => {
+  try {
+    const { amount, method } = req.body;
+    
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid amount' });
+    }
+
+    const franchise = await Franchise.findById(req.franchise._id);
+    if (!franchise) {
+      return res.status(404).json({ success: false, message: 'Franchise not found' });
+    }
+
+    // Initialize if undefined
+    if (franchise.walletBalance === undefined) {
+      franchise.walletBalance = 0;
+    }
+
+    franchise.walletBalance += Number(amount);
+    await franchise.save();
+
+    const transaction = await FranchiseTransaction.create({
+      franchiseId: franchise._id,
+      date: new Date(),
+      type: 'Deposit', // Keep consistency with existing schema which uses 'Deposit'
+      description: `Wallet recharge via ${method || 'gateway'}`,
+      amount: Number(amount),
+      status: 'completed',
+      paymentMethod: method || 'gateway'
+    });
+
+    res.status(200).json({ 
+      success: true, 
+      message: `₹${amount} added successfully`, 
+      walletBalance: franchise.walletBalance,
+      transaction
+    });
+  } catch (error) {
+    console.error('[FRANCHISE WALLET ERROR]', error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @desc    Get Franchise Dashboard Metrics
 // @route   GET /api/v1/franchise/dashboard-metrics
 export const getDashboardMetrics = async (req, res) => {
