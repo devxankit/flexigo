@@ -72,7 +72,7 @@ export default function OnboardingKYC() {
         console.log(`FLUTTER_CAM: Calling openCamera handler for [${type}]`);
         const result = await window.flutter_inappwebview.callHandler('openCamera');
         console.log(`FLUTTER_CAM: Result received for [${type}]:`, result?.success);
-        
+
         if (result?.success && result?.base64) {
           const byteString = atob(result.base64);
           const ab = new ArrayBuffer(byteString.length);
@@ -83,7 +83,7 @@ export default function OnboardingKYC() {
           const mimeType = result.mimeType || 'image/jpeg';
           const blob = new Blob([ab], { type: mimeType });
           const file = new File([blob], result.fileName || `${type}_photo.jpg`, { type: mimeType });
-          
+
           setPreviews(prev => {
             if (prev[type]) URL.revokeObjectURL(prev[type]);
             return { ...prev, [type]: URL.createObjectURL(file) };
@@ -209,18 +209,18 @@ export default function OnboardingKYC() {
     try {
       const res = await generateAadhaarOTP(aadhaarNumber);
       console.log('EKYC_UI: Received response:', JSON.stringify(res));
-      
+
       // Robust success check: either success flag is true OR message indicates success
-      const isSuccess = res.success || 
-                        res.message === 'OTP Sent.' || 
-                        res.message?.toLowerCase().includes('success') || 
-                        res.message?.toLowerCase().includes('sent');
+      const isSuccess = res.success ||
+        res.message === 'OTP Sent.' ||
+        res.message?.toLowerCase().includes('success') ||
+        res.message?.toLowerCase().includes('sent');
 
       if (isSuccess) {
         console.log('EKYC_UI: OTP request success confirmed');
         // Capture client_id or any variant of request ID
         const requestId = res.client_id || res.request_id || res.requestId || res.data?.request_id || res.data?.client_id;
-        
+
         if (!requestId) {
           console.log('EKYC_UI: WARNING - No RequestID found in success response');
           alert('OTP sent, but no Verification ID received. Please contact support or try again.');
@@ -255,10 +255,10 @@ export default function OnboardingKYC() {
     try {
       const res = await verifyAadhaarOTP(clientId, aadhaarOtp);
       console.log('EKYC_UI: Verification result:', JSON.stringify(res));
-      
-      const isSuccess = res.success || 
-                        res.message?.toLowerCase().includes('success') || 
-                        res.message?.toLowerCase().includes('verified');
+
+      const isSuccess = res.success ||
+        res.message?.toLowerCase().includes('success') ||
+        res.message?.toLowerCase().includes('verified');
 
       if (isSuccess) {
         console.log('EKYC_UI: Verification TRUE');
@@ -287,32 +287,32 @@ export default function OnboardingKYC() {
       console.log('ONBOARDING: Final step reached. Starting KYC update.');
       setLoading(true);
       try {
-          console.log('ONBOARDING: Preparing kycData object');
-          const kycData = {
-              phone,
-              selfie: await fileToBase64(uploads.selfie),
-              aadhaarFront: await fileToBase64(uploads.aadhaarFront),
-              aadhaarBack: await fileToBase64(uploads.aadhaarBack),
-              drivingLicense: uploads.license ? await fileToBase64(uploads.license) : null
-          };
-          console.log('ONBOARDING: kycData prepared. Files converted to Base64');
-          console.log('ONBOARDING: Calling updateKYC store method');
-          const result = await updateKYC(kycData);
-          console.log('ONBOARDING: updateKYC result:', JSON.stringify(result));
-          if (result.success) {
-              console.log('ONBOARDING: Success! Navigating to /rider/plans');
-              localStorage.removeItem('onboarding_step');
-              navigate('/rider/plans');
-          } else {
-              console.log('ONBOARDING: Failed result. message:', result.message);
-              alert(result.message);
-          }
+        console.log('ONBOARDING: Preparing kycData object');
+        const kycData = {
+          phone,
+          selfie: await fileToBase64(uploads.selfie),
+          aadhaarFront: await fileToBase64(uploads.aadhaarFront),
+          aadhaarBack: await fileToBase64(uploads.aadhaarBack),
+          drivingLicense: uploads.license ? await fileToBase64(uploads.license) : null
+        };
+        console.log('ONBOARDING: kycData prepared. Files converted to Base64');
+        console.log('ONBOARDING: Calling updateKYC store method');
+        const result = await updateKYC(kycData);
+        console.log('ONBOARDING: updateKYC result:', JSON.stringify(result));
+        if (result.success) {
+          console.log('ONBOARDING: Success! Navigating to /rider/plans');
+          localStorage.removeItem('onboarding_step');
+          navigate('/rider/plans');
+        } else {
+          console.log('ONBOARDING: Failed result. message:', result.message);
+          alert(result.message);
+        }
       } catch (error) {
-          console.log('ONBOARDING: Error in final step try-catch:', error.message);
-          alert('Error processing files. Please try again.');
+        console.log('ONBOARDING: Error in final step try-catch:', error.message);
+        alert('Error processing files. Please try again.');
       } finally {
-          console.log('ONBOARDING: Setting loading to false');
-          setLoading(false);
+        console.log('ONBOARDING: Setting loading to false');
+        setLoading(false);
       }
     }
   };
@@ -421,28 +421,25 @@ export default function OnboardingKYC() {
               exit={{ y: 100, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               onClick={e => e.stopPropagation()}
-              className={`w-full max-w-sm rounded-t-3xl p-6 pb-10 ${
-                isDark ? 'bg-[#111] border-t border-white/10' : 'bg-white border-t border-slate-100 shadow-2xl'
-              }`}
+              className={`w-full max-w-sm rounded-t-3xl p-6 pb-10 ${isDark ? 'bg-[#111] border-t border-white/10' : 'bg-white border-t border-slate-100 shadow-2xl'
+                }`}
             >
               {/* Handle bar */}
               <div className="flex justify-center mb-5">
                 <div className={`w-10 h-1 rounded-full ${isDark ? 'bg-white/20' : 'bg-slate-200'}`} />
               </div>
 
-              <p className={`text-center text-[10px] font-black uppercase tracking-widest mb-6 ${
-                isDark ? 'text-gray-400' : 'text-slate-500'
-              }`}>Choose Option</p>
+              <p className={`text-center text-[10px] font-black uppercase tracking-widest mb-6 ${isDark ? 'text-gray-400' : 'text-slate-500'
+                }`}>Choose Option</p>
 
               <div className="grid grid-cols-2 gap-4 mb-5">
                 {/* Camera Option — opens getUserMedia live camera */}
                 <button
                   onClick={() => openWebCamera(pickerModal.type)}
-                  className={`flex flex-col items-center gap-3 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
-                    isDark
+                  className={`flex flex-col items-center gap-3 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${isDark
                       ? 'border-white/10 bg-white/5 hover:border-[#39FF14] hover:bg-[#39FF14]/10'
                       : 'border-slate-200 bg-slate-50 hover:border-emerald-500 hover:bg-emerald-50'
-                  }`}
+                    }`}
                 >
                   <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-[#39FF14]/10">
                     <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-7 h-7">
@@ -450,20 +447,18 @@ export default function OnboardingKYC() {
                       <circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
-                  <span className={`text-[10px] font-black uppercase tracking-widest text-center ${
-                    isDark ? 'text-white' : 'text-slate-700'
-                  }`}>Camera</span>
+                  <span className={`text-[10px] font-black uppercase tracking-widest text-center ${isDark ? 'text-white' : 'text-slate-700'
+                    }`}>Camera</span>
                 </button>
 
                 {/* Gallery/Upload Option */}
                 <label
                   htmlFor={pickerModal.fileInputId}
                   onClick={closePickerModal}
-                  className={`flex flex-col items-center gap-3 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
-                    isDark
+                  className={`flex flex-col items-center gap-3 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${isDark
                       ? 'border-white/10 bg-white/5 hover:border-[#39FF14] hover:bg-[#39FF14]/10'
                       : 'border-slate-200 bg-slate-50 hover:border-emerald-500 hover:bg-emerald-50'
-                  }`}
+                    }`}
                 >
                   <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-[#39FF14]/10">
                     <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-7 h-7">
@@ -472,36 +467,33 @@ export default function OnboardingKYC() {
                       <polyline points="21 15 16 10 5 21" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </div>
-                  <span className={`text-[10px] font-black uppercase tracking-widest text-center ${
-                    isDark ? 'text-white' : 'text-slate-700'
-                  }`}>Gallery</span>
+                  <span className={`text-[10px] font-black uppercase tracking-widest text-center ${isDark ? 'text-white' : 'text-slate-700'
+                    }`}>Gallery</span>
                 </label>
               </div>
 
               <button
                 onClick={closePickerModal}
-                className={`w-full py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${
-                  isDark ? 'text-gray-500 hover:text-white' : 'text-slate-400 hover:text-slate-800'
-                }`}
+                className={`w-full py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${isDark ? 'text-gray-500 hover:text-white' : 'text-slate-400 hover:text-slate-800'
+                  }`}
               >Cancel</button>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
       <div className="flex items-center justify-between mb-8">
-        <h1 className={`text-2xl font-heading font-black transition-colors duration-500 ${
-          isDark ? 'text-white' : 'text-slate-900'
-        }`}>KYC Verification</h1>
+        <h1 className={`text-2xl font-heading font-black transition-colors duration-500 ${isDark ? 'text-white' : 'text-slate-900'
+          }`}>KYC Verification</h1>
         <div className="text-flexigo-teal font-black text-[10px] uppercase tracking-widest">Step {currentStep}/{steps.length}</div>
       </div>
 
       {/* Progress Bar */}
       <div className="flex gap-2 mb-10">
         {steps.map((step) => (
-          <div 
-            key={step.id} 
+          <div
+            key={step.id}
             className="h-1.5 flex-1 rounded-full transition-all duration-500"
-            style={{ 
+            style={{
               background: step.id <= currentStep ? '#39FF14' : isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
               boxShadow: (step.id <= currentStep && isDark) ? '0 0 10px #39FF14' : 'none'
             }}
@@ -519,30 +511,27 @@ export default function OnboardingKYC() {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-              <h2 className={`text-xl font-heading font-black transition-colors duration-500 ${
-                isDark ? 'text-white' : 'text-slate-900'
-              }`}>Take a Selfie</h2>
-              <p className={`text-sm leading-relaxed transition-colors duration-500 ${
-                isDark ? 'text-gray-400' : 'text-slate-500'
-              }`}>
+              <h2 className={`text-xl font-heading font-black transition-colors duration-500 ${isDark ? 'text-white' : 'text-slate-900'
+                }`}>Take a Selfie</h2>
+              <p className={`text-sm leading-relaxed transition-colors duration-500 ${isDark ? 'text-gray-400' : 'text-slate-500'
+                }`}>
                 We need a clear photo of your face for identity verification. Please ensure your face is well-lit.
               </p>
-              
+
               <div className="flex justify-center py-6">
-                <input 
+                <input
                   id="selfie-input"
-                  type="file" 
-                  className="hidden" 
-                  accept="image/*" 
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
                   onChange={(e) => handleFileChange('selfie', e)}
                 />
                 {/* Camera button - uses Flutter handler in app, file input on web */}
                 <div
                   onClick={() => handleCameraCapture('selfie', 'selfie-input')}
-                  className={`w-48 h-48 rounded-full border-2 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all duration-500 overflow-hidden ${
-                    uploads.selfie ? 'border-flexigo-teal' :
-                    isDark ? 'border-white/10 border-dashed bg-white/[0.02]' : 'border-slate-200 border-dashed bg-slate-50 shadow-sm'
-                  }`}
+                  className={`w-48 h-48 rounded-full border-2 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all duration-500 overflow-hidden ${uploads.selfie ? 'border-flexigo-teal' :
+                      isDark ? 'border-white/10 border-dashed bg-white/[0.02]' : 'border-slate-200 border-dashed bg-slate-50 shadow-sm'
+                    }`}
                 >
                   {previews.selfie ? (
                     <img src={previews.selfie} alt="Selfie Preview" className="w-full h-full object-cover" />
@@ -554,9 +543,8 @@ export default function OnboardingKYC() {
                           <circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       </div>
-                      <span className={`text-[9px] font-black uppercase tracking-widest text-center px-4 ${
-                        isDark ? 'text-gray-400' : 'text-slate-400'
-                      }`}>{isFlutterApp() ? 'Open Camera' : 'Camera / Upload'}</span>
+                      <span className={`text-[9px] font-black uppercase tracking-widest text-center px-4 ${isDark ? 'text-gray-400' : 'text-slate-400'
+                        }`}>{isFlutterApp() ? 'Open Camera' : 'Camera / Upload'}</span>
                     </>
                   )}
                 </div>
@@ -572,68 +560,62 @@ export default function OnboardingKYC() {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-              <h2 className={`text-xl font-heading font-black transition-colors duration-500 ${
-                isDark ? 'text-white' : 'text-slate-900'
-              }`}>Aadhaar e-KYC</h2>
-              
+              <h2 className={`text-xl font-heading font-black transition-colors duration-500 ${isDark ? 'text-white' : 'text-slate-900'
+                }`}>Aadhaar e-KYC</h2>
+
               {!isAadhaarVerified ? (
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className={`text-[10px] font-black uppercase tracking-widest italic ml-1 transition-colors duration-500 ${
-                      isDark ? 'text-[#39FF14]' : 'text-emerald-600'
-                    }`}>Aadhaar Number</label>
-                    <input 
+                    <label className={`text-[10px] font-black uppercase tracking-widest italic ml-1 transition-colors duration-500 ${isDark ? 'text-[#39FF14]' : 'text-emerald-600'
+                      }`}>Aadhaar Number</label>
+                    <input
                       type="text"
                       maxLength="12"
                       placeholder="XXXX XXXX XXXX"
                       value={aadhaarNumber}
                       onChange={(e) => setAadhaarNumber(e.target.value.replace(/\D/g, ''))}
                       disabled={otpSent}
-                      className={`w-full rounded-xl px-4 py-4 font-black tracking-[0.2em] outline-none transition-all border-2 ${
-                        isDark 
-                          ? 'bg-white/5 border-white/10 text-white focus:border-[#39FF14]' 
+                      className={`w-full rounded-xl px-4 py-4 font-black tracking-[0.2em] outline-none transition-all border-2 ${isDark
+                          ? 'bg-white/5 border-white/10 text-white focus:border-[#39FF14]'
                           : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 shadow-sm'
-                      } ${otpSent ? 'opacity-50' : ''}`}
+                        } ${otpSent ? 'opacity-50' : ''}`}
                     />
                   </div>
 
                   {otpSent && (
                     <div className="space-y-2">
-                      <label className={`text-[10px] font-black uppercase tracking-widest italic ml-1 transition-colors duration-500 ${
-                        isDark ? 'text-[#39FF14]' : 'text-emerald-600'
-                      }`}>Enter OTP</label>
-                      <input 
+                      <label className={`text-[10px] font-black uppercase tracking-widest italic ml-1 transition-colors duration-500 ${isDark ? 'text-[#39FF14]' : 'text-emerald-600'
+                        }`}>Enter OTP</label>
+                      <input
                         type="text"
                         maxLength="6"
                         placeholder="XXXXXX"
                         value={aadhaarOtp}
                         onChange={(e) => setAadhaarOtp(e.target.value.replace(/\D/g, ''))}
-                        className={`w-full rounded-xl px-4 py-4 font-black tracking-[0.5em] outline-none transition-all border-2 ${
-                          isDark 
-                            ? 'bg-white/5 border-white/10 text-white focus:border-[#39FF14]' 
+                        className={`w-full rounded-xl px-4 py-4 font-black tracking-[0.5em] outline-none transition-all border-2 ${isDark
+                            ? 'bg-white/5 border-white/10 text-white focus:border-[#39FF14]'
                             : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 shadow-sm'
-                        }`}
+                          }`}
                       />
                     </div>
                   )}
 
-                  <NeonButton 
-                    size="full" 
+                  <NeonButton
+                    size="full"
                     variant="green"
                     onClick={otpSent ? handleVerifyAadhaarOTP : handleSendAadhaarOTP}
                     disabled={ekycLoading || (otpSent ? !aadhaarOtp : !aadhaarNumber)}
                   >
                     {ekycLoading ? 'Wait...' : otpSent ? 'Verify OTP' : 'Send OTP'}
                   </NeonButton>
-                  
+
                   {otpSent && (
                     <button
                       type="button"
                       onClick={handleSendAadhaarOTP}
                       disabled={ekycLoading}
-                      className={`w-full text-center text-[10px] font-black uppercase tracking-widest mt-2 transition-colors ${
-                        isDark ? 'text-flexigo-teal hover:text-white' : 'text-emerald-600 hover:text-emerald-800'
-                      }`}
+                      className={`w-full text-center text-[10px] font-black uppercase tracking-widest mt-2 transition-colors ${isDark ? 'text-flexigo-teal hover:text-white' : 'text-emerald-600 hover:text-emerald-800'
+                        }`}
                     >
                       Resend Aadhaar OTP
                     </button>
@@ -655,24 +637,23 @@ export default function OnboardingKYC() {
 
               <div className="relative py-4">
                 <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
-                <div className={`relative flex justify-center text-[8px] uppercase font-black tracking-[0.2em] px-2 bg-transparent transition-colors duration-500 ${
-                  isDark ? 'text-white/20' : 'text-slate-400'
-                }`}>And Upload Documents</div>
+                <div className={`relative flex justify-center text-[8px] uppercase font-black tracking-[0.2em] px-2 bg-transparent transition-colors duration-500 ${isDark ? 'text-white/20' : 'text-slate-400'
+                  }`}>And Upload Documents</div>
               </div>
 
               <div className="grid grid-cols-1 gap-5">
-                <input 
+                <input
                   id="aadhaar-front-input"
-                  type="file" 
-                  className="hidden" 
-                  accept="image/*" 
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
                   onChange={(e) => handleFileChange('aadhaarFront', e)}
                 />
-                <input 
+                <input
                   id="aadhaar-back-input"
-                  type="file" 
-                  className="hidden" 
-                  accept="image/*" 
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
                   onChange={(e) => handleFileChange('aadhaarBack', e)}
                 />
 
@@ -680,9 +661,8 @@ export default function OnboardingKYC() {
                   <p className={`text-[10px] font-black uppercase tracking-widest italic ml-1 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>Aadhaar Front</p>
                   <div
                     onClick={() => handleCameraCapture('aadhaarFront', 'aadhaar-front-input')}
-                    className={`p-4 rounded-2xl border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 ${
-                      uploads.aadhaarFront ? 'border-flexigo-teal bg-flexigo-teal/5' : isDark ? 'border-white/10 bg-white/[0.02]' : 'border-slate-200 bg-slate-50'
-                    }`}
+                    className={`p-4 rounded-2xl border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 ${uploads.aadhaarFront ? 'border-flexigo-teal bg-flexigo-teal/5' : isDark ? 'border-white/10 bg-white/[0.02]' : 'border-slate-200 bg-slate-50'
+                      }`}
                   >
                     {previews.aadhaarFront ? (
                       <img src={previews.aadhaarFront} alt="Aadhaar Front" className="w-16 h-16 object-cover rounded-xl flex-shrink-0" />
@@ -701,9 +681,8 @@ export default function OnboardingKYC() {
                   <p className={`text-[10px] font-black uppercase tracking-widest italic ml-1 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>Aadhaar Back</p>
                   <div
                     onClick={() => handleCameraCapture('aadhaarBack', 'aadhaar-back-input')}
-                    className={`p-4 rounded-2xl border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 ${
-                      uploads.aadhaarBack ? 'border-flexigo-teal bg-flexigo-teal/5' : isDark ? 'border-white/10 bg-white/[0.02]' : 'border-slate-200 bg-slate-50'
-                    }`}
+                    className={`p-4 rounded-2xl border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 ${uploads.aadhaarBack ? 'border-flexigo-teal bg-flexigo-teal/5' : isDark ? 'border-white/10 bg-white/[0.02]' : 'border-slate-200 bg-slate-50'
+                      }`}
                   >
                     {previews.aadhaarBack ? (
                       <img src={previews.aadhaarBack} alt="Aadhaar Back" className="w-16 h-16 object-cover rounded-xl flex-shrink-0" />
@@ -729,28 +708,25 @@ export default function OnboardingKYC() {
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-              <h2 className={`text-xl font-heading font-black transition-colors duration-500 ${
-                isDark ? 'text-white' : 'text-slate-900'
-              }`}>Driving License</h2>
-              <p className={`text-sm leading-relaxed transition-colors duration-500 ${
-                isDark ? 'text-gray-400' : 'text-slate-500'
-              }`}>
+              <h2 className={`text-xl font-heading font-black transition-colors duration-500 ${isDark ? 'text-white' : 'text-slate-900'
+                }`}>Driving License</h2>
+              <p className={`text-sm leading-relaxed transition-colors duration-500 ${isDark ? 'text-gray-400' : 'text-slate-500'
+                }`}>
                 Finally, please upload a clear copy of your driving license.
               </p>
-              
-              <input 
+
+              <input
                 id="license-input"
-                type="file" 
-                className="hidden" 
-                accept="image/*" 
+                type="file"
+                className="hidden"
+                accept="image/*"
                 onChange={(e) => handleFileChange('license', e)}
               />
               <div
                 onClick={() => handleCameraCapture('license', 'license-input')}
-                className={`p-4 rounded-2xl border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 ${
-                  uploads.license ? 'border-flexigo-teal bg-flexigo-teal/5' :
-                  isDark ? 'border-white/10 bg-white/[0.02]' : 'border-slate-200 bg-slate-50'
-                }`}
+                className={`p-4 rounded-2xl border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 ${uploads.license ? 'border-flexigo-teal bg-flexigo-teal/5' :
+                    isDark ? 'border-white/10 bg-white/[0.02]' : 'border-slate-200 bg-slate-50'
+                  }`}
               >
                 {previews.license ? (
                   <img src={previews.license} alt="License Preview" className="w-16 h-16 object-cover rounded-xl flex-shrink-0" />
@@ -759,18 +735,16 @@ export default function OnboardingKYC() {
                     <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-6 h-6"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round" /><circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" /></svg>
                   </div>
                 )}
-                <span className={`text-[10px] font-black uppercase tracking-widest ${
-                  uploads.license ? 'text-flexigo-teal' : isDark ? 'text-gray-400' : 'text-slate-400'
-                }`}>
+                <span className={`text-[10px] font-black uppercase tracking-widest ${uploads.license ? 'text-flexigo-teal' : isDark ? 'text-gray-400' : 'text-slate-400'
+                  }`}>
                   {uploads.license ? 'License Captured ✓ Tap to Retake' : isFlutterApp() ? 'Tap to Open Camera' : 'Tap — Camera / Upload License'}
                 </span>
               </div>
 
-              <button 
+              <button
                 onClick={handleNext}
-                className={`w-full py-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${
-                  isDark ? 'text-gray-500 hover:text-white' : 'text-slate-400 hover:text-slate-900'
-                }`}
+                className={`w-full py-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${isDark ? 'text-gray-500 hover:text-white' : 'text-slate-400 hover:text-slate-900'
+                  }`}
               >
                 Skip for now →
               </button>
