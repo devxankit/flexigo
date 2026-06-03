@@ -44,7 +44,7 @@ export const deletePlan = async (req, res) => {
     const { id } = req.params;
     console.log(`ATTEMPTING DELETE: Plan ID ${id}`);
     const plan = await SubscriptionPlan.findByIdAndDelete(id);
-    
+
     if (!plan) {
       console.log(`DELETE FAILED: Plan ${id} not found`);
       return res.status(404).json({ success: false, message: 'Plan not found' });
