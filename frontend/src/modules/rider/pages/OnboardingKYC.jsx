@@ -312,17 +312,28 @@ export default function OnboardingKYC() {
                 <div 
                   onClick={() => selfieCameraRef.current.click()}
                   className={`w-40 h-40 rounded-3xl border-2 border-dashed flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-500 ${
+                    uploads.selfie ? 'border-flexigo-teal bg-flexigo-teal/5' :
                     isDark ? 'border-white/10 bg-white/[0.02] hover:bg-white/[0.05]' : 'border-slate-200 bg-slate-50 hover:bg-slate-100 shadow-sm'
                   }`}
                 >
-                   <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all bg-flexigo-teal/10`}>
-                     <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-5 h-5">
-                       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round" />
-                       <circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" />
-                     </svg>
+                   <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                     uploads.selfie ? 'bg-flexigo-teal shadow-neon-sm' : 'bg-flexigo-teal/10'
+                   }`}>
+                     {uploads.selfie ? (
+                       <svg viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" className="w-5 h-5">
+                         <path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round" />
+                       </svg>
+                     ) : (
+                       <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-5 h-5">
+                         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round" />
+                         <circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" />
+                       </svg>
+                     )}
                    </div>
-                   <span className={`text-[9px] font-black uppercase tracking-widest text-center ${isDark ? 'text-gray-400' : 'text-slate-400'}`}>
-                     Open Camera
+                   <span className={`text-[9px] font-black uppercase tracking-widest text-center ${
+                     uploads.selfie ? 'text-flexigo-teal' : isDark ? 'text-gray-400' : 'text-slate-400'
+                   }`}>
+                     {uploads.selfie ? 'Retake ✓' : 'Open Camera'}
                    </span>
                 </div>
               </div>
@@ -474,12 +485,17 @@ export default function OnboardingKYC() {
                     </GlassCard>
                     <GlassCard 
                       onClick={() => adhaarFrontCameraRef.current.click()}
-                      className={`flex-1 p-4 border-dashed border-2 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-500 ${isDark ? 'border-white/10' : 'border-slate-200'}`}
+                      className={`flex-1 p-4 border-dashed border-2 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-500 ${
+                        uploads.aadhaarFront ? 'border-flexigo-teal bg-flexigo-teal/5' : isDark ? 'border-white/10' : 'border-slate-200'
+                      }`}
                     >
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-flexigo-teal/10">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-4 h-4"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round" /><circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${uploads.aadhaarFront ? 'bg-flexigo-teal' : 'bg-flexigo-teal/10'}`}>
+                        {uploads.aadhaarFront ? <svg viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" className="w-4 h-4"><path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                        : <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-4 h-4"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round" /><circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                       </div>
-                      <span className={`text-[8px] font-black uppercase tracking-widest text-center ${isDark ? 'text-gray-400' : 'text-slate-400'}`}>Camera</span>
+                      <span className={`text-[8px] font-black uppercase tracking-widest text-center ${uploads.aadhaarFront ? 'text-flexigo-teal' : isDark ? 'text-gray-400' : 'text-slate-400'}`}>
+                        {uploads.aadhaarFront ? 'Retake ✓' : 'Camera'}
+                      </span>
                     </GlassCard>
                   </div>
                 </div>
@@ -501,12 +517,17 @@ export default function OnboardingKYC() {
                     </GlassCard>
                     <GlassCard 
                       onClick={() => adhaarBackCameraRef.current.click()}
-                      className={`flex-1 p-4 border-dashed border-2 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-500 ${isDark ? 'border-white/10' : 'border-slate-200'}`}
+                      className={`flex-1 p-4 border-dashed border-2 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-500 ${
+                        uploads.aadhaarBack ? 'border-flexigo-teal bg-flexigo-teal/5' : isDark ? 'border-white/10' : 'border-slate-200'
+                      }`}
                     >
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-flexigo-teal/10">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-4 h-4"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round" /><circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${uploads.aadhaarBack ? 'bg-flexigo-teal' : 'bg-flexigo-teal/10'}`}>
+                        {uploads.aadhaarBack ? <svg viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" className="w-4 h-4"><path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                        : <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-4 h-4"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round" /><circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                       </div>
-                      <span className={`text-[8px] font-black uppercase tracking-widest text-center ${isDark ? 'text-gray-400' : 'text-slate-400'}`}>Camera</span>
+                      <span className={`text-[8px] font-black uppercase tracking-widest text-center ${uploads.aadhaarBack ? 'text-flexigo-teal' : isDark ? 'text-gray-400' : 'text-slate-400'}`}>
+                        {uploads.aadhaarBack ? 'Retake ✓' : 'Camera'}
+                      </span>
                     </GlassCard>
                   </div>
                 </div>
@@ -570,14 +591,15 @@ export default function OnboardingKYC() {
                 <GlassCard 
                   onClick={() => licenseCameraRef.current.click()}
                   className={`flex-1 p-6 border-dashed border-2 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-500 ${
-                    isDark ? 'border-white/10' : 'border-slate-200'
+                    uploads.license ? 'border-flexigo-teal bg-flexigo-teal/5' : isDark ? 'border-white/10' : 'border-slate-200'
                   }`}
                 >
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-flexigo-teal/10">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-5 h-5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round" /><circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${uploads.license ? 'bg-flexigo-teal' : 'bg-flexigo-teal/10'}`}>
+                    {uploads.license ? <svg viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" className="w-5 h-5"><path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    : <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-5 h-5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round" /><circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                   </div>
-                  <span className={`text-[9px] font-black uppercase tracking-widest text-center ${isDark ? 'text-gray-400' : 'text-slate-400'}`}>
-                    Open Camera
+                  <span className={`text-[9px] font-black uppercase tracking-widest text-center ${uploads.license ? 'text-flexigo-teal' : isDark ? 'text-gray-400' : 'text-slate-400'}`}>
+                    {uploads.license ? 'Retake ✓' : 'Open Camera'}
                   </span>
                 </GlassCard>
               </div>
