@@ -34,6 +34,9 @@ export default function OnboardingKYC() {
     license: null
   });
 
+  // Camera/Upload picker modal
+  const [pickerModal, setPickerModal] = useState({ open: false, type: null, fileInputId: null, cameraInputId: null });
+
   // eKYC States
   const [aadhaarNumber, setAadhaarNumber] = useState('');
   const [aadhaarOtp, setAadhaarOtp] = useState('');
@@ -55,7 +58,7 @@ export default function OnboardingKYC() {
   // Detect if running inside Flutter InAppWebView
   const isFlutterApp = () => typeof window !== 'undefined' && !!window.flutter_inappwebview;
 
-  // Handle camera via Flutter native handler (app) or file input fallback (web)
+  // Handle camera via Flutter native handler (app) or show picker modal (web)
   const handleCameraCapture = async (type, fileInputId) => {
     if (isFlutterApp()) {
       try {
@@ -64,7 +67,6 @@ export default function OnboardingKYC() {
         console.log(`FLUTTER_CAM: Result received for [${type}]:`, result?.success);
         
         if (result?.success && result?.base64) {
-          // Convert base64 string to File object
           const byteString = atob(result.base64);
           const ab = new ArrayBuffer(byteString.length);
           const ia = new Uint8Array(ab);
@@ -75,7 +77,6 @@ export default function OnboardingKYC() {
           const blob = new Blob([ab], { type: mimeType });
           const file = new File([blob], result.fileName || `${type}_photo.jpg`, { type: mimeType });
           
-          // Update state same as normal file upload
           setPreviews(prev => {
             if (prev[type]) URL.revokeObjectURL(prev[type]);
             return { ...prev, [type]: URL.createObjectURL(file) };
@@ -87,14 +88,16 @@ export default function OnboardingKYC() {
         }
       } catch (err) {
         console.error('FLUTTER_CAM: Error calling Flutter camera handler:', err);
-        // Fallback to file input if handler fails
         document.getElementById(fileInputId)?.click();
       }
     } else {
-      // Web browser: trigger normal file input (shows camera/gallery native picker)
-      document.getElementById(fileInputId)?.click();
+      // Web browser: show Camera vs Upload picker modal
+      const cameraInputId = fileInputId + '-camera';
+      setPickerModal({ open: true, type, fileInputId, cameraInputId });
     }
   };
+
+  const closePickerModal = () => setPickerModal({ open: false, type: null, fileInputId: null, cameraInputId: null });
 
   useEffect(() => {
     console.log('INIT: Checking existing KYC status');
@@ -276,6 +279,104 @@ export default function OnboardingKYC() {
 
   return (
     <PageWrapper className="flex flex-col px-6 pt-8 pb-10">
+
+      {/* Camera / Upload Picker Modal */}
+      <AnimatePresence>
+        {pickerModal.open && (
+          <motion.div
+            key="picker-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={closePickerModal}
+            className="fixed inset-0 z-50 flex items-end justify-center"
+            style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
+          >
+            <motion.div
+              key="picker-sheet"
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              onClick={e => e.stopPropagation()}
+              className={`w-full max-w-sm rounded-t-3xl p-6 pb-10 ${
+                isDark ? 'bg-[#111] border-t border-white/10' : 'bg-white border-t border-slate-100 shadow-2xl'
+              }`}
+            >
+              {/* Handle bar */}
+              <div className="flex justify-center mb-5">
+                <div className={`w-10 h-1 rounded-full ${isDark ? 'bg-white/20' : 'bg-slate-200'}`} />
+              </div>
+
+              <p className={`text-center text-[10px] font-black uppercase tracking-widest mb-6 ${
+                isDark ? 'text-gray-400' : 'text-slate-500'
+              }`}>Choose Option</p>
+
+              <div className="grid grid-cols-2 gap-4 mb-5">
+                {/* Camera Option */}
+                <label
+                  htmlFor={pickerModal.cameraInputId}
+                  onClick={closePickerModal}
+                  className={`flex flex-col items-center gap-3 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
+                    isDark
+                      ? 'border-white/10 bg-white/5 hover:border-[#39FF14] hover:bg-[#39FF14]/10'
+                      : 'border-slate-200 bg-slate-50 hover:border-emerald-500 hover:bg-emerald-50'
+                  }`}
+                >
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-[#39FF14]/10">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-7 h-7">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <span className={`text-[10px] font-black uppercase tracking-widest text-center ${
+                    isDark ? 'text-white' : 'text-slate-700'
+                  }`}>Camera</span>
+                </label>
+
+                {/* Gallery/Upload Option */}
+                <label
+                  htmlFor={pickerModal.fileInputId}
+                  onClick={closePickerModal}
+                  className={`flex flex-col items-center gap-3 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
+                    isDark
+                      ? 'border-white/10 bg-white/5 hover:border-[#39FF14] hover:bg-[#39FF14]/10'
+                      : 'border-slate-200 bg-slate-50 hover:border-emerald-500 hover:bg-emerald-50'
+                  }`}
+                >
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-[#39FF14]/10">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-7 h-7">
+                      <rect x="3" y="3" width="18" height="18" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="8.5" cy="8.5" r="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <polyline points="21 15 16 10 5 21" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <span className={`text-[10px] font-black uppercase tracking-widest text-center ${
+                    isDark ? 'text-white' : 'text-slate-700'
+                  }`}>Gallery</span>
+                </label>
+              </div>
+
+              {/* Hidden inputs rendered here inside the modal for label association */}
+              <input
+                id={pickerModal.cameraInputId}
+                type="file"
+                className="hidden"
+                accept="image/*"
+                capture="environment"
+                onChange={(e) => { handleFileChange(pickerModal.type, e); closePickerModal(); }}
+              />
+
+              <button
+                onClick={closePickerModal}
+                className={`w-full py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${
+                  isDark ? 'text-gray-500 hover:text-white' : 'text-slate-400 hover:text-slate-800'
+                }`}
+              >Cancel</button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="flex items-center justify-between mb-8">
         <h1 className={`text-2xl font-heading font-black transition-colors duration-500 ${
           isDark ? 'text-white' : 'text-slate-900'
