@@ -52,6 +52,50 @@ export default function OnboardingKYC() {
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
 
+  // Detect if running inside Flutter InAppWebView
+  const isFlutterApp = () => typeof window !== 'undefined' && !!window.flutter_inappwebview;
+
+  // Handle camera via Flutter native handler (app) or file input fallback (web)
+  const handleCameraCapture = async (type, fileInputId) => {
+    if (isFlutterApp()) {
+      try {
+        console.log(`FLUTTER_CAM: Calling openCamera handler for [${type}]`);
+        const result = await window.flutter_inappwebview.callHandler('openCamera');
+        console.log(`FLUTTER_CAM: Result received for [${type}]:`, result?.success);
+        
+        if (result?.success && result?.base64) {
+          // Convert base64 string to File object
+          const byteString = atob(result.base64);
+          const ab = new ArrayBuffer(byteString.length);
+          const ia = new Uint8Array(ab);
+          for (let i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+          }
+          const mimeType = result.mimeType || 'image/jpeg';
+          const blob = new Blob([ab], { type: mimeType });
+          const file = new File([blob], result.fileName || `${type}_photo.jpg`, { type: mimeType });
+          
+          // Update state same as normal file upload
+          setPreviews(prev => {
+            if (prev[type]) URL.revokeObjectURL(prev[type]);
+            return { ...prev, [type]: URL.createObjectURL(file) };
+          });
+          setUploads(prev => ({ ...prev, [type]: file }));
+          console.log(`FLUTTER_CAM: Photo captured and stored for [${type}]`);
+        } else {
+          console.log(`FLUTTER_CAM: No photo returned for [${type}]`);
+        }
+      } catch (err) {
+        console.error('FLUTTER_CAM: Error calling Flutter camera handler:', err);
+        // Fallback to file input if handler fails
+        document.getElementById(fileInputId)?.click();
+      }
+    } else {
+      // Web browser: trigger normal file input (shows camera/gallery native picker)
+      document.getElementById(fileInputId)?.click();
+    }
+  };
+
   useEffect(() => {
     console.log('INIT: Checking existing KYC status');
     if (user?.kycDetails?.ekycVerified) {
@@ -280,8 +324,9 @@ export default function OnboardingKYC() {
                   accept="image/*" 
                   onChange={(e) => handleFileChange('selfie', e)}
                 />
-                <label 
-                  htmlFor="selfie-input"
+                {/* Camera button - uses Flutter handler in app, file input on web */}
+                <div
+                  onClick={() => handleCameraCapture('selfie', 'selfie-input')}
                   className={`w-48 h-48 rounded-full border-2 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all duration-500 overflow-hidden ${
                     uploads.selfie ? 'border-flexigo-teal' :
                     isDark ? 'border-white/10 border-dashed bg-white/[0.02]' : 'border-slate-200 border-dashed bg-slate-50 shadow-sm'
@@ -299,10 +344,10 @@ export default function OnboardingKYC() {
                       </div>
                       <span className={`text-[9px] font-black uppercase tracking-widest text-center px-4 ${
                         isDark ? 'text-gray-400' : 'text-slate-400'
-                      }`}>Camera / Upload</span>
+                      }`}>{isFlutterApp() ? 'Open Camera' : 'Camera / Upload'}</span>
                     </>
                   )}
-                </label>
+                </div>
               </div>
             </motion.div>
           )}
@@ -421,9 +466,9 @@ export default function OnboardingKYC() {
 
                 <div className="space-y-2">
                   <p className={`text-[10px] font-black uppercase tracking-widest italic ml-1 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>Aadhaar Front</p>
-                  <label 
-                    htmlFor="aadhaar-front-input"
-                    className={`p-4 rounded-2xl border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 block ${
+                  <div
+                    onClick={() => handleCameraCapture('aadhaarFront', 'aadhaar-front-input')}
+                    className={`p-4 rounded-2xl border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 ${
                       uploads.aadhaarFront ? 'border-flexigo-teal bg-flexigo-teal/5' : isDark ? 'border-white/10 bg-white/[0.02]' : 'border-slate-200 bg-slate-50'
                     }`}
                   >
@@ -435,16 +480,16 @@ export default function OnboardingKYC() {
                       </div>
                     )}
                     <span className={`text-[10px] font-black uppercase tracking-widest ${uploads.aadhaarFront ? 'text-flexigo-teal' : isDark ? 'text-gray-400' : 'text-slate-400'}`}>
-                      {uploads.aadhaarFront ? 'Front Captured ✓ Tap to Retake' : 'Tap — Camera / Upload Front'}
+                      {uploads.aadhaarFront ? 'Front Captured ✓ Tap to Retake' : isFlutterApp() ? 'Tap to Open Camera' : 'Tap — Camera / Upload Front'}
                     </span>
-                  </label>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
                   <p className={`text-[10px] font-black uppercase tracking-widest italic ml-1 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>Aadhaar Back</p>
-                  <label 
-                    htmlFor="aadhaar-back-input"
-                    className={`p-4 rounded-2xl border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 block ${
+                  <div
+                    onClick={() => handleCameraCapture('aadhaarBack', 'aadhaar-back-input')}
+                    className={`p-4 rounded-2xl border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 ${
                       uploads.aadhaarBack ? 'border-flexigo-teal bg-flexigo-teal/5' : isDark ? 'border-white/10 bg-white/[0.02]' : 'border-slate-200 bg-slate-50'
                     }`}
                   >
@@ -456,9 +501,9 @@ export default function OnboardingKYC() {
                       </div>
                     )}
                     <span className={`text-[10px] font-black uppercase tracking-widest ${uploads.aadhaarBack ? 'text-flexigo-teal' : isDark ? 'text-gray-400' : 'text-slate-400'}`}>
-                      {uploads.aadhaarBack ? 'Back Captured ✓ Tap to Retake' : 'Tap — Camera / Upload Back'}
+                      {uploads.aadhaarBack ? 'Back Captured ✓ Tap to Retake' : isFlutterApp() ? 'Tap to Open Camera' : 'Tap — Camera / Upload Back'}
                     </span>
-                  </label>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -488,9 +533,9 @@ export default function OnboardingKYC() {
                 accept="image/*" 
                 onChange={(e) => handleFileChange('license', e)}
               />
-              <label 
-                htmlFor="license-input"
-                className={`p-4 rounded-2xl border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 block ${
+              <div
+                onClick={() => handleCameraCapture('license', 'license-input')}
+                className={`p-4 rounded-2xl border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 ${
                   uploads.license ? 'border-flexigo-teal bg-flexigo-teal/5' :
                   isDark ? 'border-white/10 bg-white/[0.02]' : 'border-slate-200 bg-slate-50'
                 }`}
@@ -505,9 +550,9 @@ export default function OnboardingKYC() {
                 <span className={`text-[10px] font-black uppercase tracking-widest ${
                   uploads.license ? 'text-flexigo-teal' : isDark ? 'text-gray-400' : 'text-slate-400'
                 }`}>
-                  {uploads.license ? 'License Captured ✓ Tap to Retake' : 'Tap — Camera / Upload License'}
+                  {uploads.license ? 'License Captured ✓ Tap to Retake' : isFlutterApp() ? 'Tap to Open Camera' : 'Tap — Camera / Upload License'}
                 </span>
-              </label>
+              </div>
 
               <button 
                 onClick={handleNext}
