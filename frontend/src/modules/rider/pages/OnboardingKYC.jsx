@@ -42,7 +42,7 @@ export default function OnboardingKYC() {
   const [otpSent, setOtpSent] = useState(false);
   const [ekycLoading, setEkycLoading] = useState(false);
 
-  // Refs for file inputs
+  // Refs for file inputs - no longer needed with label approach
   const selfieRef = useRef(null);
   const adhaarFrontRef = useRef(null);
   const adhaarBackRef = useRef(null);
@@ -274,18 +274,17 @@ export default function OnboardingKYC() {
               
               <div className="flex justify-center py-6">
                 <input 
+                  id="selfie-input"
                   type="file" 
-                  ref={selfieRef} 
                   className="hidden" 
                   accept="image/*" 
                   onChange={(e) => handleFileChange('selfie', e)}
-                  onClick={(e) => { e.target.value = ''; }}
                 />
-                <div 
-                  onClick={() => selfieRef.current.click()}
+                <label 
+                  htmlFor="selfie-input"
                   className={`w-48 h-48 rounded-full border-2 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all duration-500 overflow-hidden ${
                     uploads.selfie ? 'border-flexigo-teal' :
-                    isDark ? 'border-white/10 border-dashed bg-white/[0.02] hover:bg-white/[0.05]' : 'border-slate-200 border-dashed bg-slate-50 hover:bg-slate-100 shadow-sm'
+                    isDark ? 'border-white/10 border-dashed bg-white/[0.02]' : 'border-slate-200 border-dashed bg-slate-50 shadow-sm'
                   }`}
                 >
                   {previews.selfie ? (
@@ -303,7 +302,7 @@ export default function OnboardingKYC() {
                       }`}>Camera / Upload</span>
                     </>
                   )}
-                </div>
+                </label>
               </div>
             </motion.div>
           )}
@@ -406,28 +405,26 @@ export default function OnboardingKYC() {
 
               <div className="grid grid-cols-1 gap-5">
                 <input 
+                  id="aadhaar-front-input"
                   type="file" 
-                  ref={adhaarFrontRef} 
                   className="hidden" 
                   accept="image/*" 
                   onChange={(e) => handleFileChange('aadhaarFront', e)}
-                  onClick={(e) => { e.target.value = ''; }}
                 />
                 <input 
+                  id="aadhaar-back-input"
                   type="file" 
-                  ref={adhaarBackRef} 
                   className="hidden" 
                   accept="image/*" 
                   onChange={(e) => handleFileChange('aadhaarBack', e)}
-                  onClick={(e) => { e.target.value = ''; }}
                 />
 
                 <div className="space-y-2">
                   <p className={`text-[10px] font-black uppercase tracking-widest italic ml-1 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>Aadhaar Front</p>
-                  <GlassCard 
-                    onClick={() => adhaarFrontRef.current.click()}
-                    className={`p-4 border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 ${
-                      uploads.aadhaarFront ? 'border-flexigo-teal bg-flexigo-teal/5' : isDark ? 'border-white/10' : 'border-slate-200'
+                  <label 
+                    htmlFor="aadhaar-front-input"
+                    className={`p-4 rounded-2xl border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 block ${
+                      uploads.aadhaarFront ? 'border-flexigo-teal bg-flexigo-teal/5' : isDark ? 'border-white/10 bg-white/[0.02]' : 'border-slate-200 bg-slate-50'
                     }`}
                   >
                     {previews.aadhaarFront ? (
@@ -438,17 +435,17 @@ export default function OnboardingKYC() {
                       </div>
                     )}
                     <span className={`text-[10px] font-black uppercase tracking-widest ${uploads.aadhaarFront ? 'text-flexigo-teal' : isDark ? 'text-gray-400' : 'text-slate-400'}`}>
-                      {uploads.aadhaarFront ? 'Front Captured ✓ Tap to Retake' : 'Tap to use Camera / Upload Front'}
+                      {uploads.aadhaarFront ? 'Front Captured ✓ Tap to Retake' : 'Tap — Camera / Upload Front'}
                     </span>
-                  </GlassCard>
+                  </label>
                 </div>
 
                 <div className="space-y-2">
                   <p className={`text-[10px] font-black uppercase tracking-widest italic ml-1 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>Aadhaar Back</p>
-                  <GlassCard 
-                    onClick={() => adhaarBackRef.current.click()}
-                    className={`p-4 border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 ${
-                      uploads.aadhaarBack ? 'border-flexigo-teal bg-flexigo-teal/5' : isDark ? 'border-white/10' : 'border-slate-200'
+                  <label 
+                    htmlFor="aadhaar-back-input"
+                    className={`p-4 rounded-2xl border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 block ${
+                      uploads.aadhaarBack ? 'border-flexigo-teal bg-flexigo-teal/5' : isDark ? 'border-white/10 bg-white/[0.02]' : 'border-slate-200 bg-slate-50'
                     }`}
                   >
                     {previews.aadhaarBack ? (
@@ -459,9 +456,9 @@ export default function OnboardingKYC() {
                       </div>
                     )}
                     <span className={`text-[10px] font-black uppercase tracking-widest ${uploads.aadhaarBack ? 'text-flexigo-teal' : isDark ? 'text-gray-400' : 'text-slate-400'}`}>
-                      {uploads.aadhaarBack ? 'Back Captured ✓ Tap to Retake' : 'Tap to use Camera / Upload Back'}
+                      {uploads.aadhaarBack ? 'Back Captured ✓ Tap to Retake' : 'Tap — Camera / Upload Back'}
                     </span>
-                  </GlassCard>
+                  </label>
                 </div>
               </div>
             </motion.div>
@@ -485,18 +482,17 @@ export default function OnboardingKYC() {
               </p>
               
               <input 
+                id="license-input"
                 type="file" 
-                ref={licenseRef} 
                 className="hidden" 
                 accept="image/*" 
                 onChange={(e) => handleFileChange('license', e)}
-                onClick={(e) => { e.target.value = ''; }}
               />
-              <GlassCard 
-                onClick={() => licenseRef.current.click()}
-                className={`p-4 border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 ${
+              <label 
+                htmlFor="license-input"
+                className={`p-4 rounded-2xl border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 block ${
                   uploads.license ? 'border-flexigo-teal bg-flexigo-teal/5' :
-                  isDark ? 'border-white/10' : 'border-slate-200'
+                  isDark ? 'border-white/10 bg-white/[0.02]' : 'border-slate-200 bg-slate-50'
                 }`}
               >
                 {previews.license ? (
@@ -509,9 +505,9 @@ export default function OnboardingKYC() {
                 <span className={`text-[10px] font-black uppercase tracking-widest ${
                   uploads.license ? 'text-flexigo-teal' : isDark ? 'text-gray-400' : 'text-slate-400'
                 }`}>
-                  {uploads.license ? 'License Captured ✓ Tap to Retake' : 'Tap to use Camera / Upload License'}
+                  {uploads.license ? 'License Captured ✓ Tap to Retake' : 'Tap — Camera / Upload License'}
                 </span>
-              </GlassCard>
+              </label>
 
               <button 
                 onClick={handleNext}
