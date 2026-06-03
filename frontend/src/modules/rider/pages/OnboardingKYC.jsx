@@ -35,7 +35,14 @@ export default function OnboardingKYC() {
   });
 
   // Camera/Upload picker modal
-  const [pickerModal, setPickerModal] = useState({ open: false, type: null, fileInputId: null, cameraInputId: null });
+  const [pickerModal, setPickerModal] = useState({ open: false, type: null, fileInputId: null });
+
+  // Live camera (getUserMedia) state
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraType, setCameraType] = useState(null);
+  const [cameraError, setCameraError] = useState(null);
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
 
   // eKYC States
   const [aadhaarNumber, setAadhaarNumber] = useState('');
@@ -92,12 +99,65 @@ export default function OnboardingKYC() {
       }
     } else {
       // Web browser: show Camera vs Upload picker modal
-      const cameraInputId = fileInputId + '-camera';
-      setPickerModal({ open: true, type, fileInputId, cameraInputId });
+      setPickerModal({ open: true, type, fileInputId });
     }
   };
 
-  const closePickerModal = () => setPickerModal({ open: false, type: null, fileInputId: null, cameraInputId: null });
+  const closePickerModal = () => setPickerModal({ open: false, type: null, fileInputId: null });
+
+  // Open live camera using getUserMedia
+  const openWebCamera = async (type) => {
+    closePickerModal();
+    setCameraError(null);
+    setCameraType(type);
+    setCameraOpen(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+      streamRef.current = stream;
+      // Wait for videoRef to be available after state update
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
+        }
+      }, 100);
+    } catch (err) {
+      console.error('CAM_WEB: getUserMedia error:', err);
+      setCameraError('Camera access denied. Please allow camera permission or use Gallery.');
+    }
+  };
+
+  // Stop camera stream
+  const stopWebCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+    }
+    setCameraOpen(false);
+    setCameraType(null);
+    setCameraError(null);
+  };
+
+  // Capture photo from video stream
+  const capturePhoto = () => {
+    if (!videoRef.current) return;
+    const video = videoRef.current;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const file = new File([blob], `${cameraType}_photo.jpg`, { type: 'image/jpeg' });
+      setPreviews(prev => {
+        if (prev[cameraType]) URL.revokeObjectURL(prev[cameraType]);
+        return { ...prev, [cameraType]: URL.createObjectURL(file) };
+      });
+      setUploads(prev => ({ ...prev, [cameraType]: file }));
+      stopWebCamera();
+    }, 'image/jpeg', 0.9);
+  };
 
   useEffect(() => {
     console.log('INIT: Checking existing KYC status');
@@ -280,6 +340,68 @@ export default function OnboardingKYC() {
   return (
     <PageWrapper className="flex flex-col px-6 pt-8 pb-10">
 
+      {/* Live Camera Modal (getUserMedia) */}
+      <AnimatePresence>
+        {cameraOpen && (
+          <motion.div
+            key="camera-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center"
+            style={{ background: '#000' }}
+          >
+            {/* Close button */}
+            <button
+              onClick={stopWebCamera}
+              className="absolute top-5 right-5 z-10 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5">
+                <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+
+            {cameraError ? (
+              <div className="flex flex-col items-center gap-4 px-8 text-center">
+                <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" className="w-8 h-8">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M15 9l-6 6M9 9l6 6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <p className="text-white text-sm font-bold">{cameraError}</p>
+                <button
+                  onClick={stopWebCamera}
+                  className="mt-2 px-6 py-3 rounded-xl bg-white/10 text-white text-[10px] font-black uppercase tracking-widest"
+                >Close</button>
+              </div>
+            ) : (
+              <>
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover"
+                  style={{ maxHeight: '80vh' }}
+                />
+                {/* Capture button */}
+                <div className="absolute bottom-10 left-0 right-0 flex justify-center">
+                  <button
+                    onClick={capturePhoto}
+                    className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center"
+                    style={{ background: 'rgba(57,255,20,0.2)', boxShadow: '0 0 20px #39FF14' }}
+                  >
+                    <div className="w-14 h-14 rounded-full bg-[#39FF14]" />
+                  </button>
+                </div>
+                <p className="absolute bottom-36 left-0 right-0 text-center text-white/60 text-[10px] font-black uppercase tracking-widest">Tap to Capture</p>
+              </>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Camera / Upload Picker Modal */}
       <AnimatePresence>
         {pickerModal.open && (
@@ -313,10 +435,9 @@ export default function OnboardingKYC() {
               }`}>Choose Option</p>
 
               <div className="grid grid-cols-2 gap-4 mb-5">
-                {/* Camera Option */}
-                <label
-                  htmlFor={pickerModal.cameraInputId}
-                  onClick={closePickerModal}
+                {/* Camera Option — opens getUserMedia live camera */}
+                <button
+                  onClick={() => openWebCamera(pickerModal.type)}
                   className={`flex flex-col items-center gap-3 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${
                     isDark
                       ? 'border-white/10 bg-white/5 hover:border-[#39FF14] hover:bg-[#39FF14]/10'
@@ -332,7 +453,7 @@ export default function OnboardingKYC() {
                   <span className={`text-[10px] font-black uppercase tracking-widest text-center ${
                     isDark ? 'text-white' : 'text-slate-700'
                   }`}>Camera</span>
-                </label>
+                </button>
 
                 {/* Gallery/Upload Option */}
                 <label
@@ -356,16 +477,6 @@ export default function OnboardingKYC() {
                   }`}>Gallery</span>
                 </label>
               </div>
-
-              {/* Hidden inputs rendered here inside the modal for label association */}
-              <input
-                id={pickerModal.cameraInputId}
-                type="file"
-                className="hidden"
-                accept="image/*"
-                capture="environment"
-                onChange={(e) => { handleFileChange(pickerModal.type, e); closePickerModal(); }}
-              />
 
               <button
                 onClick={closePickerModal}
