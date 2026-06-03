@@ -27,6 +27,12 @@ export default function OnboardingKYC() {
     aadhaarBack: null,
     license: null
   });
+  const [previews, setPreviews] = useState({
+    selfie: null,
+    aadhaarFront: null,
+    aadhaarBack: null,
+    license: null
+  });
 
   // eKYC States
   const [aadhaarNumber, setAadhaarNumber] = useState('');
@@ -70,14 +76,17 @@ export default function OnboardingKYC() {
 
   const handleFileChange = (type, e) => {
     console.log(`FILE_CHANGE: Handling file upload for [${type}]`);
-    const file = e.target.files[0];
-    console.log(`FILE_CHANGE: Selected file name: ${file?.name}`);
+    const file = e.target.files?.[0];
+    console.log(`FILE_CHANGE: Selected file name: ${file?.name}, size: ${file?.size}`);
     if (file) {
+      // Revoke old preview URL to avoid memory leak
+      setPreviews(prev => {
+        if (prev[type]) URL.revokeObjectURL(prev[type]);
+        return { ...prev, [type]: URL.createObjectURL(file) };
+      });
       setUploads(prev => ({ ...prev, [type]: file }));
-      console.log(`FILE_CHANGE: State updated for [${type}]`);
+      console.log(`FILE_CHANGE: State + preview updated for [${type}]`);
     }
-    // Reset input so same file/photo can be re-captured if needed
-    e.target.value = '';
   };
 
   const handleSendAadhaarOTP = async () => {
@@ -274,30 +283,26 @@ export default function OnboardingKYC() {
                 />
                 <div 
                   onClick={() => selfieRef.current.click()}
-                  className={`w-48 h-48 rounded-full border-2 border-dashed flex flex-col items-center justify-center gap-4 cursor-pointer transition-all duration-500 ${
-                    uploads.selfie ? 'border-flexigo-teal bg-flexigo-teal/5' :
-                    isDark ? 'border-white/10 bg-white/[0.02] hover:bg-white/[0.05]' : 'border-slate-200 bg-slate-50 hover:bg-slate-100 shadow-sm'
+                  className={`w-48 h-48 rounded-full border-2 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all duration-500 overflow-hidden ${
+                    uploads.selfie ? 'border-flexigo-teal' :
+                    isDark ? 'border-white/10 border-dashed bg-white/[0.02] hover:bg-white/[0.05]' : 'border-slate-200 border-dashed bg-slate-50 hover:bg-slate-100 shadow-sm'
                   }`}
                 >
-                  <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all ${
-                    uploads.selfie ? 'bg-flexigo-teal shadow-neon-sm' : 'bg-flexigo-teal/10'
-                  }`}>
-                    {uploads.selfie ? (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" className="w-7 h-7">
-                        <path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    ) : (
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-7 h-7">
-                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round" />
-                        <circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    )}
-                  </div>
-                  <span className={`text-[9px] font-black uppercase tracking-widest text-center px-4 ${
-                    uploads.selfie ? 'text-flexigo-teal' : isDark ? 'text-gray-400' : 'text-slate-400'
-                  }`}>
-                    {uploads.selfie ? 'Photo Uploaded ✓' : 'Camera / Upload'}
-                  </span>
+                  {previews.selfie ? (
+                    <img src={previews.selfie} alt="Selfie Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <>
+                      <div className="w-14 h-14 rounded-full flex items-center justify-center bg-flexigo-teal/10">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-7 h-7">
+                          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round" />
+                          <circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
+                      <span className={`text-[9px] font-black uppercase tracking-widest text-center px-4 ${
+                        isDark ? 'text-gray-400' : 'text-slate-400'
+                      }`}>Camera / Upload</span>
+                    </>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -421,18 +426,19 @@ export default function OnboardingKYC() {
                   <p className={`text-[10px] font-black uppercase tracking-widest italic ml-1 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>Aadhaar Front</p>
                   <GlassCard 
                     onClick={() => adhaarFrontRef.current.click()}
-                    className={`p-6 border-dashed border-2 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-500 ${
+                    className={`p-4 border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 ${
                       uploads.aadhaarFront ? 'border-flexigo-teal bg-flexigo-teal/5' : isDark ? 'border-white/10' : 'border-slate-200'
                     }`}
                   >
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${uploads.aadhaarFront ? 'bg-flexigo-teal shadow-neon-sm' : 'bg-flexigo-teal/10'}`}>
-                      {uploads.aadhaarFront 
-                        ? <svg viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" className="w-5 h-5"><path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                        : <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-5 h-5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round" /><circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                      }
-                    </div>
-                    <span className={`text-[9px] font-black uppercase tracking-widest text-center ${uploads.aadhaarFront ? 'text-flexigo-teal' : isDark ? 'text-gray-400' : 'text-slate-400'}`}>
-                      {uploads.aadhaarFront ? 'Front Uploaded ✓' : 'Camera / Upload Front'}
+                    {previews.aadhaarFront ? (
+                      <img src={previews.aadhaarFront} alt="Aadhaar Front" className="w-16 h-16 object-cover rounded-xl flex-shrink-0" />
+                    ) : (
+                      <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-flexigo-teal/10 flex-shrink-0">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-6 h-6"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round" /><circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      </div>
+                    )}
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${uploads.aadhaarFront ? 'text-flexigo-teal' : isDark ? 'text-gray-400' : 'text-slate-400'}`}>
+                      {uploads.aadhaarFront ? 'Front Captured ✓ Tap to Retake' : 'Tap to use Camera / Upload Front'}
                     </span>
                   </GlassCard>
                 </div>
@@ -441,18 +447,19 @@ export default function OnboardingKYC() {
                   <p className={`text-[10px] font-black uppercase tracking-widest italic ml-1 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>Aadhaar Back</p>
                   <GlassCard 
                     onClick={() => adhaarBackRef.current.click()}
-                    className={`p-6 border-dashed border-2 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-500 ${
+                    className={`p-4 border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 ${
                       uploads.aadhaarBack ? 'border-flexigo-teal bg-flexigo-teal/5' : isDark ? 'border-white/10' : 'border-slate-200'
                     }`}
                   >
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${uploads.aadhaarBack ? 'bg-flexigo-teal shadow-neon-sm' : 'bg-flexigo-teal/10'}`}>
-                      {uploads.aadhaarBack 
-                        ? <svg viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" className="w-5 h-5"><path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                        : <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-5 h-5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round" /><circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                      }
-                    </div>
-                    <span className={`text-[9px] font-black uppercase tracking-widest text-center ${uploads.aadhaarBack ? 'text-flexigo-teal' : isDark ? 'text-gray-400' : 'text-slate-400'}`}>
-                      {uploads.aadhaarBack ? 'Back Uploaded ✓' : 'Camera / Upload Back'}
+                    {previews.aadhaarBack ? (
+                      <img src={previews.aadhaarBack} alt="Aadhaar Back" className="w-16 h-16 object-cover rounded-xl flex-shrink-0" />
+                    ) : (
+                      <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-flexigo-teal/10 flex-shrink-0">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-6 h-6"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round" /><circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      </div>
+                    )}
+                    <span className={`text-[10px] font-black uppercase tracking-widest ${uploads.aadhaarBack ? 'text-flexigo-teal' : isDark ? 'text-gray-400' : 'text-slate-400'}`}>
+                      {uploads.aadhaarBack ? 'Back Captured ✓ Tap to Retake' : 'Tap to use Camera / Upload Back'}
                     </span>
                   </GlassCard>
                 </div>
@@ -487,23 +494,22 @@ export default function OnboardingKYC() {
               />
               <GlassCard 
                 onClick={() => licenseRef.current.click()}
-                className={`p-8 border-dashed border-2 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all duration-500 ${
+                className={`p-4 border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 ${
                   uploads.license ? 'border-flexigo-teal bg-flexigo-teal/5' :
                   isDark ? 'border-white/10' : 'border-slate-200'
                 }`}
               >
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-                  uploads.license ? 'bg-flexigo-teal shadow-neon-sm' : 'bg-flexigo-teal/10'
-                }`}>
-                  {uploads.license 
-                    ? <svg viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" className="w-6 h-6"><path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                    : <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-6 h-6"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round" /><circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  }
-                </div>
-                <span className={`text-[10px] font-black uppercase tracking-widest text-center ${
+                {previews.license ? (
+                  <img src={previews.license} alt="License Preview" className="w-16 h-16 object-cover rounded-xl flex-shrink-0" />
+                ) : (
+                  <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-flexigo-teal/10 flex-shrink-0">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-6 h-6"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round" /><circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  </div>
+                )}
+                <span className={`text-[10px] font-black uppercase tracking-widest ${
                   uploads.license ? 'text-flexigo-teal' : isDark ? 'text-gray-400' : 'text-slate-400'
                 }`}>
-                  {uploads.license ? 'License Uploaded ✓' : 'Camera / Upload License'}
+                  {uploads.license ? 'License Captured ✓ Tap to Retake' : 'Tap to use Camera / Upload License'}
                 </span>
               </GlassCard>
 
