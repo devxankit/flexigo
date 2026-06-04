@@ -12,6 +12,7 @@ import {
   getRiderPlans,
   createPaymentOrder,
   verifyPayment,
+  getRiderPayments,
   payViaWallet,
   requestQRPayment,
   generateAadhaarOTP,
@@ -39,6 +40,7 @@ router.get('/my-vehicle/:phone', getMyVehicle);
 router.get('/plans', getRiderPlans);
 router.post('/payments/create-order', createPaymentOrder);
 router.post('/payments/verify', verifyPayment);
+router.get('/payments/:phone', getRiderPayments);
 router.post('/payments/wallet', payViaWallet);
 router.post('/payments/qr-request', requestQRPayment);
 router.patch('/location', protectRider, updateRiderLocation);

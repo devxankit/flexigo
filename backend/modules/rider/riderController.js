@@ -421,7 +421,8 @@ export const verifyPayment = async (req, res) => {
         type: 'debit',
         status: 'success',
         description: `Plan Upgrade: ${plan.name}`,
-        method: 'razorpay'
+        method: 'razorpay',
+        planId: plan._id
       });
 
       const mapUrl = 'https://www.google.com/maps?q=18.566177368164062,73.7693099975586&z=17&hl=en';
@@ -430,6 +431,46 @@ export const verifyPayment = async (req, res) => {
       res.status(200).json({ success: true, message: 'Payment verified' });
     } else res.status(400).json({ success: false, message: 'Invalid signature' });
   } catch (error) { res.status(500).json({ success: false, message: error.message }); }
+};
+
+export const getRiderPayments = async (req, res) => {
+  try {
+    const { phone } = req.params;
+    const rider = await Rider.findOne({ phone }).populate('subscriptionPlan');
+    if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
+
+    const transactions = await Transaction.find({ riderId: rider._id }).sort({ createdAt: -1 }).populate('planId');
+    
+    let isDue = false;
+    let dueAmount = 0;
+    let nextDueDate = rider.subscriptionEnd;
+    let dueReason = '';
+    let planId = rider.subscriptionPlan?._id || null;
+
+    if (rider.subscriptionPlan) {
+      dueAmount = rider.subscriptionPlan.price;
+      dueReason = `Weekly Rent: ${rider.subscriptionPlan.name}`;
+      
+      if (!rider.subscriptionEnd || new Date(rider.subscriptionEnd) < new Date()) {
+        isDue = true;
+      }
+    } else {
+      // If they don't have a plan yet, we don't mark as due here (they should go to Plans page)
+      dueAmount = 0;
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      transactions,
+      isDue,
+      dueAmount,
+      dueReason,
+      planId,
+      nextDueDate
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
 // @desc    Request QR/UPI Payment (pending until admin approves)

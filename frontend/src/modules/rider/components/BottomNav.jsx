@@ -24,6 +24,17 @@ const tabs = [
     ),
   },
   {
+    id: 'payments',
+    path: '/rider/payments',
+    label: 'Payments',
+    icon: (active, theme) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke={active ? '#39FF14' : (theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} strokeWidth="1.8" className="w-6 h-6">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M8 8.5h8M8 12.5h8M10 8.5v7M14 8.5v4" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+  },
+  {
     id: 'garage',
     path: '/rider/garage',
     label: 'Hub',

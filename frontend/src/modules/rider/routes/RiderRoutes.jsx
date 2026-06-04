@@ -7,6 +7,7 @@ import AuthOTP from '../pages/AuthOTP';
 import OnboardingKYC from '../pages/OnboardingKYC';
 import HomeDashboard from '../pages/HomeDashboard';
 import BatteriesHubs from '../pages/BatteriesHubs';
+import PaymentsScreen from '../pages/PaymentsScreen';
 import LiveGarage from '../pages/LiveGarage';
 import SubscriptionPlans from '../pages/SubscriptionPlans';
 import RideFlow from '../pages/RideFlow';
@@ -64,6 +65,7 @@ export default function RiderRoutes() {
         <Route path="/onboarding" element={<OnboardingKYC />} />
         <Route path="/home" element={<HomeDashboard />} />
         <Route path="/batteries-hubs" element={<BatteriesHubs />} />
+        <Route path="/payments" element={<PaymentsScreen />} />
         <Route path="/garage" element={<LiveGarage />} />
         <Route path="/wallet" element={<WalletScreen />} />
         <Route path="/plans" element={<SubscriptionPlans />} />

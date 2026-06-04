@@ -161,11 +161,18 @@ export default function OnboardingKYC() {
 
   useEffect(() => {
     console.log('INIT: Checking existing KYC status');
+    
+    // Prevent showing onboarding if already registered
+    if (user?.isRegistered) {
+      navigate('/rider/home', { replace: true });
+      return;
+    }
+    
     if (user?.kycDetails?.ekycVerified) {
       console.log('INIT: Aadhaar already verified in profile');
       setIsAadhaarVerified(true);
     }
-  }, [user]);
+  }, [user, navigate]);
 
   useEffect(() => {
     localStorage.setItem('onboarding_step', currentStep.toString());

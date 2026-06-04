@@ -67,9 +67,10 @@ export default function PaymentGatewayPage() {
     const interval = setInterval(() => {
       fetchPendingPayments();
       fetchDueAlerts();
+      fetchFinanceData(activeFilters);
     }, 10000);
     return () => clearInterval(interval);
-  }, []);
+  }, [activeFilters]);
 
   const handleApprove = async (transactionId) => {
     setLoadingAction(transactionId);

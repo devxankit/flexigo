@@ -463,14 +463,14 @@ export default function HomeDashboard() {
             </div>
             <div>
               <h3 className={`text-sm font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                No Active Subscription
+                Payment Pending
               </h3>
               <p className={`text-[9px] font-bold uppercase tracking-widest mt-1 ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>
-                Purchase a plan to access your vehicle
+                Please complete your payment to get your vehicle
               </p>
             </div>
             <div className="px-5 py-2 bg-flexigo-teal text-white text-[9px] font-black uppercase tracking-widest rounded-xl shadow-[0_0_15px_rgba(57,255,20,0.3)]">
-              View Plans →
+              Complete Payment →
             </div>
           </div>
         </div>
