@@ -473,7 +473,7 @@ export const getRiderPayments = async (req, res) => {
   }
 };
 
-// @desc    QR/UPI Payment — auto-activates subscription instantly (no admin approval needed)
+// @desc    QR/UPI Payment — creates transaction immediately (shows in gateway automatically)
 // @route   POST /api/v1/rider/payments/qr-request
 export const requestQRPayment = async (req, res) => {
   try {
@@ -484,44 +484,20 @@ export const requestQRPayment = async (req, res) => {
     const rider = await Rider.findOne({ phone });
     if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
 
-    // Auto-activate subscription immediately
-    const durationMs = plan.type === 'Daily' ? 86400000 : plan.type === 'Weekly' ? 604800000 : 2592000000;
-    const expiresAt = new Date(Date.now() + durationMs);
-
-    rider.status = 'active';
-    rider.subscriptionPlan = plan._id;
-    rider.subscriptionStart = new Date();
-    rider.subscriptionEnd = expiresAt;
-    await rider.save();
-
-    // Create transaction as success directly
+    // Create transaction with pending status — shows in gateway automatically
     const transaction = await Transaction.create({
       riderId: rider._id,
       amount: plan.price,
       type: 'debit',
-      status: 'success',
-      description: `Plan Upgrade: ${plan.name} (UPI/QR)`,
+      status: 'pending',
+      description: `QR Payment: ${plan.name}`,
       method: 'upi_qr',
       planId: plan._id
     });
 
-    // Send SMS confirmation to rider
-    try {
-      const msg = `Flexigo: Payment of ₹${plan.price} received via UPI. Subscription activated successfully.`;
-      await sendSMS(phone, msg);
-    } catch (e) {}
-
-    // Send push notification to rider
-    const riderToken = rider.fcmToken || rider.fcmTokenMobile;
-    if (riderToken) {
-      try {
-        await sendPushNotification(riderToken, 'Payment Successful', `₹${plan.price} payment received. Subscription is now active!`, { type: 'payment_approved' });
-      } catch (e) {}
-    }
-
     res.status(200).json({
       success: true,
-      message: 'Payment successful. Subscription activated.',
+      message: 'Payment submitted. Will reflect in gateway.',
       transactionId: transaction._id
     });
   } catch (error) {

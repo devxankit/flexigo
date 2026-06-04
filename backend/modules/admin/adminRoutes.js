@@ -222,6 +222,46 @@ router.get('/payments/pending-qr', protectAdmin, async (req, res) => {
   }
 });
 
+// One-time fix: Auto-approve all pending UPI_QR transactions
+router.post('/payments/fix-pending-qr', protectAdmin, async (req, res) => {
+  try {
+    const SubscriptionPlan = (await import('./subscriptionPlanModel.js')).default;
+    const Rider = (await import('../rider/riderModel.js')).default;
+
+    const pendingTxns = await Transaction.find({ method: 'upi_qr', status: 'pending' }).populate('riderId');
+
+    let fixed = 0;
+    for (const txn of pendingTxns) {
+      // Mark transaction as success
+      txn.status = 'success';
+      txn.description = txn.description?.replace('Awaiting Admin Approval', 'Auto-Approved') || 'UPI/QR Payment';
+      await txn.save();
+
+      // Activate rider subscription if planId exists
+      if (txn.planId && txn.riderId) {
+        const plan = await SubscriptionPlan.findById(txn.planId);
+        if (plan) {
+          const durationMs = plan.type === 'Daily' ? 86400000 : plan.type === 'Weekly' ? 604800000 : 2592000000;
+          const rider = await Rider.findById(txn.riderId._id || txn.riderId);
+          if (rider) {
+            rider.status = 'active';
+            rider.subscriptionPlan = plan._id;
+            rider.subscriptionStart = txn.createdAt || new Date();
+            rider.subscriptionEnd = new Date((txn.createdAt || Date.now()) + durationMs);
+            await rider.save();
+          }
+        }
+      }
+      fixed++;
+    }
+
+    res.status(200).json({ success: true, message: `${fixed} pending transactions fixed to success` });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+
 router.get('/payments/due-alerts', protectAdmin, async (req, res) => {
   try {
     const now = new Date();
