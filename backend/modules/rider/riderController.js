@@ -473,7 +473,7 @@ export const getRiderPayments = async (req, res) => {
   }
 };
 
-// @desc    Request QR/UPI Payment (pending until admin approves)
+// @desc    QR/UPI Payment — auto-activates subscription instantly (no admin approval needed)
 // @route   POST /api/v1/rider/payments/qr-request
 export const requestQRPayment = async (req, res) => {
   try {
@@ -484,20 +484,44 @@ export const requestQRPayment = async (req, res) => {
     const rider = await Rider.findOne({ phone });
     if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
 
-    // Create a pending transaction
+    // Auto-activate subscription immediately
+    const durationMs = plan.type === 'Daily' ? 86400000 : plan.type === 'Weekly' ? 604800000 : 2592000000;
+    const expiresAt = new Date(Date.now() + durationMs);
+
+    rider.status = 'active';
+    rider.subscriptionPlan = plan._id;
+    rider.subscriptionStart = new Date();
+    rider.subscriptionEnd = expiresAt;
+    await rider.save();
+
+    // Create transaction as success directly
     const transaction = await Transaction.create({
       riderId: rider._id,
       amount: plan.price,
       type: 'debit',
-      status: 'pending',
-      description: `QR Payment: ${plan.name} (Awaiting Admin Approval)`,
+      status: 'success',
+      description: `Plan Upgrade: ${plan.name} (UPI/QR)`,
       method: 'upi_qr',
       planId: plan._id
     });
 
+    // Send SMS confirmation to rider
+    try {
+      const msg = `Flexigo: Payment of ₹${plan.price} received via UPI. Subscription activated successfully.`;
+      await sendSMS(phone, msg);
+    } catch (e) {}
+
+    // Send push notification to rider
+    const riderToken = rider.fcmToken || rider.fcmTokenMobile;
+    if (riderToken) {
+      try {
+        await sendPushNotification(riderToken, 'Payment Successful', `₹${plan.price} payment received. Subscription is now active!`, { type: 'payment_approved' });
+      } catch (e) {}
+    }
+
     res.status(200).json({
       success: true,
-      message: 'Payment request submitted. Awaiting admin verification.',
+      message: 'Payment successful. Subscription activated.',
       transactionId: transaction._id
     });
   } catch (error) {
