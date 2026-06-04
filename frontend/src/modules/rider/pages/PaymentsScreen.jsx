@@ -4,7 +4,7 @@ import { GlassCard } from '../components/GlassCard';
 import { NeonButton } from '../components/NeonButton';
 import { useThemeStore } from '../store/themeStore';
 import { useAuthStore } from '../store/authStore';
-import { api } from '../../../lib/api';
+import api from '../../../lib/axios';
 import { RefreshCw, CheckCircle, AlertCircle, Clock, CreditCard } from 'lucide-react';
 import { motion } from 'framer-motion';
 
