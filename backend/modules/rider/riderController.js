@@ -454,41 +454,6 @@ export const requestQRPayment = async (req, res) => {
       planId: plan._id
     });
 
-    // Send real-time push notification to all SuperAdmins
-    const admins = await Admin.find({ role: 'SuperAdmin' });
-    for (const admin of admins) {
-      if (admin.fcmToken) {
-        try {
-          await sendPushNotification(
-            admin.fcmToken,
-            '💰 New QR Payment Request',
-            `${rider.name || rider.phone} paid ₹${plan.price} for ${plan.name}. Verify & approve.`,
-            { type: 'qr_payment_request', transactionId: transaction._id.toString(), riderId: rider._id.toString() }
-          );
-        } catch (e) {
-          console.error("Admin FCM notification failed:", e.message);
-        }
-      }
-    }
-
-    // Also notify franchise if rider has one
-    if (rider.franchise) {
-      const franchise = await Franchise.findById(rider.franchise);
-      const frToken = franchise?.fcmToken || franchise?.fcmTokenMobile;
-      if (frToken) {
-        try {
-          await sendPushNotification(
-            frToken,
-            '💰 QR Payment Request',
-            `Rider ${rider.name || rider.phone} submitted ₹${plan.price} payment. Awaiting verification.`,
-            { type: 'qr_payment_request', transactionId: transaction._id.toString() }
-          );
-        } catch (e) {
-          console.error("Franchise FCM notification failed:", e.message);
-        }
-      }
-    }
-
     res.status(200).json({
       success: true,
       message: 'Payment request submitted. Awaiting admin verification.',

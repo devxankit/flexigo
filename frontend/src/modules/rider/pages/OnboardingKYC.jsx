@@ -743,10 +743,11 @@ export default function OnboardingKYC() {
 
               <button
                 onClick={handleNext}
+                disabled={loading}
                 className={`w-full py-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${isDark ? 'text-gray-500 hover:text-white' : 'text-slate-400 hover:text-slate-900'
-                  }`}
+                  } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                Skip for now →
+                {loading ? 'Processing...' : 'Skip for now →'}
               </button>
             </motion.div>
           )}

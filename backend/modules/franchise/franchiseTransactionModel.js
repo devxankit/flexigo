@@ -12,13 +12,18 @@ const FranchiseTransactionSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['Subscription', 'Payout', 'Bonus', 'Penalty'],
+    enum: ['Subscription', 'Payout', 'Bonus', 'Penalty', 'Deposit'],
     required: true,
   },
   status: {
     type: String,
     enum: ['pending', 'completed', 'failed'],
     default: 'completed',
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['wallet', 'gateway', 'razorpay', 'upi', 'upi_qr', 'card', 'bank'],
+    default: 'gateway'
   },
   subscriberName: String,
   description: String,
