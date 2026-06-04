@@ -34,35 +34,51 @@ export const getDateFilter = (range, fieldName = 'createdAt') => {
     }
   } catch (e) { }
 
-  const now = new Date();
-  let start = new Date();
-  start.setHours(0, 0, 0, 0);
+  // IST offset: UTC+5:30 = 330 minutes
+  const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
+
+  // Get current IST time
+  const nowUTC = new Date();
+  const nowIST = new Date(nowUTC.getTime() + IST_OFFSET_MS);
+
+  // IST midnight = start of today in IST, converted back to UTC for MongoDB query
+  const getISTMidnightUTC = (date) => {
+    const ist = new Date(date.getTime() + IST_OFFSET_MS);
+    ist.setUTCHours(0, 0, 0, 0); // midnight in IST space
+    return new Date(ist.getTime() - IST_OFFSET_MS); // convert back to UTC
+  };
+
+  const todayMidnightUTC = getISTMidnightUTC(nowUTC);
 
   if (rangeVal === 'Today') {
-    return { [fieldName]: { $gte: start } };
+    return { [fieldName]: { $gte: todayMidnightUTC } };
   } else if (rangeVal === 'Yesterday') {
-    start.setDate(start.getDate() - 1);
-    const end = new Date(start);
-    end.setHours(23, 59, 59, 999);
-    return { [fieldName]: { $gte: start, $lte: end } };
+    const yesterdayMidnightUTC = new Date(todayMidnightUTC.getTime() - 24 * 60 * 60 * 1000);
+    const yesterdayEndUTC = new Date(todayMidnightUTC.getTime() - 1);
+    return { [fieldName]: { $gte: yesterdayMidnightUTC, $lte: yesterdayEndUTC } };
   } else if (rangeVal === 'Last 7 Days') {
-    start.setDate(start.getDate() - 7);
+    const start = new Date(todayMidnightUTC.getTime() - 7 * 24 * 60 * 60 * 1000);
     return { [fieldName]: { $gte: start } };
   } else if (rangeVal === 'Last 30 Days') {
-    start.setDate(start.getDate() - 30);
+    const start = new Date(todayMidnightUTC.getTime() - 30 * 24 * 60 * 60 * 1000);
     return { [fieldName]: { $gte: start } };
   } else if (rangeVal === 'This Month') {
-    start.setDate(1);
-    return { [fieldName]: { $gte: start } };
+    // 1st of current month in IST
+    const firstOfMonthIST = new Date(Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth(), 1, 0, 0, 0, 0));
+    const firstOfMonthUTC = new Date(firstOfMonthIST.getTime() - IST_OFFSET_MS);
+    return { [fieldName]: { $gte: firstOfMonthUTC } };
   } else if (rangeVal === 'Last Month') {
-    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
-    return { [fieldName]: { $gte: lastMonthStart, $lte: lastMonthEnd } };
+    const lastMonthStartIST = new Date(Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth() - 1, 1, 0, 0, 0, 0));
+    const lastMonthEndIST = new Date(Date.UTC(nowIST.getUTCFullYear(), nowIST.getUTCMonth(), 0, 23, 59, 59, 999));
+    const lastMonthStartUTC = new Date(lastMonthStartIST.getTime() - IST_OFFSET_MS);
+    const lastMonthEndUTC = new Date(lastMonthEndIST.getTime() - IST_OFFSET_MS);
+    return { [fieldName]: { $gte: lastMonthStartUTC, $lte: lastMonthEndUTC } };
   } else if (typeof rangeVal === 'object' && rangeVal.start && rangeVal.end) {
+    // Custom date range — treat as IST dates
     return {
       [fieldName]: {
-        $gte: new Date(rangeVal.start + 'T00:00:00Z'),
-        $lte: new Date(rangeVal.end + 'T23:59:59Z')
+        $gte: new Date(rangeVal.start + 'T00:00:00+05:30'),
+        $lte: new Date(rangeVal.end + 'T23:59:59+05:30')
       }
     };
   }
