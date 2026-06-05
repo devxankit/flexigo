@@ -47,6 +47,16 @@ export default function WalletFinancials() {
       }
    };
 
+   const loadRazorpay = () => {
+      return new Promise((resolve) => {
+         const script = document.createElement('script');
+         script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+         script.onload = () => resolve(true);
+         script.onerror = () => resolve(false);
+         document.body.appendChild(script);
+      });
+   };
+
    const handleAddFunds = async (e) => {
       e.preventDefault();
       const amount = parseFloat(addFundsAmount);
@@ -57,12 +67,76 @@ export default function WalletFinancials() {
          }
 
          setIsProcessingAddFunds(true);
-         const res = await addFunds(amount, paymentMethod);
-         setIsProcessingAddFunds(false);
-         if (res.success) {
-            setAddFundsModalOpen(false);
-            setAddFundsAmount('');
-            alert(`Successfully added ₹${amount} via Razorpay`);
+
+         if (paymentMethod.toLowerCase() === 'razorpay') {
+            const res = await loadRazorpay();
+            if (!res) {
+               alert('Razorpay SDK failed to load');
+               setIsProcessingAddFunds(false);
+               return;
+            }
+
+            try {
+               const { data: orderRes } = await import('../../../lib/axios').then(m => m.default).then(api => api.post('/franchise/wallet/create-order', { amount }));
+               
+               if (!orderRes.success) {
+                  alert('Failed to create order');
+                  setIsProcessingAddFunds(false);
+                  return;
+               }
+
+               const options = {
+                  key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_YourKey',
+                  amount: orderRes.order.amount,
+                  currency: 'INR',
+                  name: 'Flexigo Franchise',
+                  description: 'Wallet Recharge',
+                  order_id: orderRes.order.id,
+                  handler: async function (response) {
+                     try {
+                        const { data: verifyRes } = await import('../../../lib/axios').then(m => m.default).then(api => api.post('/franchise/wallet/verify-payment', {
+                           ...response,
+                           amount
+                        }));
+                        if (verifyRes.success) {
+                           alert('Payment Successful!');
+                           setAddFundsModalOpen(false);
+                           setAddFundsAmount('');
+                           fetchWallet(); // refresh state
+                        } else {
+                           alert('Payment verification failed');
+                        }
+                     } catch (err) {
+                        alert('Verification failed: ' + err.message);
+                     }
+                  },
+                  theme: {
+                     color: '#10B981' // emerald-500
+                  }
+               };
+
+               const rzp = new window.Razorpay(options);
+               rzp.on('payment.failed', function (response) {
+                  alert('Payment failed: ' + response.error.description);
+               });
+               rzp.open();
+            } catch (error) {
+               console.error('Payment flow error', error);
+               alert('Something went wrong during payment');
+            } finally {
+               setIsProcessingAddFunds(false);
+            }
+         } else {
+            // Ensure payment method is lowercase to match backend enum
+            const res = await addFunds(amount, paymentMethod.toLowerCase());
+            setIsProcessingAddFunds(false);
+            if (res.success) {
+               setAddFundsModalOpen(false);
+               setAddFundsAmount('');
+               alert(`Successfully added ₹${amount} via ${paymentMethod}`);
+            } else {
+               alert(res.message || 'Failed to process payment');
+            }
          }
       }
    };
@@ -72,13 +146,16 @@ export default function WalletFinancials() {
       // Simulate backend review and approval after 2 seconds
       setTimeout(async () => {
          const amount = parseFloat(addFundsAmount);
-         const res = await addFunds(amount, 'UPI_QR');
+         const res = await addFunds(amount, 'upi_qr');
          if (res.success) {
             setAddFundsModalOpen(false);
             setAddFundsAmount('');
             setShowQRCode(false);
             setQrSubmitted(false);
             alert(`Successfully added ₹${amount} via UPI QR`);
+         } else {
+            alert(res.message || 'Failed to process payment');
+            setQrSubmitted(false);
          }
       }, 2000);
    };

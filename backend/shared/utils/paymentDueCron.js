@@ -12,17 +12,20 @@ export const startPaymentDueCron = () => {
 
     try {
       const now = new Date();
-      // Only check riders whose plan expired yesterday (not older)
-      const yesterday = new Date(now);
-      yesterday.setDate(yesterday.getDate() - 1);
-      yesterday.setHours(0, 0, 0, 0);
       
-      const today = new Date(now);
-      today.setHours(0, 0, 0, 0);
+      // Calculate exactly the previous day (which means 7 days are fully complete)
+      // Example: Paid 25 May -> 7 days complete on 1 June -> Today is 2 June (Next day / 8th day)
+      const targetDateStart = new Date(now);
+      targetDateStart.setDate(targetDateStart.getDate() - 1);
+      targetDateStart.setHours(0, 0, 0, 0);
+      
+      const targetDateEnd = new Date(now);
+      targetDateEnd.setHours(0, 0, 0, 0);
 
-      // Find riders whose subscription expired between yesterday 00:00 and today 00:00
+      // Find riders whose subscription ended strictly between yesterday 00:00 and today 00:00
+      // This ensures the reminder ONLY goes once, exactly on the next day after completion.
       const expiredRiders = await Rider.find({
-        subscriptionEnd: { $gte: yesterday, $lt: today },
+        subscriptionEnd: { $gte: targetDateStart, $lt: targetDateEnd },
         subscriptionPlan: { $ne: null },
         status: { $in: ['active', 'approved'] }
       }).populate('subscriptionPlan');

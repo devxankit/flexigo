@@ -14,8 +14,9 @@ import {
   franchiseLogin,
   getNotifications,
   markNotificationRead,
-  markAllNotificationsRead,
-  addWalletFunds
+  addWalletFunds,
+  createWalletOrder,
+  verifyWalletPayment
 } from './franchiseController.js';
 import { protectFranchise } from '../../shared/middleware/authMiddleware.js';
 
@@ -29,6 +30,8 @@ router.get('/plans', getFranchisePlans);
 router.post('/update-registration', protectFranchise, updateRegistration);
 router.get('/wallet', protectFranchise, getWalletData);
 router.post('/wallet/add', protectFranchise, addWalletFunds);
+router.post('/wallet/create-order', protectFranchise, createWalletOrder);
+router.post('/wallet/verify-payment', protectFranchise, verifyWalletPayment);
 router.get('/dashboard-metrics', protectFranchise, getDashboardMetrics);
 router.post('/handover', protectFranchise, createHandover);
 router.post('/kyc/aadhaar/generate-otp', generateAadhaarOTP);

@@ -10,6 +10,8 @@ import { sendSMS } from '../../shared/utils/smsService.js';
 import cloudinary from '../../config/cloudinary.js';
 import axios from 'axios';
 import FranchiseNotification from './franchiseNotificationModel.js';
+import Razorpay from 'razorpay';
+import crypto from 'crypto';
 
 // @desc    Send OTP to Franchise
 // @route   POST /api/v1/franchise/auth/send-otp
@@ -377,6 +379,77 @@ export const addWalletFunds = async (req, res) => {
     });
   } catch (error) {
     console.error('[FRANCHISE WALLET ERROR]', error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Create Razorpay Order for Wallet Recharge
+// @route   POST /api/v1/franchise/wallet/create-order
+export const createWalletOrder = async (req, res) => {
+  try {
+    const { amount } = req.body;
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid amount' });
+    }
+
+    const instance = new Razorpay({ 
+      key_id: process.env.RAZORPAY_KEY_ID, 
+      key_secret: process.env.RAZORPAY_KEY_SECRET 
+    });
+
+    const order = await instance.orders.create({ 
+      amount: Math.round(Number(amount) * 100), 
+      currency: 'INR', 
+      receipt: `receipt_${Date.now()}` 
+    });
+    
+    res.status(200).json({ success: true, order });
+  } catch (error) {
+    console.error('[FRANCHISE RAZORPAY ERROR]', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Verify Razorpay Payment for Wallet Recharge
+// @route   POST /api/v1/franchise/wallet/verify-payment
+export const verifyWalletPayment = async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount } = req.body;
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(body.toString())
+      .digest('hex');
+
+    if (expectedSignature === razorpay_signature) {
+      const franchise = await Franchise.findById(req.franchise._id);
+      if (!franchise) return res.status(404).json({ success: false, message: 'Franchise not found' });
+
+      if (franchise.walletBalance === undefined) franchise.walletBalance = 0;
+      franchise.walletBalance += Number(amount);
+      await franchise.save();
+
+      const transaction = await FranchiseTransaction.create({
+        franchiseId: franchise._id,
+        date: new Date(),
+        type: 'Deposit',
+        description: `Wallet recharge via Razorpay`,
+        amount: Number(amount),
+        status: 'completed',
+        paymentMethod: 'razorpay'
+      });
+
+      res.status(200).json({ 
+        success: true, 
+        message: 'Payment verified successfully',
+        walletBalance: franchise.walletBalance,
+        transaction
+      });
+    } else {
+      res.status(400).json({ success: false, message: 'Invalid signature' });
+    }
+  } catch (error) {
+    console.error('[FRANCHISE RAZORPAY VERIFY ERROR]', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
