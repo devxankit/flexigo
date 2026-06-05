@@ -237,15 +237,15 @@ export default function WalletFinancials() {
                </button>
                <button
                   onClick={() => setAddFundsModalOpen(true)}
-                  className="px-3 py-1.5 bg-[var(--bg-secondary)] border border-emerald-500/30 text-emerald-500 rounded-xl text-[7.5px] font-black uppercase tracking-widest hover:bg-emerald-500/10 transition-all shadow-inner active:scale-95 italic flex items-center gap-1.5 leading-none"
+                  className="px-4 py-2 bg-[var(--bg-secondary)] border border-emerald-500/30 text-emerald-500 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-500/10 transition-all shadow-inner active:scale-95 italic flex items-center gap-2 leading-none"
                >
-                  ADD_FUNDS <TrendingUp size={10} strokeWidth={3} />
+                  PAY NOW <TrendingUp size={12} strokeWidth={3} />
                </button>
                <button
                   onClick={() => setPayoutModalOpen(true)}
-                  className="px-3 py-1.5 bg-emerald-600 text-white rounded-xl text-[7.5px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all shadow-lg active:scale-95 italic flex items-center gap-1.5 shadow-emerald-950/20 leading-none"
+                  className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-500 transition-all shadow-lg active:scale-95 italic flex items-center gap-2 shadow-emerald-950/20 leading-none"
                >
-                  REQUEST_PAYOUT <ArrowRight size={10} strokeWidth={3} />
+                  REQUEST_PAYOUT <ArrowRight size={12} strokeWidth={3} />
                </button>
             </div>
          </div>

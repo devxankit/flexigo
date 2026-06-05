@@ -38,7 +38,7 @@ export const sendOTP = async (req, res) => {
 
     const message = `Welcome to the Flexigo powered by SMSINDIAHUB. Your OTP for registration is ${otp}`;
     if (!isTestNumber) {
-      try { await sendSMS(phone, message); } catch (e) {}
+      try { await sendSMS(phone, message); } catch (e) { }
     }
 
     res.status(200).json({ success: true, message: 'OTP sent successfully' });
@@ -93,11 +93,11 @@ export const saveFcmToken = async (req, res) => {
 // @desc    Update KYC Details
 export const updateKYC = async (req, res) => {
   try {
-    const { 
-      phone, 
-      selfie, 
-      aadhaarFront, 
-      aadhaarBack, 
+    const {
+      phone,
+      selfie,
+      aadhaarFront,
+      aadhaarBack,
       drivingLicense,
       referenceName,
       referenceNumber,
@@ -148,13 +148,13 @@ export const generateAadhaarOTP = async (req, res) => {
       key: process.env.SUREPASS_API_KEY,
       id_number: aadhaarNumber
     });
-    
+
     if (response.data.success || response.data.status === 'success' || response.data.message === 'OTP Sent.') {
       const requestId = response.data.data?.request_id || response.data.request_id || response.data.data?.client_id;
-      res.status(200).json({ 
-        success: true, 
-        client_id: requestId, 
-        message: response.data.message || 'OTP sent to mobile' 
+      res.status(200).json({
+        success: true,
+        client_id: requestId,
+        message: response.data.message || 'OTP sent to mobile'
       });
     } else {
       res.status(400).json({ success: false, message: response.data.message || 'Failed to send Aadhaar OTP' });
@@ -172,7 +172,7 @@ export const verifyAadhaarOTP = async (req, res) => {
       request_id: client_id,
       otp
     });
-    
+
     if (response.data.success || response.data.status === 'success') {
       const rider = await Rider.findOne({ phone });
       if (rider) {
@@ -203,11 +203,11 @@ export const addMoney = async (req, res) => {
     const rider = await Rider.findOne({ phone });
     rider.walletBalance += Number(amount);
     await rider.save();
-    await Transaction.create({ 
-      riderId: rider._id, 
-      amount, 
-      type: 'credit', 
-      status: 'success', 
+    await Transaction.create({
+      riderId: rider._id,
+      amount,
+      type: 'credit',
+      status: 'success',
       description: 'Added to wallet',
       method: 'razorpay'
     });
@@ -220,7 +220,7 @@ export const payViaWallet = async (req, res) => {
     const { planId, phone } = req.body;
     const plan = await SubscriptionPlan.findById(planId);
     if (!plan) return res.status(404).json({ success: false, message: 'Plan not found' });
-    
+
     const rider = await Rider.findOne({ phone }).populate('franchise');
     if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
 
@@ -230,9 +230,9 @@ export const payViaWallet = async (req, res) => {
     if (rider.franchise) {
       const Franchise = (await import('../franchise/franchiseModel.js')).default;
       const FranchiseTransaction = (await import('../franchise/franchiseTransactionModel.js')).default;
-      
+
       const franchiseToUpdate = await Franchise.findById(rider.franchise._id || rider.franchise);
-      
+
       if (!franchiseToUpdate) {
         return res.status(404).json({ success: false, message: 'Mapped Franchise not found' });
       }
@@ -253,7 +253,7 @@ export const payViaWallet = async (req, res) => {
         description: `Subscription paid for rider ${rider.name || rider.phone}`,
         paymentMethod: 'wallet'
       });
-      
+
       isFranchisePaid = true;
     } else {
       // Independent Rider Logic
@@ -427,7 +427,7 @@ export const verifyPayment = async (req, res) => {
 
       const mapUrl = 'https://www.google.com/maps?q=18.566177368164062,73.7693099975586&z=17&hl=en';
       const msg = `Welcome to Flexigo. Registration successful. Pickup: ${mapUrl}`;
-      try { await sendSMS(phone, msg); } catch (e) {}
+      try { await sendSMS(phone, msg); } catch (e) { }
       res.status(200).json({ success: true, message: 'Payment verified' });
     } else res.status(400).json({ success: false, message: 'Invalid signature' });
   } catch (error) { res.status(500).json({ success: false, message: error.message }); }
@@ -440,7 +440,7 @@ export const getRiderPayments = async (req, res) => {
     if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
 
     const transactions = await Transaction.find({ riderId: rider._id }).sort({ createdAt: -1 }).populate('planId');
-    
+
     let isDue = false;
     let dueAmount = 0;
     let nextDueDate = rider.subscriptionEnd;
@@ -450,7 +450,7 @@ export const getRiderPayments = async (req, res) => {
     if (rider.subscriptionPlan) {
       dueAmount = rider.subscriptionPlan.price;
       dueReason = `Weekly Rent: ${rider.subscriptionPlan.name}`;
-      
+
       if (!rider.subscriptionEnd || new Date(rider.subscriptionEnd) < new Date()) {
         isDue = true;
       }
@@ -459,8 +459,8 @@ export const getRiderPayments = async (req, res) => {
       dueAmount = 0;
     }
 
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       transactions,
       isDue,
       dueAmount,
@@ -539,14 +539,14 @@ export const approveQRPayment = async (req, res) => {
     try {
       const msg = `Flexigo: Your payment of ₹${plan.price} has been verified. Subscription activated.`;
       await sendSMS(rider.phone, msg);
-    } catch (e) {}
+    } catch (e) { }
 
     // Send push notification to rider
     const riderToken = rider.fcmToken || rider.fcmTokenMobile;
     if (riderToken) {
       try {
         await sendPushNotification(riderToken, 'Payment Approved', `Your ₹${plan.price} payment has been verified. Subscription is now active.`, { type: 'payment_approved' });
-      } catch (e) {}
+      } catch (e) { }
     }
 
     res.status(200).json({ success: true, message: 'Payment approved and subscription activated' });
@@ -573,7 +573,7 @@ export const rejectQRPayment = async (req, res) => {
     if (riderToken) {
       try {
         await sendPushNotification(riderToken, 'Payment Rejected', 'Your payment could not be verified. Please try again or contact support.', { type: 'payment_rejected' });
-      } catch (e) {}
+      } catch (e) { }
     }
 
     res.status(200).json({ success: true, message: 'Payment rejected' });
@@ -653,8 +653,8 @@ export const updateRiderLocation = async (req, res) => {
       const R = 6371;
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     };
 
     if (rider.lastLocation && (rider.lastLocation.lat || rider.lastLocation.latitude)) {
@@ -681,7 +681,7 @@ export const updateRiderLocation = async (req, res) => {
       const dist = getDist(latitude, longitude, fence.center.lat, fence.center.lng);
       const radiusKm = parseFloat(fence.radius) || 1.0;
       let breached = (fence.type === 'inclusion' && dist > radiusKm) || (fence.type === 'exclusion' && dist < radiusKm);
-      
+
       if (breached) {
         const cacheKey = `${riderId.toString()}_${fence._id.toString()}`;
         const now = Date.now();
@@ -693,7 +693,7 @@ export const updateRiderLocation = async (req, res) => {
           fence.alerts += 1;
           await fence.save();
           const msg = `Safety Alert: Geofence Breach [${fence.name}]`;
-          
+
           try {
             if (rider.fcmToken) await sendPushNotification(rider.fcmToken, 'Safety Alert', msg, { type: 'geofence_breach', fenceId: fence._id.toString() });
           } catch (fcmErr) {
@@ -707,9 +707,9 @@ export const updateRiderLocation = async (req, res) => {
         }
       }
     }
-    
-    res.status(200).json({ 
-      success: true, 
+
+    res.status(200).json({
+      success: true,
       message: 'Location updated',
       data: {
         location: {

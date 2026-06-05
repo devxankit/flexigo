@@ -45,7 +45,15 @@ export const startPaymentDueCron = () => {
       for (const rider of weeklyExpiredRiders) {
         const planName = rider.subscriptionPlan.name || 'Weekly Plan';
         const amount = rider.subscriptionPlan.price || 0;
-        const dueMessage = `Payment Due: Your ${planName} (₹${amount}) has expired. Please renew to continue using your vehicle.`;
+        
+        const dueDateString = new Date(rider.subscriptionEnd).toLocaleDateString('en-IN', { 
+          weekday: 'long', 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric' 
+        });
+
+        const dueMessage = `Payment Due: Your ${planName} (₹${amount}) due on ${dueDateString} has expired. Please renew to continue using your vehicle.`;
 
         // Push notification to rider
         const riderToken = rider.fcmToken || rider.fcmTokenMobile;
@@ -54,8 +62,8 @@ export const startPaymentDueCron = () => {
             await sendPushNotification(
               riderToken,
               '⚠️ Payment Due',
-              `Your ${planName} (₹${amount}) has expired. Please renew now.`,
-              { type: 'payment_due', amount: amount.toString(), planName }
+              `Your ${planName} (₹${amount}) due on ${dueDateString} has expired. Please renew now.`,
+              { type: 'payment_due', amount: amount.toString(), planName, dueDate: dueDateString }
             );
             console.log(`📱 [CRON] Notification sent to rider: ${rider.name || rider.phone}`);
           } catch (e) {
