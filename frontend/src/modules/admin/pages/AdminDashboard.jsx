@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
    Zap,
    Activity,
@@ -41,6 +42,7 @@ export default function AdminDashboard() {
       fetchDistribution
    } = useAdminDataStore();
 
+   const navigate = useNavigate();
 
    const [activeFilters, setActiveFilters] = React.useState({
       range: 'Last 7 Days',
@@ -110,9 +112,9 @@ export default function AdminDashboard() {
 
          {/* Primary KPIs */}
          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <AdminStatCard title="Revenue" value={`₹${(networkStats.grossRevenue || 0).toLocaleString('en-IN')}`} trend="up" trendValue={networkStats.revenueTrend || "+0%"} icon={Zap} color="emerald" subtitle="Monthly Earnings" />
-            <AdminStatCard title="Total Riders" value={networkStats.activeFleet || 0} trend="up" trendValue="+0%" icon={Activity} color="blue" subtitle="Active Vehicles" />
-            <AdminStatCard title="Total Franchises" value={networkStats.totalHubs || 0} icon={Warehouse} color="emerald" subtitle="Operational" />
+            <AdminStatCard onClick={() => navigate('/admin/financials')} title="Revenue" value={`₹${(networkStats.grossRevenue || 0).toLocaleString('en-IN')}`} trend="up" trendValue={networkStats.revenueTrend || "+0%"} icon={Zap} color="emerald" subtitle="Monthly Earnings" />
+            <AdminStatCard onClick={() => navigate('/admin/subscribers')} title="Total Riders" value={networkStats.activeFleet || 0} trend="up" trendValue="+0%" icon={Activity} color="blue" subtitle="Active Vehicles" />
+            <AdminStatCard onClick={() => navigate('/admin/hubs')} title="Total Franchises" value={networkStats.totalHubs || 0} icon={Warehouse} color="emerald" subtitle="Operational" />
          </div>
 
          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

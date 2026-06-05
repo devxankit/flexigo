@@ -9,7 +9,8 @@ export default function AdminStatCard({
   trend, 
   trendValue, 
   color = 'emerald',
-  className = ""
+  className = "",
+  onClick
 }) {
   const colorMap = {
     emerald: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
@@ -21,7 +22,8 @@ export default function AdminStatCard({
 
   return (
     <div 
-      className={`p-5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group ${className}`}
+      onClick={onClick}
+      className={`p-5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group ${onClick ? 'cursor-pointer' : ''} ${className}`}
     >
       <div className="flex items-start justify-between relative z-10">
         <div className="space-y-4">
