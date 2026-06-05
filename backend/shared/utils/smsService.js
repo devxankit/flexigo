@@ -10,7 +10,7 @@ export const sendSMS = async (phone, message) => {
   const apiKey = process.env.SMSINDIAHUB_API_KEY;
   const senderId = process.env.SMSINDIAHUB_SENDER_ID;
   const templateId = process.env.SMSINDIAHUB_TEMPLATE_ID;
-  
+
   // Clean phone number (standard 10-digit)
   let cleanPhone = phone.toString();
   if (cleanPhone.startsWith('+91')) {
@@ -22,7 +22,7 @@ export const sendSMS = async (phone, message) => {
   try {
     // API URL for SMSIndiaHub (pushsms.aspx)
     const url = 'http://cloud.smsindiahub.in/vendorsms/pushsms.aspx';
-    
+
     const params = {
       APIKey: apiKey,
       user: process.env.SMSINDIAHUB_USERNAME,
@@ -40,10 +40,10 @@ export const sendSMS = async (phone, message) => {
     console.log(`[SMS SERVICE] Sender ID: ${senderId}`);
 
     const response = await axios.get(url, { params });
-    
+
     console.log(`[SMS SERVICE] API Response:`, JSON.stringify(response.data));
     console.log(`[SMS SERVICE] ----- SENDING SMS END -----\n`);
-    
+
     return response.data;
   } catch (error) {
     console.error(`\n[SMS SERVICE] ERROR!`);

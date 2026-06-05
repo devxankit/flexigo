@@ -11,16 +11,19 @@ const HandoverSchema = new mongoose.Schema({
     enum: ['dispatch', 'intake'],
     required: true,
   },
+
   subscriberId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Rider',
     required: true,
   },
+
   vehicleId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Vehicle',
     required: true,
   },
+
   photos: {
     front: String,
     back: String,
@@ -34,6 +37,7 @@ const HandoverSchema = new mongoose.Schema({
     lights: Boolean,
     batteryCable: Boolean,
   },
+
   batteryLevel: Number,
   returnDate: Date,
   finalStatus: String,
@@ -42,6 +46,7 @@ const HandoverSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
+
 
 const Handover = mongoose.model('Handover', HandoverSchema);
 export default Handover;

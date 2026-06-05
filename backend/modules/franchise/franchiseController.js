@@ -97,13 +97,13 @@ export const verifyOTP = async (req, res) => {
     franchise.isPhoneVerified = true;
 
     // Robust Auto-upgrade: Check all possible verification markers (camelCase and snake_case)
-    const isEkycDone = franchise.kycDetails?.ekycVerified || 
-                       franchise.ekycVerified || 
-                       franchise.aadhaarNumber || 
-                       franchise.aadhaar_number ||
-                       franchise.ownerName ||
-                       (franchise.kycDetails?.ekycData && Object.keys(franchise.kycDetails.ekycData).length > 0);
-    
+    const isEkycDone = franchise.kycDetails?.ekycVerified ||
+      franchise.ekycVerified ||
+      franchise.aadhaarNumber ||
+      franchise.aadhaar_number ||
+      franchise.ownerName ||
+      (franchise.kycDetails?.ekycData && Object.keys(franchise.kycDetails.ekycData).length > 0);
+
     if (isEkycDone) {
       if (franchise.kycStatus !== 'approved' || !franchise.isVerified) {
         franchise.kycStatus = 'pending';
@@ -141,8 +141,9 @@ export const verifyOTP = async (req, res) => {
   }
 };
 
-// @desc    Franchise Login (Email/Password)
-// @route   POST /api/v1/franchise/auth/login
+// @desc Franchise Login (Email/Password)
+// @route POST /api/v1/franchise/auth/login
+
 export const franchiseLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -294,11 +295,11 @@ export const updateRegistration = async (req, res) => {
         franchise.kycDetails?.businessLicense;
 
       // Prioritize eKYC verification for approval status (Check all possible markers)
-      const isEkycDone = franchise.kycDetails?.ekycVerified || 
-                         franchise.ekycVerified || 
-                         franchise.aadhaarNumber || 
-                         franchise.aadhaar_number || 
-                         franchise.ownerName;
+      const isEkycDone = franchise.kycDetails?.ekycVerified ||
+        franchise.ekycVerified ||
+        franchise.aadhaarNumber ||
+        franchise.aadhaar_number ||
+        franchise.ownerName;
 
       if (isEkycDone) {
         franchise.kycStatus = 'pending';
@@ -343,7 +344,7 @@ export const getWalletData = async (req, res) => {
 export const addWalletFunds = async (req, res) => {
   try {
     const { amount, method } = req.body;
-    
+
     if (!amount || amount <= 0) {
       return res.status(400).json({ success: false, message: 'Invalid amount' });
     }
@@ -371,9 +372,9 @@ export const addWalletFunds = async (req, res) => {
       paymentMethod: method || 'gateway'
     });
 
-    res.status(200).json({ 
-      success: true, 
-      message: `₹${amount} added successfully`, 
+    res.status(200).json({
+      success: true,
+      message: `₹${amount} added successfully`,
       walletBalance: franchise.walletBalance,
       transaction
     });
@@ -392,17 +393,17 @@ export const createWalletOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid amount' });
     }
 
-    const instance = new Razorpay({ 
-      key_id: process.env.RAZORPAY_KEY_ID, 
-      key_secret: process.env.RAZORPAY_KEY_SECRET 
+    const instance = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET
     });
 
-    const order = await instance.orders.create({ 
-      amount: Math.round(Number(amount) * 100), 
-      currency: 'INR', 
-      receipt: `receipt_${Date.now()}` 
+    const order = await instance.orders.create({
+      amount: Math.round(Number(amount) * 100),
+      currency: 'INR',
+      receipt: `receipt_${Date.now()}`
     });
-    
+
     res.status(200).json({ success: true, order });
   } catch (error) {
     console.error('[FRANCHISE RAZORPAY ERROR]', error);
@@ -439,8 +440,8 @@ export const verifyWalletPayment = async (req, res) => {
         paymentMethod: 'razorpay'
       });
 
-      res.status(200).json({ 
-        success: true, 
+      res.status(200).json({
+        success: true,
         message: 'Payment verified successfully',
         walletBalance: franchise.walletBalance,
         transaction
@@ -663,8 +664,8 @@ export const addVehicle = async (req, res) => {
 // @route   GET /api/v1/franchise/notifications
 export const getNotifications = async (req, res) => {
   try {
-    const notifications = await FranchiseNotification.find({ 
-      franchiseId: req.franchise._id 
+    const notifications = await FranchiseNotification.find({
+      franchiseId: req.franchise._id
     }).sort('-createdAt').limit(50);
 
     res.status(200).json({

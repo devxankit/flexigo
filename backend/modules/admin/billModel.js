@@ -8,8 +8,8 @@ const VendorBillSchema = new mongoose.Schema({
   partId: { type: mongoose.Schema.Types.ObjectId, ref: 'Part', required: true },
   partsRepair: { type: String, required: true },
   amount: { type: Number, required: true },
-  status: { 
-    type: String, 
+  status: {
+    type: String,
     enum: ['paid', 'pending', 'overdue'],
     default: 'pending'
   },

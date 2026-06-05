@@ -7,8 +7,8 @@ const InventorySchema = new mongoose.Schema({
   stock: { type: Number, default: 0 },
   minThreshold: { type: Number, default: 10 },
   supplier: { type: String },
-  status: { 
-    type: String, 
+  status: {
+    type: String,
     enum: ['optimal', 'low-stock', 'out-of-stock'],
     default: 'optimal'
   },

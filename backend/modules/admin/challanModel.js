@@ -6,8 +6,8 @@ const ChallanSchema = new mongoose.Schema({
   issueType: { type: String, required: true },
   amount: { type: Number, required: true },
   rtoNode: { type: String, default: 'KA-01 (BLR)' },
-  status: { 
-    type: String, 
+  status: {
+    type: String,
     enum: ['auto-paid', 'pending', 'disputed'],
     default: 'pending'
   },

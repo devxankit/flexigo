@@ -101,7 +101,7 @@ export const getWebsiteAbout = async (req, res) => {
   try {
     let about = await WebsiteAbout.findOne();
     if (!about) {
-       return res.status(200).json({ success: true, about: null });
+      return res.status(200).json({ success: true, about: null });
     }
     res.status(200).json({ success: true, about });
   } catch (error) {
