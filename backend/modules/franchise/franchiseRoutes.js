@@ -14,6 +14,7 @@ import {
   franchiseLogin,
   getNotifications,
   markNotificationRead,
+  markAllNotificationsRead,
   addWalletFunds,
   createWalletOrder,
   verifyWalletPayment
