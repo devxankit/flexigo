@@ -38,6 +38,7 @@ export default function HubDashboard() {
   });
   
   const dashboardRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fId = franchise?._id || franchise?.id;
@@ -117,6 +118,7 @@ export default function HubDashboard() {
           color="#10b981" 
           trend="up" 
           trendValue={5} 
+          onClick={() => navigate('/franchise/fleet')}
         />
         <DataCard 
           title="Active Subscribers" 
@@ -126,6 +128,7 @@ export default function HubDashboard() {
           color="#3b82f6" 
           trend="up" 
           trendValue={12} 
+          onClick={() => navigate('/franchise/tracking')}
         />
         <DataCard 
           title="Available Inventory" 
@@ -135,6 +138,7 @@ export default function HubDashboard() {
           color="#f59e0b" 
           trend="down" 
           trendValue={2} 
+          onClick={() => navigate('/franchise/fleet')}
         />
         <DataCard 
           title="Maintenance Alert" 
@@ -144,6 +148,7 @@ export default function HubDashboard() {
           color="#ef4444" 
           trend="up" 
           trendValue={1} 
+          onClick={() => navigate('/franchise/maintenance')}
         />
       </div>
 

@@ -10,7 +10,8 @@ export default function DataCard({
   trend, 
   trendValue, 
   color = 'emerald',
-  className = ""
+  className = "",
+  onClick
 }) {
   const cardRef = useRef(null);
   const iconRef = useRef(null);
@@ -70,11 +71,12 @@ export default function DataCard({
   return (
     <motion.div 
       ref={cardRef}
+      onClick={onClick}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.985 }}
-      className={`p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] shadow-inner transition-colors hover:border-emerald-500/30 group relative overflow-hidden perspective-1000 ${className}`}
+      className={`p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] shadow-inner transition-colors hover:border-emerald-500/30 group relative overflow-hidden perspective-1000 ${onClick ? 'cursor-pointer' : ''} ${className}`}
       style={{ transformStyle: 'preserve-3d' }}
     >
       <div className="flex items-start justify-between relative z-10 pointer-events-none">
