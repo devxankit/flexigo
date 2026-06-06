@@ -19,7 +19,11 @@ import {
   verifyAadhaarOTP,
   saveFcmToken,
   updateRiderLocation,
-  requestHandover
+  requestHandover,
+  payDepositViaWallet,
+  createDepositOrder,
+  verifyDepositPayment,
+  requestDepositQR
 } from './riderController.js';
 import { protectFranchise, protectRider } from '../../shared/middleware/authMiddleware.js';
 
@@ -43,6 +47,12 @@ router.post('/payments/verify', verifyPayment);
 router.get('/payments/:phone', getRiderPayments);
 router.post('/payments/wallet', payViaWallet);
 router.post('/payments/qr-request', requestQRPayment);
+
+router.post('/payments/deposit/wallet', payDepositViaWallet);
+router.post('/payments/deposit/create-order', createDepositOrder);
+router.post('/payments/deposit/verify', verifyDepositPayment);
+router.post('/payments/deposit/qr-request', requestDepositQR);
+
 router.patch('/location', protectRider, updateRiderLocation);
 router.post('/handover/request', protectRider, requestHandover);
 

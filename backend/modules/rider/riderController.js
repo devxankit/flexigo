@@ -790,3 +790,116 @@ export const requestHandover = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// --- SECURITY DEPOSIT ENDPOINTS ---
+
+export const payDepositViaWallet = async (req, res) => {
+  try {
+    const { phone } = req.body;
+    const rider = await Rider.findOne({ phone }).populate('franchise');
+    if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
+    if (rider.depositPaid) return res.status(400).json({ success: false, message: 'Deposit already paid' });
+
+    const DEPOSIT_AMOUNT = 2800;
+    let isFranchisePaid = false;
+
+    if (rider.franchise) {
+      const Franchise = (await import('../franchise/franchiseModel.js')).default;
+      const FranchiseTransaction = (await import('../franchise/franchiseTransactionModel.js')).default;
+      const franchiseToUpdate = await Franchise.findById(rider.franchise._id || rider.franchise);
+
+      if (!franchiseToUpdate) return res.status(404).json({ success: false, message: 'Franchise not found' });
+      if ((franchiseToUpdate.walletBalance || 0) < DEPOSIT_AMOUNT) {
+        return res.status(400).json({ success: false, message: 'Franchise wallet balance insufficient' });
+      }
+
+      franchiseToUpdate.walletBalance -= DEPOSIT_AMOUNT;
+      await franchiseToUpdate.save();
+
+      await FranchiseTransaction.create({
+        franchiseId: franchiseToUpdate._id,
+        amount: DEPOSIT_AMOUNT,
+        type: 'Deposit',
+        status: 'completed',
+        subscriberName: rider.name || rider.phone,
+        description: `Security Deposit paid for rider ${rider.name || rider.phone}`,
+        paymentMethod: 'wallet'
+      });
+      isFranchisePaid = true;
+    } else {
+      if ((rider.walletBalance || 0) < DEPOSIT_AMOUNT) {
+        return res.status(400).json({ success: false, message: 'Insufficient wallet balance' });
+      }
+      rider.walletBalance -= DEPOSIT_AMOUNT;
+    }
+
+    rider.depositPaid = true;
+    await rider.save();
+
+    await Transaction.create({
+      riderId: rider._id,
+      amount: DEPOSIT_AMOUNT,
+      type: 'debit',
+      status: 'success',
+      description: `Security Deposit ${isFranchisePaid ? '(Paid by Franchise)' : ''}`,
+      method: 'wallet'
+    });
+
+    res.status(200).json({ success: true, message: 'Security Deposit paid successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createDepositOrder = async (req, res) => {
+  try {
+    const instance = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET });
+    const order = await instance.orders.create({ amount: 2800 * 100, currency: 'INR', receipt: `dep_receipt_${Date.now()}` });
+    res.status(200).json({ success: true, order });
+  } catch (error) { res.status(500).json({ success: false, message: error.message }); }
+};
+
+export const verifyDepositPayment = async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, phone } = req.body;
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET).update(body.toString()).digest('hex');
+
+    if (expectedSignature === razorpay_signature) {
+      const rider = await Rider.findOne({ phone });
+      if (rider && !rider.depositPaid) {
+        rider.depositPaid = true;
+        await rider.save();
+
+        await Transaction.create({
+          riderId: rider._id,
+          amount: 2800,
+          type: 'debit',
+          status: 'success',
+          description: `Security Deposit`,
+          method: 'razorpay'
+        });
+      }
+      res.status(200).json({ success: true, message: 'Deposit Payment verified' });
+    } else res.status(400).json({ success: false, message: 'Invalid signature' });
+  } catch (error) { res.status(500).json({ success: false, message: error.message }); }
+};
+
+export const requestDepositQR = async (req, res) => {
+  try {
+    const { phone } = req.body;
+    const rider = await Rider.findOne({ phone });
+    if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
+
+    const transaction = await Transaction.create({
+      riderId: rider._id,
+      amount: 2800,
+      type: 'debit',
+      status: 'pending',
+      description: `QR Payment: Security Deposit`,
+      method: 'upi_qr'
+    });
+
+    res.status(200).json({ success: true, message: 'Deposit payment submitted', transactionId: transaction._id });
+  } catch (error) { res.status(500).json({ success: false, message: error.message }); }
+};

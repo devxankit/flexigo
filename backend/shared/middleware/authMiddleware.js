@@ -27,17 +27,17 @@ export const protectFranchiseOrAdmin = async (req, res, next) => {
     try {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
+
       req.franchise = await Franchise.findById(decoded.id).select('-otp -otpExpire');
       if (req.franchise) {
         return next();
       }
-      
+
       req.admin = await Admin.findById(decoded.id).select('-password');
       if (req.admin) {
         return next();
       }
-      
+
       const staff = await Staff.findById(decoded.id).select('-password');
       if (staff && staff.status === 'active') {
         req.admin = {
@@ -49,7 +49,7 @@ export const protectFranchiseOrAdmin = async (req, res, next) => {
         };
         return next();
       }
-      
+
       return res.status(401).json({ success: false, message: 'Authorized user not found' });
     } catch (error) {
       res.status(401).json({ success: false, message: 'Invalid Token' });
@@ -125,14 +125,14 @@ export const authorize = (module, action) => {
       }
 
       // 2. Fetch the role's permissions from DB
-      const role = await Role.findOne({ 
-        name: { $regex: new RegExp(`^${userRole}$`, 'i') } 
+      const role = await Role.findOne({
+        name: { $regex: new RegExp(`^${userRole}$`, 'i') }
       });
-      
+
       if (!role) {
-        return res.status(403).json({ 
-          success: false, 
-          message: `Role '${userRole}' not defined in Matrix. Access Denied.` 
+        return res.status(403).json({
+          success: false,
+          message: `Role '${userRole}' not defined in Matrix. Access Denied.`
         });
       }
 
@@ -158,9 +158,9 @@ export const authorize = (module, action) => {
       const hasPermission = role.permissions && role.permissions[targetModule] && role.permissions[targetModule][action];
 
       if (!hasPermission) {
-        return res.status(403).json({ 
-          success: false, 
-          message: `Access Denied: No '${action}' permission for '${targetModule}'.` 
+        return res.status(403).json({
+          success: false,
+          message: `Access Denied: No '${action}' permission for '${targetModule}'.`
         });
       }
 

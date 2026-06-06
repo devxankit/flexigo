@@ -557,7 +557,7 @@ export default function GeoFencingPage() {
             value={networkStats.geofenceStats?.activeZones || geofences.filter(gf => gf.riderId).length} 
             icon={MapIcon} 
             color="emerald" 
-            subtitle={geofences.length > 0 ? geofences.filter(gf => gf.riderId && gf.name).map(gf => gf.name.toUpperCase()).join(', ') : "Monitored Nodes"} 
+            subtitle={geofences.length > 0 ? [...new Set(geofences.filter(gf => gf.riderId && gf.name).map(gf => gf.name.toUpperCase()))].join(', ') : "Monitored Nodes"} 
          />
          <AdminStatCard 
             title="Breaches" 
@@ -1074,12 +1074,18 @@ export default function GeoFencingPage() {
                         <div className="space-y-2">
                            <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1 italic leading-none">Zone Identity Name</label>
                            <input 
+                              list="zone-names"
                               autoFocus
                               value={newZoneName}
-                              onChange={(e) => setNewZoneName(e.target.value)}
-                              placeholder="e.g. SOUTH CLUSTER RESTRICTED"
+                              onChange={(e) => setNewZoneName(e.target.value.toUpperCase())}
+                              placeholder="e.g. PUNE, INDORE"
                               className="w-full px-4 py-3 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-black tracking-widest focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500/40 outline-none transition-all placeholder:text-[var(--text-tertiary)]/50 italic text-[var(--text-primary)]"
                            />
+                           <datalist id="zone-names">
+                              {[...new Set(geofences.map(gf => gf.name).filter(Boolean).map(n => n.toUpperCase()))].map(name => (
+                                 <option key={name} value={name} />
+                              ))}
+                           </datalist>
                         </div>
 
                         <div className="space-y-2">
