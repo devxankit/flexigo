@@ -667,6 +667,34 @@ export const toggleBlockKycRecord = async (req, res) => {
   }
 };
 
+// @desc    Delete KYC Record (Rider or Franchise)
+// @route   DELETE /api/v1/admin/kyc/:id
+export const deleteKycRecord = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid ID format' });
+    }
+
+    let deleted = await Rider.findByIdAndDelete(id);
+    if (!deleted) {
+      deleted = await Franchise.findByIdAndDelete(id);
+    }
+
+    if (!deleted) {
+      return res.status(404).json({ success: false, message: 'Record not found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Record deleted successfully`
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @desc    Upload Certificate for KYC Record
 // @route   POST /api/v1/admin/kyc/:id/certificate
 export const uploadKycCertificate = async (req, res) => {

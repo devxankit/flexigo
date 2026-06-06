@@ -77,17 +77,29 @@ export const addVehicle = async (req, res) => {
       imageUrls = results.filter(r => r !== null).map(r => r.secure_url);
     }
 
-    const vehicle = await Vehicle.create({
+    const vehiclePayload = {
       ...vehicleData,
       ...(rcUrl && { rcUrl }),
       ...(insuranceDocUrl && { insuranceDocUrl }),
       ...(pucDocUrl && { pucDocUrl }),
-      images: imageUrls,
-    });
+      ...(imageUrls.length > 0 && { images: imageUrls }),
+    };
 
-    res.status(201).json({
+    let vehicle = await Vehicle.findOne({ plate: vehicleData.plate });
+    let isNew = false;
+
+    if (vehicle) {
+      // Update existing vehicle
+      vehicle = await Vehicle.findByIdAndUpdate(vehicle._id, vehiclePayload, { new: true });
+    } else {
+      // Create new
+      vehicle = await Vehicle.create(vehiclePayload);
+      isNew = true;
+    }
+
+    res.status(isNew ? 201 : 200).json({
       success: true,
-      message: 'Vehicle provisioned successfully',
+      message: isNew ? 'Vehicle provisioned successfully' : 'Existing vehicle updated successfully',
       vehicle,
     });
   } catch (error) {
@@ -403,25 +415,24 @@ export const bulkAddVehicles = async (req, res) => {
       return vData;
     }));
 
-    // Use insertMany for efficiency
-    const result = await Vehicle.insertMany(processedVehicles, { ordered: false });
+    // Use bulkWrite for upsert functionality (update if exists, insert if new)
+    const bulkOps = processedVehicles.map(v => ({
+      updateOne: {
+        filter: { plate: v.plate },
+        update: { $set: v },
+        upsert: true
+      }
+    }));
+
+    const result = await Vehicle.bulkWrite(bulkOps);
 
     res.status(201).json({
       success: true,
-      count: result.length,
-      message: `${result.length} vehicles provisioned successfully`,
-      vehicles: result
+      count: processedVehicles.length,
+      message: `${processedVehicles.length} vehicles provisioned/updated successfully`,
+      vehicles: processedVehicles
     });
   } catch (error) {
-    // If some succeeded and some failed (due to ordered: false), handle accordingly
-    if (error.writeErrors) {
-      const succeededCount = error.result.nInserted;
-      return res.status(207).json({ 
-        success: true, 
-        message: `${succeededCount} vehicles added, but some failed due to duplicates.`,
-        error: error.message 
-      });
-    }
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -450,6 +461,28 @@ export const updateVehicleAttachment = async (req, res) => {
       success: true,
       message: 'Attachment synced successfully',
       attachmentUrl: vehicle.attachmentUrl
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Delete vehicle
+// @route   DELETE /api/v1/fleet/:id
+export const deleteVehicle = async (req, res) => {
+  try {
+    const vehicle = await Vehicle.findByIdAndDelete(req.params.id);
+
+    if (!vehicle) {
+      return res.status(404).json({ success: false, message: 'Vehicle not found' });
+    }
+
+    // Optional: Delete related assignments or rider vehicleIds here if needed.
+    // Assuming simple deletion for now.
+
+    res.status(200).json({
+      success: true,
+      message: 'Vehicle deleted successfully',
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

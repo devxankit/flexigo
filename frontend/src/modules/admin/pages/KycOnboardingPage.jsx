@@ -22,7 +22,8 @@ import {
   ChevronRight,
   Activity,
   Save,
-  Paperclip
+  Paperclip,
+  Trash2
 } from 'lucide-react';
 import AdminStatCard from '../components/AdminStatCard';
 import OpsFilter from '../components/OpsFilter';
@@ -373,6 +374,25 @@ export default function KycOnboardingPage() {
                                        <Zap size={12} fill="currentColor" />
                                     </button>
                                  )}
+                                 <button
+                                   onClick={async (e) => {
+                                     e.stopPropagation();
+                                     try {
+                                       const res = await api.delete(`/admin/kyc/${record._id || record.id}`);
+                                       if (res.data.success) {
+                                         useAdminDataStore.getState().fetchKycRecords();
+                                       } else {
+                                         alert(res.data.message || 'Deletion failed');
+                                       }
+                                     } catch(err) {
+                                       alert('Deletion failed: ' + (err.response?.data?.message || err.message));
+                                     }
+                                   }}
+                                   className="p-1.5 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white transition-all ml-1.5"
+                                   title="Delete Record"
+                                 >
+                                   <Trash2 size={12} />
+                                 </button>
                              </div>
                           </td>
                        </motion.tr>

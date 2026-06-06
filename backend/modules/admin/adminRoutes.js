@@ -59,7 +59,8 @@ import {
   uploadKycCertificate,
   uploadKycAttachment,
   deleteSecurityLog,
-  toggleBlockKycRecord
+  toggleBlockKycRecord,
+  deleteKycRecord
 } from './adminController.js';
 import {
   getWebsitePlans,
@@ -166,6 +167,7 @@ router.delete('/kyc/:id/attachment/:index', protectAdmin, authorize('KYC', 'upda
   }
 });
 router.patch('/kyc/:id/toggle-block', protectAdmin, authorize('KYC', 'update'), toggleBlockKycRecord);
+router.delete('/kyc/:id', protectAdmin, authorize('KYC', 'delete'), deleteKycRecord);
 
 // Finance Management
 router.get('/finance', getFinanceData);

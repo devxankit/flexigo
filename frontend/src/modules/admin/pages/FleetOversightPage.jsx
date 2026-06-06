@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   Paperclip,
   Eye,
+  Trash2,
   Download as FileDown
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -27,6 +28,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
 import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
+import api from '../../../lib/axios';
 
 export default function FleetOversightPage() {
   const navigate = useNavigate();
@@ -273,6 +275,25 @@ export default function FleetOversightPage() {
                                     <Paperclip size={12} strokeWidth={3} />
                                  </label>
                               )}
+                                <button
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    try {
+                                      const res = await api.delete(`/fleet/${vehicle._id}`);
+                                      if (res.data.success) {
+                                        useAdminDataStore.getState().fetchAllVehicles();
+                                      } else {
+                                        alert(res.data.message || 'Deletion failed');
+                                      }
+                                    } catch(err) {
+                                      alert('Deletion failed: ' + (err.response?.data?.message || err.message));
+                                    }
+                                  }}
+                                  className="p-1.5 bg-rose-500/10 text-rose-500 rounded-lg hover:bg-rose-500 hover:text-white transition-all shadow-sm"
+                                  title="Delete Vehicle"
+                                >
+                                  <Trash2 size={12} strokeWidth={3} />
+                                </button>
                            </div>
                         </td>
                      </tr>

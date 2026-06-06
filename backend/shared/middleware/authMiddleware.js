@@ -38,6 +38,18 @@ export const protectFranchiseOrAdmin = async (req, res, next) => {
         return next();
       }
       
+      const staff = await Staff.findById(decoded.id).select('-password');
+      if (staff && staff.status === 'active') {
+        req.admin = {
+          _id: staff._id,
+          name: staff.name,
+          email: staff.email,
+          role: staff.assignedRole || staff.role,
+          accountType: 'staff'
+        };
+        return next();
+      }
+      
       return res.status(401).json({ success: false, message: 'Authorized user not found' });
     } catch (error) {
       res.status(401).json({ success: false, message: 'Invalid Token' });
