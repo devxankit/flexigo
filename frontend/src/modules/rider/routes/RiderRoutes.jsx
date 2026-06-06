@@ -47,7 +47,7 @@ export default function RiderRoutes() {
         navigate('/rider/auth/phone');
       }
     } else {
-      if (pathname === '/rider' || pathname === '/rider/' || pathname.includes('/rider/auth')) {
+      if (pathname === '/rider' || pathname === '/rider/' || pathname === '/rider/auth/phone') {
         navigate('/rider/home');
       }
     }
