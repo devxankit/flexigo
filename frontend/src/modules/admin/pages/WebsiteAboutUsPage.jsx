@@ -16,9 +16,9 @@ export default function WebsiteAboutUsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState(''); // 'info', 'milestone', 'value'
   const [editingIndex, setEditingIndex] = useState(-1);
-  
+
   const [formData, setFormData] = useState({
-    mission: '', vision: '', 
+    mission: '', vision: '',
     heroTag: '', heroTitle: '', heroDescription: '',
     whoWeAreTag: '', whoWeAreTitle: '', whoWeAreDescription1: '', whoWeAreDescription2: '',
     addressTitle: '', addressContent: '',
@@ -63,20 +63,20 @@ export default function WebsiteAboutUsPage() {
   };
 
   const handleUpdateInfo = async () => {
-    const payload = { 
-        ...websiteAbout, 
-        mission: formData.mission, 
-        vision: formData.vision, 
-        heroTag: formData.heroTag,
-        heroTitle: formData.heroTitle,
-        heroDescription: formData.heroDescription,
-        whoWeAreTag: formData.whoWeAreTag,
-        whoWeAreTitle: formData.whoWeAreTitle,
-        whoWeAreDescription1: formData.whoWeAreDescription1,
-        whoWeAreDescription2: formData.whoWeAreDescription2,
-        addressTitle: formData.addressTitle,
-        addressContent: formData.addressContent,
-        stats: formData.stats 
+    const payload = {
+      ...websiteAbout,
+      mission: formData.mission,
+      vision: formData.vision,
+      heroTag: formData.heroTag,
+      heroTitle: formData.heroTitle,
+      heroDescription: formData.heroDescription,
+      whoWeAreTag: formData.whoWeAreTag,
+      whoWeAreTitle: formData.whoWeAreTitle,
+      whoWeAreDescription1: formData.whoWeAreDescription1,
+      whoWeAreDescription2: formData.whoWeAreDescription2,
+      addressTitle: formData.addressTitle,
+      addressContent: formData.addressContent,
+      stats: formData.stats
     };
     await updateWebsiteAbout(payload);
     setIsModalOpen(false);
@@ -140,7 +140,7 @@ export default function WebsiteAboutUsPage() {
             Website · Company Overview Management
           </p>
         </div>
-        <button 
+        <button
           onClick={() => openModal('info')}
           className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
         >
@@ -159,13 +159,13 @@ export default function WebsiteAboutUsPage() {
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-6 shadow-sm">
             <h3 className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-4">Hero Section (Our Story)</h3>
             <div className="space-y-3">
-               <div>
-                  <p className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">{websiteAbout?.heroTag}</p>
-                  <p className="text-lg font-black text-[var(--text-primary)] tracking-tight uppercase italic">{websiteAbout?.heroTitle}</p>
-               </div>
-               <p className="text-[10px] text-[var(--text-secondary)] leading-relaxed bg-[var(--bg-tertiary)]/30 rounded-xl p-3 border border-[var(--border-subtle)]">
-                 {websiteAbout?.heroDescription}
-               </p>
+              <div>
+                <p className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">{websiteAbout?.heroTag}</p>
+                <p className="text-lg font-black text-[var(--text-primary)] tracking-tight uppercase italic">{websiteAbout?.heroTitle}</p>
+              </div>
+              <p className="text-[10px] text-[var(--text-secondary)] leading-relaxed bg-[var(--bg-tertiary)]/30 rounded-xl p-3 border border-[var(--border-subtle)]">
+                {websiteAbout?.heroDescription}
+              </p>
             </div>
           </div>
 
@@ -173,33 +173,33 @@ export default function WebsiteAboutUsPage() {
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-6 shadow-sm">
             <h3 className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-4">Who We Are Section</h3>
             <div className="space-y-3">
-               <div>
-                  <p className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">{websiteAbout?.whoWeAreTag}</p>
-                  <p className="text-sm font-black text-[var(--text-primary)] uppercase tracking-tight">{websiteAbout?.whoWeAreTitle}</p>
-               </div>
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <p className="text-[9px] text-[var(--text-tertiary)] leading-relaxed bg-[var(--bg-tertiary)]/30 rounded-xl p-3 border border-[var(--border-subtle)]">
-                    {websiteAbout?.whoWeAreDescription1}
-                  </p>
-                  <p className="text-[9px] text-[var(--text-tertiary)] leading-relaxed bg-[var(--bg-tertiary)]/30 rounded-xl p-3 border border-[var(--border-subtle)]">
-                    {websiteAbout?.whoWeAreDescription2}
-                  </p>
-               </div>
+              <div>
+                <p className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">{websiteAbout?.whoWeAreTag}</p>
+                <p className="text-sm font-black text-[var(--text-primary)] uppercase tracking-tight">{websiteAbout?.whoWeAreTitle}</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <p className="text-[9px] text-[var(--text-tertiary)] leading-relaxed bg-[var(--bg-tertiary)]/30 rounded-xl p-3 border border-[var(--border-subtle)]">
+                  {websiteAbout?.whoWeAreDescription1}
+                </p>
+                <p className="text-[9px] text-[var(--text-tertiary)] leading-relaxed bg-[var(--bg-tertiary)]/30 rounded-xl p-3 border border-[var(--border-subtle)]">
+                  {websiteAbout?.whoWeAreDescription2}
+                </p>
+              </div>
             </div>
           </div>
 
           {/* Address Preview */}
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-6 shadow-sm">
-             <h3 className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-4">Office Address</h3>
-             <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shrink-0">
-                   <MapPin size={18} />
-                </div>
-                <div>
-                   <p className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-tight">{websiteAbout?.addressTitle}</p>
-                   <p className="text-[9px] text-[var(--text-tertiary)] mt-1">{websiteAbout?.addressContent}</p>
-                </div>
-             </div>
+            <h3 className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-4">Office Address</h3>
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shrink-0">
+                <MapPin size={18} />
+              </div>
+              <div>
+                <p className="text-[11px] font-black text-[var(--text-primary)] uppercase tracking-tight">{websiteAbout?.addressTitle}</p>
+                <p className="text-[9px] text-[var(--text-tertiary)] mt-1">{websiteAbout?.addressContent}</p>
+              </div>
+            </div>
           </div>
 
           {/* Key Stats */}
@@ -300,126 +300,126 @@ export default function WebsiteAboutUsPage() {
                 <>
                   {/* Hero Section Editing */}
                   <div className="space-y-4 p-4 rounded-2xl bg-[var(--bg-tertiary)]/20 border border-[var(--border-subtle)]">
-                     <h4 className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.2em]">Hero Section (Our Story)</h4>
-                     <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Tag</label>
-                          <input
-                            type="text"
-                            value={formData.heroTag} onChange={e => setFormData({...formData, heroTag: e.target.value})}
-                            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Title</label>
-                          <input
-                            type="text"
-                            value={formData.heroTitle} onChange={e => setFormData({...formData, heroTitle: e.target.value})}
-                            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
-                          />
-                        </div>
-                     </div>
-                     <div className="space-y-1">
-                        <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Description</label>
-                        <textarea
-                          value={formData.heroDescription} onChange={e => setFormData({...formData, heroDescription: e.target.value})}
-                          className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none min-h-[60px]"
+                    <h4 className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.2em]">Hero Section (Our Story)</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Tag</label>
+                        <input
+                          type="text"
+                          value={formData.heroTag} onChange={e => setFormData({ ...formData, heroTag: e.target.value })}
+                          className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
                         />
-                     </div>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Title</label>
+                        <input
+                          type="text"
+                          value={formData.heroTitle} onChange={e => setFormData({ ...formData, heroTitle: e.target.value })}
+                          className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Description</label>
+                      <textarea
+                        value={formData.heroDescription} onChange={e => setFormData({ ...formData, heroDescription: e.target.value })}
+                        className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none min-h-[60px]"
+                      />
+                    </div>
                   </div>
 
                   {/* Who We Are Editing */}
                   <div className="space-y-4 p-4 rounded-2xl bg-[var(--bg-tertiary)]/20 border border-[var(--border-subtle)]">
-                     <h4 className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.2em]">Who We Are Section</h4>
-                     <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Tag</label>
-                          <input
-                            type="text"
-                            value={formData.whoWeAreTag} onChange={e => setFormData({...formData, whoWeAreTag: e.target.value})}
-                            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Headline</label>
-                          <input
-                            type="text"
-                            value={formData.whoWeAreTitle} onChange={e => setFormData({...formData, whoWeAreTitle: e.target.value})}
-                            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
-                          />
-                        </div>
-                     </div>
-                     <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Paragraph 1</label>
-                          <textarea
-                            value={formData.whoWeAreDescription1} onChange={e => setFormData({...formData, whoWeAreDescription1: e.target.value})}
-                            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none min-h-[80px]"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Paragraph 2</label>
-                          <textarea
-                            value={formData.whoWeAreDescription2} onChange={e => setFormData({...formData, whoWeAreDescription2: e.target.value})}
-                            className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none min-h-[80px]"
-                          />
-                        </div>
-                     </div>
+                    <h4 className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.2em]">Who We Are Section</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Tag</label>
+                        <input
+                          type="text"
+                          value={formData.whoWeAreTag} onChange={e => setFormData({ ...formData, whoWeAreTag: e.target.value })}
+                          className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Headline</label>
+                        <input
+                          type="text"
+                          value={formData.whoWeAreTitle} onChange={e => setFormData({ ...formData, whoWeAreTitle: e.target.value })}
+                          className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Paragraph 1</label>
+                        <textarea
+                          value={formData.whoWeAreDescription1} onChange={e => setFormData({ ...formData, whoWeAreDescription1: e.target.value })}
+                          className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none min-h-[80px]"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Paragraph 2</label>
+                        <textarea
+                          value={formData.whoWeAreDescription2} onChange={e => setFormData({ ...formData, whoWeAreDescription2: e.target.value })}
+                          className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none min-h-[80px]"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   {/* Address Editing */}
                   <div className="space-y-4 p-4 rounded-2xl bg-[var(--bg-tertiary)]/20 border border-[var(--border-subtle)]">
-                     <h4 className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.2em]">Office Address</h4>
-                     <div className="space-y-1">
-                        <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Section Title</label>
-                        <input
-                          type="text"
-                          value={formData.addressTitle} onChange={e => setFormData({...formData, addressTitle: e.target.value})}
-                          className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
-                        />
-                     </div>
-                     <div className="space-y-1">
-                        <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Full Address</label>
-                        <textarea
-                          value={formData.addressContent} onChange={e => setFormData({...formData, addressContent: e.target.value})}
-                          className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none min-h-[60px]"
-                        />
-                     </div>
+                    <h4 className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.2em]">Office Address</h4>
+                    <div className="space-y-1">
+                      <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Section Title</label>
+                      <input
+                        type="text"
+                        value={formData.addressTitle} onChange={e => setFormData({ ...formData, addressTitle: e.target.value })}
+                        className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Full Address</label>
+                      <textarea
+                        value={formData.addressContent} onChange={e => setFormData({ ...formData, addressContent: e.target.value })}
+                        className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none min-h-[60px]"
+                      />
+                    </div>
                   </div>
 
                   {/* Mission/Vision & Stats */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Mission Statement</label>
-                          <textarea
-                            value={formData.mission} onChange={e => setFormData({...formData, mission: e.target.value})}
-                            className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none min-h-[80px]"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Vision Statement</label>
-                          <textarea
-                            value={formData.vision} onChange={e => setFormData({...formData, vision: e.target.value})}
-                            className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none min-h-[80px]"
-                          />
-                        </div>
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Mission Statement</label>
+                        <textarea
+                          value={formData.mission} onChange={e => setFormData({ ...formData, mission: e.target.value })}
+                          className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none min-h-[80px]"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Vision Statement</label>
+                        <textarea
+                          value={formData.vision} onChange={e => setFormData({ ...formData, vision: e.target.value })}
+                          className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none min-h-[80px]"
+                        />
+                      </div>
                     </div>
                     <div className="space-y-4">
-                        <h4 className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Key Stats</h4>
-                        {Object.keys(formData.stats).map(key => (
-                          <div key={key} className="space-y-1">
-                            <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">{key.replace(/([A-Z])/g, ' $1')}</label>
-                            <input
-                              type="text"
-                              value={formData.stats[key]} onChange={e => setFormData({...formData, stats: {...formData.stats, [key]: e.target.value}})}
-                              className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
-                            />
-                          </div>
-                        ))}
+                      <h4 className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Key Stats</h4>
+                      {Object.keys(formData.stats).map(key => (
+                        <div key={key} className="space-y-1">
+                          <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">{key.replace(/([A-Z])/g, ' $1')}</label>
+                          <input
+                            type="text"
+                            value={formData.stats[key]} onChange={e => setFormData({ ...formData, stats: { ...formData.stats, [key]: e.target.value } })}
+                            className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
+                          />
+                        </div>
+                      ))}
                     </div>
                   </div>
-                  
+
                   <button onClick={handleUpdateInfo} className="w-full py-4 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20">Save All Changes</button>
                 </>
               )}
@@ -430,7 +430,7 @@ export default function WebsiteAboutUsPage() {
                     <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Year / Period</label>
                     <input
                       type="text"
-                      value={formData.milestone.year} onChange={e => setFormData({...formData, milestone: {...formData.milestone, year: e.target.value}})}
+                      value={formData.milestone.year} onChange={e => setFormData({ ...formData, milestone: { ...formData.milestone, year: e.target.value } })}
                       className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
                       placeholder="e.g. May 2026"
                     />
@@ -439,14 +439,14 @@ export default function WebsiteAboutUsPage() {
                     <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Title</label>
                     <input
                       type="text"
-                      value={formData.milestone.title} onChange={e => setFormData({...formData, milestone: {...formData.milestone, title: e.target.value}})}
+                      value={formData.milestone.title} onChange={e => setFormData({ ...formData, milestone: { ...formData.milestone, title: e.target.value } })}
                       className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
                     />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Description</label>
                     <textarea
-                      value={formData.milestone.desc} onChange={e => setFormData({...formData, milestone: {...formData.milestone, desc: e.target.value}})}
+                      value={formData.milestone.desc} onChange={e => setFormData({ ...formData, milestone: { ...formData.milestone, desc: e.target.value } })}
                       className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none min-h-[80px]"
                     />
                   </div>
@@ -462,7 +462,7 @@ export default function WebsiteAboutUsPage() {
                     <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Title</label>
                     <input
                       type="text"
-                      value={formData.value.title} onChange={e => setFormData({...formData, value: {...formData.value, title: e.target.value}})}
+                      value={formData.value.title} onChange={e => setFormData({ ...formData, value: { ...formData.value, title: e.target.value } })}
                       className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
                     />
                   </div>
@@ -470,7 +470,7 @@ export default function WebsiteAboutUsPage() {
                     <div className="space-y-1">
                       <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Icon (Lucide Name)</label>
                       <select
-                        value={formData.value.icon} onChange={e => setFormData({...formData, value: {...formData.value, icon: e.target.value}})}
+                        value={formData.value.icon} onChange={e => setFormData({ ...formData, value: { ...formData.value, icon: e.target.value } })}
                         className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
                       >
                         {Object.keys(iconMap).map(key => <option key={key} value={key}>{key}</option>)}
@@ -479,7 +479,7 @@ export default function WebsiteAboutUsPage() {
                     <div className="space-y-1">
                       <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Color Theme</label>
                       <select
-                        value={formData.value.color} onChange={e => setFormData({...formData, value: {...formData.value, color: e.target.value}})}
+                        value={formData.value.color} onChange={e => setFormData({ ...formData, value: { ...formData.value, color: e.target.value } })}
                         className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
                       >
                         {['emerald', 'green', 'blue', 'purple', 'amber', 'rose', 'indigo'].map(c => <option key={c} value={c}>{c}</option>)}
@@ -489,7 +489,7 @@ export default function WebsiteAboutUsPage() {
                   <div className="space-y-1">
                     <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Description</label>
                     <textarea
-                      value={formData.value.desc} onChange={e => setFormData({...formData, value: {...formData.value, desc: e.target.value}})}
+                      value={formData.value.desc} onChange={e => setFormData({ ...formData, value: { ...formData.value, desc: e.target.value } })}
                       className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none min-h-[80px]"
                     />
                   </div>

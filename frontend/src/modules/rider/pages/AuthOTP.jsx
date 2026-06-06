@@ -33,8 +33,10 @@ export default function AuthOTP() {
 
     if (result.success) {
       if (result.rider?.isRegistered) {
+        alert("Already Rider Signup");
         navigate('/rider/home');
       } else {
+        alert("New Rider Signup");
         navigate('/rider/onboarding');
       }
     } else {
@@ -63,15 +65,13 @@ export default function AuthOTP() {
 
   return (
     <PageWrapper noHeader>
-      <div className={`min-h-[100dvh] flex flex-col px-6 pt-16 pb-10 transition-colors duration-500 relative overflow-hidden ${
-        isDark ? 'bg-[#0A0A0F]' : 'bg-slate-50'
-      }`}>
+      <div className={`min-h-[100dvh] flex flex-col px-6 pt-16 pb-10 transition-colors duration-500 relative overflow-hidden ${isDark ? 'bg-[#0A0A0F]' : 'bg-slate-50'
+        }`}>
         {/* Back button */}
         <button
           onClick={() => navigate(-1)}
-          className={`flex items-center gap-2 transition-colors mb-12 w-fit ${
-            isDark ? 'text-gray-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
-          }`}
+          className={`flex items-center gap-2 transition-colors mb-12 w-fit ${isDark ? 'text-gray-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
+            }`}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
             <path d="M19 12H5M12 5l-7 7 7 7" strokeLinecap="round" strokeLinejoin="round" />
@@ -86,22 +86,19 @@ export default function AuthOTP() {
           className="mb-10 text-center flex flex-col items-center"
         >
           <div
-            className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-all mx-auto ${
-              isDark 
-                ? 'bg-flexigo-teal/10 border border-flexigo-teal/30 shadow-neon-sm' 
+            className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-all mx-auto ${isDark
+                ? 'bg-flexigo-teal/10 border border-flexigo-teal/30 shadow-neon-sm'
                 : 'bg-flexigo-teal/5 border border-flexigo-teal/20 shadow-sm'
-            }`}
+              }`}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2" className="w-7 h-7">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <h1 className={`text-3xl font-heading font-black mb-2 transition-colors duration-500 ${
-            isDark ? 'text-white' : 'text-slate-900'
-          }`}>Verify OTP</h1>
-          <p className={`text-sm transition-colors duration-500 max-w-[260px] ${
-            isDark ? 'text-gray-500' : 'text-slate-500'
-          }`}>
+          <h1 className={`text-3xl font-heading font-black mb-2 transition-colors duration-500 ${isDark ? 'text-white' : 'text-slate-900'
+            }`}>Verify OTP</h1>
+          <p className={`text-sm transition-colors duration-500 max-w-[260px] ${isDark ? 'text-gray-500' : 'text-slate-500'
+            }`}>
             We sent a 6-digit code to{' '}
             <span className={`font-black transition-colors duration-500 ${isDark ? 'text-white' : 'text-slate-900'}`}>+91 {phone}</span>
           </p>
@@ -127,11 +124,10 @@ export default function AuthOTP() {
           {resent ? (
             <span className="text-flexigo-teal text-sm font-black uppercase tracking-widest">OTP Resent Successfully ✓</span>
           ) : (
-            <button 
-              onClick={handleResend} 
-              className={`text-sm transition-colors duration-500 ${
-                isDark ? 'text-gray-500 hover:text-white' : 'text-slate-500 hover:text-slate-900'
-              }`}
+            <button
+              onClick={handleResend}
+              className={`text-sm transition-colors duration-500 ${isDark ? 'text-gray-500 hover:text-white' : 'text-slate-500 hover:text-slate-900'
+                }`}
             >
               Didn't receive it?{' '}
               <span className="text-flexigo-teal font-black underline underline-offset-4 decoration-flexigo-teal/30">Resend OTP</span>

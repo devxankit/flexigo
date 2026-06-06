@@ -327,8 +327,8 @@ export default function SubscriptionPlans() {
           >
             <GlassCard
               className={`relative p-5 overflow-hidden transition-all duration-300 border shadow-lg ${selectedPlan?.id === plan.id
-                  ? 'border-flexigo-teal bg-flexigo-teal/5'
-                  : isDark ? 'border-white/05 hover:border-white/20' : 'border-slate-300 bg-white hover:border-flexigo-teal/50'
+                ? 'border-flexigo-teal bg-flexigo-teal/5'
+                : isDark ? 'border-white/05 hover:border-white/20' : 'border-slate-300 bg-white hover:border-flexigo-teal/50'
                 }`}
             >
               <div className="flex justify-between items-center mb-3">
@@ -365,8 +365,8 @@ export default function SubscriptionPlans() {
                   {selectedPlan?.id === plan.id ? 'Ready to Upgrade' : 'Select Tier'}
                 </div>
                 <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${selectedPlan?.id === plan.id
-                    ? 'border-flexigo-teal bg-flexigo-teal/10'
-                    : (isDark ? 'border-white/10' : 'border-slate-400')
+                  ? 'border-flexigo-teal bg-flexigo-teal/10'
+                  : (isDark ? 'border-white/10' : 'border-slate-400')
                   }`}>
                   {selectedPlan?.id === plan.id && <div className="w-2 h-2 bg-flexigo-teal rounded-full shadow-sm" />}
                 </div>
@@ -657,8 +657,8 @@ export default function SubscriptionPlans() {
                           key={method.id}
                           onClick={() => setSelectedMethod(method.id)}
                           className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${selectedMethod === method.id
-                              ? 'border-flexigo-teal bg-flexigo-teal/5 shadow-[0_0_20px_rgba(57,255,20,0.1)]'
-                              : (isDark ? 'border-white/5 bg-white/[0.02] hover:border-white/10' : 'border-slate-300 bg-white hover:border-slate-300')
+                            ? 'border-flexigo-teal bg-flexigo-teal/5 shadow-[0_0_20px_rgba(57,255,20,0.1)]'
+                            : (isDark ? 'border-white/5 bg-white/[0.02] hover:border-white/10' : 'border-slate-300 bg-white hover:border-slate-300')
                             }`}
                         >
                           <div className="flex items-center gap-4">
