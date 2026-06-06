@@ -35,7 +35,7 @@ export const addStaff = async (req, res) => {
     res.status(201).json({ success: true, staff });
   } catch (error) {
     if (error.code === 11000) {
-        return res.status(400).json({ success: false, message: 'Phone number already registered' });
+      return res.status(400).json({ success: false, message: 'Phone number already registered' });
     }
     res.status(500).json({ success: false, message: error.message });
   }
@@ -62,8 +62,8 @@ export const updateStaffStatus = async (req, res) => {
   }
 };
 
-// @desc    Delete staff
-// @route   DELETE /api/v1/staff/:id
+// @desc Delete staff
+// @route DELETE /api/v1/staff/:id
 export const deleteStaff = async (req, res) => {
   try {
     const staff = await Staff.findByIdAndDelete(req.params.id);

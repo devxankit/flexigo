@@ -91,6 +91,12 @@ export const addVehicle = async (req, res) => {
       vehicle,
     });
   } catch (error) {
+    if (error.code === 11000 && error.keyPattern && error.keyPattern.plate) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `A vehicle with plate number ${error.keyValue?.plate || ''} already exists in the system.` 
+      });
+    }
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -376,14 +382,16 @@ export const bulkAddVehicles = async (req, res) => {
         let fId = vData.franchise;
         if (typeof fId === 'string') {
           fId = fId.trim().replace(/^\(|\)$/g, '');
+          // Automatically fix Excel's drag-to-fill auto-increment errors (e.g., FLEXIGO_20 -> FLEXIGO)
+          fId = fId.replace(/_\d+$/, '');
         }
 
         if (!mongoose.Types.ObjectId.isValid(fId)) {
           const hub = await Franchise.findOne({ 
             $or: [
-              { hubName: fId }, 
-              { "businessDetails.name": fId },
-              { ownerName: fId }
+              { hubName: { $regex: new RegExp(`^${fId}$`, 'i') } }, 
+              { "businessDetails.name": { $regex: new RegExp(`^${fId}$`, 'i') } },
+              { ownerName: { $regex: new RegExp(`^${fId}$`, 'i') } }
             ] 
           });
           if (hub) vData.franchise = hub._id;

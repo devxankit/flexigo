@@ -12,13 +12,13 @@ export const startPaymentDueCron = () => {
 
     try {
       const now = new Date();
-      
+
       // Calculate exactly the previous day (which means 7 days are fully complete)
       // Example: Paid 25 May -> 7 days complete on 1 June -> Today is 2 June (Next day / 8th day)
       const targetDateStart = new Date(now);
       targetDateStart.setDate(targetDateStart.getDate() - 1);
       targetDateStart.setHours(0, 0, 0, 0);
-      
+
       const targetDateEnd = new Date(now);
       targetDateEnd.setHours(0, 0, 0, 0);
 
@@ -45,12 +45,12 @@ export const startPaymentDueCron = () => {
       for (const rider of weeklyExpiredRiders) {
         const planName = rider.subscriptionPlan.name || 'Weekly Plan';
         const amount = rider.subscriptionPlan.price || 0;
-        
-        const dueDateString = new Date(rider.subscriptionEnd).toLocaleDateString('en-IN', { 
-          weekday: 'long', 
-          year: 'numeric', 
-          month: 'short', 
-          day: 'numeric' 
+
+        const dueDateString = new Date(rider.subscriptionEnd).toLocaleDateString('en-IN', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
         });
 
         const dueMessage = `Payment Due: Your ${planName} (₹${amount}) due on ${dueDateString} has expired. Please renew to continue using your vehicle.`;

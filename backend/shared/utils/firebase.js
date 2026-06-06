@@ -12,7 +12,7 @@ if (existsSync(serviceAccountPath)) {
     if (!admin.apps.length) {
       const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
       console.log('🚀 Initializing Firebase for Project:', serviceAccount.project_id);
-      
+
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount)
       });
@@ -51,13 +51,13 @@ export const sendPushNotification = async (token, title, body, data = {}) => {
     return response;
   } catch (error) {
     console.error('Error sending message (FCM):', error.message);
-    
+
     if (error.message.includes('invalid_grant')) {
       console.error('💡 PRO TIP: This usually means your service account key is revoked or your server time is out of sync.');
       console.error('1. Check if you committed the key to GitHub (Google will revoke it automatically).');
       console.error('2. Run "w32tm /resync" on Windows to sync your clock.');
     }
-    
+
     return { success: false, error: error.message };
   }
 };
