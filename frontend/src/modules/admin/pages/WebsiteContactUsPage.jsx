@@ -3,12 +3,12 @@ import { Mail, Phone, MessageCircle, MapPin, Clock, Search, CheckCircle2, Circle
 import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function WebsiteContactUsPage() {
-  const { 
+  const {
     websiteInquiries, fetchWebsiteInquiries, updateInquiryStatus, deleteInquiry,
     websiteContactInfo, fetchWebsiteContactInfo, updateWebsiteContactInfo,
-    isLoading 
+    isLoading
   } = useAdminDataStore();
-  
+
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -35,8 +35,8 @@ export default function WebsiteContactUsPage() {
   }, [websiteContactInfo]);
 
   const filtered = websiteInquiries.filter(i => {
-    const matchesSearch = 
-      (i.name?.toLowerCase().includes(search.toLowerCase())) || 
+    const matchesSearch =
+      (i.name?.toLowerCase().includes(search.toLowerCase())) ||
       (i.subject?.toLowerCase().includes(search.toLowerCase())) ||
       (i.email?.toLowerCase().includes(search.toLowerCase()));
     const matchesFilter = filter === 'all' || i.status === filter;
@@ -78,14 +78,14 @@ export default function WebsiteContactUsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button 
+          <button
             onClick={() => setIsEditModalOpen(true)}
             className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
           >
             <Pencil size={14} />
             Edit Contact Info
           </button>
-          <button 
+          <button
             onClick={() => fetchWebsiteInquiries()}
             className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-tertiary)] hover:bg-[var(--bg-tertiary)]/80 text-[var(--text-primary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
           >
@@ -153,9 +153,8 @@ export default function WebsiteContactUsPage() {
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${
-                    filter === f ? 'bg-emerald-600 text-white' : 'bg-[var(--bg-tertiary)]/50 text-[var(--text-tertiary)] hover:text-emerald-500'
-                  }`}
+                  className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${filter === f ? 'bg-emerald-600 text-white' : 'bg-[var(--bg-tertiary)]/50 text-[var(--text-tertiary)] hover:text-emerald-500'
+                    }`}
                 >
                   {f}
                 </button>
@@ -204,16 +203,15 @@ export default function WebsiteContactUsPage() {
                     </td>
                     <td className="py-2.5 px-4 text-[10px] text-[var(--text-tertiary)] font-bold">{new Date(inq.createdAt).toLocaleDateString()}</td>
                     <td className="py-2.5 px-4">
-                      <button 
+                      <button
                         onClick={() => handleToggleStatus(inq._id, inq.status)}
-                        className={`inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border transition-all ${
-                        inq.status === 'resolved'
+                        className={`inline-flex px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border transition-all ${inq.status === 'resolved'
                           ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10 hover:bg-emerald-500 hover:text-white'
                           : 'bg-amber-500/10 text-amber-500 border-amber-500/10 hover:bg-amber-500 hover:text-white'
-                      }`}>{inq.status}</button>
+                          }`}>{inq.status}</button>
                     </td>
                     <td className="py-2.5 px-4">
-                      <button 
+                      <button
                         onClick={() => handleDelete(inq._id)}
                         className="w-7 h-7 rounded-lg bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] flex items-center justify-center text-[var(--text-tertiary)] hover:text-rose-500 hover:border-rose-500/30 transition-all"
                       >
@@ -248,89 +246,89 @@ export default function WebsiteContactUsPage() {
               </button>
             </div>
             <div className="p-6 space-y-6 max-h-[85vh] overflow-y-auto custom-scrollbar">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                     <div className="space-y-1">
-                        <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Email Address</label>
-                        <input
-                          type="email"
-                          value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})}
-                          className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
-                        />
-                     </div>
-                     <div className="space-y-1">
-                        <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Phone Number</label>
-                        <input
-                          type="text"
-                          value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})}
-                          className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
-                        />
-                     </div>
-                     <div className="space-y-1">
-                        <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Working Hours</label>
-                        <input
-                          type="text"
-                          value={formData.workingHours} onChange={e => setFormData({...formData, workingHours: e.target.value})}
-                          className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
-                          placeholder="e.g. Mon - Sat: 10AM - 7PM"
-                        />
-                     </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Email Address</label>
+                    <input
+                      type="email"
+                      value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
+                    />
                   </div>
-                  <div className="space-y-4">
-                     <div className="space-y-1">
-                        <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Office Address</label>
-                        <textarea
-                          value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})}
-                          className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none min-h-[120px]"
-                        />
-                     </div>
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Phone Number</label>
+                    <input
+                      type="text"
+                      value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                      className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
+                    />
                   </div>
-               </div>
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Working Hours</label>
+                    <input
+                      type="text"
+                      value={formData.workingHours} onChange={e => setFormData({ ...formData, workingHours: e.target.value })}
+                      className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
+                      placeholder="e.g. Mon - Sat: 10AM - 7PM"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Office Address</label>
+                    <textarea
+                      value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })}
+                      className="w-full bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none min-h-[120px]"
+                    />
+                  </div>
+                </div>
+              </div>
 
-               <div className="space-y-4 p-4 rounded-2xl bg-[var(--bg-tertiary)]/20 border border-[var(--border-subtle)]">
-                  <h4 className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.2em] flex items-center gap-2">
-                     Social Links
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                     <div className="space-y-1">
-                        <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-1.5 ml-1">
-                           <Instagram size={10} /> Instagram
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.socialLinks.instagram} onChange={e => setFormData({...formData, socialLinks: {...formData.socialLinks, instagram: e.target.value}})}
-                          className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
-                        />
-                     </div>
-                     <div className="space-y-1">
-                        <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-1.5 ml-1">
-                           <Linkedin size={10} /> LinkedIn
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.socialLinks.linkedin} onChange={e => setFormData({...formData, socialLinks: {...formData.socialLinks, linkedin: e.target.value}})}
-                          className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
-                        />
-                     </div>
-                     <div className="space-y-1">
-                        <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-1.5 ml-1">
-                           <Twitter size={10} /> Twitter
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.socialLinks.twitter} onChange={e => setFormData({...formData, socialLinks: {...formData.socialLinks, twitter: e.target.value}})}
-                          className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
-                        />
-                     </div>
+              <div className="space-y-4 p-4 rounded-2xl bg-[var(--bg-tertiary)]/20 border border-[var(--border-subtle)]">
+                <h4 className="text-[9px] font-black text-emerald-500 uppercase tracking-[0.2em] flex items-center gap-2">
+                  Social Links
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-1.5 ml-1">
+                      <Instagram size={10} /> Instagram
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.socialLinks.instagram} onChange={e => setFormData({ ...formData, socialLinks: { ...formData.socialLinks, instagram: e.target.value } })}
+                      className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
+                    />
                   </div>
-               </div>
-               
-               <button 
-                  onClick={handleUpdateContactInfo}
-                  className="w-full py-4 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-[0.98] transition-all"
-               >
-                  Save Contact Information
-               </button>
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-1.5 ml-1">
+                      <Linkedin size={10} /> LinkedIn
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.socialLinks.linkedin} onChange={e => setFormData({ ...formData, socialLinks: { ...formData.socialLinks, linkedin: e.target.value } })}
+                      className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-1.5 ml-1">
+                      <Twitter size={10} /> Twitter
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.socialLinks.twitter} onChange={e => setFormData({ ...formData, socialLinks: { ...formData.socialLinks, twitter: e.target.value } })}
+                      className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl px-4 py-2 text-[11px] font-bold focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleUpdateContactInfo}
+                className="w-full py-4 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-[0.98] transition-all"
+              >
+                Save Contact Information
+              </button>
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { PageWrapper } from '../components/PageWrapper';
 import { OTPInput } from '../components/AnimatedInput';
 import { NeonButton } from '../components/NeonButton';
@@ -17,6 +17,7 @@ export default function AuthOTP() {
   const { phone, verifyOTP } = useAuthStore();
   const { theme } = useThemeStore();
   const [error, setError] = useState('');
+  const [toastMsg, setToastMsg] = useState(null);
 
   const isDark = theme === 'dark';
   const isValid = otp.length === 6;
@@ -33,11 +34,11 @@ export default function AuthOTP() {
 
     if (result.success) {
       if (result.rider?.isRegistered) {
-        alert("Already Rider Signup");
-        navigate('/rider/home');
+        setToastMsg("Welcome Back! Already Registered.");
+        setTimeout(() => navigate('/rider/home'), 1500);
       } else {
-        alert("New Rider Signup");
-        navigate('/rider/onboarding');
+        setToastMsg("Welcome! New Rider Signup.");
+        setTimeout(() => navigate('/rider/onboarding'), 1500);
       }
     } else {
       setError(result.message);
@@ -67,6 +68,26 @@ export default function AuthOTP() {
     <PageWrapper noHeader>
       <div className={`min-h-[100dvh] flex flex-col px-6 pt-16 pb-10 transition-colors duration-500 relative overflow-hidden ${isDark ? 'bg-[#0A0A0F]' : 'bg-slate-50'
         }`}>
+
+        {/* Custom Professional Toast */}
+        <AnimatePresence>
+          {toastMsg && (
+            <motion.div
+              initial={{ opacity: 0, y: -50, x: '-50%' }}
+              animate={{ opacity: 1, y: 0, x: '-50%' }}
+              exit={{ opacity: 0, y: -50, x: '-50%' }}
+              className={`fixed top-12 left-1/2 z-[999] px-6 py-3.5 rounded-full shadow-2xl border backdrop-blur-xl flex items-center gap-3 w-max max-w-[90vw] ${
+                isDark ? 'bg-[#0A0A0F]/90 border-flexigo-teal/30 text-white shadow-flexigo-teal/10' : 'bg-white/90 border-flexigo-teal/20 text-slate-900 shadow-slate-200/50'
+              }`}
+            >
+              <div className="w-7 h-7 rounded-full bg-flexigo-teal flex items-center justify-center text-white shrink-0 shadow-[0_0_12px_rgba(57,255,20,0.4)]">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-4 h-4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              </div>
+              <span className="text-[11px] font-black uppercase tracking-[0.1em]">{toastMsg}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Back button */}
         <button
           onClick={() => navigate(-1)}
