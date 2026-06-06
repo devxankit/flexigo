@@ -76,12 +76,11 @@ export default function AuthOTP() {
               initial={{ opacity: 0, y: -50, x: '-50%' }}
               animate={{ opacity: 1, y: 0, x: '-50%' }}
               exit={{ opacity: 0, y: -50, x: '-50%' }}
-              className={`fixed top-12 left-1/2 z-[999] px-6 py-3.5 rounded-full shadow-2xl border backdrop-blur-xl flex items-center gap-3 w-max max-w-[90vw] ${
-                isDark ? 'bg-[#0A0A0F]/90 border-flexigo-teal/30 text-white shadow-flexigo-teal/10' : 'bg-white/90 border-flexigo-teal/20 text-slate-900 shadow-slate-200/50'
-              }`}
+              className={`fixed top-12 left-1/2 z-[999] px-6 py-3.5 rounded-full shadow-2xl border backdrop-blur-xl flex items-center gap-3 w-max max-w-[90vw] ${isDark ? 'bg-[#0A0A0F]/90 border-flexigo-teal/30 text-white shadow-flexigo-teal/10' : 'bg-white/90 border-flexigo-teal/20 text-slate-900 shadow-slate-200/50'
+                }`}
             >
               <div className="w-7 h-7 rounded-full bg-flexigo-teal flex items-center justify-center text-white shrink-0 shadow-[0_0_12px_rgba(57,255,20,0.4)]">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-4 h-4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-4 h-4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
               </div>
               <span className="text-[11px] font-black uppercase tracking-[0.1em]">{toastMsg}</span>
             </motion.div>
@@ -108,8 +107,8 @@ export default function AuthOTP() {
         >
           <div
             className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-all mx-auto ${isDark
-                ? 'bg-flexigo-teal/10 border border-flexigo-teal/30 shadow-neon-sm'
-                : 'bg-flexigo-teal/5 border border-flexigo-teal/20 shadow-sm'
+              ? 'bg-flexigo-teal/10 border border-flexigo-teal/30 shadow-neon-sm'
+              : 'bg-flexigo-teal/5 border border-flexigo-teal/20 shadow-sm'
               }`}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2" className="w-7 h-7">

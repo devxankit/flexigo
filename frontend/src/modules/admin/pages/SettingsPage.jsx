@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Lock, User, Save, Key, AlertCircle, CheckCircle2, RefreshCw, Smartphone } from 'lucide-react';
+import { Shield, Lock, User, Save, Key, AlertCircle, CheckCircle2, RefreshCw, Smartphone, Database } from 'lucide-react';
 import axios from 'axios';
 import api from '../../../lib/axios';
 
@@ -16,6 +16,8 @@ const SettingsPage = () => {
   const [updating, setUpdating] = useState(false);
   const [appVersions, setAppVersions] = useState([]);
   const [versionSaving, setVersionSaving] = useState(null);
+  const [systemSettings, setSystemSettings] = useState({ securityDepositAmount: 2800 });
+  const [settingsSaving, setSettingsSaving] = useState(false);
 
   useEffect(() => {
     const fetchAppVersions = async () => {
@@ -26,7 +28,18 @@ const SettingsPage = () => {
         console.error('Failed to fetch app versions:', e);
       }
     };
+    const fetchSettings = async () => {
+      try {
+        const res = await api.get('/admin/settings');
+        if (res.data.success && res.data.settings) {
+          setSystemSettings({ securityDepositAmount: res.data.settings.securityDepositAmount || 2800 });
+        }
+      } catch (e) {
+        console.error('Failed to fetch settings:', e);
+      }
+    };
     fetchAppVersions();
+    fetchSettings();
   }, []);
 
   const handleVersionUpdate = async (platform) => {
@@ -46,6 +59,20 @@ const SettingsPage = () => {
       alert('Failed to update version');
     } finally {
       setVersionSaving(null);
+    }
+  };
+
+  const handleSettingsUpdate = async () => {
+    setSettingsSaving(true);
+    try {
+      const res = await api.put('/admin/settings', systemSettings);
+      if (res.data.success) {
+        alert('System settings updated successfully!');
+      }
+    } catch (e) {
+      alert('Failed to update system settings');
+    } finally {
+      setSettingsSaving(false);
     }
   };
 
@@ -304,6 +331,51 @@ const SettingsPage = () => {
               </div>
             );
           })}
+        </div>
+      </motion.div>
+
+      {/* Platform Parameters */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-8 shadow-sm"
+      >
+        <div className="flex items-center gap-3 mb-8 pb-4 border-b border-[var(--border-subtle)]">
+          <Database className="text-emerald-500" size={20} />
+          <div>
+            <h2 className="font-black text-[var(--text-primary)] uppercase tracking-wider">Platform Parameters</h2>
+            <p className="text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest mt-0.5">Manage global variables and monetary thresholds</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="p-5 bg-[var(--bg-primary)] border border-[var(--border-subtle)] rounded-xl space-y-4">
+            <div className="space-y-1">
+              <label className="text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">Security Deposit Amount (₹)</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 font-bold">₹</span>
+                <input
+                  type="number"
+                  value={systemSettings.securityDepositAmount}
+                  onChange={(e) => setSystemSettings({ ...systemSettings, securityDepositAmount: Number(e.target.value) })}
+                  className="w-full bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg py-2 pl-8 pr-3 text-sm font-bold outline-none focus:border-emerald-500 transition-all"
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={handleSettingsUpdate}
+              disabled={settingsSaving}
+              className="w-full py-2.5 bg-emerald-500 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 mt-4"
+            >
+              {settingsSaving ? (
+                <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <><Save size={12} /> Save Settings</>
+              )}
+            </button>
+          </div>
         </div>
       </motion.div>
     </div>

@@ -60,7 +60,9 @@ import {
   uploadKycAttachment,
   deleteSecurityLog,
   toggleBlockKycRecord,
-  deleteKycRecord
+  deleteKycRecord,
+  getSettings,
+  updateSettings
 } from './adminController.js';
 import {
   getWebsitePlans,
@@ -123,7 +125,7 @@ router.delete('/geofencing/:id', deleteGeofence);
 
 // Vehicle Management
 router.get('/assignments', protectAdmin, authorize('Fleet', 'read'), getAssignments);
-router.post('/assignments', protectAdmin, authorize('Fleet', 'create'), createAssignment);
+router.post('/assignments', protectAdmin, authorize('Fleet', 'create'), getAssignments);
 router.post('/fleet/add', protectAdmin, authorize('Fleet', 'create'), addVehicle);
 router.post('/fleet/bulk-add', protectAdmin, authorize('Fleet', 'create'), bulkAddVehicles);
 router.patch('/fleet/:id/attachment', protectAdmin, authorize('Fleet', 'update'), updateVehicleAttachment);
@@ -349,5 +351,9 @@ router.get('/web/press', getWebsitePressReleases);
 router.post('/web/press', createWebsitePressRelease);
 router.patch('/web/press/:id', updateWebsitePressRelease);
 router.delete('/web/press/:id', deleteWebsitePressRelease);
+
+// --- Settings Routes ---
+router.get('/settings', protectAdmin, getSettings);
+router.put('/settings', protectAdmin, updateSettings);
 
 export default router;

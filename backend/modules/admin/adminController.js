@@ -23,6 +23,7 @@ import cloudinary from '../../config/cloudinary.js';
 import Admin from './adminModel.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import SystemSetting from './systemSettingModel.js';
 
 export const getDateFilter = (range, fieldName = 'createdAt') => {
   if (!range) return {};
@@ -104,7 +105,7 @@ export const getAdminStats = async (req, res) => {
       Transaction.find({ ...transFilter, type: 'Subscription', status: { $in: ['completed', 'success'] } }),
       RiderTransaction.find({ ...getDateFilter(range, 'createdAt'), status: { $in: ['completed', 'success'] } })
     ]);
-    
+
     const frRev = frTxns.reduce((acc, t) => acc + t.amount, 0);
     const riderRev = riderTxns.reduce((acc, t) => acc + t.amount, 0);
     const grossRevenue = frRev + riderRev;
@@ -220,7 +221,7 @@ export const adminLogin = async (req, res) => {
 
     // 1. Check for admin first
     let admin = await Admin.findOne({ email });
-    
+
     // Auto-seed if no admin exists at all (Development Safety)
     if (!admin && email === 'admin@flexigo.com') {
       admin = await Admin.create({
@@ -1394,7 +1395,7 @@ export const getFinanceData = async (req, res) => {
       transactions: combined.slice(0, 50).map(t => ({
         ...t,
         val: `₹${t.amount.toLocaleString()}`,
-        date: t.date 
+        date: t.date
       })),
       stats: {
         settled: formatValue(settled),
@@ -1847,7 +1848,7 @@ export const getRoles = async (req, res) => {
     ];
 
     let roles = await Role.find().sort({ createdAt: -1 });
-    
+
     // Seed if empty
     if (roles.length === 0) {
       const initialPermissions = {};
@@ -1908,7 +1909,7 @@ export const getRoles = async (req, res) => {
     // Background Repair (Non-blocking)
     roles.forEach(async (role) => {
       let permissionsUpdated = false;
-      
+
       // Deep Repair: Ensure permissions is a valid object and NOT a string
       if (!role.permissions || typeof role.permissions !== 'object' || Array.isArray(role.permissions)) {
         role.permissions = {};
@@ -2592,5 +2593,37 @@ export const updateAdminPassword = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getSettings = async (req, res) => {
+  try {
+    let settings = await SystemSetting.findOne();
+    if (!settings) {
+      settings = await SystemSetting.create({});
+    }
+    res.json({ success: true, settings });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch settings' });
+  }
+};
+
+export const updateSettings = async (req, res) => {
+  try {
+    const { securityDepositAmount } = req.body;
+    let settings = await SystemSetting.findOne();
+
+    if (!settings) {
+      settings = await SystemSetting.create({ securityDepositAmount });
+    } else {
+      if (securityDepositAmount !== undefined) {
+        settings.securityDepositAmount = securityDepositAmount;
+      }
+      await settings.save();
+    }
+
+    res.json({ success: true, settings, message: 'Settings updated successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to update settings' });
   }
 };

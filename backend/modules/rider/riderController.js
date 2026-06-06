@@ -14,6 +14,7 @@ import { sendPushNotification } from '../../shared/utils/firebase.js';
 import AuditLog from '../admin/auditLogModel.js';
 import Admin from '../admin/adminModel.js';
 import FranchiseNotification from '../franchise/franchiseNotificationModel.js';
+import SystemSetting from '../admin/systemSettingModel.js';
 
 const lastGeofenceAlertTimes = new Map();
 
@@ -791,6 +792,16 @@ export const requestHandover = async (req, res) => {
   }
 };
 
+// --- SETTINGS ENDPOINT ---
+export const getSettings = async (req, res) => {
+  try {
+    let settings = await SystemSetting.findOne();
+    res.json({ success: true, securityDepositAmount: settings?.securityDepositAmount || 2800 });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // --- SECURITY DEPOSIT ENDPOINTS ---
 
 export const payDepositViaWallet = async (req, res) => {
@@ -800,7 +811,8 @@ export const payDepositViaWallet = async (req, res) => {
     if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
     if (rider.depositPaid) return res.status(400).json({ success: false, message: 'Deposit already paid' });
 
-    const DEPOSIT_AMOUNT = 2800;
+    let settings = await SystemSetting.findOne();
+    const DEPOSIT_AMOUNT = settings?.securityDepositAmount || 2800;
     let isFranchisePaid = false;
 
     if (rider.franchise) {
@@ -853,8 +865,10 @@ export const payDepositViaWallet = async (req, res) => {
 
 export const createDepositOrder = async (req, res) => {
   try {
+    let settings = await SystemSetting.findOne();
+    const DEPOSIT_AMOUNT = settings?.securityDepositAmount || 2800;
     const instance = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET });
-    const order = await instance.orders.create({ amount: 2800 * 100, currency: 'INR', receipt: `dep_receipt_${Date.now()}` });
+    const order = await instance.orders.create({ amount: DEPOSIT_AMOUNT * 100, currency: 'INR', receipt: `dep_receipt_${Date.now()}` });
     res.status(200).json({ success: true, order });
   } catch (error) { res.status(500).json({ success: false, message: error.message }); }
 };
@@ -871,9 +885,12 @@ export const verifyDepositPayment = async (req, res) => {
         rider.depositPaid = true;
         await rider.save();
 
+        let settings = await SystemSetting.findOne();
+        const DEPOSIT_AMOUNT = settings?.securityDepositAmount || 2800;
+
         await Transaction.create({
           riderId: rider._id,
-          amount: 2800,
+          amount: DEPOSIT_AMOUNT,
           type: 'debit',
           status: 'success',
           description: `Security Deposit`,
@@ -891,9 +908,12 @@ export const requestDepositQR = async (req, res) => {
     const rider = await Rider.findOne({ phone });
     if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
 
+    let settings = await SystemSetting.findOne();
+    const DEPOSIT_AMOUNT = settings?.securityDepositAmount || 2800;
+
     const transaction = await Transaction.create({
       riderId: rider._id,
-      amount: 2800,
+      amount: DEPOSIT_AMOUNT,
       type: 'debit',
       status: 'pending',
       description: `QR Payment: Security Deposit`,

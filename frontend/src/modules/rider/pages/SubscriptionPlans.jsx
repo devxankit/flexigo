@@ -14,12 +14,25 @@ export default function SubscriptionPlans() {
   const { user, fetchProfile } = useAuthStore();
   const { balance, fetchWalletData } = useWalletStore();
 
+  const [systemSettings, setSystemSettings] = useState({ securityDepositAmount: 2800 });
+
   useEffect(() => {
     fetchPlans();
     if (user?.phone) {
       fetchWalletData(user.phone);
       fetchProfile();
     }
+    const fetchSettings = async () => {
+      try {
+        const res = await api.get('/rider/settings');
+        if (res.data.success) {
+          setSystemSettings({ securityDepositAmount: res.data.securityDepositAmount || 2800 });
+        }
+      } catch (err) {
+        console.error('Failed to fetch settings:', err);
+      }
+    };
+    fetchSettings();
   }, [user?.phone]);
 
   const { theme } = useThemeStore();
@@ -171,7 +184,7 @@ export default function SubscriptionPlans() {
   const [showDepositQRCode, setShowDepositQRCode] = useState(false);
 
   const handleDepositWallet = async () => {
-    if (balance < 2800) { alert("Insufficient wallet balance!"); return; }
+    if (balance < systemSettings.securityDepositAmount) { alert("Insufficient wallet balance!"); return; }
     try {
       const res = await api.post('/rider/payments/deposit/wallet', { phone: user.phone });
       if (res.data.success) {
@@ -215,78 +228,74 @@ export default function SubscriptionPlans() {
     } catch (e) { alert("Payment Failed"); }
   };
 
-  if (user && user.depositPaid === false) {
-    return (
-      <PageWrapper className="flex flex-col p-6 pt-6 pb-32">
-        <div className="mb-6 text-left">
-          <h1 className={`text-3xl font-heading font-black transition-colors duration-500 ${isDark ? 'text-white' : 'text-slate-900'}`}>Security <span className="text-flexigo-teal">Deposit</span></h1>
-          <p className={`text-xs ml-1 font-black uppercase tracking-[0.2em] transition-colors duration-500 ${isDark ? 'text-gray-500' : 'text-slate-600'}`}>Mandatory one-time deposit required.</p>
-        </div>
-        <GlassCard className="p-6 border-flexigo-teal/30 bg-flexigo-teal/[0.03] relative overflow-hidden mb-10 shadow-2xl">
-          <div className="flex justify-between items-center relative z-10">
-            <div><h4 className={`text-xl font-heading font-black transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>Security Deposit</h4><p className="text-[10px] font-black uppercase tracking-widest text-flexigo-teal mt-1">One-time & Refundable</p></div>
-            <div className="text-right"><span className={`text-2xl font-black transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>₹2800</span></div>
-          </div>
-        </GlassCard>
-        <div className="space-y-4 flex-1">
-          <p className={`text-[8px] font-black uppercase tracking-[0.3em] ${isDark ? 'text-white/40' : 'text-slate-950 font-black opacity-80'}`}>Select Payment Method</p>
-          <div className="space-y-3">
-            {paymentMethods.map((method) => (
-              <div key={method.id} onClick={() => setDepositMethod(method.id)} className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${depositMethod === method.id ? 'border-flexigo-teal bg-flexigo-teal/5 shadow-[0_0_20px_rgba(57,255,20,0.1)]' : (isDark ? 'border-white/5 bg-white/[0.02] hover:border-white/10' : 'border-slate-300 bg-white hover:border-slate-300')}`}>
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${depositMethod === method.id ? 'bg-flexigo-teal text-white shadow-neon-sm' : (isDark ? 'bg-white/10 text-gray-500' : 'bg-slate-100 text-slate-500')}`}>{method.icon}</div>
-                  <div><p className={`text-[10px] font-black uppercase tracking-widest ${isDark ? (depositMethod === method.id ? 'text-white' : 'text-gray-400') : (depositMethod === method.id ? 'text-flexigo-teal' : 'text-slate-950')}`}>{method.label}</p><p className={`text-[8px] font-black italic ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>{method.sub}</p></div>
-                </div>
-                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${depositMethod === method.id ? 'border-flexigo-teal bg-flexigo-teal shadow-[0_0_8px_#39FF1444]' : (isDark ? 'border-white/10' : 'border-slate-300')}`}>{depositMethod === method.id && <div className="w-1.5 h-1.5 rounded-full bg-white" />}</div>
-              </div>
-            ))}
-          </div>
-          <div className="pt-6">
-            <NeonButton variant="solid" size="full" onClick={() => setIsPayingDeposit(true)}>Pay Security Deposit</NeonButton>
-          </div>
-        </div>
-
-        <AnimatePresence>
-          {isPayingDeposit && (
-            <div className="fixed inset-0 z-[9999] flex items-end justify-center px-4">
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => !depositPaymentSuccess && setIsPayingDeposit(false)} />
-              <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className={`relative w-full max-w-lg rounded-t-[2.5rem] p-8 pb-12 shadow-2xl border-t border-white/10 ${isDark ? 'bg-[#0A1120]' : 'bg-white'}`}>
-                {depositPaymentSuccess ? (
-                  <div className="text-center py-6 space-y-6">
-                    <h3 className={`text-2xl font-heading font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Deposit Paid!</h3>
-                    <p className="text-flexigo-teal text-[11px] font-black uppercase">You can now purchase a plan.</p>
-                  </div>
-                ) : showDepositQRCode ? (
-                  <div className="space-y-6 py-4 text-center">
-                    <h3 className={`text-lg font-heading font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Scan & Pay <span className="text-flexigo-teal">₹2800</span></h3>
-                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent("upi://pay?pa=MSFLEXIGOEMOBILITYPRIVATELIMITED.eazypay@icici&pn=Flexigo E-Mobility&am=2800&cu=INR&tn=Security Deposit")}`} className="w-[220px] h-[220px] mx-auto" />
-                    <button onClick={handleDepositQR} className="w-full py-3 bg-flexigo-teal text-white rounded-xl text-[9px] font-black uppercase">I Have Paid</button>
-                  </div>
-                ) : (
-                  <div className="space-y-8">
-                    <h3 className={`text-2xl font-heading font-black italic ${isDark ? 'text-white' : 'text-slate-900'}`}>Checkout <span className="text-flexigo-teal">Deposit</span></h3>
-                    <NeonButton variant="solid" size="full" onClick={handleDepositRazorpay}>Complete Secure Purchase</NeonButton>
-                  </div>
-                )}
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-      </PageWrapper>
-    );
-  }
-
   return (
     <PageWrapper className="flex flex-col p-6 pt-6 pb-32">
-      <div className="mb-6 text-left">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-1.5 h-8 bg-flexigo-teal rounded-full" />
-          <h1 className={`text-3xl font-heading font-black transition-colors duration-500 ${isDark ? 'text-white' : 'text-slate-900'
-            }`}>Subscription <span className="text-flexigo-teal">Management</span></h1>
+      <AnimatePresence>
+        {isPayingDeposit && (
+          <div className="fixed inset-0 z-[9999] flex items-end justify-center px-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => !depositPaymentSuccess && setIsPayingDeposit(false)} />
+            <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className={`relative w-full max-w-lg rounded-t-[2.5rem] p-8 pb-12 shadow-2xl border-t border-white/10 ${isDark ? 'bg-[#0A1120]' : 'bg-white'}`}>
+              {depositPaymentSuccess ? (
+                <div className="text-center py-6 space-y-6">
+                  <h3 className={`text-2xl font-heading font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Deposit Paid!</h3>
+                  <p className="text-flexigo-teal text-[11px] font-black uppercase">You can now purchase a plan.</p>
+                </div>
+              ) : showDepositQRCode ? (
+                <div className="space-y-6 py-4 text-center">
+                  <h3 className={`text-lg font-heading font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Scan & Pay <span className="text-flexigo-teal">₹{systemSettings.securityDepositAmount}</span></h3>
+                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(`upi://pay?pa=MSFLEXIGOEMOBILITYPRIVATELIMITED.eazypay@icici&pn=Flexigo E-Mobility&am=${systemSettings.securityDepositAmount}&cu=INR&tn=Security Deposit`)}`} className="w-[220px] h-[220px] mx-auto" />
+                  <button onClick={handleDepositQR} className="w-full py-3 bg-flexigo-teal text-white rounded-xl text-[9px] font-black uppercase">I Have Paid</button>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  <h3 className={`text-2xl font-heading font-black italic ${isDark ? 'text-white' : 'text-slate-900'}`}>Checkout <span className="text-flexigo-teal">Deposit</span></h3>
+                  <NeonButton variant="solid" size="full" onClick={handleDepositRazorpay}>Complete Secure Purchase</NeonButton>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {user?.depositPaid === false ? (
+        <div className="mb-10 space-y-6 pb-6 border-b border-white/10">
+          <div className="mb-6 text-left">
+            <h1 className={`text-3xl font-heading font-black transition-colors duration-500 ${isDark ? 'text-white' : 'text-slate-900'}`}>Security <span className="text-flexigo-teal">Deposit</span></h1>
+            <p className={`text-xs ml-1 font-black uppercase tracking-[0.2em] transition-colors duration-500 ${isDark ? 'text-gray-500' : 'text-slate-600'}`}>Mandatory one-time deposit required.</p>
+          </div>
+          <GlassCard className="p-6 border-flexigo-teal/30 bg-flexigo-teal/[0.03] relative overflow-hidden shadow-2xl">
+            <div className="flex justify-between items-center relative z-10">
+              <div><h4 className={`text-xl font-heading font-black transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>Security Deposit</h4><p className="text-[10px] font-black uppercase tracking-widest text-flexigo-teal mt-1">One-time & Refundable</p></div>
+              <div className="text-right"><span className={`text-2xl font-black transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>₹{systemSettings.securityDepositAmount}</span></div>
+            </div>
+          </GlassCard>
+          <div className="space-y-4">
+            <p className={`text-[8px] font-black uppercase tracking-[0.3em] ${isDark ? 'text-white/40' : 'text-slate-950 font-black opacity-80'}`}>Select Payment Method</p>
+            <div className="space-y-3">
+              {paymentMethods.map((method) => (
+                <div key={method.id} onClick={() => setDepositMethod(method.id)} className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${depositMethod === method.id ? 'border-flexigo-teal bg-flexigo-teal/5 shadow-[0_0_20px_rgba(57,255,20,0.1)]' : (isDark ? 'border-white/5 bg-white/[0.02] hover:border-white/10' : 'border-slate-300 bg-white hover:border-slate-300')}`}>
+                  <div className="flex items-center gap-4">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${depositMethod === method.id ? 'bg-flexigo-teal text-white shadow-neon-sm' : (isDark ? 'bg-white/10 text-gray-500' : 'bg-slate-100 text-slate-500')}`}>{method.icon}</div>
+                    <div><p className={`text-[10px] font-black uppercase tracking-widest ${isDark ? (depositMethod === method.id ? 'text-white' : 'text-gray-400') : (depositMethod === method.id ? 'text-flexigo-teal' : 'text-slate-950')}`}>{method.label}</p><p className={`text-[8px] font-black italic ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>{method.sub}</p></div>
+                  </div>
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${depositMethod === method.id ? 'border-flexigo-teal bg-flexigo-teal shadow-[0_0_8px_#39FF1444]' : (isDark ? 'border-white/10' : 'border-slate-300')}`}>{depositMethod === method.id && <div className="w-1.5 h-1.5 rounded-full bg-white" />}</div>
+                </div>
+              ))}
+            </div>
+            <div className="pt-4">
+              <NeonButton variant="solid" size="full" onClick={() => setIsPayingDeposit(true)}>Pay Security Deposit</NeonButton>
+            </div>
+          </div>
         </div>
-        <p className={`text-xs ml-4 font-black uppercase tracking-[0.2em] transition-colors duration-500 ${isDark ? 'text-gray-500' : 'text-slate-600'
-          }`}>Manage your fleet access and billing tiers.</p>
-      </div>
+      ) : (
+        <div className="mb-6 text-left">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-1.5 h-8 bg-flexigo-teal rounded-full" />
+            <h1 className={`text-3xl font-heading font-black transition-colors duration-500 ${isDark ? 'text-white' : 'text-slate-900'}`}>Subscription <span className="text-flexigo-teal">Management</span></h1>
+          </div>
+          <p className={`text-xs ml-4 font-black uppercase tracking-[0.2em] transition-colors duration-500 ${isDark ? 'text-gray-500' : 'text-slate-600'}`}>Manage your fleet access and billing tiers.</p>
+        </div>
+      )}
 
       {/* Current Active Plan Banner */}
       {activePlan && (
@@ -315,7 +324,7 @@ export default function SubscriptionPlans() {
         </motion.div>
       )}
 
-      <div className="space-y-4 flex-1">
+      <div className={`space-y-4 flex-1 ${user?.depositPaid === false ? 'opacity-40 pointer-events-none grayscale' : ''}`}>
         <h3 className={`text-[10px] font-black uppercase tracking-[0.3em] px-2 mb-2 transition-colors duration-500 ${isDark ? 'text-gray-500' : 'text-slate-950 font-black'
           }`}>{activePlan ? 'Upgrade Options' : 'Available Plans'}</h3>
 
@@ -380,10 +389,16 @@ export default function SubscriptionPlans() {
         <NeonButton
           variant="solid"
           size="full"
-          disabled={!selectedPlan}
-          onClick={handleUpdatePlan}
+          disabled={!selectedPlan || user?.depositPaid === false}
+          onClick={() => {
+            if (user?.depositPaid === false) {
+              alert("Please pay the Security Deposit first.");
+              return;
+            }
+            handleUpdatePlan();
+          }}
         >
-          Confirm Plan Upgrade
+          {user?.depositPaid === false ? "Pay Deposit First" : "Confirm Plan Upgrade"}
         </NeonButton>
         <p className={`text-center text-[9px] uppercase font-black tracking-[0.2em] transition-colors ${isDark ? 'text-gray-600' : 'text-slate-700'}`}>
           Next billing on {activePlan ? 'the next cycle' : 'Immediately'}

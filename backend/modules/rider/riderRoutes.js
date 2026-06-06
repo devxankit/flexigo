@@ -23,7 +23,8 @@ import {
   payDepositViaWallet,
   createDepositOrder,
   verifyDepositPayment,
-  requestDepositQR
+  requestDepositQR,
+  getSettings
 } from './riderController.js';
 import { protectFranchise, protectRider } from '../../shared/middleware/authMiddleware.js';
 
@@ -55,5 +56,7 @@ router.post('/payments/deposit/qr-request', requestDepositQR);
 
 router.patch('/location', protectRider, updateRiderLocation);
 router.post('/handover/request', protectRider, requestHandover);
+
+router.get('/settings', getSettings);
 
 export default router;
