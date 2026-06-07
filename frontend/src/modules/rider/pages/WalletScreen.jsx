@@ -7,6 +7,7 @@ import { Modal } from '../components/Modal';
 import { useWalletStore } from '../store/walletStore';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
+import api from '../../../lib/axios';
 
 export default function WalletScreen() {
   const { balance, transactions, addMoney, fetchWalletData } = useWalletStore();
@@ -23,19 +24,78 @@ export default function WalletScreen() {
     }
   }, [phone]);
 
+  const loadRazorpay = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const handleTopUp = async () => {
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) return;
     
     setProcessing(true);
-    const result = await addMoney(phone, Number(amount));
-    setProcessing(false);
+    
+    try {
+      const res = await loadRazorpay();
+      if (!res) {
+        alert('Razorpay SDK failed to load');
+        setProcessing(false);
+        return;
+      }
 
-    if (result.success) {
-      setIsTopUpOpen(false);
-      setAmount('');
-    } else {
-      alert(result.message);
+      const orderRes = await api.post('/rider/wallet/create-topup-order', { amount: Number(amount) });
+      if (!orderRes.data.success) {
+        alert('Failed to create order');
+        setProcessing(false);
+        return;
+      }
+
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_YourKey',
+        amount: orderRes.data.order.amount,
+        currency: 'INR',
+        name: 'Flexigo Wallet',
+        description: 'Add money to wallet',
+        order_id: orderRes.data.order.id,
+        handler: async function (response) {
+          try {
+            const verifyRes = await api.post('/rider/wallet/verify-topup', {
+              ...response,
+              amount: Number(amount),
+              phone: phone
+            });
+            if (verifyRes.data.success) {
+              fetchWalletData(phone);
+              setIsTopUpOpen(false);
+              setAmount('');
+            }
+          } catch (err) {
+            alert('Payment verification failed');
+          }
+        },
+        prefill: {
+          contact: phone
+        },
+        theme: {
+          color: '#39FF14'
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response) {
+        alert('Payment failed: ' + response.error.description);
+      });
+      rzp.open();
+      
+    } catch (error) {
+      console.error('Payment flow error', error);
+      alert('Something went wrong during payment');
     }
+    setProcessing(false);
   };
 
   return (

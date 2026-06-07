@@ -24,7 +24,9 @@ import {
   createDepositOrder,
   verifyDepositPayment,
   requestDepositQR,
-  getSettings
+  getSettings,
+  createWalletTopUpOrder,
+  verifyWalletTopUp
 } from './riderController.js';
 import { protectFranchise, protectRider } from '../../shared/middleware/authMiddleware.js';
 
@@ -38,6 +40,8 @@ router.post('/kyc/aadhaar/verify-otp', verifyAadhaarOTP);
 router.post('/auth/save-fcm-token', protectRider, saveFcmToken);
 router.get('/profile/:phone', getRiderProfile);
 router.post('/wallet/add', addMoney);
+router.post('/wallet/create-topup-order', createWalletTopUpOrder);
+router.post('/wallet/verify-topup', verifyWalletTopUp);
 router.get('/wallet/:phone', getWalletData);
 router.get('/subscribers', protectFranchise, getSubscribersByFranchise);
 router.get('/hubs', getActiveHubs);

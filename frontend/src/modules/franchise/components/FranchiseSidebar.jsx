@@ -34,29 +34,35 @@ export default function FranchiseSidebar({ mobileMenuOpen, setMobileMenuOpen }) 
   const location = useLocation();
   const { logout, user } = useAuthStore();
   const [collapsed, setCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <>
-      {/* Mobile overlay */}
       <AnimatePresence>
-        {mobileMenuOpen && (
+        {mobileMenuOpen && isMobile && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setMobileMenuOpen(false)}
-            className="fixed inset-0 bg-black/60 z-[90] md:hidden backdrop-blur-sm"
+            className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[90]"
           />
         )}
       </AnimatePresence>
 
       <motion.aside 
         initial={false}
-        animate={{ width: collapsed ? 80 : 256 }}
+        animate={{ width: isMobile ? 256 : (collapsed ? 80 : 256) }}
         transition={{ type: "spring", stiffness: 400, damping: 35, restDelta: 0.1 }}
-        className={`h-full bg-[var(--bg-secondary)] border-r border-[var(--border-subtle)] flex flex-col shadow-sm relative z-[100] shrink-0
-          fixed md:relative top-0 left-0 bottom-0 transition-transform duration-300
-          ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        className={`h-full bg-[var(--bg-secondary)] border-r border-[var(--border-subtle)] flex flex-col shadow-sm z-[100] shrink-0
+          fixed md:relative inset-y-0 left-0 transform transition-transform duration-300
+          ${isMobile ? (mobileMenuOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'}
         `}
       >
       {/* Sidebar Header Brand - Professional B2B Style */}
@@ -92,6 +98,7 @@ export default function FranchiseSidebar({ mobileMenuOpen, setMobileMenuOpen }) 
               <Link 
                 key={item.id} 
                 to={item.path}
+                onClick={() => { if (isMobile) setMobileMenuOpen(false); }}
                 className="block relative group"
               >
                 <div className={`flex items-center px-4 py-2.5 rounded-lg transition-all duration-300 relative h-11 ${
@@ -132,12 +139,14 @@ export default function FranchiseSidebar({ mobileMenuOpen, setMobileMenuOpen }) 
       </div>
 
       {/* Toggle Bubble */}
-      <button 
-        onClick={() => setCollapsed(!collapsed)}
-        className="absolute top-18 -right-3 w-6 h-6 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-emerald-500 transition-all shadow-md z-50 transform translate-y-12 active:scale-90"
-      >
-        {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-      </button>
+      {!isMobile && (
+        <button 
+          onClick={() => setCollapsed(!collapsed)}
+          className="absolute top-18 -right-3 w-6 h-6 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-full flex items-center justify-center text-[var(--text-tertiary)] hover:text-emerald-500 transition-all shadow-md z-50 transform translate-y-12 active:scale-90"
+        >
+          {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        </button>
+      )}
 
       {/* Sidebar Footer Context - Professional B2B Profile */}
       <div className="p-3 border-t border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/10 overflow-hidden">

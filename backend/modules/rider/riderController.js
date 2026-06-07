@@ -216,6 +216,44 @@ export const addMoney = async (req, res) => {
   } catch (error) { res.status(500).json({ success: false, message: error.message }); }
 };
 
+export const createWalletTopUpOrder = async (req, res) => {
+  try {
+    const { amount } = req.body;
+    if (!amount || amount <= 0) return res.status(400).json({ success: false, message: 'Invalid amount' });
+
+    const instance = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET });
+    const order = await instance.orders.create({ amount: Math.round(amount * 100), currency: 'INR', receipt: `receipt_wallet_${Date.now()}` });
+    res.status(200).json({ success: true, order });
+  } catch (error) { res.status(500).json({ success: false, message: error.message }); }
+};
+
+export const verifyWalletTopUp = async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, phone, amount } = req.body;
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET).update(body.toString()).digest('hex');
+
+    if (expectedSignature === razorpay_signature) {
+      const rider = await Rider.findOne({ phone });
+      rider.walletBalance += Number(amount);
+      await rider.save();
+
+      await Transaction.create({
+        riderId: rider._id,
+        amount,
+        type: 'credit',
+        status: 'success',
+        description: 'Added to wallet',
+        method: 'razorpay'
+      });
+
+      res.status(200).json({ success: true, message: `₹${amount} added`, walletBalance: rider.walletBalance });
+    } else {
+      res.status(400).json({ success: false, message: 'Invalid signature' });
+    }
+  } catch (error) { res.status(500).json({ success: false, message: error.message }); }
+};
+
 export const payViaWallet = async (req, res) => {
   try {
     const { planId, phone } = req.body;
