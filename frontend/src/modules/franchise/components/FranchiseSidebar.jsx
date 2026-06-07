@@ -30,18 +30,35 @@ const menuItems = [
   { id: 'notifications', label: 'Alerts', icon: Bell, path: '/franchise/notifications' },
 ];
 
-export default function FranchiseSidebar() {
+export default function FranchiseSidebar({ mobileMenuOpen, setMobileMenuOpen }) {
   const location = useLocation();
   const { logout, user } = useAuthStore();
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <motion.aside 
-      initial={false}
-      animate={{ width: collapsed ? 80 : 256 }}
-      transition={{ type: "spring", stiffness: 400, damping: 35, restDelta: 0.1 }}
-      className="h-full bg-[var(--bg-secondary)] border-r border-[var(--border-subtle)] flex flex-col shadow-sm relative z-50 shrink-0"
-    >
+    <>
+      {/* Mobile overlay */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setMobileMenuOpen(false)}
+            className="fixed inset-0 bg-black/60 z-[90] md:hidden backdrop-blur-sm"
+          />
+        )}
+      </AnimatePresence>
+
+      <motion.aside 
+        initial={false}
+        animate={{ width: collapsed ? 80 : 256 }}
+        transition={{ type: "spring", stiffness: 400, damping: 35, restDelta: 0.1 }}
+        className={`h-full bg-[var(--bg-secondary)] border-r border-[var(--border-subtle)] flex flex-col shadow-sm relative z-[100] shrink-0
+          fixed md:relative top-0 left-0 bottom-0 transition-transform duration-300
+          ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}
+      >
       {/* Sidebar Header Brand - Professional B2B Style */}
       <div className="h-14 border-b border-[var(--border-subtle)] flex items-center px-6 shrink-0 overflow-hidden">
         <div className="flex items-center gap-3 min-w-[200px]">
@@ -154,5 +171,6 @@ export default function FranchiseSidebar() {
         </div>
       </div>
     </motion.aside>
+    </>
   );
 }

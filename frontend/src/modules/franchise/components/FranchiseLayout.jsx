@@ -21,6 +21,7 @@ export default function FranchiseLayout() {
   const [toast, setToast] = useState(null);
   const [showUpdatePopup, setShowUpdatePopup] = useState(false);
   const [latestVersion, setLatestVersion] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Check for app update on mount
   useEffect(() => {
@@ -118,20 +119,20 @@ export default function FranchiseLayout() {
         )}
       </AnimatePresence>
       {/* Sidebar with internal motion logic */}
-      <FranchiseSidebar />
+      <FranchiseSidebar mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
 
       {/* Main Hub Body */}
-      <div className="flex-1 flex flex-col min-w-0 relative">
+      <div className="flex-1 flex flex-col min-w-0 relative w-full overflow-hidden">
         <motion.div 
           initial={{ y: -56, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: "spring", stiffness: 400, damping: 40, delay: 0.1 }}
           className="z-10 bg-[var(--bg-secondary)] border-b border-[var(--border-subtle)] h-14 shrink-0 flex items-center w-full"
         >
-          <FranchiseHeader />
+          <FranchiseHeader setMobileMenuOpen={setMobileMenuOpen} />
         </motion.div>
         
-        <main className="flex-1 overflow-y-auto overscroll-y-none no-scrollbar p-6 bg-[var(--bg-primary)] w-full w-full">
+        <main className="flex-1 overflow-y-auto overscroll-y-none no-scrollbar p-4 md:p-6 bg-[var(--bg-primary)] w-full">
           <AnimatePresence mode="wait">
             <motion.div
               key={window.location.pathname}

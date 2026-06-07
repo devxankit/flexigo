@@ -131,7 +131,7 @@ router.post('/fleet/bulk-add', protectAdmin, authorize('Fleet', 'create'), bulkA
 router.patch('/fleet/:id/attachment', protectAdmin, authorize('Fleet', 'update'), updateVehicleAttachment);
 
 // Staff Management
-  router.get('/staff', getAllStaff);
+router.get('/staff', getAllStaff);
 router.post('/staff', createStaff);
 router.put('/staff/:id', updateStaff);
 router.delete('/staff/:id', deleteStaff);

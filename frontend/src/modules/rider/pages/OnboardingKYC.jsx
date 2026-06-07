@@ -161,13 +161,13 @@ export default function OnboardingKYC() {
 
   useEffect(() => {
     console.log('INIT: Checking existing KYC status');
-    
+
     // Prevent showing onboarding if already registered
     if (user?.isRegistered) {
       navigate('/rider/home', { replace: true });
       return;
     }
-    
+
     if (user?.kycDetails?.ekycVerified) {
       console.log('INIT: Aadhaar already verified in profile');
       setIsAadhaarVerified(true);
@@ -444,8 +444,8 @@ export default function OnboardingKYC() {
                 <button
                   onClick={() => openWebCamera(pickerModal.type)}
                   className={`flex flex-col items-center gap-3 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${isDark
-                      ? 'border-white/10 bg-white/5 hover:border-[#39FF14] hover:bg-[#39FF14]/10'
-                      : 'border-slate-200 bg-slate-50 hover:border-emerald-500 hover:bg-emerald-50'
+                    ? 'border-white/10 bg-white/5 hover:border-[#39FF14] hover:bg-[#39FF14]/10'
+                    : 'border-slate-200 bg-slate-50 hover:border-emerald-500 hover:bg-emerald-50'
                     }`}
                 >
                   <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-[#39FF14]/10">
@@ -463,8 +463,8 @@ export default function OnboardingKYC() {
                   htmlFor={pickerModal.fileInputId}
                   onClick={closePickerModal}
                   className={`flex flex-col items-center gap-3 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${isDark
-                      ? 'border-white/10 bg-white/5 hover:border-[#39FF14] hover:bg-[#39FF14]/10'
-                      : 'border-slate-200 bg-slate-50 hover:border-emerald-500 hover:bg-emerald-50'
+                    ? 'border-white/10 bg-white/5 hover:border-[#39FF14] hover:bg-[#39FF14]/10'
+                    : 'border-slate-200 bg-slate-50 hover:border-emerald-500 hover:bg-emerald-50'
                     }`}
                 >
                   <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-[#39FF14]/10">
@@ -537,7 +537,7 @@ export default function OnboardingKYC() {
                 <div
                   onClick={() => handleCameraCapture('selfie', 'selfie-input')}
                   className={`w-48 h-48 rounded-full border-2 flex flex-col items-center justify-center gap-4 cursor-pointer transition-all duration-500 overflow-hidden ${uploads.selfie ? 'border-flexigo-teal' :
-                      isDark ? 'border-white/10 border-dashed bg-white/[0.02]' : 'border-slate-200 border-dashed bg-slate-50 shadow-sm'
+                    isDark ? 'border-white/10 border-dashed bg-white/[0.02]' : 'border-slate-200 border-dashed bg-slate-50 shadow-sm'
                     }`}
                 >
                   {previews.selfie ? (
@@ -583,8 +583,8 @@ export default function OnboardingKYC() {
                       onChange={(e) => setAadhaarNumber(e.target.value.replace(/\D/g, ''))}
                       disabled={otpSent}
                       className={`w-full rounded-xl px-4 py-4 font-black tracking-[0.2em] outline-none transition-all border-2 ${isDark
-                          ? 'bg-white/5 border-white/10 text-white focus:border-[#39FF14]'
-                          : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 shadow-sm'
+                        ? 'bg-white/5 border-white/10 text-white focus:border-[#39FF14]'
+                        : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 shadow-sm'
                         } ${otpSent ? 'opacity-50' : ''}`}
                     />
                   </div>
@@ -600,8 +600,8 @@ export default function OnboardingKYC() {
                         value={aadhaarOtp}
                         onChange={(e) => setAadhaarOtp(e.target.value.replace(/\D/g, ''))}
                         className={`w-full rounded-xl px-4 py-4 font-black tracking-[0.5em] outline-none transition-all border-2 ${isDark
-                            ? 'bg-white/5 border-white/10 text-white focus:border-[#39FF14]'
-                            : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 shadow-sm'
+                          ? 'bg-white/5 border-white/10 text-white focus:border-[#39FF14]'
+                          : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-emerald-500 shadow-sm'
                           }`}
                       />
                     </div>
@@ -732,7 +732,7 @@ export default function OnboardingKYC() {
               <div
                 onClick={() => handleCameraCapture('license', 'license-input')}
                 className={`p-4 rounded-2xl border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 ${uploads.license ? 'border-flexigo-teal bg-flexigo-teal/5' :
-                    isDark ? 'border-white/10 bg-white/[0.02]' : 'border-slate-200 bg-slate-50'
+                  isDark ? 'border-white/10 bg-white/[0.02]' : 'border-slate-200 bg-slate-50'
                   }`}
               >
                 {previews.license ? (

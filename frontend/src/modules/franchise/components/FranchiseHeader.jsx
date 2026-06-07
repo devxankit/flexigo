@@ -1,15 +1,23 @@
-import { Bell, Search, MapPin, User, ChevronDown, Sun, Moon } from 'lucide-react';
+import { Bell, Search, MapPin, User, ChevronDown, Sun, Moon, Menu } from 'lucide-react';
 import { useFranchiseAuthStore } from '../store/franchiseAuthStore';
 import { useFranchiseNotificationStore } from '../store/notificationStore';
 import { useThemeStore } from "../store/themeStore";
 
-export default function FranchiseHeader() {
+export default function FranchiseHeader({ setMobileMenuOpen }) {
   const { user } = useFranchiseAuthStore();
   const { unreadCount } = useFranchiseNotificationStore();
   const { theme, toggleTheme } = useThemeStore();
 
   return (
-    <header className="h-14 w-full bg-[var(--bg-secondary)] border-b border-[var(--border-subtle)] flex items-center justify-between px-6 sticky top-0 z-40 transition-all duration-300 shadow-sm">
+    <header className="h-14 w-full bg-[var(--bg-secondary)] border-b border-[var(--border-subtle)] flex items-center justify-between px-4 md:px-6 sticky top-0 z-40 transition-all duration-300 shadow-sm">
+      <div className="flex items-center gap-2">
+        <button 
+          onClick={() => setMobileMenuOpen(prev => !prev)}
+          className="md:hidden p-2 -ml-2 text-[var(--text-secondary)] hover:text-emerald-500 rounded-lg transition-all"
+        >
+          <Menu size={20} />
+        </button>
+      </div>
       <div className="flex-1" />
 
       {/* Actions Section */}
