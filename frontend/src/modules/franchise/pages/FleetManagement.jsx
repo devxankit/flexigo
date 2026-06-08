@@ -25,6 +25,8 @@ import { useFleetStore } from '../store/fleetStore';
 import { useFranchiseAuthStore } from '../store/franchiseAuthStore';
 import GlassTable from '../components/GlassTable';
 import StatusBadge from '../components/StatusBadge';
+import { getDatabase, ref, onValue } from "firebase/database";
+import app from '../../../lib/firebase';
 
 const containerStyle = {
   width: '100%',
@@ -71,6 +73,19 @@ export default function FleetManagement() {
   const [focusedVehicle, setFocusedVehicle] = useState(null);   // Controls Map Widget & Focus
   const [map, setMap] = useState(null);
 
+  const [firebaseLocations, setFirebaseLocations] = useState({});
+
+  useEffect(() => {
+     const db = getDatabase(app);
+     const locationsRef = ref(db, 'locations');
+     const unsubscribe = onValue(locationsRef, (snapshot) => {
+        if (snapshot.exists()) {
+           setFirebaseLocations(snapshot.val());
+        }
+     });
+     return () => unsubscribe();
+  }, []);
+
   const [timeOffset, setTimeOffset] = useState(0);
 
   useEffect(() => {
@@ -81,6 +96,15 @@ export default function FleetManagement() {
   }, []);
 
   const getVehicleLiveLocation = useCallback((v) => {
+     const riderId = v?.riderId?._id || v?.riderId?.id || v?.riderId;
+     if (riderId && firebaseLocations[riderId]) {
+        const fbLoc = firebaseLocations[riderId];
+        return {
+           lat: Number(fbLoc.lat),
+           lng: Number(fbLoc.lng)
+        };
+     }
+
      const loc = v?.lastLocation || v?.location;
      if (loc) {
         const vLat = loc.lat !== undefined && loc.lat !== null ? loc.lat : loc.latitude;
@@ -113,7 +137,7 @@ export default function FleetManagement() {
         lat: baseLat + offsetLat + driftLat,
         lng: baseLng + offsetLng + driftLng
      };
-  }, [timeOffset]);
+  }, [timeOffset, firebaseLocations]);
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',

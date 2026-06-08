@@ -140,7 +140,16 @@ export default function GeoFencingPage() {
    const [mapCenter, setMapCenter] = useState(null);
    const [firebaseLocations, setFirebaseLocations] = useState({});
 
-   // Removed Firebase RTDB listener as per user request to handle database entirely on the backend
+   useEffect(() => {
+      const db = getDatabase(app);
+      const locationsRef = ref(db, 'locations');
+      const unsubscribe = onValue(locationsRef, (snapshot) => {
+         if (snapshot.exists()) {
+            setFirebaseLocations(snapshot.val());
+         }
+      });
+      return () => unsubscribe();
+   }, []);
 
    const getRiderLiveLocation = useCallback((rider, gf) => {
       const riderId = rider?._id || rider?.id;
