@@ -61,23 +61,23 @@ export function RiderLayout() {
             return;
           }
           let { latitude, longitude } = position.coords;
-          
+
           // Use actual GPS coordinates without any location override
           console.log("✅ GPS Acquired:", latitude, longitude);
-          
+
           let finalAddress = `GPS: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-          
+
           try {
             // OPTIMIZATION: Only hit Google Maps Geocoding API if rider moved more than 200 meters!
             // This slashes API costs to 0 while stationary and minimizes it heavily while moving.
             const storedGeo = JSON.parse(sessionStorage.getItem('last_geocoded') || 'null');
-            
+
             // Haversine distance calculation in meters
             const getDistance = (lat1, lon1, lat2, lon2) => {
-              const R = 6371e3; const p1 = lat1 * Math.PI/180; const p2 = lat2 * Math.PI/180;
-              const dp = (lat2-lat1) * Math.PI/180; const dl = (lon2-lon1) * Math.PI/180;
-              const a = Math.sin(dp/2) * Math.sin(dp/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl/2) * Math.sin(dl/2);
-              return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+              const R = 6371e3; const p1 = lat1 * Math.PI / 180; const p2 = lat2 * Math.PI / 180;
+              const dp = (lat2 - lat1) * Math.PI / 180; const dl = (lon2 - lon1) * Math.PI / 180;
+              const a = Math.sin(dp / 2) * Math.sin(dp / 2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) * Math.sin(dl / 2);
+              return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             };
 
             if (!storedGeo || getDistance(storedGeo.lat, storedGeo.lng, latitude, longitude) > 200) {
@@ -94,10 +94,10 @@ export function RiderLayout() {
           } catch (geoErr) {
             console.warn("Geocoding failed, using GPS fallback:", geoErr);
           }
-          
+
           applyLiveLocation({ latitude, longitude, address: finalAddress });
           console.log("📍 Address updated:", finalAddress);
-          
+
           // 2. Database update: sync coordinates so admin panels map immediately
           try {
             await updateLocation(latitude, longitude, finalAddress);
@@ -112,7 +112,7 @@ export function RiderLayout() {
 
       const handleLocationError = (error) => {
         console.error("❌ Location Acquisition Error:", error);
-        
+
         // Handle User Denying Geolocation Access
         if (error.code === error.PERMISSION_DENIED) {
           console.warn("⚠️ Geolocation permission denied by user.");
@@ -227,7 +227,7 @@ export function RiderLayout() {
     const unsubscribe = onMessage(messaging, (payload) => {
       console.log('🔔 Rider Notification:', payload);
       const { title, body } = payload.notification;
-      
+
       // Add to store
       addNotification({ title, message: body });
 
@@ -249,7 +249,7 @@ export function RiderLayout() {
 
     // Hard lock the root to prevent rubber-band scrolling on mobile
     const root = document.getElementById('root');
-    
+
     document.documentElement.style.setProperty('overflow', 'hidden', 'important');
     document.documentElement.style.setProperty('position', 'fixed', 'important');
     document.documentElement.style.setProperty('height', '100%', 'important');
@@ -267,7 +267,7 @@ export function RiderLayout() {
       root.style.setProperty('height', '100%', 'important');
       root.style.setProperty('width', '100%', 'important');
     }
-    
+
     return () => {
       document.documentElement.style.cssText = '';
       document.body.style.cssText = '';
@@ -285,9 +285,8 @@ export function RiderLayout() {
   }
 
   return (
-    <div className={`fixed inset-0 transition-colors duration-500 overflow-hidden overscroll-none touch-none ${
-      theme === 'dark' ? 'bg-[#0A0A0F]' : 'bg-white'
-    }`}>
+    <div className={`fixed inset-0 transition-colors duration-500 overflow-hidden overscroll-none touch-none ${theme === 'dark' ? 'bg-[#0A0A0F]' : 'bg-white'
+      }`}>
       {/* App Update Popup */}
       <AnimatePresence>
         {showUpdatePopup && (
@@ -296,9 +295,8 @@ export function RiderLayout() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className={`w-full max-w-sm rounded-3xl p-8 text-center space-y-6 ${
-                theme === 'dark' ? 'bg-[#14141E] border border-white/10' : 'bg-white border border-slate-200 shadow-2xl'
-              }`}
+              className={`w-full max-w-sm rounded-3xl p-8 text-center space-y-6 ${theme === 'dark' ? 'bg-[#14141E] border border-white/10' : 'bg-white border border-slate-200 shadow-2xl'
+                }`}
             >
               <div className="w-16 h-16 bg-flexigo-teal/10 border-2 border-flexigo-teal/30 rounded-2xl flex items-center justify-center mx-auto">
                 <RefreshCw size={32} className="text-flexigo-teal" />
@@ -320,9 +318,8 @@ export function RiderLayout() {
                 </button>
                 <button
                   onClick={() => setShowUpdatePopup(false)}
-                  className={`w-full py-2 text-[9px] font-black uppercase tracking-widest transition-all ${
-                    theme === 'dark' ? 'text-gray-500 hover:text-white' : 'text-slate-400 hover:text-slate-900'
-                  }`}
+                  className={`w-full py-2 text-[9px] font-black uppercase tracking-widest transition-all ${theme === 'dark' ? 'text-gray-500 hover:text-white' : 'text-slate-400 hover:text-slate-900'
+                    }`}
                 >
                   Later
                 </button>
@@ -333,15 +330,14 @@ export function RiderLayout() {
       </AnimatePresence>
       {/* Header Layer */}
       {showHeader && (
-        <div className={`absolute top-0 left-0 right-0 z-[60] transition-colors duration-500 ${
-          theme === 'dark' 
-            ? 'bg-[#0A0A0F]' 
-            : 'bg-white/80 backdrop-blur-xl'
-        }`}>
+        <div className={`absolute top-0 left-0 right-0 z-[60] transition-colors duration-500 ${theme === 'dark'
+          ? 'bg-[#0A0A0F]'
+          : 'bg-white/80 backdrop-blur-xl'
+          }`}>
           <RiderHeader />
         </div>
       )}
-      
+
       {/* Scrollable Content Layer */}
       <main className={`absolute inset-x-0 top-0 bottom-0 overflow-y-auto overflow-x-hidden ${showHeader ? 'pt-[100px]' : 'pt-0'} ${showBottomNav ? 'pb-32' : 'pb-10'} px-0 select-none touch-pan-y`}>
         <Outlet />
@@ -361,9 +357,8 @@ export function RiderLayout() {
             exit={{ opacity: 0, scale: 0.9, y: -20 }}
             className="fixed top-24 left-6 right-6 z-[100] mx-auto max-w-sm"
           >
-            <div className={`p-4 rounded-2xl border backdrop-blur-xl shadow-2xl flex gap-4 ${
-              theme === 'dark' ? 'bg-[#1A1F2C]/90 border-white/10' : 'bg-white/90 border-slate-200 shadow-slate-200/50'
-            }`}>
+            <div className={`p-4 rounded-2xl border backdrop-blur-xl shadow-2xl flex gap-4 ${theme === 'dark' ? 'bg-[#1A1F2C]/90 border-white/10' : 'bg-white/90 border-slate-200 shadow-slate-200/50'
+              }`}>
               <div className="w-10 h-10 rounded-xl bg-flexigo-teal/10 flex items-center justify-center text-flexigo-teal shrink-0">
                 <RefreshCw size={20} strokeWidth={2.5} className="animate-spin-slow" />
               </div>

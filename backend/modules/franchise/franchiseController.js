@@ -28,7 +28,7 @@ export const sendOTP = async (req, res) => {
 
     // Generate OTP (Static for test number, Dynamic otherwise)
     const isTestNumber = phone === '9999999999';
-    const otp = '123456'; // isTestNumber ? '123456' : Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = isTestNumber ? '123456' : Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpire = new Date(Date.now() + 10 * 60 * 1000);
     console.log('[FRANCHISE AUTH] Generated OTP:', otp);
 
@@ -50,17 +50,17 @@ export const sendOTP = async (req, res) => {
 
     // Send SMS via SMSIndiaHub
     const message = `Welcome to the Flexigo powered by SMSINDIAHUB. Your OTP for registration is ${otp}`;
-    // if (!isTestNumber) {
-    //   console.log('[FRANCHISE AUTH] Triggering SMS Service...');
-    //   try {
-    //     await sendSMS(phone, message);
-    //     console.log('[FRANCHISE AUTH] SMS sent successfully');
-    //   } catch (smsError) {
-    //     console.log('[FRANCHISE AUTH] SMS Sending FAILED:', smsError.message);
-    //   }
-    // } else {
-    //   console.log('[FRANCHISE AUTH] Test Number Detected. Skipping SMS.');
-    // }
+    if (!isTestNumber) {
+      console.log('[FRANCHISE AUTH] Triggering SMS Service...');
+      try {
+        await sendSMS(phone, message);
+        console.log('[FRANCHISE AUTH] SMS sent successfully');
+      } catch (smsError) {
+        console.log('[FRANCHISE AUTH] SMS Sending FAILED:', smsError.message);
+      }
+    } else {
+      console.log('[FRANCHISE AUTH] Test Number Detected. Skipping SMS.');
+    }
 
     res.status(200).json({
       success: true,
