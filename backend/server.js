@@ -60,7 +60,11 @@ app.use(cors({
 
 // Logging
 if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
+  app.use(morgan('dev', {
+    skip: function (req, res) {
+      return req.originalUrl.includes('/api/v1/admin/geofencing') || req.originalUrl.includes('/api/v1/admin/notifications-feed');
+    }
+  }));
 }
 
 // Basic route
