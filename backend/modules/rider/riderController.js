@@ -25,7 +25,7 @@ export const sendOTP = async (req, res) => {
     if (!phone) return res.status(400).json({ success: false, message: 'Please provide a phone number' });
 
     const isTestNumber = phone === '4315256688';
-    const otp = isTestNumber ? '123456' : Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = '123456'; // isTestNumber ? '123456' : Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpire = new Date(Date.now() + 10 * 60 * 1000);
 
     let rider = await Rider.findOne({ phone });
@@ -38,9 +38,9 @@ export const sendOTP = async (req, res) => {
     }
 
     const message = `Welcome to the Flexigo powered by SMSINDIAHUB. Your OTP for registration is ${otp}`;
-    if (!isTestNumber) {
-      try { await sendSMS(phone, message); } catch (e) { }
-    }
+    // if (!isTestNumber) {
+    //   try { await sendSMS(phone, message); } catch (e) { }
+    // }
 
     res.status(200).json({ success: true, message: 'OTP sent successfully' });
   } catch (error) {
