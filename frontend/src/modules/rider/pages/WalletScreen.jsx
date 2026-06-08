@@ -55,7 +55,7 @@ export default function WalletScreen() {
       }
 
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_SxBAcIEtexyUUQ',
+        key: 'rzp_live_SxBAcIEtexyUUQ', // Hardcoded Live Key
         amount: orderRes.data.order.amount,
         currency: 'INR',
         name: 'Flexigo Wallet',
