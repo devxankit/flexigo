@@ -764,7 +764,7 @@ export const addReferralBonus = async (req, res) => {
     await rider.save();
 
     const transaction = await RiderTransaction.create({
-      rider: rider._id,
+      riderId: rider._id,
       amount: Number(amount),
       type: 'credit',
       method: 'referral_bonus',

@@ -23,7 +23,7 @@ const TransactionSchema = new mongoose.Schema({
   description: String,
   method: {
     type: String,
-    enum: ['wallet', 'razorpay', 'upi', 'upi_qr', 'card', 'bank'],
+    enum: ['wallet', 'razorpay', 'upi', 'upi_qr', 'card', 'bank', 'referral_bonus'],
     default: 'razorpay'
   },
   planId: {
