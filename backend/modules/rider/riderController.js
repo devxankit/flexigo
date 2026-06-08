@@ -497,6 +497,49 @@ export const verifyPayment = async (req, res) => {
   } catch (error) { res.status(500).json({ success: false, message: error.message }); }
 };
 
+export const createAddOffOrder = async (req, res) => {
+  try {
+    const { amount } = req.body;
+    if (!amount || amount <= 0) return res.status(400).json({ success: false, message: 'Invalid amount' });
+
+    const instance = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET });
+    const order = await instance.orders.create({
+      amount: Math.round(Number(amount) * 100),
+      currency: 'INR',
+      receipt: `receipt_${Date.now()}`
+    });
+
+    res.status(200).json({ success: true, order });
+  } catch (error) { res.status(500).json({ success: false, message: error.message }); }
+};
+
+export const verifyAddOffPayment = async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount, phone } = req.body;
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET).update(body.toString()).digest('hex');
+
+    if (expectedSignature === razorpay_signature) {
+      const rider = await Rider.findOne({ phone });
+      if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
+
+      rider.addOff = (rider.addOff || 0) + Number(amount);
+      await rider.save();
+
+      await Transaction.create({
+        riderId: rider._id,
+        amount: Number(amount),
+        type: 'debit',
+        status: 'success',
+        description: `Advance / Add off paid`,
+        method: 'razorpay'
+      });
+
+      res.status(200).json({ success: true, message: 'Add off added successfully', addOff: rider.addOff });
+    } else res.status(400).json({ success: false, message: 'Invalid signature' });
+  } catch (error) { res.status(500).json({ success: false, message: error.message }); }
+};
+
 export const getRiderPayments = async (req, res) => {
   try {
     const { phone } = req.params;

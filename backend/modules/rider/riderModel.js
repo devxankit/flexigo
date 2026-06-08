@@ -47,6 +47,10 @@ const RiderSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  addOff: {
+    type: Number,
+    default: 0,
+  },
   walletBalance: {
     type: Number,
     default: 0,

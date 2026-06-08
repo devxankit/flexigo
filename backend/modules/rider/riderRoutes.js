@@ -26,7 +26,9 @@ import {
   requestDepositQR,
   getSettings,
   createWalletTopUpOrder,
-  verifyWalletTopUp
+  verifyWalletTopUp,
+  createAddOffOrder,
+  verifyAddOffPayment
 } from './riderController.js';
 import { protectFranchise, protectRider } from '../../shared/middleware/authMiddleware.js';
 
@@ -57,6 +59,9 @@ router.post('/payments/deposit/wallet', payDepositViaWallet);
 router.post('/payments/deposit/create-order', createDepositOrder);
 router.post('/payments/deposit/verify', verifyDepositPayment);
 router.post('/payments/deposit/qr-request', requestDepositQR);
+
+router.post('/payments/add-off/create-order', createAddOffOrder);
+router.post('/payments/add-off/verify', verifyAddOffPayment);
 
 router.patch('/location', protectRider, updateRiderLocation);
 router.post('/handover/request', protectRider, requestHandover);

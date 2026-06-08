@@ -236,6 +236,31 @@ export default function SubscriptionPlans() {
     } catch (e) { alert("Payment Failed"); }
   };
 
+  const [addOffAmount, setAddOffAmount] = useState('');
+  const handleAddOffPayment = async () => {
+    if (!addOffAmount || Number(addOffAmount) <= 0) return alert('Enter valid amount');
+    try {
+      const orderRes = await api.post('/rider/payments/add-off/create-order', { amount: Number(addOffAmount) });
+      const orderData = orderRes.data.order;
+      const options = {
+        key: 'rzp_live_SxBAcIEtexyUUQ',
+        amount: orderData.amount, currency: orderData.currency,
+        name: "Flexigo Mobility", description: "Add off Payment", order_id: orderData.id,
+        handler: async (response) => {
+          const verifyRes = await api.post('/rider/payments/add-off/verify', { ...response, amount: Number(addOffAmount), phone: user.phone });
+          if (verifyRes.data.success) {
+             alert('Add off paid successfully!');
+             setAddOffAmount('');
+             fetchProfile();
+          }
+        },
+        prefill: { name: user.name, contact: user.phone },
+        theme: { color: "#39FF14" }
+      };
+      new window.Razorpay(options).open();
+    } catch (e) { alert('Payment failed'); }
+  };
+
 
   return (
     <PageWrapper className="flex flex-col p-6 pt-6 pb-32">
@@ -292,6 +317,31 @@ export default function SubscriptionPlans() {
             <div className="flex justify-between items-center relative z-10">
               <div><h4 className={`text-xl font-heading font-black transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>Security Deposit</h4><p className="text-[10px] font-black uppercase tracking-widest text-flexigo-teal mt-1">One-time & Refundable</p></div>
               <div className="text-right"><span className={`text-2xl font-black transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>₹{systemSettings.securityDepositAmount}</span></div>
+            </div>
+          </GlassCard>
+
+          {/* Add off Section */}
+          <GlassCard className={`p-4 mt-4 border shadow-md ${isDark ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-white'}`}>
+            <div className="flex flex-col gap-3">
+              <div className="flex justify-between items-center">
+                <span className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>Add off Balance</span>
+                <span className="text-sm font-black text-flexigo-teal">₹{user?.addOff || 0}</span>
+              </div>
+              <div className="flex gap-2">
+                <input 
+                  type="number" 
+                  placeholder="Enter Amount" 
+                  value={addOffAmount} 
+                  onChange={(e) => setAddOffAmount(e.target.value)}
+                  className={`flex-1 rounded-xl px-4 py-2 text-sm font-bold border ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'} focus:outline-none focus:border-flexigo-teal transition-all`}
+                />
+                <button 
+                  onClick={handleAddOffPayment}
+                  className="bg-slate-900 text-white px-6 py-2 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-black transition-all active:scale-95"
+                >
+                  Add off
+                </button>
+              </div>
             </div>
           </GlassCard>
           <div className="space-y-4">
