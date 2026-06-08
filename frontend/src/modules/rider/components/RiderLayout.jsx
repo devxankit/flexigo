@@ -65,12 +65,31 @@ export function RiderLayout() {
           // Use actual GPS coordinates without any location override
           console.log("✅ GPS Acquired:", latitude, longitude);
           
-          // 1. Try reverse geocode but have fallback ready
           let finalAddress = `GPS: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+          
           try {
-            const address = await reverseGeocode(latitude, longitude);
-            if (address) {
-              finalAddress = address;
+            // OPTIMIZATION: Only hit Google Maps Geocoding API if rider moved more than 200 meters!
+            // This slashes API costs to 0 while stationary and minimizes it heavily while moving.
+            const storedGeo = JSON.parse(sessionStorage.getItem('last_geocoded') || 'null');
+            
+            // Haversine distance calculation in meters
+            const getDistance = (lat1, lon1, lat2, lon2) => {
+              const R = 6371e3; const p1 = lat1 * Math.PI/180; const p2 = lat2 * Math.PI/180;
+              const dp = (lat2-lat1) * Math.PI/180; const dl = (lon2-lon1) * Math.PI/180;
+              const a = Math.sin(dp/2) * Math.sin(dp/2) + Math.cos(p1) * Math.cos(p2) * Math.sin(dl/2) * Math.sin(dl/2);
+              return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            };
+
+            if (!storedGeo || getDistance(storedGeo.lat, storedGeo.lng, latitude, longitude) > 200) {
+              const { reverseGeocode } = await import('../../../lib/googleMaps');
+              const address = await reverseGeocode(latitude, longitude);
+              if (address) {
+                finalAddress = address;
+                sessionStorage.setItem('last_geocoded', JSON.stringify({ lat: latitude, lng: longitude, address }));
+              }
+            } else {
+              // Re-use cached address if moved less than 200m
+              finalAddress = storedGeo.address;
             }
           } catch (geoErr) {
             console.warn("Geocoding failed, using GPS fallback:", geoErr);
