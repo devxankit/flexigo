@@ -122,7 +122,7 @@ export default function SubscriptionPlans() {
 
       // 2. Open Razorpay Interface
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_SxBAcIEtexyUUQ',
         amount: orderData.amount,
         currency: orderData.currency,
         name: "Flexigo Mobility",
@@ -219,7 +219,7 @@ export default function SubscriptionPlans() {
 
       const orderData = orderRes.data.order;
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_live_SxBAcIEtexyUUQ',
         amount: orderData.amount, currency: orderData.currency,
         name: "Flexigo Mobility", description: "Security Deposit", order_id: orderData.id,
         handler: async (response) => {
