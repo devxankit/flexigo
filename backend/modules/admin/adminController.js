@@ -456,6 +456,7 @@ export const getKycRecords = async (req, res) => {
           vehiclePlate: r.vehicleId?.plate || 'N/A',
           date: r.createdAt,
           details: r.kycDetails,
+          walletBalance: r.walletBalance || 0,
           isBlocked: r.isBlocked || false
         };
       }),
@@ -471,6 +472,7 @@ export const getKycRecords = async (req, res) => {
           status: normalizedKycStatus === 'approved' ? 'approved' : (normalizedKycStatus === 'rejected' ? 'rejected' : (f.status || 'pending')),
           date: f.createdAt,
           details: f.kycDetails,
+          walletBalance: f.walletBalance || 0,
           hubs: 1,
           isBlocked: f.isBlocked || false
         };

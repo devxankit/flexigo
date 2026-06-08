@@ -229,7 +229,7 @@ export default function KycOnboardingPage() {
             <table className="w-full">
                <thead>
                      <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
-                     {['Identity Identity', 'Persona', 'Liveness Check', 'Registry Date', 'Status', 'Actions'].map((header) => (
+                     {['Identity', 'Wallet Balance', 'Persona', 'Liveness Check', 'Registry Date', 'Status', 'Actions'].map((header) => (
                         <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                      ))}
                   </tr>
@@ -263,6 +263,11 @@ export default function KycOnboardingPage() {
                                 {record.phone && (
                                   <span className="text-[10px] font-medium text-[var(--text-tertiary)] mt-0.5">{record.phone}</span>
                                 )}
+                             </div>
+                          </td>
+                          <td className="py-2 px-4">
+                             <div className="text-[11px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                                ₹{record.walletBalance || 0}
                              </div>
                           </td>
                           <td className="py-2 px-4 font-medium text-[var(--text-tertiary)]">{record.role}</td>
