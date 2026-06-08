@@ -186,7 +186,7 @@ export default function SubscriptionPlans() {
   const handleDepositWallet = async () => {
     if (balance < systemSettings.securityDepositAmount) { alert("Insufficient wallet balance!"); return; }
     try {
-      const res = await api.post('/rider/payments/deposit/wallet', { phone: user.phone });
+      const res = await api.post('/rider/payments/deposit/wallet', { phone: user.phone, planId: selectedPlan?.id });
       if (res.data.success) {
         setDepositPaymentSuccess(true);
         setTimeout(() => { setIsPayingDeposit(false); fetchProfile(); }, 3000);
@@ -196,7 +196,7 @@ export default function SubscriptionPlans() {
 
   const handleDepositQR = async () => {
     try {
-      const res = await api.post('/rider/payments/deposit/qr-request', { phone: user.phone });
+      const res = await api.post('/rider/payments/deposit/qr-request', { phone: user.phone, planId: selectedPlan?.id });
       if (res.data.success) {
         alert("Deposit QR request submitted.");
         setIsPayingDeposit(false); setShowDepositQRCode(false);
@@ -215,7 +215,7 @@ export default function SubscriptionPlans() {
         amount: orderData.amount, currency: orderData.currency,
         name: "Flexigo Mobility", description: "Security Deposit", order_id: orderData.id,
         handler: async (response) => {
-          const verifyRes = await api.post('/rider/payments/deposit/verify', { ...response, phone: user.phone });
+          const verifyRes = await api.post('/rider/payments/deposit/verify', { ...response, phone: user.phone, planId: selectedPlan?.id });
           if (verifyRes.data.success) {
             setDepositPaymentSuccess(true);
             setTimeout(() => { setIsPayingDeposit(false); fetchProfile(); }, 3000);
@@ -227,6 +227,7 @@ export default function SubscriptionPlans() {
       new window.Razorpay(options).open();
     } catch (e) { alert("Payment Failed"); }
   };
+
 
   return (
     <PageWrapper className="flex flex-col p-6 pt-6 pb-32">
@@ -283,7 +284,13 @@ export default function SubscriptionPlans() {
               ))}
             </div>
             <div className="pt-4">
-              <NeonButton variant="solid" size="full" onClick={() => setIsPayingDeposit(true)}>Pay Security Deposit</NeonButton>
+              <NeonButton variant="solid" size="full" onClick={() => {
+                if (!selectedPlan) {
+                  alert("Please select a Subscription Plan first!");
+                  return;
+                }
+                setIsPayingDeposit(true);
+              }}>Pay Security Deposit & Save Plan</NeonButton>
             </div>
           </div>
         </div>
@@ -324,7 +331,7 @@ export default function SubscriptionPlans() {
         </motion.div>
       )}
 
-      <div className={`space-y-4 flex-1 ${user?.depositPaid === false ? 'opacity-40 pointer-events-none grayscale' : ''}`}>
+      <div className={`space-y-4 flex-1`}>
         <h3 className={`text-[10px] font-black uppercase tracking-[0.3em] px-2 mb-2 transition-colors duration-500 ${isDark ? 'text-gray-500' : 'text-slate-950 font-black'
           }`}>{activePlan ? 'Upgrade Options' : 'Available Plans'}</h3>
 

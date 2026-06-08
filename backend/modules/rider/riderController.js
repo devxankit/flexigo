@@ -560,6 +560,9 @@ export const approveQRPayment = async (req, res) => {
     if (!plan) return res.status(404).json({ success: false, message: 'Plan not found' });
 
     // Activate subscription
+    if (transaction.description && transaction.description.includes('Deposit')) {
+      rider.depositPaid = true;
+    }
     const durationMs = plan.type === 'Daily' ? 86400000 : plan.type === 'Weekly' ? 604800000 : 2592000000;
     const expiresAt = new Date(Date.now() + durationMs);
 
@@ -844,7 +847,7 @@ export const getSettings = async (req, res) => {
 
 export const payDepositViaWallet = async (req, res) => {
   try {
-    const { phone } = req.body;
+    const { phone, planId } = req.body;
     const rider = await Rider.findOne({ phone }).populate('franchise');
     if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
     if (rider.depositPaid) return res.status(400).json({ success: false, message: 'Deposit already paid' });
@@ -884,6 +887,16 @@ export const payDepositViaWallet = async (req, res) => {
     }
 
     rider.depositPaid = true;
+    if (planId) {
+      const plan = await SubscriptionPlan.findById(planId);
+      if (plan) {
+        const durationMs = plan.type === 'Daily' ? 86400000 : plan.type === 'Weekly' ? 604800000 : 2592000000;
+        rider.subscriptionPlan = plan._id;
+        rider.subscriptionStart = new Date();
+        rider.subscriptionEnd = new Date(Date.now() + durationMs);
+        rider.status = 'active';
+      }
+    }
     await rider.save();
 
     await Transaction.create({
@@ -913,7 +926,7 @@ export const createDepositOrder = async (req, res) => {
 
 export const verifyDepositPayment = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, phone } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, phone, planId } = req.body;
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET).update(body.toString()).digest('hex');
 
@@ -921,6 +934,16 @@ export const verifyDepositPayment = async (req, res) => {
       const rider = await Rider.findOne({ phone });
       if (rider && !rider.depositPaid) {
         rider.depositPaid = true;
+        if (planId) {
+          const plan = await SubscriptionPlan.findById(planId);
+          if (plan) {
+            const durationMs = plan.type === 'Daily' ? 86400000 : plan.type === 'Weekly' ? 604800000 : 2592000000;
+            rider.subscriptionPlan = plan._id;
+            rider.subscriptionStart = new Date();
+            rider.subscriptionEnd = new Date(Date.now() + durationMs);
+            rider.status = 'active';
+          }
+        }
         await rider.save();
 
         let settings = await SystemSetting.findOne();
@@ -942,7 +965,7 @@ export const verifyDepositPayment = async (req, res) => {
 
 export const requestDepositQR = async (req, res) => {
   try {
-    const { phone } = req.body;
+    const { phone, planId } = req.body;
     const rider = await Rider.findOne({ phone });
     if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
 
@@ -955,7 +978,8 @@ export const requestDepositQR = async (req, res) => {
       type: 'debit',
       status: 'pending',
       description: `QR Payment: Security Deposit`,
-      method: 'upi_qr'
+      method: 'upi_qr',
+      planId: planId
     });
 
     res.status(200).json({ success: true, message: 'Deposit payment submitted', transactionId: transaction._id });
