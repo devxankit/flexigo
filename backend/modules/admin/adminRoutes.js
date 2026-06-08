@@ -7,6 +7,7 @@ import {
   getKycRecords,
   updateKycStatus,
   updateKycReferences,
+  addReferralBonus,
   createHub,
   getFranchiseById,
   getHubVehicles,
@@ -146,6 +147,7 @@ router.get('/kyc', protectAdmin, authorize('KYC', 'read'), getKycRecords);
 router.patch('/kyc/:id', protectAdmin, authorize('KYC', 'update'), updateKycStatus);
 router.patch('/kyc/:id/references', protectAdmin, authorize('KYC', 'update'), updateKycReferences);
 router.post('/kyc/:id/certificate', protectAdmin, authorize('KYC', 'update'), uploadKycCertificate);
+router.post('/kyc/:id/referral', protectAdmin, authorize('KYC', 'update'), addReferralBonus);
 router.post('/kyc/:id/attachment', protectAdmin, authorize('KYC', 'update'), uploadKycAttachment);
 router.delete('/kyc/:id/attachment/:index', protectAdmin, authorize('KYC', 'update'), async (req, res) => {
   try {

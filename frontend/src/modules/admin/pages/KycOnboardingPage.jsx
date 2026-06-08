@@ -45,6 +45,7 @@ export default function KycOnboardingPage() {
   const [editRecordId, setEditRecordId] = useState(null);
   const [searchQuery, setSearchQuery] = useState(() => localStorage.getItem('kyc_search_query') || '');
   const [activeFilters, setActiveFilters] = useState({ range: 'Last 7 Days' });
+  const [referralAmount, setReferralAmount] = useState('');
 
   React.useEffect(() => {
     localStorage.setItem('kyc_active_tab', activeTab);
@@ -660,6 +661,53 @@ export default function KycOnboardingPage() {
                      >
                         <Save size={12} /> SAVE
                      </button>
+                  </div>
+
+                  {/* Referral Bonus Section */}
+                  <div className="pt-4 border-t border-[var(--border-subtle)] space-y-4">
+                     <h4 className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest flex items-center gap-1.5 italic leading-none">
+                        <Zap size={10} className="text-emerald-500" /> Wallet & Referral Bonus
+                     </h4>
+                     <div className="flex items-center gap-4 bg-[var(--bg-tertiary)]/30 border border-[var(--border-subtle)] rounded-xl p-3">
+                       <div className="flex-1 space-y-1">
+                         <p className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Current Wallet Balance</p>
+                         <p className="text-lg font-black text-emerald-500">₹{selectedRecord.walletBalance || 0}</p>
+                       </div>
+                       <div className="flex-1 space-y-1.5">
+                         <label className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Add Bonus Amount</label>
+                         <div className="flex items-center gap-2">
+                           <input 
+                              type="number"
+                              value={referralAmount}
+                              onChange={(e) => setReferralAmount(e.target.value)}
+                              placeholder="₹0"
+                              className="w-full px-3 py-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-lg text-[9px] font-bold tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all placeholder:text-[var(--text-tertiary)]/30"
+                           />
+                           <button 
+                             onClick={async () => {
+                               if(!referralAmount || isNaN(referralAmount) || Number(referralAmount) <= 0) return alert("Enter a valid amount");
+                               try {
+                                 const id = selectedRecord.id || selectedRecord._id;
+                                 const res = await api.post(`/admin/kyc/${id}/referral`, { amount: Number(referralAmount) });
+                                 if(res.data.success) {
+                                   alert("Referral Bonus Added!");
+                                   setReferralAmount('');
+                                   setSelectedRecord(prev => ({ ...prev, walletBalance: res.data.walletBalance }));
+                                   useAdminDataStore.getState().fetchKycRecords();
+                                 } else {
+                                   alert(res.data.message || "Failed to add bonus");
+                                 }
+                               } catch(err) {
+                                 alert("Error adding bonus");
+                               }
+                             }}
+                             className="px-3 py-2 bg-emerald-500 text-white rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-emerald-600 transition-all whitespace-nowrap"
+                           >
+                             Credit
+                           </button>
+                         </div>
+                       </div>
+                     </div>
                   </div>
 
                   <div className="flex gap-2.5 pt-6 border-t border-[var(--border-subtle)] relative z-10">

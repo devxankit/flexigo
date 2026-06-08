@@ -742,6 +742,42 @@ export const uploadKycCertificate = async (req, res) => {
   }
 };
 
+// @desc    Add Referral Bonus to Rider Wallet
+// @route   POST /api/v1/admin/kyc/:id/referral
+export const addReferralBonus = async (req, res) => {
+  try {
+    const { amount } = req.body;
+    const id = req.params.id;
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid referral amount' });
+    }
+
+    let rider = await Rider.findById(id);
+    if (!rider) {
+      // Could also be a Franchise, but franchises don't have wallets in this system yet?
+      // Assuming Referral Bonus is strictly for Riders (direct or franchise riders).
+      return res.status(404).json({ success: false, message: 'Rider not found for wallet update' });
+    }
+
+    rider.walletBalance = (rider.walletBalance || 0) + Number(amount);
+    await rider.save();
+
+    const transaction = await RiderTransaction.create({
+      rider: rider._id,
+      amount: Number(amount),
+      type: 'credit',
+      method: 'referral_bonus',
+      status: 'success',
+      description: 'Admin KYC Referral Bonus'
+    });
+
+    res.status(200).json({ success: true, message: 'Referral bonus added', walletBalance: rider.walletBalance });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @desc    Upload Attachment (PDF/Image) for KYC Record
 // @route   POST /api/v1/admin/kyc/:id/attachment
 export const uploadKycAttachment = async (req, res) => {

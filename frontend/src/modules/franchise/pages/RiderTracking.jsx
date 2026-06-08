@@ -177,11 +177,24 @@ export default function SubscriberConsole() {
              header: 'SUBSCRIPTION_TIER',
              accessor: 'subscriptionPlan',
              render: (row) => (
-               <div className="flex flex-col">
-                  <span className="text-[8.5px] font-black text-[var(--text-primary)] uppercase italic tracking-[0.2em] leading-none">{row.subscriptionPlan?.toUpperCase()}</span>
-                  <div className="flex items-center gap-1.5 mt-1.5 opacity-80">
-                     <CreditCard size={10} className="text-blue-500" />
-                     <span className="text-[6.5px] font-black text-blue-500 uppercase tracking-[0.2em] italic leading-none">NODE_LEASE</span>
+               <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                     <span className="text-[8.5px] font-black text-[var(--text-primary)] uppercase italic tracking-[0.2em] leading-none">
+                        {row.subscriptionPlan ? (row.subscriptionPlan.name || row.subscriptionPlan.label || 'Standard') : 'No Plan Selected'}
+                     </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                     {row.depositPaid ? (
+                        <div className="px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded flex items-center gap-1">
+                           <CheckCircle2 size={8} className="text-emerald-500" />
+                           <span className="text-[6px] font-black text-emerald-500 uppercase tracking-widest italic">Deposit Paid</span>
+                        </div>
+                     ) : (
+                        <div className="px-1.5 py-0.5 bg-rose-500/10 border border-rose-500/20 rounded flex items-center gap-1">
+                           <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                           <span className="text-[6px] font-black text-rose-500 uppercase tracking-widest italic">Deposit Pending</span>
+                        </div>
+                     )}
                   </div>
                </div>
              )
@@ -192,22 +205,28 @@ export default function SubscriberConsole() {
              render: (row) => <StatusBadge status={row.status} />
            },
            {
-             header: 'HANDSHAKE_TX',
-             accessor: 'subscriptionStart',
-             render: (row) => (
-               <div className="flex flex-col">
-                  <div className="flex items-center gap-1.5 text-[8.5px] font-black text-[var(--text-primary)] italic leading-none">
-                     <Clock size={10} strokeWidth={2.5} className="text-slate-600" />
-                     {row.subscriptionStart ? new Date(row.subscriptionStart).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }).toUpperCase() : 'N/A'}
-                  </div>
-                  {row.subscriptionEnd && (
-                    <div className="flex items-center gap-1.5 text-[6.5px] font-black text-amber-500 uppercase tracking-[0.3em] mt-2 italic opacity-80 leading-none">
-                      <Calendar size={10} strokeWidth={2.5} />
-                      EXPIRE {new Date(row.subscriptionEnd).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }).toUpperCase()}
-                    </div>
-                  )}
-               </div>
-             )
+             header: 'PAYMENT_DUE',
+             accessor: 'subscriptionEnd',
+             render: (row) => {
+               if (!row.depositPaid) {
+                  return <span className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-50">Awaiting Deposit</span>;
+               }
+
+               const isOverdue = row.subscriptionEnd && new Date(row.subscriptionEnd) < new Date();
+               
+               return (
+                 <div className="flex flex-col gap-1.5">
+                    {row.subscriptionEnd ? (
+                      <div className={`flex items-center gap-1.5 text-[8px] font-black uppercase tracking-[0.2em] italic leading-none ${isOverdue ? 'text-rose-500 bg-rose-500/10 px-2 py-1 rounded border border-rose-500/20' : 'text-amber-500'}`}>
+                        <Calendar size={10} strokeWidth={2.5} />
+                        DUE {new Date(row.subscriptionEnd).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}
+                      </div>
+                    ) : (
+                      <span className="text-[7px] font-black text-amber-500 uppercase tracking-widest italic opacity-70">Plan Pending</span>
+                    )}
+                 </div>
+               );
+             }
            },
            {
              header: '',

@@ -107,13 +107,16 @@ export default function SubscriptionPlans() {
     }
 
     try {
-      // 1. Create Order on Backend
       const orderRes = await api.post('/rider/payments/create-order', {
         planId: selectedPlan.id,
         phone: user.phone
       });
 
       if (!orderRes.data.success) throw new Error("Order creation failed");
+
+      if (orderRes.data.amountPayable === 0) {
+        return handleWalletPayment();
+      }
 
       const orderData = orderRes.data.order;
 
@@ -209,6 +212,11 @@ export default function SubscriptionPlans() {
     if (depositMethod === 'UPI_QR') { setShowDepositQRCode(true); return; }
     try {
       const orderRes = await api.post('/rider/payments/deposit/create-order', { phone: user.phone });
+      
+      if (orderRes.data.amountPayable === 0) {
+        return handleDepositWallet();
+      }
+
       const orderData = orderRes.data.order;
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
@@ -248,8 +256,24 @@ export default function SubscriptionPlans() {
                   <button onClick={handleDepositQR} className="w-full py-3 bg-flexigo-teal text-white rounded-xl text-[9px] font-black uppercase">I Have Paid</button>
                 </div>
               ) : (
-                <div className="space-y-8">
+                <div className="space-y-4">
                   <h3 className={`text-2xl font-heading font-black italic ${isDark ? 'text-white' : 'text-slate-900'}`}>Checkout <span className="text-flexigo-teal">Deposit</span></h3>
+                  <div className="space-y-2 mb-4 p-4 rounded-xl bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)]">
+                    <div className="flex justify-between text-xs font-black uppercase text-[var(--text-secondary)]">
+                      <span>Total Deposit</span>
+                      <span>₹{systemSettings.securityDepositAmount}</span>
+                    </div>
+                    {depositMethod === 'RAZORPAY' && balance > 0 && (
+                      <div className="flex justify-between text-xs font-black uppercase text-emerald-500">
+                        <span>Wallet Applied</span>
+                        <span>-₹{Math.min(systemSettings.securityDepositAmount, balance)}</span>
+                      </div>
+                    )}
+                    <div className="pt-2 border-t border-[var(--border-subtle)] flex justify-between text-sm font-black uppercase text-[var(--text-primary)]">
+                      <span>Net Payable</span>
+                      <span>₹{depositMethod === 'RAZORPAY' ? Math.max(0, systemSettings.securityDepositAmount - balance) : systemSettings.securityDepositAmount}</span>
+                    </div>
+                  </div>
                   <NeonButton variant="solid" size="full" onClick={handleDepositRazorpay}>Complete Secure Purchase</NeonButton>
                 </div>
               )}
@@ -608,8 +632,28 @@ export default function SubscriptionPlans() {
                         <p className="text-sm font-black text-slate-900 italic">Flexigo Hub Operations</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-[10px] font-black text-slate-700 uppercase tracking-[0.2em] mb-1">Amount</p>
+                        <p className="text-[10px] font-black text-slate-700 uppercase tracking-[0.2em] mb-1">Total</p>
                         <p className="text-2xl font-black text-slate-900 leading-none italic">₹{selectedPlan?.price}</p>
+                      </div>
+                    </div>
+                    {selectedMethod === 'RAZORPAY' && balance > 0 && (
+                      <div className="flex justify-between items-center mb-6 pt-4 border-t border-slate-200 border-dashed">
+                        <div>
+                          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] mb-1">Wallet Applied</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-black text-emerald-600 leading-none italic">-₹{Math.min(selectedPlan?.price, balance)}</p>
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center mb-6 pt-4 border-t border-slate-200">
+                      <div>
+                        <p className="text-[10px] font-black text-slate-700 uppercase tracking-[0.2em] mb-1">Net Payable</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xl font-black text-slate-900 leading-none italic">
+                          ₹{selectedMethod === 'RAZORPAY' ? Math.max(0, selectedPlan?.price - balance) : selectedPlan?.price}
+                        </p>
                       </div>
                     </div>
 
