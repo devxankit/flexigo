@@ -718,6 +718,24 @@ export const updateRiderLocation = async (req, res) => {
     if (speed !== undefined) rider.currentSpeed = speed;
     await rider.save();
 
+    // Push directly to Firebase RTDB from Backend
+    try {
+      const { default: admin } = await import('../../shared/utils/firebase.js');
+      if (admin.apps.length > 0) {
+        const db = admin.database();
+        const ref = db.ref(`locations/${riderId.toString()}`);
+        await ref.set({
+          lat: latitude,
+          lng: longitude,
+          address: address || '',
+          updatedAt: Date.now()
+        });
+        console.log(`⚡ Backend pushed Firebase RTDB Location for ${riderId}`);
+      }
+    } catch (fbErr) {
+      console.error('❌ Backend Firebase RTDB Push failed:', fbErr);
+    }
+
     const activeFences = await Geofence.find({ status: 'active', $or: [{ riderId: riderId }, { riderId: null }] });
     for (const fence of activeFences) {
       const dist = getDist(latitude, longitude, fence.center.lat, fence.center.lng);
