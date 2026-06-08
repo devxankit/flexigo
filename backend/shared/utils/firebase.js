@@ -15,7 +15,7 @@ if (existsSync(serviceAccountPath)) {
 
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
-        databaseURL: "https://flexigo-74574-default-rtdb.firebaseio.com/"
+        databaseURL: process.env.FIREBASE_DATABASE_URL || "https://flexigo-74574-default-rtdb.firebaseio.com/"
       });
       console.log('✅ Firebase Initialized Successfully');
     } else {

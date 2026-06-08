@@ -8,8 +8,7 @@ const firebaseConfig = {
   storageBucket: "flexigo-74574.firebasestorage.app",
   messagingSenderId: "985479144542",
   appId: "1:985479144542:web:f0f77764e72279d68540cf",
-  measurementId: "G-YZVP534P17",
-  databaseURL: "https://flexigo-74574-default-rtdb.firebaseio.com/"
+  measurementId: "G-YZVP534P17"
 };
 
 const app = initializeApp(firebaseConfig);
