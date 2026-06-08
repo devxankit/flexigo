@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import api from '../../../lib/axios';
+import { getDatabase, ref, set } from "firebase/database";
+import app from '../../../lib/firebase';
 
 export const useRideStore = create((set, get) => ({
   rideStatus: 'idle', // idle | unlocking | active | ending | completed
@@ -162,6 +164,27 @@ export const useRideStore = create((set, get) => ({
         address,
         updatedAt: requestTimestamp,
       });
+
+      // PUSH TO FIREBASE REALTIME DATABASE INSTANTLY
+      try {
+        const { useAuthStore } = await import('./authStore');
+        const user = useAuthStore.getState().user;
+        const riderId = user?._id || user?.id;
+        
+        if (riderId) {
+          const db = getDatabase(app);
+          const locationRef = ref(db, 'locations/' + riderId);
+          await set(locationRef, {
+            lat: lat,
+            lng: lng,
+            address: address || '',
+            updatedAt: requestTimestamp
+          });
+          console.log('⚡ Firebase RTDB Location pushed successfully!');
+        }
+      } catch (fbErr) {
+        console.error('❌ Firebase RTDB Push failed:', fbErr);
+      }
       
       const res = await api.patch('/rider/location', { latitude: lat, longitude: lng, address });
       console.log('✅ Location update response:', res.data);
