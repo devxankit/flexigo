@@ -170,9 +170,23 @@ export default function RiderReportPage() {
                            </div>
                         </td>
                         <td className="py-3 px-4">
-                           <div className="flex flex-col">
-                              <span className="text-[11px] font-black text-emerald-500">₹{r.totalPayments.toLocaleString()}</span>
-                              <span className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Total Successful</span>
+                           <div className="flex flex-col gap-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[11px] font-black text-emerald-500">₹{(r.totalPayments || 0).toLocaleString()}</span>
+                                {r.latestPaymentMethod && (
+                                  <span className="text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] bg-[var(--bg-tertiary)]/10 px-1.5 py-0.5 rounded">
+                                    Via {r.latestPaymentMethod.replace('_', ' ')}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                 <span className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Total Successful</span>
+                                 {r.depositPaid && (
+                                   <span className="text-[8px] font-black px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-500 uppercase tracking-widest border border-blue-500/20" title="Deposit Paid">
+                                     + Dep: ₹{r.depositAmount || 'Paid'}
+                                   </span>
+                                 )}
+                              </div>
                            </div>
                         </td>
                         <td className="py-3 px-4">

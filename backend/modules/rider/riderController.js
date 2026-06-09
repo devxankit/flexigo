@@ -436,7 +436,7 @@ export const createPaymentOrder = async (req, res) => {
     const plan = await SubscriptionPlan.findById(planId);
     const rider = await Rider.findOne({ phone });
     const walletBalance = rider?.walletBalance || 0;
-    
+
     const amountToPay = Math.max(0, plan.price - walletBalance);
     if (amountToPay === 0) {
       return res.status(200).json({ success: true, amountPayable: 0, walletApplied: plan.price });
@@ -515,7 +515,7 @@ export const createAddOffOrder = async (req, res) => {
 
 export const verifyAddOffPayment = async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount, phone } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount, phone, description } = req.body;
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET).update(body.toString()).digest('hex');
 
@@ -531,11 +531,11 @@ export const verifyAddOffPayment = async (req, res) => {
         amount: Number(amount),
         type: 'debit',
         status: 'success',
-        description: `Advance / Add off paid`,
+        description: description || `Adhoc Payment`,
         method: 'razorpay'
       });
 
-      res.status(200).json({ success: true, message: 'Add off added successfully', addOff: rider.addOff });
+      res.status(200).json({ success: true, message: 'Adhoc payment successful', addOff: rider.addOff });
     } else res.status(400).json({ success: false, message: 'Invalid signature' });
   } catch (error) { res.status(500).json({ success: false, message: error.message }); }
 };
@@ -1009,7 +1009,7 @@ export const createDepositOrder = async (req, res) => {
     const { phone } = req.body;
     let settings = await SystemSetting.findOne();
     const DEPOSIT_AMOUNT = settings?.securityDepositAmount || 2800;
-    
+
     const rider = await Rider.findOne({ phone });
     const walletBalance = rider?.walletBalance || 0;
     const amountToPay = Math.max(0, DEPOSIT_AMOUNT - walletBalance);

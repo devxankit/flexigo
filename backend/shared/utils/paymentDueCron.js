@@ -13,33 +13,39 @@ export const startPaymentDueCron = () => {
     try {
       const now = new Date();
 
-      // Calculate exactly the previous day (which means 7 days are fully complete)
-      // Example: Paid 25 May -> 7 days complete on 1 June -> Today is 2 June (Next day / 8th day)
-      const targetDateStart = new Date(now);
-      targetDateStart.setDate(targetDateStart.getDate() - 1);
-      targetDateStart.setHours(0, 0, 0, 0);
+      const todayStart = new Date(now);
+      todayStart.setHours(0, 0, 0, 0);
 
-      const targetDateEnd = new Date(now);
-      targetDateEnd.setHours(0, 0, 0, 0);
-
-      // Find riders whose subscription ended strictly between yesterday 00:00 and today 00:00
-      // This ensures the reminder ONLY goes once, exactly on the next day after completion.
+      // Find ALL riders whose subscription ended before today
       const expiredRiders = await Rider.find({
-        subscriptionEnd: { $gte: targetDateStart, $lt: targetDateEnd },
+        subscriptionEnd: { $lt: todayStart },
         subscriptionPlan: { $ne: null },
-        status: { $in: ['active', 'approved'] }
+        status: { $in: ['active', 'approved', 'suspended'] } // Include suspended in case they were suspended for non-payment
       }).populate('subscriptionPlan');
 
       const weeklyExpiredRiders = expiredRiders.filter(rider => {
-        return rider.subscriptionPlan && rider.subscriptionPlan.type === 'Weekly';
+        if (!rider.subscriptionPlan || rider.subscriptionPlan.type !== 'Weekly') return false;
+
+        // Calculate exact days passed since expiration
+        const subEnd = new Date(rider.subscriptionEnd);
+        subEnd.setHours(0, 0, 0, 0);
+
+        const diffTime = todayStart.getTime() - subEnd.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        // Notify on Day 1 (exactly next day / 8th day from start), Day 8 (15th day from start), Day 15, etc.
+        // E.g. Plan starts June 9 -> Ends June 16.
+        // June 17: diffDays = 1 -> Alert 1
+        // June 24: diffDays = 8 -> Alert 2
+        return diffDays >= 1 && (diffDays - 1) % 7 === 0;
       });
 
       if (weeklyExpiredRiders.length === 0) {
-        console.log('✅ [CRON] No weekly payment dues found.');
+        console.log('✅ [CRON] No weekly payment dues found for today.');
         return;
       }
 
-      console.log(`⚠️ [CRON] Found ${weeklyExpiredRiders.length} riders with weekly payment due.`);
+      console.log(`⚠️ [CRON] Found ${weeklyExpiredRiders.length} riders with weekly payment due (Initial or Recurring 7-day alert).`);
 
       // Notify each rider
       for (const rider of weeklyExpiredRiders) {

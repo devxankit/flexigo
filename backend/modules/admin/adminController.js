@@ -2247,44 +2247,54 @@ export const getRiderDetailedReport = async (req, res) => {
       // Fetch successful transactions for this rider (direct)
       const txns = await RiderTransaction.find({
         riderId: r._id,
-        status: 'success'
+        status: { $in: ['success', 'completed'] }
       }).sort('-createdAt').lean();
 
       // Fetch franchise transactions for this rider (if applicable)
       let franchiseTxns = [];
       if (r.franchise && r.franchise._id) {
+        // Use case-insensitive regex to match subscriberName robustly
+        const namesToMatch = [r.name, r.phone].filter(Boolean);
+        const nameRegexes = namesToMatch.map(name => new RegExp(`^\\s*${name.trim()}\\s*$`, 'i'));
+
         franchiseTxns = await Transaction.find({
           franchiseId: r.franchise._id,
-          status: 'completed',
-          subscriberName: { $in: [r.name, r.phone].filter(Boolean) }
+          status: { $in: ['success', 'completed'] },
+          subscriberName: { $in: nameRegexes }
         }).sort('-date').lean();
       }
 
       const allAmounts = [
-        ...txns.map(t => t.amount),
-        ...franchiseTxns.map(t => t.amount)
+        ...txns.map(t => Number(t.amount) || 0),
+        ...franchiseTxns.map(t => Number(t.amount) || 0)
       ];
       const totalPayments = allAmounts.reduce((acc, val) => acc + val, 0);
 
       const totalDebits = [
-        ...txns.filter(t => t.type === 'debit').map(t => t.amount),
-        ...franchiseTxns.filter(t => ['Subscription', 'Deposit'].includes(t.type)).map(t => t.amount)
+        ...txns.filter(t => t.type === 'debit').map(t => Number(t.amount) || 0),
+        ...franchiseTxns.filter(t => ['Subscription', 'Deposit'].includes(t.type)).map(t => Number(t.amount) || 0)
       ].reduce((acc, val) => acc + val, 0);
 
       const combinedTxns = [
         ...txns.map(t => ({
-          amount: t.amount,
+          amount: Number(t.amount) || 0,
           type: t.type,
+          method: t.method || 'unknown',
           date: t.createdAt,
           description: t.description || 'Wallet/Plan Payment'
         })),
         ...franchiseTxns.map(t => ({
-          amount: t.amount,
+          amount: Number(t.amount) || 0,
           type: t.type === 'Deposit' ? 'credit' : 'debit',
+          method: t.paymentMethod || 'unknown',
           date: t.date,
           description: t.description || `${t.type} Payment`
         }))
       ].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      const depositTxn = franchiseTxns.find(t => t.type === 'Deposit') || txns.find(t => t.description?.toLowerCase().includes('deposit'));
+      const depositAmount = depositTxn ? Number(depositTxn.amount) : 0;
+      const latestPaymentMethod = combinedTxns.length > 0 ? combinedTxns[0].method : null;
 
       return {
         id: r._id,
@@ -2300,6 +2310,9 @@ export const getRiderDetailedReport = async (req, res) => {
         totalDebits: totalDebits,
         walletBalance: r.walletBalance || 0,
         totalDistance: r.totalDistance || 0,
+        depositPaid: r.depositPaid || false,
+        depositAmount: depositAmount,
+        latestPaymentMethod: latestPaymentMethod,
         status: r.kycStatus === 'approved' ? 'approved' : (r.kycStatus === 'rejected' ? 'rejected' : (r.status || 'pending')),
         kycStatus: r.kycStatus,
         recentPayments: combinedTxns.slice(0, 5)
