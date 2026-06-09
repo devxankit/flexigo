@@ -178,10 +178,30 @@ export function RiderLayout() {
         );
       }, 5000);
 
-      // Immediately sync location when app is returned to foreground
+      // --- SCREEN WAKE LOCK API ---
+      // Prevents the phone screen from sleeping so tracking continues flawlessly
+      let wakeLock = null;
+      const requestWakeLock = async () => {
+        try {
+          if ('wakeLock' in navigator) {
+            wakeLock = await navigator.wakeLock.request('screen');
+            console.log("🌞 Screen Wake Lock acquired: Phone will not sleep.");
+            wakeLock.addEventListener('release', () => {
+              console.log("🌑 Screen Wake Lock released.");
+            });
+          }
+        } catch (err) {
+          console.error("Wake Lock error:", err.message);
+        }
+      };
+
+      requestWakeLock();
+
+      // Immediately sync location and re-acquire wake lock when app is returned to foreground
       const handleVisibilityChange = () => {
         if (document.visibilityState === 'visible') {
           console.log("📱 App became visible, syncing location immediately...");
+          requestWakeLock();
           navigator.geolocation.getCurrentPosition(
             handleLocationSuccess,
             handleLocationError,
@@ -195,6 +215,9 @@ export function RiderLayout() {
         navigator.geolocation.clearWatch(watchId);
         clearInterval(pollInterval);
         document.removeEventListener('visibilitychange', handleVisibilityChange);
+        if (wakeLock !== null) {
+          wakeLock.release().catch(() => { });
+        }
       };
     } else {
       console.warn("⚠️ Geolocation is NOT available in this browser context (possibly insecure HTTP connection).");
