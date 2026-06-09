@@ -1059,7 +1059,8 @@ export const verifyDepositPayment = async (req, res) => {
             type: 'debit',
             status: 'success',
             description: `Wallet applied to Security Deposit`,
-            method: 'wallet'
+            method: 'wallet',
+            planId: planId || null
           });
         }
 
@@ -1084,7 +1085,8 @@ export const verifyDepositPayment = async (req, res) => {
             type: 'debit',
             status: 'success',
             description: `Security Deposit`,
-            method: 'razorpay'
+            method: 'razorpay',
+            planId: planId || null
           });
         }
       }
