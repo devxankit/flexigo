@@ -176,7 +176,9 @@ export default function PaymentGatewayPage() {
                               {txn.status}
                            </div>
                         </td>
-                        <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]     whitespace-nowrap">{new Date(txn.date).toLocaleTimeString()}</td>
+                        <td className="py-2 px-4 font-bold text-[12px] text-[var(--text-tertiary)] whitespace-nowrap">
+                           {new Date(txn.date).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
+                        </td>
                      </tr>
                   ))}
                </tbody>

@@ -162,8 +162,8 @@ export default function OnboardingKYC() {
   useEffect(() => {
     console.log('INIT: Checking existing KYC status');
 
-    // Prevent showing onboarding if already registered
-    if (user?.isRegistered) {
+    // Prevent showing onboarding if already registered or KYC is approved
+    if (user?.isRegistered || user?.kycStatus === 'approved') {
       navigate('/rider/home', { replace: true });
       return;
     }

@@ -183,7 +183,7 @@ export default function FinancialCenterPage() {
                            </div>
                         </td>
                         <td className="py-2 px-4 font-medium text-[var(--text-primary)]">{txn.hub}</td>
-                        <td className="py-2 px-4 font-medium text-emerald-500">{txn.val}</td>
+                        <td className="py-2 px-4 font-black text-emerald-400 drop-shadow-sm text-[13px]">{txn.val}</td>
                         <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]">{txn.method}</td>
                         <td className="py-2 px-4">
                            <div className={`inline-flex px-1.5 py-0.5 rounded  font-medium   border ${
@@ -194,8 +194,8 @@ export default function FinancialCenterPage() {
                               {txn.status}
                            </div>
                         </td>
-                        <td className="py-2 px-4  font-medium text-[var(--text-tertiary)]">
-                           {new Date(txn.date).toLocaleDateString()}
+                        <td className="py-2 px-4 font-bold text-[12px] text-slate-400 whitespace-nowrap">
+                           {new Date(txn.date).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
                         </td>
                      </tr>
                   ))}

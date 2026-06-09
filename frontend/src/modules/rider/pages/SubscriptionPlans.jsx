@@ -212,7 +212,7 @@ export default function SubscriptionPlans() {
     if (depositMethod === 'UPI_QR') { setShowDepositQRCode(true); return; }
     try {
       const orderRes = await api.post('/rider/payments/deposit/create-order', { phone: user.phone });
-      
+
       if (orderRes.data.amountPayable === 0) {
         return handleDepositWallet();
       }
@@ -238,7 +238,7 @@ export default function SubscriptionPlans() {
 
   const [addOffAmount, setAddOffAmount] = useState('');
   const [adhocDescription, setAdhocDescription] = useState('');
-  
+
   const handleAddOffPayment = async () => {
     if (!addOffAmount || Number(addOffAmount) <= 0) return alert('Enter valid amount');
     try {
@@ -251,19 +251,19 @@ export default function SubscriptionPlans() {
         handler: async (response) => {
           const verifyRes = await api.post('/rider/payments/add-off/verify', { ...response, amount: Number(addOffAmount), phone: user?.phone, description: adhocDescription });
           if (verifyRes.data.success) {
-             alert('Adhoc Payment successful!');
-             setAddOffAmount('');
-             setAdhocDescription('');
-             fetchProfile();
+            alert('Adhoc Payment successful!');
+            setAddOffAmount('');
+            setAdhocDescription('');
+            fetchProfile();
           }
         },
         prefill: { name: user?.name || "Rider", contact: user?.phone || "0000000000" },
         theme: { color: "#39FF14" }
       };
       new window.Razorpay(options).open();
-    } catch (e) { 
+    } catch (e) {
       console.error("Adhoc Payment Error:", e);
-      alert('Payment failed: ' + (e.response?.data?.message || e.message)); 
+      alert('Payment failed: ' + (e.response?.data?.message || e.message));
     }
   };
 
@@ -333,14 +333,14 @@ export default function SubscriptionPlans() {
               </div>
               <div className="flex flex-col gap-2">
                 <div className="flex gap-2">
-                  <input 
-                    type="number" 
-                    placeholder="Enter Amount" 
-                    value={addOffAmount} 
+                  <input
+                    type="number"
+                    placeholder="Enter Amount"
+                    value={addOffAmount}
                     onChange={(e) => setAddOffAmount(e.target.value)}
                     className={`flex-1 rounded-xl px-4 py-2 text-sm font-bold border ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'} focus:outline-none focus:border-flexigo-teal transition-all`}
                   />
-                  <button 
+                  <button
                     type="button"
                     onClick={handleAddOffPayment}
                     className="bg-slate-900 text-white px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-black transition-all active:scale-95"
@@ -348,10 +348,10 @@ export default function SubscriptionPlans() {
                     PAY NOW
                   </button>
                 </div>
-                <input 
-                  type="text" 
-                  placeholder="Payment Description (Optional)" 
-                  value={adhocDescription} 
+                <input
+                  type="text"
+                  placeholder="Payment Description (Optional)"
+                  value={adhocDescription}
                   onChange={(e) => setAdhocDescription(e.target.value)}
                   className={`w-full rounded-xl px-4 py-2 text-xs font-bold border ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'} focus:outline-none focus:border-flexigo-teal transition-all`}
                 />

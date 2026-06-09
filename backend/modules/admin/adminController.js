@@ -1395,7 +1395,7 @@ export const getFinanceData = async (req, res) => {
     // Normalize and Combine
     const combined = [
       ...frTxns.map(t => ({
-        id: `TXN-${t._id.toString().slice(-4).toUpperCase()}`,
+        id: t.transactionId || `TXN-${t._id.toString().slice(-6).toUpperCase()}`,
         hub: t.franchiseId?.hubName || 'Hub Network',
         user: t.franchiseId?.ownerName || t.subscriberName || 'Partner',
         amount: t.amount,
@@ -1405,7 +1405,7 @@ export const getFinanceData = async (req, res) => {
         rawStatus: t.status
       })),
       ...riderTxns.map(t => ({
-        id: `TXN-${t._id.toString().slice(-4).toUpperCase()}`,
+        id: t.transactionId || `TXN-${t._id.toString().slice(-6).toUpperCase()}`,
         hub: 'Direct (Rider)',
         user: t.riderId?.name || t.riderId?.phone || 'Rider',
         amount: t.amount,
@@ -2277,6 +2277,8 @@ export const getRiderDetailedReport = async (req, res) => {
 
       const combinedTxns = [
         ...txns.map(t => ({
+          id: t._id,
+          txnId: t.transactionId || `TXN-${t._id.toString().slice(-6).toUpperCase()}`,
           amount: Number(t.amount) || 0,
           type: t.type,
           method: t.method || 'unknown',
@@ -2284,6 +2286,8 @@ export const getRiderDetailedReport = async (req, res) => {
           description: t.description || 'Wallet/Plan Payment'
         })),
         ...franchiseTxns.map(t => ({
+          id: t._id,
+          txnId: t.transactionId || `TXN-${t._id.toString().slice(-6).toUpperCase()}`,
           amount: Number(t.amount) || 0,
           type: t.type === 'Deposit' ? 'credit' : 'debit',
           method: t.paymentMethod || 'unknown',

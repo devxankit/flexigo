@@ -33,7 +33,7 @@ export default function AuthOTP() {
     setLoading(false);
 
     if (result.success) {
-      if (result.rider?.isRegistered) {
+      if (result.rider?.isRegistered || result.rider?.kycStatus === 'approved') {
         setToastMsg("Welcome Back! Already Registered.");
         setTimeout(() => navigate('/rider/home'), 1500);
       } else {

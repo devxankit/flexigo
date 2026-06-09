@@ -172,17 +172,22 @@ export default function RiderReportPage() {
                            <td className="py-3 px-4">
                               <div className="flex flex-col gap-1">
                                  <div className="flex items-center gap-2">
-                                    <span className="text-[11px] font-black text-emerald-500">₹{(r.totalPayments || 0).toLocaleString()}</span>
+                                    <span className="text-[13px] font-black text-emerald-400 drop-shadow-md">₹{(r.totalPayments || 0).toLocaleString()}</span>
                                     {r.latestPaymentMethod && (
-                                       <span className="text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] bg-[var(--bg-tertiary)]/10 px-1.5 py-0.5 rounded">
+                                       <span className="text-[8px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
                                           Via {r.latestPaymentMethod.replace('_', ' ')}
                                        </span>
                                     )}
                                  </div>
-                                 <div className="flex items-center gap-1.5 mt-0.5">
+                                 <div className="flex flex-col gap-1 mt-0.5">
                                     <span className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Total Successful</span>
+                                    {r.recentPayments && r.recentPayments.length > 0 && (
+                                       <span className="text-[10px] font-bold text-slate-500 tracking-wider bg-slate-500/10 px-2 py-1 rounded w-fit border border-slate-500/20">
+                                          ID: {r.recentPayments[0].txnId} • {new Date(r.recentPayments[0].date).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
+                                       </span>
+                                    )}
                                     {r.depositPaid && (
-                                       <span className="text-[8px] font-black px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-500 uppercase tracking-widest border border-blue-500/20" title="Deposit Paid">
+                                       <span className="text-[8px] font-black px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-500 uppercase tracking-widest border border-blue-500/20 w-fit" title="Deposit Paid">
                                           + Dep: ₹{r.depositAmount || 'Paid'}
                                        </span>
                                     )}
