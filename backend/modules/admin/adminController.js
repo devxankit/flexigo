@@ -2250,12 +2250,7 @@ export const getRiderDetailedReport = async (req, res) => {
         status: 'success'
       }).sort('-createdAt').lean();
 
-      const totalPayments = txns.reduce((acc, t) => {
-        if (t.type === 'credit' || (t.type === 'debit' && t.method !== 'wallet')) {
-          return acc + t.amount;
-        }
-        return acc;
-      }, 0);
+      const totalPayments = txns.reduce((acc, t) => acc + t.amount, 0);
       const totalDebits = txns.reduce((acc, t) => acc + (t.type === 'debit' ? t.amount : 0), 0);
 
       return {
