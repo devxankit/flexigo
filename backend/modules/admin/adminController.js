@@ -2244,14 +2244,47 @@ export const getRiderDetailedReport = async (req, res) => {
       .lean();
 
     const report = await Promise.all(riders.map(async (r) => {
-      // Fetch successful transactions for this rider
+      // Fetch successful transactions for this rider (direct)
       const txns = await RiderTransaction.find({
         riderId: r._id,
         status: 'success'
       }).sort('-createdAt').lean();
 
-      const totalPayments = txns.reduce((acc, t) => acc + t.amount, 0);
-      const totalDebits = txns.reduce((acc, t) => acc + (t.type === 'debit' ? t.amount : 0), 0);
+      // Fetch franchise transactions for this rider (if applicable)
+      let franchiseTxns = [];
+      if (r.franchise && r.franchise._id) {
+        franchiseTxns = await Transaction.find({
+          franchiseId: r.franchise._id,
+          status: 'completed',
+          subscriberName: { $in: [r.name, r.phone].filter(Boolean) }
+        }).sort('-date').lean();
+      }
+
+      const allAmounts = [
+        ...txns.map(t => t.amount),
+        ...franchiseTxns.map(t => t.amount)
+      ];
+      const totalPayments = allAmounts.reduce((acc, val) => acc + val, 0);
+
+      const totalDebits = [
+        ...txns.filter(t => t.type === 'debit').map(t => t.amount),
+        ...franchiseTxns.filter(t => ['Subscription', 'Deposit'].includes(t.type)).map(t => t.amount)
+      ].reduce((acc, val) => acc + val, 0);
+
+      const combinedTxns = [
+        ...txns.map(t => ({
+          amount: t.amount,
+          type: t.type,
+          date: t.createdAt,
+          description: t.description || 'Wallet/Plan Payment'
+        })),
+        ...franchiseTxns.map(t => ({
+          amount: t.amount,
+          type: t.type === 'Deposit' ? 'credit' : 'debit',
+          date: t.date,
+          description: t.description || `${t.type} Payment`
+        }))
+      ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
       return {
         id: r._id,
@@ -2269,12 +2302,7 @@ export const getRiderDetailedReport = async (req, res) => {
         totalDistance: r.totalDistance || 0,
         status: r.kycStatus === 'approved' ? 'approved' : (r.kycStatus === 'rejected' ? 'rejected' : (r.status || 'pending')),
         kycStatus: r.kycStatus,
-        recentPayments: txns.slice(0, 5).map(t => ({
-          amount: t.amount,
-          type: t.type,
-          date: t.createdAt,
-          description: t.description
-        }))
+        recentPayments: combinedTxns.slice(0, 5)
       };
     }));
 
