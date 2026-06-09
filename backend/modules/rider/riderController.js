@@ -813,6 +813,7 @@ export const updateRiderLocation = async (req, res) => {
           lat: latitude,
           lng: longitude,
           address: address || '',
+          speed: speed || 0,
           updatedAt: Date.now()
         });
         console.log(`⚡ Backend pushed Firebase RTDB Location for ${riderId}`);

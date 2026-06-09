@@ -282,21 +282,25 @@ export default function GeoFencingPage() {
    useEffect(() => {
       if (selectedZone && map) {
          const currentId = (selectedZone._id || selectedZone.id || '').toString();
+         const riderId = selectedZone.riderId?._id || selectedZone.riderId?.id || selectedZone.riderId;
+         const matchedRider = allRiders.find(r => (r._id || r.id || '').toString() === (riderId || '').toString());
+         const targetLoc = getRiderLiveLocation(matchedRider || selectedZone.riderId, selectedZone) || selectedZone.center || userLocation;
+
+         const isNewDelhi = Math.abs(targetLoc.lat - 28.6139) < 0.1 && Math.abs(targetLoc.lng - 77.2090) < 0.1;
+         const finalLoc = (isNewDelhi && userLocation) ? userLocation : targetLoc;
+
          if (currentId !== lastSelectedZoneId) {
-            const riderId = selectedZone.riderId?._id || selectedZone.riderId?.id || selectedZone.riderId;
-            const matchedRider = allRiders.find(r => (r._id || r.id || '').toString() === (riderId || '').toString());
-            const targetLoc = getRiderLiveLocation(matchedRider || selectedZone.riderId, selectedZone) || selectedZone.center || userLocation;
-
-            const isNewDelhi = Math.abs(targetLoc.lat - 28.6139) < 0.1 && Math.abs(targetLoc.lng - 77.2090) < 0.1;
-            const finalLoc = (isNewDelhi && userLocation) ? userLocation : targetLoc;
-
             setMapCenter(finalLoc);
             map.panTo(finalLoc);
             map.setZoom(16);
             setLastSelectedZoneId(currentId);
+         } else {
+            // Auto-pan on live location update
+            setMapCenter(finalLoc);
+            map.panTo(finalLoc);
          }
       }
-   }, [selectedZone, map, lastSelectedZoneId, allRiders, getRiderLiveLocation, userLocation]);
+   }, [selectedZone, map, lastSelectedZoneId, allRiders, getRiderLiveLocation, userLocation, firebaseLocations]);
 
    const addNotification = (riderName) => {
       const newNotif = {
@@ -906,7 +910,12 @@ export default function GeoFencingPage() {
                                     const loc = getRiderLiveLocation(matchedRider || selectedZone.riderId, selectedZone) || selectedZone.center || userLocation;
                                     const isNewDelhi = loc.lat === 28.6139 && loc.lng === 77.2090;
                                     const finalLoc = (isNewDelhi && userLocation) ? userLocation : loc;
-                                    const address = matchedRider?.lastLocation?.address || selectedZone.center?.address || matchedRider?.address || '';
+                                    
+                                    let address = matchedRider?.lastLocation?.address || selectedZone.center?.address || matchedRider?.address || '';
+                                    if (riderId && firebaseLocations[riderId] && firebaseLocations[riderId].address) {
+                                        address = firebaseLocations[riderId].address;
+                                    }
+
                                     return (
                                        <span className="flex flex-col gap-0.5">
                                           <span className="truncate max-w-[200px] block" title={address || `${finalLoc.lat.toFixed(4)}° N, ${finalLoc.lng.toFixed(4)}° E`}>
@@ -928,7 +937,12 @@ export default function GeoFencingPage() {
                                  {selectedZone ? (() => {
                                     const riderId = selectedZone.riderId?._id || selectedZone.riderId?.id || selectedZone.riderId;
                                     const matchedRider = allRiders.find(r => (r._id || r.id || '').toString() === (riderId || '').toString());
-                                    const speed = matchedRider?.currentSpeed !== undefined ? matchedRider.currentSpeed : (selectedZone.riderId?.currentSpeed !== undefined ? selectedZone.riderId.currentSpeed : 24.5);
+                                    
+                                    let speed = matchedRider?.currentSpeed !== undefined ? matchedRider.currentSpeed : (selectedZone.riderId?.currentSpeed !== undefined ? selectedZone.riderId.currentSpeed : 0);
+                                    if (riderId && firebaseLocations[riderId] && firebaseLocations[riderId].speed !== undefined) {
+                                        speed = firebaseLocations[riderId].speed;
+                                    }
+
                                     return `${speed} km/h`;
                                  })() : '0.0 km/h'}
                               </p>

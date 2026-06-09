@@ -179,7 +179,7 @@ export default function FleetManagement() {
             }
          }
       }
-   }, [vehicles, map, timeOffset, getVehicleLiveLocation]);
+   }, [vehicles, map, timeOffset, getVehicleLiveLocation, firebaseLocations]);
 
    useEffect(() => {
       const loc = focusedVehicle ? getVehicleLiveLocation(focusedVehicle) : null;
@@ -463,8 +463,13 @@ export default function FleetManagement() {
                            {focusedVehicle ? (() => {
                               const liveLoc = getVehicleLiveLocation(focusedVehicle);
                               if (!liveLoc) return 'Searching...';
-                              const originalLoc = focusedVehicle.lastLocation || focusedVehicle.location || {};
-                              const address = originalLoc.address || focusedVehicle.address || '';
+                              
+                              const riderId = focusedVehicle?.riderId?._id || focusedVehicle?.riderId?.id || focusedVehicle?.riderId;
+                              let address = focusedVehicle.lastLocation?.address || focusedVehicle.location?.address || focusedVehicle.address || '';
+                              if (riderId && firebaseLocations[riderId] && firebaseLocations[riderId].address) {
+                                  address = firebaseLocations[riderId].address;
+                              }
+
                               return (
                                  <span className="flex flex-col gap-0.5">
                                     <span className="truncate max-w-[200px] block" title={address || `${Number(liveLoc.lat).toFixed(4)}° N, ${Number(liveLoc.lng).toFixed(4)}° E`}>
