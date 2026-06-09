@@ -520,20 +520,33 @@ export const verifyAddOffPayment = async (req, res) => {
     const expectedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET).update(body.toString()).digest('hex');
 
     if (expectedSignature === razorpay_signature) {
-      const rider = await Rider.findOne({ phone });
+      const rider = await Rider.findOne({ phone }).populate('franchise');
       if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
 
       rider.addOff = (rider.addOff || 0) + Number(amount);
       await rider.save();
 
-      await Transaction.create({
-        riderId: rider._id,
-        amount: Number(amount),
-        type: 'debit',
-        status: 'success',
-        description: description || `Adhoc Payment`,
-        method: 'razorpay'
-      });
+      if (rider.franchise) {
+        const FranchiseTransaction = (await import('../franchise/franchiseTransactionModel.js')).default;
+        await FranchiseTransaction.create({
+          franchiseId: rider.franchise._id || rider.franchise,
+          amount: Number(amount),
+          type: 'Adhoc Payment',
+          status: 'completed',
+          subscriberName: rider.name || rider.phone,
+          description: description || `Adhoc Payment`,
+          paymentMethod: 'razorpay'
+        });
+      } else {
+        await Transaction.create({
+          riderId: rider._id,
+          amount: Number(amount),
+          type: 'credit',
+          status: 'success',
+          description: description || `Adhoc Payment`,
+          method: 'razorpay'
+        });
+      }
 
       res.status(200).json({ success: true, message: 'Adhoc payment successful', addOff: rider.addOff });
     } else res.status(400).json({ success: false, message: 'Invalid signature' });

@@ -249,7 +249,7 @@ export default function SubscriptionPlans() {
         amount: orderData.amount, currency: orderData.currency,
         name: "Flexigo Mobility", description: adhocDescription || "Adhoc Payment", order_id: orderData.id,
         handler: async (response) => {
-          const verifyRes = await api.post('/rider/payments/add-off/verify', { ...response, amount: Number(addOffAmount), phone: user.phone, description: adhocDescription });
+          const verifyRes = await api.post('/rider/payments/add-off/verify', { ...response, amount: Number(addOffAmount), phone: user?.phone, description: adhocDescription });
           if (verifyRes.data.success) {
              alert('Adhoc Payment successful!');
              setAddOffAmount('');
@@ -257,11 +257,14 @@ export default function SubscriptionPlans() {
              fetchProfile();
           }
         },
-        prefill: { name: user.name, contact: user.phone },
+        prefill: { name: user?.name || "Rider", contact: user?.phone || "0000000000" },
         theme: { color: "#39FF14" }
       };
       new window.Razorpay(options).open();
-    } catch (e) { alert('Payment failed'); }
+    } catch (e) { 
+      console.error("Adhoc Payment Error:", e);
+      alert('Payment failed: ' + (e.response?.data?.message || e.message)); 
+    }
   };
 
   return (
@@ -338,6 +341,7 @@ export default function SubscriptionPlans() {
                     className={`flex-1 rounded-xl px-4 py-2 text-sm font-bold border ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'} focus:outline-none focus:border-flexigo-teal transition-all`}
                   />
                   <button 
+                    type="button"
                     onClick={handleAddOffPayment}
                     className="bg-slate-900 text-white px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-black transition-all active:scale-95"
                   >
