@@ -177,7 +177,6 @@ export default function SubscriptionPlans() {
 
   const paymentMethods = [
     { id: 'WALLET', label: 'Flexigo Wallet', sub: `Balance: ₹${balance}`, icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M21 18c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h9v1zm-9-10v6h9V8h-9zM3 13V6c0-.55.45-1 1-1h16c.55 0 1 .45 1 1v2h-9c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h9v2c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1v-2z" /></svg> },
-    { id: 'UPI_QR', label: 'UPI QR Code', sub: 'Scan & Pay via any UPI App', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M3 11h2v2H3v-2zm0-4h2v2H3V7zm4 4h2v2H7v-2zm0-4h2v2H7V7zm0-4h2v2H7V3zm4 8h2v2h-2v-2zm0-4h2v2h-2V7zm0-4h2v2h-2V3zm4 8h2v2h-2v-2zm0-8h2v2h-2V3zm4 4h2v2h-2V7zm0 4h2v2h-2v-2zm0-8h2v2h-2V3zM3 3h2v2H3V3zm0 8h2v2H3v-2z" /></svg> },
     { id: 'RAZORPAY', label: balance > 0 ? 'Razorpay + Wallet' : 'Razorpay UPI', sub: balance > 0 ? 'Wallet balance auto-applied' : 'Instant Online Payment', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" /></svg> },
   ];
 

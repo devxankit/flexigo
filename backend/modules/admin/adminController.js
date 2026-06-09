@@ -1395,6 +1395,7 @@ export const getFinanceData = async (req, res) => {
     // Normalize and Combine
     const combined = [
       ...frTxns.map(t => ({
+        _id: t._id,
         id: t.transactionId || `TXN-${t._id.toString().slice(-6).toUpperCase()}`,
         hub: t.franchiseId?.hubName || 'Hub Network',
         user: t.franchiseId?.ownerName || t.subscriberName || 'Partner',
@@ -1405,6 +1406,7 @@ export const getFinanceData = async (req, res) => {
         rawStatus: t.status
       })),
       ...riderTxns.map(t => ({
+        _id: t._id,
         id: t.transactionId || `TXN-${t._id.toString().slice(-6).toUpperCase()}`,
         hub: 'Direct (Rider)',
         user: t.riderId?.name || t.riderId?.phone || 'Rider',

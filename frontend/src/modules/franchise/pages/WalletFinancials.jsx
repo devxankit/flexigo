@@ -506,7 +506,7 @@ export default function WalletFinancials() {
                                     </div>
                                  </div>
 
-                                 {/* UPI QR Option */}
+                                 {/* UPI QR Option Hidden 
                                  <div
                                     onClick={() => !isProcessingAddFunds && setPaymentMethod('UPI_QR')}
                                     className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between ${paymentMethod === 'UPI_QR'
@@ -529,6 +529,7 @@ export default function WalletFinancials() {
                                        {paymentMethod === 'UPI_QR' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                                     </div>
                                  </div>
+                                 */}
                               </div>
 
                               <button
