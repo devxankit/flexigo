@@ -642,7 +642,11 @@ export const approveQRPayment = async (req, res) => {
 
     // Update transaction status
     transaction.status = 'success';
-    transaction.description = `Plan Upgrade: ${plan.name} (QR Verified)`;
+    if (transaction.description && transaction.description.includes('Deposit')) {
+      transaction.description = `Security Deposit & Plan Upgrade: ${plan.name} (QR Verified)`;
+    } else {
+      transaction.description = `Plan Upgrade: ${plan.name} (QR Verified)`;
+    }
     await transaction.save();
 
     // Send SMS to rider
