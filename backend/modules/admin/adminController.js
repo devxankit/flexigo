@@ -2246,9 +2246,13 @@ export const getRiderDetailedReport = async (req, res) => {
     const report = await Promise.all(riders.map(async (r) => {
       // Fetch successful transactions for this rider
       const txns = await RiderTransaction.find({
-        riderId: r._id,
-        status: 'success'
+        riderId: r._id
       }).sort('-createdAt').lean();
+
+      console.log(`[DEBUG] Rider ${r.name || r.phone} (${r._id}) has ${txns.length} successful transactions.`);
+      if (txns.length > 0) {
+        console.log(`[DEBUG] Transactions:`, txns);
+      }
 
       const totalPayments = txns.reduce((acc, t) => acc + t.amount, 0);
       const totalDebits = txns.reduce((acc, t) => acc + (t.type === 'debit' ? t.amount : 0), 0);
