@@ -29,7 +29,8 @@ import {
   createWalletTopUpOrder,
   verifyWalletTopUp,
   createAddOffOrder,
-  verifyAddOffPayment
+  verifyAddOffPayment,
+  requestWithdrawal
 } from './riderController.js';
 import { protectFranchise, protectRider } from '../../shared/middleware/authMiddleware.js';
 
@@ -45,6 +46,7 @@ router.get('/profile/:phone', getRiderProfile);
 router.post('/wallet/add', addMoney);
 router.post('/wallet/create-topup-order', createWalletTopUpOrder);
 router.post('/wallet/verify-topup', verifyWalletTopUp);
+router.post('/wallet/withdraw', requestWithdrawal);
 router.get('/wallet/:phone', getWalletData);
 router.get('/subscribers', protectFranchise, getSubscribersByFranchise);
 router.get('/hubs', getActiveHubs);

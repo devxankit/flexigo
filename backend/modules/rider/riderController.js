@@ -15,6 +15,7 @@ import AuditLog from '../admin/auditLogModel.js';
 import Admin from '../admin/adminModel.js';
 import FranchiseNotification from '../franchise/franchiseNotificationModel.js';
 import SystemSetting from '../admin/systemSettingModel.js';
+import WithdrawalRequest from './models/withdrawalRequestModel.js';
 
 const lastGeofenceAlertTimes = new Map();
 
@@ -225,6 +226,47 @@ export const createWalletTopUpOrder = async (req, res) => {
     const order = await instance.orders.create({ amount: Math.round(amount * 100), currency: 'INR', receipt: `receipt_wallet_${Date.now()}` });
     res.status(200).json({ success: true, order });
   } catch (error) { res.status(500).json({ success: false, message: error.message }); }
+};
+
+export const requestWithdrawal = async (req, res) => {
+  try {
+    const { amount, upiId, phone } = req.body;
+    if (!amount || amount <= 0) return res.status(400).json({ success: false, message: 'Invalid amount' });
+    if (!upiId) return res.status(400).json({ success: false, message: 'UPI ID is required' });
+
+    const rider = await Rider.findOne({ phone });
+    if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
+
+    if ((rider.walletBalance || 0) < amount) {
+      return res.status(400).json({ success: false, message: 'Insufficient wallet balance' });
+    }
+
+    // Deduct balance
+    rider.walletBalance -= amount;
+    await rider.save();
+
+    // Create withdrawal request
+    await WithdrawalRequest.create({
+      riderId: rider._id,
+      amount: amount,
+      upiId: upiId,
+      status: 'pending'
+    });
+
+    // Create transaction log
+    await Transaction.create({
+      riderId: rider._id,
+      amount: amount,
+      type: 'debit',
+      status: 'pending',
+      description: 'Withdrawal Request',
+      method: 'wallet'
+    });
+
+    res.status(200).json({ success: true, message: 'Withdrawal request submitted successfully', walletBalance: rider.walletBalance });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
 export const verifyWalletTopUp = async (req, res) => {

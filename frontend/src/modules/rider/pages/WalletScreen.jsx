@@ -11,11 +11,14 @@ import api from '../../../lib/axios';
 
 export default function WalletScreen() {
   const { balance, transactions, addMoney, fetchWalletData } = useWalletStore();
-  const { phone } = useAuthStore();
+  const { phone, user } = useAuthStore();
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
+  const isFranchiseRider = !!user?.franchise;
   const [isTopUpOpen, setIsTopUpOpen] = useState(false);
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
   const [amount, setAmount] = useState('');
+  const [upiId, setUpiId] = useState('');
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
@@ -98,6 +101,43 @@ export default function WalletScreen() {
     setProcessing(false);
   };
 
+  const handleWithdraw = async () => {
+    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+      alert('Please enter a valid amount');
+      return;
+    }
+    if (!upiId) {
+      alert('Please enter your UPI ID');
+      return;
+    }
+    if (Number(amount) > balance) {
+      alert('Insufficient wallet balance');
+      return;
+    }
+
+    setProcessing(true);
+    try {
+      const res = await api.post('/rider/wallet/withdraw', {
+        amount: Number(amount),
+        upiId: upiId,
+        phone: phone
+      });
+      if (res.data.success) {
+        fetchWalletData(phone);
+        setIsWithdrawOpen(false);
+        setAmount('');
+        setUpiId('');
+        alert('Withdrawal request submitted successfully');
+      } else {
+        alert(res.data.message || 'Failed to request withdrawal');
+      }
+    } catch (error) {
+      console.error('Withdrawal error', error);
+      alert(error.response?.data?.message || 'Something went wrong');
+    }
+    setProcessing(false);
+  };
+
   return (
     <PageWrapper className="flex flex-col p-6 pb-24">
        {/* Balance Card */}
@@ -118,15 +158,39 @@ export default function WalletScreen() {
                </span>
                <span className="text-flexigo-teal font-black uppercase text-[10px] tracking-widest shadow-sm">Active</span>
             </div>
-            <div className="mt-4">
+            <div className="mt-4 flex gap-3">
                <NeonButton 
-                 onClick={() => setIsTopUpOpen(true)}
+                 onClick={() => { setAmount(''); setIsTopUpOpen(true); }}
                  className="px-8"
                  variant="solid"
                  size="md"
                >
                  Add Money →
                </NeonButton>
+               {!isFranchiseRider ? (
+                 <button 
+                   onClick={() => { setAmount(''); setUpiId(''); setIsWithdrawOpen(true); }}
+                   className={`px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest border transition-colors duration-300 ${
+                     isDark 
+                       ? 'border-white/20 text-white hover:bg-white/10' 
+                       : 'border-slate-300 text-slate-700 hover:bg-slate-100'
+                   }`}
+                 >
+                   Withdraw
+                 </button>
+               ) : (
+                 <button 
+                   disabled
+                   title="Your payouts are managed directly by your Franchise Owner"
+                   className={`px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest border opacity-50 cursor-not-allowed transition-colors duration-300 ${
+                     isDark 
+                       ? 'border-white/10 text-white/50 bg-white/5' 
+                       : 'border-slate-200 text-slate-400 bg-slate-50'
+                   }`}
+                 >
+                   Managed by Franchise
+                 </button>
+               )}
             </div>
          </div>
        </GlassCard>
@@ -247,6 +311,74 @@ export default function WalletScreen() {
                    Processing Payment...
                 </span>
               ) : `Add ₹${amount || '0'} Now →`}
+            </NeonButton>
+          </div>
+       </Modal>
+
+       {/* Withdraw Modal */}
+       <Modal
+         isOpen={isWithdrawOpen}
+         onClose={() => !processing && setIsWithdrawOpen(false)}
+         title="Withdraw Money"
+       >
+         <div className="p-6 pt-2 pb-10 space-y-8">
+            <div className="space-y-3">
+               <label className={`text-[10px] font-black uppercase tracking-[0.3em] transition-colors duration-500 ${
+                 isDark ? 'text-gray-500' : 'text-slate-400'
+               }`}>
+                 Withdrawal Amount (₹)
+               </label>
+               <input 
+                 type="number"
+                 value={amount}
+                 onChange={(e) => setAmount(e.target.value)}
+                 placeholder="0.00"
+                 disabled={processing}
+                 className={`w-full text-4xl font-heading font-black bg-transparent border-none outline-none transition-colors duration-500 ${
+                   isDark ? 'text-white' : 'text-slate-900'
+                 }`}
+                 autoFocus
+               />
+               <div className={`h-px w-full transition-all duration-500 ${
+                 isDark ? 'bg-white/10' : 'bg-slate-200 shadow-sm'
+               }`} />
+               <p className={`text-xs font-bold ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>Available Balance: ₹{balance}</p>
+            </div>
+
+            <div className="space-y-3">
+               <label className={`text-[10px] font-black uppercase tracking-[0.3em] transition-colors duration-500 ${
+                 isDark ? 'text-gray-500' : 'text-slate-400'
+               }`}>
+                 Your UPI ID
+               </label>
+               <input 
+                 type="text"
+                 value={upiId}
+                 onChange={(e) => setUpiId(e.target.value)}
+                 placeholder="yourname@bank"
+                 disabled={processing}
+                 className={`w-full p-4 rounded-xl text-sm font-bold bg-transparent border outline-none transition-colors duration-500 ${
+                   isDark 
+                    ? 'text-white border-white/10 focus:border-flexigo-teal' 
+                    : 'text-slate-900 border-slate-200 focus:border-slate-400'
+                 }`}
+               />
+            </div>
+
+            <NeonButton 
+              size="full" 
+              variant="solid" 
+              onClick={handleWithdraw}
+              disabled={!amount || Number(amount) <= 0 || !upiId || processing}
+            >
+              {processing ? (
+                <span className="flex items-center gap-2">
+                   <svg className="animate-spin h-4 w-4 text-black" viewBox="0 0 24 24">
+                     <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                   </svg>
+                   Processing...
+                </span>
+              ) : `Withdraw ₹${amount || '0'}`}
             </NeonButton>
          </div>
        </Modal>
