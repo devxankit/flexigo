@@ -23,14 +23,7 @@ export default function FranchiseHeader({ mobileMenuOpen, setMobileMenuOpen }) {
 
       {/* Actions Section */}
       <div className="flex items-center gap-3">
-        {/* Theme Toggle */}
-        <button 
-          onClick={toggleTheme}
-          className="p-2 text-[var(--text-secondary)] hover:text-emerald-500 hover:bg-emerald-500/5 rounded-lg transition-all active:scale-95"
-          title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
-        >
-          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
+        
 
         {/* Notification Bell */}
         <button className="relative p-2 text-[var(--text-secondary)] hover:text-emerald-500 hover:bg-emerald-500/5 rounded-lg transition-all group">

@@ -132,7 +132,7 @@ export default function FranchiseLayout() {
           <FranchiseHeader mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
         </motion.div>
         
-        <main className="flex-1 overflow-y-auto overscroll-y-none no-scrollbar p-6 bg-[var(--bg-primary)] w-full w-full">
+        <main className="flex-1 overflow-auto overscroll-y-none custom-scrollbar-emerald p-6 bg-[var(--bg-primary)] w-full">
           <AnimatePresence mode="wait">
             <motion.div
               key={window.location.pathname}

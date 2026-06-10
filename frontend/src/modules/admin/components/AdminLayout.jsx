@@ -124,46 +124,6 @@ export default function AdminLayout() {
               
               <div className="flex items-center gap-1 relative" ref={dropdownRef}>
                 <button 
-                  onClick={(e) => {
-                    if (!document.startViewTransition) {
-                      toggleTheme();
-                      return;
-                    }
-
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const x = ((rect.left + rect.width / 2) / window.innerWidth) * 100;
-                    const y = ((rect.top + rect.height / 2) / window.innerHeight) * 100;
-                    
-                    const endRadius = Math.hypot(
-                      Math.max(x, 100 - x),
-                      Math.max(y, 100 - y)
-                    );
-
-                    const transition = document.startViewTransition(() => {
-                      toggleTheme();
-                    });
-
-                    transition.ready.then(() => {
-                      document.documentElement.animate(
-                        {
-                          clipPath: [
-                            `circle(0 at ${x}% ${y}%)`,
-                            `circle(${endRadius * 1.5}% at ${x}% ${y}%)`,
-                          ],
-                        },
-                        {
-                          duration: 600,
-                          easing: "ease-in-out",
-                          pseudoElement: "::view-transition-new(root)",
-                        }
-                      );
-                    });
-                  }}
-                  className="p-2 text-[var(--text-tertiary)] hover:text-emerald-500 rounded-lg transition-all relative group"
-                >
-                   {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-                </button>
-                <button 
                   onClick={() => setIsNotifOpen(!isNotifOpen)}
                   className={`p-2 rounded-lg transition-all relative group ${isNotifOpen ? 'text-emerald-500 bg-emerald-500/10' : 'text-[var(--text-tertiary)] hover:text-emerald-500'}`}
                 >
@@ -250,7 +210,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Dynamic Viewport */}
-        <main className="flex-1 overflow-y-auto overscroll-y-none no-scrollbar pt-6 px-4 md:px-10 pb-20 relative bg-[var(--bg-primary)] transition-colors duration-300">
+        <main className="flex-1 overflow-auto overscroll-y-none custom-scrollbar-emerald pt-6 px-4 md:px-10 pb-20 relative bg-[var(--bg-primary)] transition-colors duration-300">
            {/* Discrete Grid Pattern Backdrop */}
            <div className="absolute inset-0 bg-[radial-gradient(#10b981_0.5px,transparent_0.5px)] [background-size:24px_24px] opacity-[0.03] pointer-events-none" />
            
