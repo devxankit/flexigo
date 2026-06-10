@@ -471,7 +471,7 @@ export default function HomeDashboard() {
                 </h3>
                 <p className={`text-[9px] font-bold uppercase tracking-widest mt-1 ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>
                   {user?.subscriptionPlan && user?.status !== 'active'
-                    ? 'You have a saved plan. Please complete payment to activate.'
+                    ? `Pay for ${user.subscriptionPlan.name || 'Saved Plan'} to activate.`
                     : 'Please complete your payment to get your vehicle'}
                 </p>
               </div>
@@ -610,8 +610,8 @@ export default function HomeDashboard() {
                         setCustomAddress('Pipliyahana Square, Pipliyahana Road, Indore, Madhya Pradesh 452016');
                       }}
                       className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase transition-all border ${isAutoSimulating
-                          ? 'opacity-40 cursor-not-allowed bg-slate-500/10 border-transparent text-slate-500'
-                          : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
+                        ? 'opacity-40 cursor-not-allowed bg-slate-500/10 border-transparent text-slate-500'
+                        : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
                         }`}
                     >
                       Indore Pipliyahana
@@ -625,8 +625,8 @@ export default function HomeDashboard() {
                         setCustomAddress('Choti Gwaltoli, Indore, Madhya Pradesh 452001');
                       }}
                       className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase transition-all border ${isAutoSimulating
-                          ? 'opacity-40 cursor-not-allowed bg-slate-500/10 border-transparent text-slate-500'
-                          : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/20'
+                        ? 'opacity-40 cursor-not-allowed bg-slate-500/10 border-transparent text-slate-500'
+                        : 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border-amber-500/20'
                         }`}
                     >
                       Indore Choti Gwaltoli
@@ -646,8 +646,8 @@ export default function HomeDashboard() {
                         setCustomAddress('Prima Domus building-B, Prima Domus, Patil Nagar, Balewadi, Pune, Maharashtra 411045');
                       }}
                       className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase transition-all border ${isAutoSimulating
-                          ? 'opacity-40 cursor-not-allowed bg-slate-500/10 border-transparent text-slate-500'
-                          : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
+                        ? 'opacity-40 cursor-not-allowed bg-slate-500/10 border-transparent text-slate-500'
+                        : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
                         }`}
                     >
                       Prima Domus B
@@ -661,8 +661,8 @@ export default function HomeDashboard() {
                         setCustomAddress('Balaji Bike Repair & Service Baner Pune, Patil Nagar, Balewadi, Pune, Maharashtra 411045');
                       }}
                       className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase transition-all border ${isAutoSimulating
-                          ? 'opacity-40 cursor-not-allowed bg-slate-500/10 border-transparent text-slate-500'
-                          : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
+                        ? 'opacity-40 cursor-not-allowed bg-slate-500/10 border-transparent text-slate-500'
+                        : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
                         }`}
                     >
                       Balaji Bike
@@ -676,8 +676,8 @@ export default function HomeDashboard() {
                         setCustomAddress('Hinjewadi Phase 1, Hinjewadi Rajiv Gandhi Infotech Park, Hinjawadi, Pune, Maharashtra 411057');
                       }}
                       className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase transition-all border ${isAutoSimulating
-                          ? 'opacity-40 cursor-not-allowed bg-slate-500/10 border-transparent text-slate-500'
-                          : 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border-blue-500/20'
+                        ? 'opacity-40 cursor-not-allowed bg-slate-500/10 border-transparent text-slate-500'
+                        : 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border-blue-500/20'
                         }`}
                     >
                       Pune Hinjewadi
@@ -687,8 +687,8 @@ export default function HomeDashboard() {
 
                 {/* Dynamic Auto-Simulation Engine UI Box */}
                 <div className={`p-4 rounded-xl border transition-all space-y-3 ${isAutoSimulating
-                    ? 'bg-emerald-500/10 border-emerald-500/35 shadow-[0_0_15px_rgba(16,185,129,0.15)] shadow-emerald-500/10'
-                    : 'bg-white/5 border-white/10'
+                  ? 'bg-emerald-500/10 border-emerald-500/35 shadow-[0_0_15px_rgba(16,185,129,0.15)] shadow-emerald-500/10'
+                  : 'bg-white/5 border-white/10'
                   }`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -709,8 +709,8 @@ export default function HomeDashboard() {
                       disabled={isAutoSimulating}
                       onClick={() => setSimRouteType('circular')}
                       className={`py-1.5 px-2 rounded-lg border text-[8px] font-black uppercase tracking-wider transition-all text-center ${simRouteType === 'circular'
-                          ? 'bg-emerald-500/20 border-emerald-500/35 text-emerald-400'
-                          : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'
+                        ? 'bg-emerald-500/20 border-emerald-500/35 text-emerald-400'
+                        : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'
                         }`}
                     >
                       🔄 Circular Route (200m)
@@ -720,8 +720,8 @@ export default function HomeDashboard() {
                       disabled={isAutoSimulating}
                       onClick={() => setSimRouteType('linear')}
                       className={`py-1.5 px-2 rounded-lg border text-[8px] font-black uppercase tracking-wider transition-all text-center ${simRouteType === 'linear'
-                          ? 'bg-emerald-500/20 border-emerald-500/35 text-emerald-400'
-                          : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'
+                        ? 'bg-emerald-500/20 border-emerald-500/35 text-emerald-400'
+                        : 'bg-white/5 border-white/5 text-slate-400 hover:bg-white/10'
                         }`}
                     >
                       ⚡ Linear ZigZag (400m)
@@ -733,8 +733,8 @@ export default function HomeDashboard() {
                     type="button"
                     onClick={toggleAutoSimulation}
                     className={`w-full py-2 px-3 rounded-xl border text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${isAutoSimulating
-                        ? 'bg-rose-500/10 border-rose-500/25 text-rose-400 hover:bg-rose-500/20'
-                        : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 shadow-[0_0_12px_rgba(16,185,129,0.15)] shadow-emerald-500/10'
+                      ? 'bg-rose-500/10 border-rose-500/25 text-rose-400 hover:bg-rose-500/20'
+                      : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 shadow-[0_0_12px_rgba(16,185,129,0.15)] shadow-emerald-500/10'
                       }`}
                   >
                     {isAutoSimulating ? (
@@ -812,10 +812,10 @@ export default function HomeDashboard() {
                       }
                     }}
                     className={`py-2 px-3 rounded-xl border text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${isAutoSimulating
-                        ? 'opacity-40 cursor-not-allowed bg-slate-500/10 border-transparent text-slate-500'
-                        : simulatingLoc === 'custom'
-                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
-                          : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20'
+                      ? 'opacity-40 cursor-not-allowed bg-slate-500/10 border-transparent text-slate-500'
+                      : simulatingLoc === 'custom'
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
+                        : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20'
                       }`}
                   >
                     {simulatingLoc === 'custom' ? (
@@ -866,10 +866,10 @@ export default function HomeDashboard() {
                       }
                     }}
                     className={`py-2 px-3 rounded-xl border text-[9px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all ${isAutoSimulating
-                        ? 'opacity-40 cursor-not-allowed bg-slate-500/10 border-transparent text-slate-500'
-                        : simulatingLoc === 'realgps'
-                          ? 'bg-blue-500/10 border-blue-500/30 text-blue-500'
-                          : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:border-blue-500/20'
+                      ? 'opacity-40 cursor-not-allowed bg-slate-500/10 border-transparent text-slate-500'
+                      : simulatingLoc === 'realgps'
+                        ? 'bg-blue-500/10 border-blue-500/30 text-blue-500'
+                        : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:border-blue-500/20'
                       }`}
                   >
                     {simulatingLoc === 'realgps' ? (
