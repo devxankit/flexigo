@@ -66,7 +66,10 @@ import {
   updateSettings,
   getRidersList,
   createRefundOrder,
-  verifyRefundPayment
+  verifyRefundPayment,
+  getWithdrawals,
+  approveWithdrawal,
+  rejectWithdrawal
 } from './adminController.js';
 import {
   getWebsitePlans,
@@ -367,5 +370,10 @@ router.put('/settings', protectAdmin, updateSettings);
 router.get('/refund/riders-list', protectAdmin, getRidersList);
 router.post('/refund/create-order', protectAdmin, createRefundOrder);
 router.post('/refund/verify-payment', protectAdmin, verifyRefundPayment);
+
+// --- Withdrawal Routes ---
+router.get('/withdrawals', protectAdmin, getWithdrawals);
+router.post('/withdrawals/:id/approve', protectAdmin, approveWithdrawal);
+router.post('/withdrawals/:id/reject', protectAdmin, rejectWithdrawal);
 
 export default router;
