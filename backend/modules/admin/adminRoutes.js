@@ -88,7 +88,8 @@ import {
   createAssignment,
   addVehicle,
   bulkAddVehicles,
-  updateVehicleAttachment
+  updateVehicleAttachment,
+  updateVehicleStatus
 } from '../fleet/vehicleController.js';
 import {
   getPlans,
@@ -130,6 +131,7 @@ router.post('/assignments', protectAdmin, authorize('Fleet', 'create'), getAssig
 router.post('/fleet/add', protectAdmin, authorize('Fleet', 'create'), addVehicle);
 router.post('/fleet/bulk-add', protectAdmin, authorize('Fleet', 'create'), bulkAddVehicles);
 router.patch('/fleet/:id/attachment', protectAdmin, authorize('Fleet', 'update'), updateVehicleAttachment);
+router.patch('/fleet/:id/status', protectAdmin, authorize('Fleet', 'update'), updateVehicleStatus);
 
 // Staff Management
 router.get('/staff', getAllStaff);

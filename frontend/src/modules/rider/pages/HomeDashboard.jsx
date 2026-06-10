@@ -352,7 +352,6 @@ export default function HomeDashboard() {
           </div>
 
 
-
           {/* Quick Stats: Wallet & Subscription */}
           <div className="grid grid-cols-2 gap-4">
             <motion.div

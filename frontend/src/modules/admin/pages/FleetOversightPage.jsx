@@ -278,6 +278,25 @@ export default function FleetOversightPage() {
                                 <button
                                   onClick={async (e) => {
                                     e.stopPropagation();
+                                    const newStatus = vehicle.status === 'assigned' ? 'available' : 'assigned';
+                                    try {
+                                      await useAdminDataStore.getState().updateVehicleStatus(vehicle._id || vehicle.id, newStatus);
+                                    } catch(err) {
+                                      alert('Failed to update status: ' + (err.response?.data?.message || err.message));
+                                    }
+                                  }}
+                                  className={`px-2 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg shadow-sm transition-all ${
+                                    vehicle.status === 'assigned' 
+                                      ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white' 
+                                      : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white'
+                                  }`}
+                                  title={vehicle.status === 'assigned' ? "Mark as Unassigned" : "Mark as Assigned"}
+                                >
+                                  {vehicle.status === 'assigned' ? 'UNASSIGN' : 'ASSIGN'}
+                                </button>
+                                <button
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
                                     try {
                                       const res = await api.delete(`/fleet/${vehicle._id}`);
                                       if (res.data.success) {
