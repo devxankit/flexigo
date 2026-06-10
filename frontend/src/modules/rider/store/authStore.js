@@ -52,9 +52,20 @@ export const useAuthStore = create(
                   expiresAt: res.data.rider.subscriptionEnd 
                 } 
               });
-            } else if (res.data.rider.subscriptionPlan) {
+            } else if (res.data.rider.subscriptionPlan && res.data.rider.subscriptionPlan._id) {
               // Plan is saved but not active
-              useSubscriptionStore.setState({ selectedPlan: res.data.rider.subscriptionPlan });
+              const sp = res.data.rider.subscriptionPlan;
+              useSubscriptionStore.setState({ 
+                selectedPlan: {
+                  id: sp._id,
+                  label: sp.name,
+                  price: sp.price,
+                  duration: sp.type === 'Daily' ? '1 Day' : sp.type === 'Weekly' ? '7 Days' : '30 Days',
+                  perks: sp.features || []
+                }
+              });
+            } else if (res.data.rider.subscriptionPlan) {
+              useSubscriptionStore.setState({ selectedPlan: { id: res.data.rider.subscriptionPlan } });
             }
             
             return { success: true, rider: res.data.rider };
@@ -123,8 +134,19 @@ export const useAuthStore = create(
                   expiresAt: res.data.rider.subscriptionEnd 
                 } 
               });
+            } else if (res.data.rider.subscriptionPlan && res.data.rider.subscriptionPlan._id) {
+              const sp = res.data.rider.subscriptionPlan;
+              useSubscriptionStore.setState({ 
+                selectedPlan: {
+                  id: sp._id,
+                  label: sp.name,
+                  price: sp.price,
+                  duration: sp.type === 'Daily' ? '1 Day' : sp.type === 'Weekly' ? '7 Days' : '30 Days',
+                  perks: sp.features || []
+                }
+              });
             } else if (res.data.rider.subscriptionPlan) {
-              useSubscriptionStore.setState({ selectedPlan: res.data.rider.subscriptionPlan });
+              useSubscriptionStore.setState({ selectedPlan: { id: res.data.rider.subscriptionPlan } });
             }
           }
         } catch (error) {
