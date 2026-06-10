@@ -24,6 +24,8 @@ import Admin from './adminModel.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import SystemSetting from './systemSettingModel.js';
+import Razorpay from 'razorpay';
+import crypto from 'crypto';
 
 export const getDateFilter = (range, fieldName = 'createdAt') => {
   if (!range) return {};
@@ -2705,5 +2707,116 @@ export const updateSettings = async (req, res) => {
     res.json({ success: true, settings, message: 'Settings updated successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to update settings' });
+  }
+};
+
+// --- Rider Refund Functions ---
+
+export const getRidersList = async (req, res) => {
+  try {
+    const riders = await Rider.find({}, 'name phone franchise status walletBalance').lean();
+    const formatted = riders.map(r => ({
+      id: r._id,
+      name: r.name,
+      phone: r.phone,
+      franchiseId: r.franchise,
+      walletBalance: r.walletBalance || 0
+    }));
+    res.status(200).json({ success: true, riders: formatted });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createRefundOrder = async (req, res) => {
+  try {
+    const { amount, riderId } = req.body;
+    if (!amount || amount <= 0) return res.status(400).json({ success: false, message: 'Invalid amount' });
+
+    const instance = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET });
+    const options = {
+      amount: Math.round(amount * 100), // amount in paise
+      currency: 'INR',
+      receipt: `ref_${Date.now()}`
+    };
+
+    const order = await instance.orders.create(options);
+    if (!order) return res.status(500).json({ success: false, message: 'Failed to create Razorpay order' });
+
+    res.status(200).json({ success: true, order });
+  } catch (error) {
+    console.error('[Admin Refund Error]', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const verifyRefundPayment = async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount, riderId, description } = req.body;
+    
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET).update(body.toString()).digest('hex');
+
+    if (expectedSignature === razorpay_signature) {
+      const session = await mongoose.startSession();
+      session.startTransaction();
+
+      const rider = await Rider.findById(riderId);
+      if (!rider) {
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(404).json({ success: false, message: 'Rider not found' });
+      }
+
+      // Update Rider Wallet
+      rider.walletBalance = (rider.walletBalance || 0) + Number(amount);
+      await rider.save({ session });
+
+      // Create Rider Transaction History (Refund Credit)
+      await RiderTransaction.create([{
+        riderId,
+        amount: Number(amount),
+        type: 'credit',
+        method: 'razorpay',
+        status: 'success',
+        description: description || 'Admin Refund processed via Razorpay',
+        referenceId: razorpay_payment_id,
+        createdAt: new Date()
+      }], { session });
+
+      // Create Franchise Transaction if rider belongs to one
+      if (rider.franchise) {
+        await Transaction.create([{
+          franchiseId: rider.franchise,
+          amount: amount,
+          type: 'Refund',
+          status: 'completed',
+          paymentMethod: 'razorpay',
+          description: description || `Admin refund to rider ${rider.phone}`,
+          date: new Date()
+        }], { session });
+      }
+
+      await session.commitTransaction();
+      session.endSession();
+
+      // Send Firebase Push Notification to Rider (Foreground & Background)
+      const notifTitle = "Refund Successful! 🎉";
+      const notifBody = `₹${amount} has been successfully added to your wallet.`;
+      
+      if (rider.fcmToken) {
+        await sendPushNotification(rider.fcmToken, notifTitle, notifBody, { type: 'wallet_update', amount: amount.toString() });
+      }
+      if (rider.fcmTokenMobile) {
+        await sendPushNotification(rider.fcmTokenMobile, notifTitle, notifBody, { type: 'wallet_update', amount: amount.toString() });
+      }
+
+      res.status(200).json({ success: true, message: 'Payment verified and refund processed' });
+    } else {
+      res.status(400).json({ success: false, message: 'Invalid payment signature' });
+    }
+  } catch (error) {
+    console.error('[Admin Refund Verify Error]', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };

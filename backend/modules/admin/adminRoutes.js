@@ -63,7 +63,10 @@ import {
   toggleBlockKycRecord,
   deleteKycRecord,
   getSettings,
-  updateSettings
+  updateSettings,
+  getRidersList,
+  createRefundOrder,
+  verifyRefundPayment
 } from './adminController.js';
 import {
   getWebsitePlans,
@@ -359,5 +362,10 @@ router.delete('/web/press/:id', deleteWebsitePressRelease);
 // --- Settings Routes ---
 router.get('/settings', protectAdmin, getSettings);
 router.put('/settings', protectAdmin, updateSettings);
+
+// --- Rider Refund Routes ---
+router.get('/refund/riders-list', protectAdmin, getRidersList);
+router.post('/refund/create-order', protectAdmin, createRefundOrder);
+router.post('/refund/verify-payment', protectAdmin, verifyRefundPayment);
 
 export default router;

@@ -45,12 +45,12 @@ const KycOnboardingPage = lazy(() => import('../pages/KycOnboardingPage'));
 const HrManagementPage = lazy(() => import('../pages/HrManagementPage'));
 const FranchiseKycQueue = lazy(() => import('../pages/FranchiseKycQueue'));
 
-// Finance Group
 const FinancialCenterPage = lazy(() => import('../pages/FinancialCenterPage'));
 const PaymentGatewayPage = lazy(() => import('../pages/PaymentGatewayPage'));
 const InventoryBillingPage = lazy(() => import('../pages/InventoryBillingPage'));
 const FranchiseOpsPage = lazy(() => import('../pages/FranchiseOpsPage'));
 const SubscriptionPlansPage = lazy(() => import('../pages/SubscriptionPlansPage'));
+const RiderRefundPage = lazy(() => import('../pages/RiderRefundPage'));
 
 // Legal & Support Group
 const CompliancePage = lazy(() => import('../pages/CompliancePage'));
@@ -103,6 +103,7 @@ export default function AdminRoutes() {
           <Route path="inventory" element={<PermGuard pageId="inventory"><InventoryBillingPage /></PermGuard>} />
           <Route path="franchise-ops" element={<PermGuard pageId="franchise-ops"><FranchiseOpsPage /></PermGuard>} />
           <Route path="subscription-plans" element={<PermGuard pageId="subscription-plans"><SubscriptionPlansPage /></PermGuard>} />
+          <Route path="rider-refund" element={<PermGuard pageId="rider-refund"><RiderRefundPage /></PermGuard>} />
           
           {/* Intelligence Group */}
           <Route path="analytics" element={<PermGuard pageId="analytics"><DeepAnalyticsPage /></PermGuard>} />

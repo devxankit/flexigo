@@ -70,6 +70,7 @@ const navigationGroups = [
       { id: 'inventory', label: 'Inventory & Billing', icon: Boxes, path: '/admin/inventory' },
       { id: 'franchise-ops', label: 'Franchise & 3PL', icon: Layers, path: '/admin/franchise-ops' },
       { id: 'subscription-plans', label: 'Subscription Plans', icon: Zap, path: '/admin/subscription-plans' },
+      { id: 'rider-refund', label: 'Rider Refund', icon: CreditCardIcon, path: '/admin/rider-refund' },
     ]
   },
   {
