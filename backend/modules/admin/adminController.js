@@ -2753,7 +2753,7 @@ export const createRefundOrder = async (req, res) => {
 export const verifyRefundPayment = async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount, riderId, description } = req.body;
-    
+
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET).update(body.toString()).digest('hex');
 
@@ -2803,7 +2803,7 @@ export const verifyRefundPayment = async (req, res) => {
       // Send Firebase Push Notification to Rider (Foreground & Background)
       const notifTitle = "Refund Successful! 🎉";
       const notifBody = `₹${amount} has been successfully added to your wallet.`;
-      
+
       if (rider.fcmToken) {
         await sendPushNotification(rider.fcmToken, notifTitle, notifBody, { type: 'wallet_update', amount: amount.toString() });
       }

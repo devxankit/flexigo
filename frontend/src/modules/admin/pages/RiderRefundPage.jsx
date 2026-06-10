@@ -51,7 +51,7 @@ export default function RiderRefundPage() {
       }
 
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_YourKeyHere', // Should be injected via env or config in real app
+        key: 'rzp_live_SxBAcIEtexyUUQ',
         amount: orderRes.data.order.amount,
         currency: "INR",
         name: "Flexigo Admin",
