@@ -142,7 +142,7 @@ export default function FinancialCenterPage() {
                      contentStyle={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: '12px' }}
                      itemStyle={{ fontSize: '8px', fontWeight: 900, textTransform: 'uppercase', color: '#10b981' }}
                      labelStyle={{ fontSize: '8px', fontWeight: 900, marginBottom: '4px', textTransform: 'uppercase' }}
-                     formatter={(value) => [`₹${(value * 100000).toLocaleString()}`, 'Revenue']}
+                     formatter={(value) => [`₹${value.toLocaleString()}`, 'Revenue']}
                   />
                   <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
                </AreaChart>

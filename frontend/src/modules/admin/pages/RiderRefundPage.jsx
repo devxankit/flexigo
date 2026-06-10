@@ -6,7 +6,7 @@ export default function RiderRefundPage() {
   const [riders, setRiders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  
+
   const [selectedRider, setSelectedRider] = useState(null);
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
@@ -29,8 +29,8 @@ export default function RiderRefundPage() {
     }
   };
 
-  const filteredRiders = riders.filter(r => 
-    (r.name?.toLowerCase().includes(search.toLowerCase())) || 
+  const filteredRiders = riders.filter(r =>
+    (r.name?.toLowerCase().includes(search.toLowerCase())) ||
     (r.phone?.includes(search))
   );
 
@@ -115,16 +115,16 @@ export default function RiderRefundPage() {
         {/* Rider Selection Section */}
         <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-3xl p-6 shadow-xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-bl-full pointer-events-none" />
-          
+
           <h2 className="text-sm font-black text-[var(--text-secondary)] uppercase tracking-wider flex items-center gap-2 mb-6">
             <User size={16} className="text-emerald-500" /> Select Rider
           </h2>
 
           <div className="relative mb-6">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" size={16} />
-            <input 
-              type="text" 
-              placeholder="SEARCH BY NAME OR PHONE..." 
+            <input
+              type="text"
+              placeholder="SEARCH BY NAME OR PHONE..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl pl-11 pr-4 py-3 text-[11px] font-bold text-[var(--text-primary)] placeholder-[var(--text-tertiary)] uppercase tracking-wider focus:outline-none focus:border-emerald-500 transition-colors"
@@ -148,11 +148,10 @@ export default function RiderRefundPage() {
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
                   onClick={() => setSelectedRider(rider)}
-                  className={`w-full text-left p-4 rounded-2xl border transition-all duration-200 flex items-center justify-between ${
-                    selectedRider?.id === rider.id 
-                      ? 'bg-emerald-500/10 border-emerald-500' 
-                      : 'bg-[var(--bg-tertiary)]/50 border-[var(--border-subtle)] hover:border-emerald-500/50'
-                  }`}
+                  className={`w-full text-left p-4 rounded-2xl border transition-all duration-200 flex items-center justify-between ${selectedRider?.id === rider.id
+                    ? 'bg-emerald-500/10 border-emerald-500'
+                    : 'bg-[var(--bg-tertiary)]/50 border-[var(--border-subtle)] hover:border-emerald-500/50'
+                    }`}
                 >
                   <div>
                     <h3 className="text-sm font-bold text-[var(--text-primary)]">{rider.name || 'Unknown'}</h3>
@@ -188,8 +187,8 @@ export default function RiderRefundPage() {
                 <label className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Refund Amount (₹)</label>
                 <div className="relative">
                   <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500" size={16} />
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="ENTER AMOUNT..."
@@ -202,7 +201,7 @@ export default function RiderRefundPage() {
                 <label className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Description (Optional)</label>
                 <div className="relative">
                   <FileText className="absolute left-4 top-4 text-[var(--text-tertiary)]" size={16} />
-                  <textarea 
+                  <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="REASON FOR REFUND..."
