@@ -430,6 +430,22 @@ export const getRiderPlans = async (req, res) => {
   } catch (error) { res.status(500).json({ success: false, message: error.message }); }
 };
 
+export const saveRiderPlan = async (req, res) => {
+  try {
+    const { planId, phone } = req.body;
+    const plan = await SubscriptionPlan.findById(planId);
+    if (!plan) return res.status(404).json({ success: false, message: 'Plan not found' });
+    
+    const rider = await Rider.findOne({ phone });
+    if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
+
+    rider.subscriptionPlan = plan._id;
+    await rider.save();
+
+    res.status(200).json({ success: true, message: 'Plan saved successfully' });
+  } catch (error) { res.status(500).json({ success: false, message: error.message }); }
+};
+
 export const createPaymentOrder = async (req, res) => {
   try {
     const { planId, phone } = req.body;
@@ -640,10 +656,31 @@ export const approveQRPayment = async (req, res) => {
     const plan = await SubscriptionPlan.findById(transaction.planId);
     if (!plan) return res.status(404).json({ success: false, message: 'Plan not found' });
 
-    // Activate subscription
+    // Check if it's a deposit payment
     if (transaction.description && transaction.description.includes('Deposit')) {
       rider.depositPaid = true;
+      if (plan) {
+         rider.subscriptionPlan = plan._id;
+      }
+      transaction.status = 'success';
+      transaction.description = `Security Deposit (QR Verified)`;
+      await rider.save();
+      await transaction.save();
+      
+      try {
+        const msg = `Flexigo: Your security deposit has been verified.`;
+        await sendSMS(rider.phone, msg);
+      } catch (e) { }
+      const riderToken = rider.fcmToken || rider.fcmTokenMobile;
+      if (riderToken) {
+        try {
+          await sendPushNotification(riderToken, 'Deposit Approved', `Your security deposit payment has been verified.`, { type: 'deposit_approved' });
+        } catch (e) { }
+      }
+      return res.status(200).json({ success: true, message: 'Deposit approved' });
     }
+
+    // Normal Plan Payment
     const durationMs = plan.type === 'Daily' ? 86400000 : plan.type === 'Weekly' ? 604800000 : 2592000000;
     const expiresAt = new Date(Date.now() + durationMs);
 
@@ -655,11 +692,7 @@ export const approveQRPayment = async (req, res) => {
 
     // Update transaction status
     transaction.status = 'success';
-    if (transaction.description && transaction.description.includes('Deposit')) {
-      transaction.description = `Security Deposit & Plan Upgrade: ${plan.name} (QR Verified)`;
-    } else {
-      transaction.description = `Plan Upgrade: ${plan.name} (QR Verified)`;
-    }
+    transaction.description = `Plan Upgrade: ${plan.name} (QR Verified)`;
     await transaction.save();
 
     // Send SMS to rider
@@ -994,11 +1027,7 @@ export const payDepositViaWallet = async (req, res) => {
     if (planId) {
       const plan = await SubscriptionPlan.findById(planId);
       if (plan) {
-        const durationMs = plan.type === 'Daily' ? 86400000 : plan.type === 'Weekly' ? 604800000 : 2592000000;
         rider.subscriptionPlan = plan._id;
-        rider.subscriptionStart = new Date();
-        rider.subscriptionEnd = new Date(Date.now() + durationMs);
-        rider.status = 'active';
       }
     }
     await rider.save();
@@ -1068,11 +1097,7 @@ export const verifyDepositPayment = async (req, res) => {
         if (planId) {
           const plan = await SubscriptionPlan.findById(planId);
           if (plan) {
-            const durationMs = plan.type === 'Daily' ? 86400000 : plan.type === 'Weekly' ? 604800000 : 2592000000;
             rider.subscriptionPlan = plan._id;
-            rider.subscriptionStart = new Date();
-            rider.subscriptionEnd = new Date(Date.now() + durationMs);
-            rider.status = 'active';
           }
         }
         await rider.save();

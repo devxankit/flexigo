@@ -10,6 +10,7 @@ import {
   getActiveHubs,
   getMyVehicle,
   getRiderPlans,
+  saveRiderPlan,
   createPaymentOrder,
   verifyPayment,
   getRiderPayments,
@@ -49,6 +50,7 @@ router.get('/subscribers', protectFranchise, getSubscribersByFranchise);
 router.get('/hubs', getActiveHubs);
 router.get('/my-vehicle/:phone', getMyVehicle);
 router.get('/plans', getRiderPlans);
+router.post('/plans/save', saveRiderPlan);
 router.post('/payments/create-order', createPaymentOrder);
 router.post('/payments/verify', verifyPayment);
 router.get('/payments/:phone', getRiderPayments);

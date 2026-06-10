@@ -454,23 +454,33 @@ export default function HomeDashboard() {
         <div className="px-6 pb-8 mt-2">
           <div
             onClick={() => navigate('/rider/plans')}
-            className={`cursor-pointer rounded-2xl p-5 border-2 border-dashed border-flexigo-teal/30 bg-flexigo-teal/5 flex flex-col items-center gap-3 text-center active:scale-[0.98] transition-all`}
+            className={`cursor-pointer rounded-2xl p-5 border-2 border-dashed ${user?.subscriptionPlan && user?.status !== 'active' ? 'border-rose-500/40 bg-rose-500/5' : 'border-flexigo-teal/30 bg-flexigo-teal/5'} flex flex-col items-center gap-3 text-center active:scale-[0.98] transition-all`}
           >
-            <div className="w-14 h-14 rounded-2xl bg-flexigo-teal/10 flex items-center justify-center">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-7 h-7">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+            <div className={`w-14 h-14 rounded-2xl ${user?.subscriptionPlan && user?.status !== 'active' ? 'bg-rose-500/10' : 'bg-flexigo-teal/10'} flex items-center justify-center`}>
+              {user?.subscriptionPlan && user?.status !== 'active' ? (
+                <svg viewBox="0 0 24 24" fill="none" stroke="#F43F5E" strokeWidth="2.5" className="w-7 h-7">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-7 h-7">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
             </div>
             <div>
               <h3 className={`text-sm font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                Payment Pending
+                {user?.subscriptionPlan && user?.status !== 'active' ? 'Upcoming Payment' : 'Payment Pending'}
               </h3>
               <p className={`text-[9px] font-bold uppercase tracking-widest mt-1 ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>
-                Please complete your payment to get your vehicle
+                {user?.subscriptionPlan && user?.status !== 'active' 
+                  ? 'You have a saved plan. Please complete payment to activate.'
+                  : 'Please complete your payment to get your vehicle'}
               </p>
             </div>
-            <div className="px-5 py-2 bg-flexigo-teal text-white text-[9px] font-black uppercase tracking-widest rounded-xl shadow-[0_0_15px_rgba(57,255,20,0.3)]">
-              Complete Payment →
+            <div className={`px-5 py-2 text-white text-[9px] font-black uppercase tracking-widest rounded-xl shadow-lg ${user?.subscriptionPlan && user?.status !== 'active' ? 'bg-rose-500 shadow-rose-500/30' : 'bg-flexigo-teal shadow-[0_0_15px_rgba(57,255,20,0.3)]'}`}>
+              Pay Now →
             </div>
           </div>
         </div>

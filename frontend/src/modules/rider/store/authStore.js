@@ -45,13 +45,16 @@ export const useAuthStore = create(
             if (res.data.rider.walletBalance !== undefined) {
               useWalletStore.setState({ balance: res.data.rider.walletBalance });
             }
-            if (res.data.rider.subscriptionPlan) {
+            if (res.data.rider.subscriptionPlan && res.data.rider.status === 'active') {
               useSubscriptionStore.setState({ 
                 activePlan: { 
                   ...res.data.rider.subscriptionPlan, 
                   expiresAt: res.data.rider.subscriptionEnd 
                 } 
               });
+            } else if (res.data.rider.subscriptionPlan) {
+              // Plan is saved but not active
+              useSubscriptionStore.setState({ selectedPlan: res.data.rider.subscriptionPlan });
             }
             
             return { success: true, rider: res.data.rider };
@@ -113,13 +116,15 @@ export const useAuthStore = create(
             if (res.data.rider.walletBalance !== undefined) {
               useWalletStore.setState({ balance: res.data.rider.walletBalance });
             }
-            if (res.data.rider.subscriptionPlan) {
+            if (res.data.rider.subscriptionPlan && res.data.rider.status === 'active') {
               useSubscriptionStore.setState({ 
                 activePlan: { 
                   ...res.data.rider.subscriptionPlan, 
                   expiresAt: res.data.rider.subscriptionEnd 
                 } 
               });
+            } else if (res.data.rider.subscriptionPlan) {
+              useSubscriptionStore.setState({ selectedPlan: res.data.rider.subscriptionPlan });
             }
           }
         } catch (error) {
