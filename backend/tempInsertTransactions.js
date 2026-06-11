@@ -12,12 +12,12 @@ const run = async () => {
     console.log('Connected to DB');
 
     const ridersToUpdate = [
-      { phone: '8805041137', amount: 2800 }, // Assuming 2800 is the weekly plan, adjust if needed
-      { phone: '9922371344', amount: 2800 }
+      { id: '6a293fcfb29c6478b53061c4', amount: 2800 },
+      { id: '6a294511b29c6478b53061c6', amount: 2800 }
     ];
     
     for (const info of ridersToUpdate) {
-      const rider = await Rider.findOne({ phone: info.phone }).populate('subscriptionPlan');
+      const rider = await Rider.findById(info.id).populate('subscriptionPlan');
       
       if (rider) {
         console.log(`Processing Rider: ${rider.name || rider.phone}`);
@@ -49,7 +49,7 @@ const run = async () => {
           console.log(`⚠️ Transaction already exists for ${rider.phone}`);
         }
       } else {
-        console.log(`❌ Rider not found: ${info.phone}`);
+        console.log(`❌ Rider not found with ID: ${info.id}`);
       }
     }
   } catch (error) {
