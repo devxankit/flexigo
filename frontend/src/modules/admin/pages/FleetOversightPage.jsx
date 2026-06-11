@@ -21,7 +21,8 @@ import {
   Paperclip,
   Eye,
   Trash2,
-  Download as FileDown
+  Download as FileDown,
+  AlertCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -42,6 +43,7 @@ export default function FleetOversightPage() {
 
   const [searchQuery, setSearchQuery] = React.useState('');
   const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
+  const [deleteConfirm, setDeleteConfirm] = React.useState({ isOpen: false, id: null });
   
   React.useEffect(() => {
     fetchAllVehicles();
@@ -295,18 +297,9 @@ export default function FleetOversightPage() {
                                   {vehicle.status === 'assigned' ? 'UNASSIGN' : 'ASSIGN'}
                                 </button>
                                 <button
-                                  onClick={async (e) => {
+                                  onClick={(e) => {
                                     e.stopPropagation();
-                                    try {
-                                      const res = await api.delete(`/fleet/${vehicle._id}`);
-                                      if (res.data.success) {
-                                        useAdminDataStore.getState().fetchAllVehicles();
-                                      } else {
-                                        alert(res.data.message || 'Deletion failed');
-                                      }
-                                    } catch(err) {
-                                      alert('Deletion failed: ' + (err.response?.data?.message || err.message));
-                                    }
+                                    setDeleteConfirm({ isOpen: true, id: vehicle._id || vehicle.id });
                                   }}
                                   className="p-1.5 bg-rose-500/10 text-rose-500 rounded-lg hover:bg-rose-500 hover:text-white transition-all shadow-sm"
                                   title="Delete Vehicle"
@@ -321,6 +314,46 @@ export default function FleetOversightPage() {
             </table>
          </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deleteConfirm.isOpen && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-sm bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl shadow-2xl p-6 relative overflow-hidden"
+            >
+              <div className="flex flex-col items-center text-center space-y-4">
+                <div className="w-16 h-16 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-500 shadow-inner">
+                  <AlertCircle size={32} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-tighter italic">Confirm Deletion</h3>
+                  <p className="text-[10px] text-[var(--text-tertiary)] font-bold mt-1 uppercase tracking-widest leading-relaxed">Are you sure you want to permanently delete this vehicle? This action cannot be undone.</p>
+                </div>
+                <div className="flex w-full gap-3 pt-4">
+                  <button onClick={() => setDeleteConfirm({ isOpen: false, id: null })} className="flex-1 py-2.5 rounded-xl border border-[var(--border-subtle)] text-[10px] font-black uppercase tracking-widest text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-all active:scale-95">Cancel</button>
+                  <button onClick={async () => {
+                     try {
+                        const res = await api.delete(`/fleet/${deleteConfirm.id}`);
+                        if (res.data.success) {
+                           useAdminDataStore.getState().fetchAllVehicles();
+                           setDeleteConfirm({ isOpen: false, id: null });
+                        } else {
+                           alert(res.data.message || 'Deletion failed');
+                        }
+                     } catch(err) {
+                        alert('Deletion failed: ' + (err.response?.data?.message || err.message));
+                     }
+                  }} className="flex-1 py-2.5 rounded-xl bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 transition-all shadow-md active:scale-95 shadow-rose-500/20">Delete</button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Bulk Upload Modal */}
       <AnimatePresence>

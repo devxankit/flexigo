@@ -46,6 +46,7 @@ export default function KycOnboardingPage() {
   const [searchQuery, setSearchQuery] = useState(() => localStorage.getItem('kyc_search_query') || '');
   const [activeFilters, setActiveFilters] = useState({ range: 'Last 7 Days' });
   const [referralAmount, setReferralAmount] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, id: null });
 
   React.useEffect(() => {
     localStorage.setItem('kyc_active_tab', activeTab);
@@ -381,18 +382,9 @@ export default function KycOnboardingPage() {
                                     </button>
                                  )}
                                  <button
-                                   onClick={async (e) => {
+                                   onClick={(e) => {
                                      e.stopPropagation();
-                                     try {
-                                       const res = await api.delete(`/admin/kyc/${record._id || record.id}`);
-                                       if (res.data.success) {
-                                         useAdminDataStore.getState().fetchKycRecords();
-                                       } else {
-                                         alert(res.data.message || 'Deletion failed');
-                                       }
-                                     } catch(err) {
-                                       alert('Deletion failed: ' + (err.response?.data?.message || err.message));
-                                     }
+                                     setDeleteConfirm({ isOpen: true, id: record._id || record.id });
                                    }}
                                    className="p-1.5 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
                                    title="Delete Record"
@@ -408,6 +400,46 @@ export default function KycOnboardingPage() {
            </table>
          </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deleteConfirm.isOpen && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-sm bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl shadow-2xl p-6 relative overflow-hidden"
+            >
+              <div className="flex flex-col items-center text-center space-y-4">
+                <div className="w-16 h-16 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-500 shadow-inner">
+                  <AlertCircle size={32} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-tighter italic">Confirm Deletion</h3>
+                  <p className="text-[10px] text-[var(--text-tertiary)] font-bold mt-1 uppercase tracking-widest leading-relaxed">Are you sure you want to permanently delete this record? This action cannot be undone.</p>
+                </div>
+                <div className="flex w-full gap-3 pt-4">
+                  <button onClick={() => setDeleteConfirm({ isOpen: false, id: null })} className="flex-1 py-2.5 rounded-xl border border-[var(--border-subtle)] text-[10px] font-black uppercase tracking-widest text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-all active:scale-95">Cancel</button>
+                  <button onClick={async () => {
+                     try {
+                        const res = await api.delete(`/admin/kyc/${deleteConfirm.id}`);
+                        if (res.data.success) {
+                           useAdminDataStore.getState().fetchKycRecords();
+                           setDeleteConfirm({ isOpen: false, id: null });
+                        } else {
+                           alert(res.data.message || 'Deletion failed');
+                        }
+                     } catch(err) {
+                        alert('Deletion failed: ' + (err.response?.data?.message || err.message));
+                     }
+                  }} className="flex-1 py-2.5 rounded-xl bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 transition-all shadow-md active:scale-95 shadow-rose-500/20">Delete</button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* KYC Detail Modal */}
       <AnimatePresence>
