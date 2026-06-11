@@ -573,7 +573,7 @@ export default function GeoFencingPage() {
                            <thead>
                               <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
                                  {['Rider Identity', 'Type', 'Radius', 'Status', 'Alerts', 'Actions'].map((header) => (
-                                    <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
+                                    <th key={header} className="text-left py-3 px-2 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                                  ))}
                               </tr>
                            </thead>
@@ -614,7 +614,7 @@ export default function GeoFencingPage() {
                                           }}
                                           className={`group/row hover:bg-emerald-500/5 transition-all cursor-pointer ${isSelected ? 'bg-emerald-500/5' : ''}`}
                                        >
-                                          <td className="py-2 px-4 whitespace-nowrap">
+                                          <td className="py-2 px-2 whitespace-nowrap">
                                              <div className="flex flex-col">
                                                 {gf && (
                                                    <span className="text-[10px] font-black text-emerald-500 uppercase tracking-tighter mb-0.5 italic">
@@ -625,24 +625,24 @@ export default function GeoFencingPage() {
                                                 <span className="font-medium text-[var(--text-tertiary)] mt-1">{rider.phone}</span>
                                              </div>
                                           </td>
-                                          <td className="py-2 px-4">
+                                          <td className="py-2 px-2">
                                              <span className={`font-medium px-2 py-0.5 rounded border ${gf ? (gf.type === 'exclusion' ? 'bg-rose-500/10 text-rose-500 border-rose-500/10' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10') : 'bg-slate-500/10 text-slate-500 border-slate-500/10'
                                                 }`}>
                                                 {gf ? gf.type : 'No Zone'}
                                              </span>
                                           </td>
-                                          <td className="py-2 px-4 font-medium text-[var(--text-primary)]">{gf ? gf.radius : '--'}</td>
-                                          <td className="py-2 px-4">
+                                          <td className="py-2 px-2 font-medium text-[var(--text-primary)]">{gf ? gf.radius : '--'}</td>
+                                          <td className="py-2 px-2">
                                              <div className={`inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded font-medium border ${gf?.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-slate-500/10 text-slate-500 border-slate-500/10'
                                                 }`}>
                                                 <div className={`w-1 h-1 rounded-full ${gf?.status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`} />
                                                 {gf ? gf.status : 'inactive'}
                                              </div>
                                           </td>
-                                          <td className="py-2 px-4">
+                                          <td className="py-2 px-2">
                                              <span className={`font-medium ${gf?.alerts > 0 ? 'text-rose-500' : 'text-[var(--text-tertiary)]'}`}>{gf ? gf.alerts : 0} FLUX</span>
                                           </td>
-                                          <td className="py-2 px-4">
+                                          <td className="py-2 px-2">
                                              <div className="flex items-center gap-2">
                                                 {gf ? (
                                                    <>

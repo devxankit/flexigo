@@ -230,7 +230,7 @@ export default function KycOnboardingPage() {
                <thead>
                      <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
                      {['Identity', 'Wallet Balance', 'Persona', 'Liveness Check', 'Registry Date', 'Status', 'Actions'].map((header) => (
-                        <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
+                        <th key={header} className="text-left py-3 px-2 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                      ))}
                   </tr>
                </thead>
@@ -246,7 +246,7 @@ export default function KycOnboardingPage() {
                           className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer"
                           onClick={() => openDetails(record)}
                        >
-                          <td className="py-2 px-4 whitespace-nowrap">
+                          <td className="py-2 px-2 whitespace-nowrap">
                              <div className="flex flex-col">
                                 <span className={`font-medium transition-colors ${
                                    record.isBlocked 
@@ -265,13 +265,13 @@ export default function KycOnboardingPage() {
                                 )}
                              </div>
                           </td>
-                          <td className="py-2 px-4">
+                          <td className="py-2 px-2">
                              <div className="text-[11px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
                                 ₹{record.walletBalance || 0}
                              </div>
                           </td>
-                          <td className="py-2 px-4 font-medium text-[var(--text-tertiary)]">{record.role}</td>
-                          <td className="py-2 px-4">
+                          <td className="py-2 px-2 font-medium text-[var(--text-tertiary)]">{record.role}</td>
+                          <td className="py-2 px-2">
                              {(record.status === 'approved' || record.details?.ekycVerified) && !record.vehicleId ? (
                                <div className="flex items-center gap-1.5 px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full w-fit">
                                   <Camera size={8} className="text-emerald-500" />
@@ -279,8 +279,8 @@ export default function KycOnboardingPage() {
                                </div>
                              ) : null}
                           </td>
-                          <td className="py-2 px-4  font-medium text-[var(--text-tertiary)] whitespace-nowrap">{new Date(record.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</td>
-                          <td className="py-2 px-4">
+                          <td className="py-2 px-2 font-medium text-[var(--text-tertiary)] whitespace-nowrap">{new Date(record.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</td>
+                          <td className="py-2 px-2">
                              <div className={`inline-flex px-1.5 py-0.5 rounded  font-medium   border  ${
                                 record.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 
                                 record.status === 'pending' ? 'bg-blue-500/10 text-blue-500 border-blue-500/10' : 
@@ -289,8 +289,8 @@ export default function KycOnboardingPage() {
                                 {record.status}
                              </div>
                           </td>
-                          <td className="py-2 px-4">
-                             <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                          <td className="py-2 px-2">
+                             <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                                 <button 
                                    onClick={() => openDetails(record)}
                                    className="p-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[var(--text-tertiary)] hover:text-emerald-500 hover:border-emerald-500/30 transition-all"
@@ -321,7 +321,7 @@ export default function KycOnboardingPage() {
                                           alert(res?.message || "Failed to toggle block status");
                                        }
                                     }}
-                                    className={`p-1.5 border rounded-lg transition-all ml-1.5 ${
+                                    className={`p-1.5 border rounded-lg transition-all ${
                                        record.isBlocked 
                                           ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500 hover:text-white' 
                                           : 'bg-rose-500/10 border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white'
@@ -359,7 +359,7 @@ export default function KycOnboardingPage() {
                                     };
                                     input.click();
                                   }}
-                                  className="p-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-blue-500 hover:bg-blue-500 hover:text-white transition-all ml-1.5"
+                                  className="p-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-blue-500 hover:bg-blue-500 hover:text-white transition-all"
                                   title="Add Attachment"
                                 >
                                   <Paperclip size={12} />
@@ -374,7 +374,7 @@ export default function KycOnboardingPage() {
                                         });
                                         setIsAssignModalOpen(true);
                                       }}
-                                      className="p-1.5 bg-emerald-600/10 border border-emerald-500/20 rounded-lg text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all ml-1.5"
+                                      className="p-1.5 bg-emerald-600/10 border border-emerald-500/20 rounded-lg text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all"
                                       title="Assign Vehicle"
                                     >
                                        <Zap size={12} fill="currentColor" />
@@ -394,7 +394,7 @@ export default function KycOnboardingPage() {
                                        alert('Deletion failed: ' + (err.response?.data?.message || err.message));
                                      }
                                    }}
-                                   className="p-1.5 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white transition-all ml-1.5"
+                                   className="p-1.5 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
                                    title="Delete Record"
                                  >
                                    <Trash2 size={12} />
@@ -403,9 +403,9 @@ export default function KycOnboardingPage() {
                           </td>
                        </motion.tr>
                     ))}
-                  </AnimatePresence>
-               </tbody>
-            </table>
+                 </AnimatePresence>
+              </tbody>
+           </table>
          </div>
       </div>
 

@@ -138,7 +138,7 @@ export default function FranchiseKycQueue() {
                <thead>
                      <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
                      {['Partner Identity', 'Entity', 'Zone Node', 'Submission', 'Status', 'Actions'].map((header) => (
-                        <th key={header} className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
+                        <th key={header} className="text-left py-3 px-2 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                      ))}
                   </tr>
                </thead>
@@ -154,20 +154,20 @@ export default function FranchiseKycQueue() {
                          className="group/row hover:bg-[var(--bg-tertiary)]/20 transition-colors cursor-pointer"
                          onClick={() => openDetails(record)}
                        >
-                          <td className="py-2 px-4 whitespace-nowrap">
+                          <td className="py-2 px-2 whitespace-nowrap">
                              <div className="flex flex-col gap-0.5">
                                 <span className="font-medium text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{record.name}</span>
                              </div>
                           </td>
-                          <td className="py-2 px-4 font-medium text-[var(--text-tertiary)]">{record.type}</td>
-                          <td className="py-2 px-4">
+                          <td className="py-2 px-2 font-medium text-[var(--text-tertiary)]">{record.type}</td>
+                          <td className="py-2 px-2">
                              <div className="flex items-center gap-1.5">
                                 <MapPin size={10} className="text-emerald-500 opacity-60" />
                                 <span className="font-medium text-[var(--text-primary)]">{record.city}</span>
                              </div>
                           </td>
-                          <td className="py-2 px-4 font-medium text-[var(--text-tertiary)] whitespace-nowrap">{new Date(record.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</td>
-                          <td className="py-2 px-4">
+                          <td className="py-2 px-2 font-medium text-[var(--text-tertiary)] whitespace-nowrap">{new Date(record.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</td>
+                          <td className="py-2 px-2">
                              <div className={`inline-flex px-1.5 py-0.5 rounded  font-medium   border  ${
                                 record.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 
                                 record.status === 'pending' ? 'bg-blue-500/10 text-blue-500 border-blue-500/10' : 
@@ -176,7 +176,7 @@ export default function FranchiseKycQueue() {
                                 {record.status}
                              </div>
                           </td>
-                          <td className="py-2 px-4">
+                          <td className="py-2 px-2">
                              <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                                 <button 
                                    onClick={() => openDetails(record)}
