@@ -12,37 +12,42 @@ const run = async () => {
     console.log('Connected to DB');
 
     const ridersToUpdate = [
-      { id: '6a293fcfb29c6478b53061c4', amount: 2800 },
-      { id: '6a294511b29c6478b53061c6', amount: 2800 }
+      { id: '6a293fcfb29c6478b53061c4', amount: 2800, planId: '6a20ee6234bc40ba8e4bc091' },
+      { id: '6a294511b29c6478b53061c6', amount: 2800, planId: '6a20ee6234bc40ba8e4bc091' }
     ];
     
     for (const info of ridersToUpdate) {
-      const rider = await Rider.findById(info.id).populate('subscriptionPlan');
+      const rider = await Rider.findById(info.id);
       
       if (rider) {
         console.log(`Processing Rider: ${rider.name || rider.phone}`);
         
-        const planName = rider.subscriptionPlan ? rider.subscriptionPlan.name : 'Weekly Rent';
-        const planId = rider.subscriptionPlan ? rider.subscriptionPlan._id : null;
-        const amount = rider.subscriptionPlan ? rider.subscriptionPlan.price : info.amount;
+        // 1. Update Rider Subscription to Active
+        const expiresAt = new Date(Date.now() + 604800000); // +7 days for weekly plan
+        rider.status = 'active';
+        rider.subscriptionPlan = info.planId;
+        rider.subscriptionStart = new Date();
+        rider.subscriptionEnd = expiresAt;
+        await rider.save();
+        console.log(`- Rider plan updated to active`);
 
-        // Check if transaction already exists to avoid duplicates
+        // 2. Check and Create Transaction
         const existingTxn = await Transaction.findOne({
           riderId: rider._id,
           method: 'razorpay',
           status: 'success',
-          amount: amount
+          amount: info.amount
         });
 
         if (!existingTxn) {
           await Transaction.create({
             riderId: rider._id,
-            amount: amount,
+            amount: info.amount,
             type: 'debit',
             status: 'success',
-            description: `Plan Upgrade: ${planName} (Manual DB Recovery)`,
+            description: `Plan Upgrade: Weekly Rent`,
             method: 'razorpay',
-            planId: planId
+            planId: info.planId
           });
           console.log(`✅ Transaction added for ${rider.phone}`);
         } else {
