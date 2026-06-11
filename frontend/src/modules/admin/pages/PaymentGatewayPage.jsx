@@ -192,22 +192,7 @@ export default function PaymentGatewayPage() {
                       }`}>
                       {txn.status}
                     </div>
-                    {txn.status === 'pending' && (
-                      <div className="flex items-center gap-2 mt-1">
-                        <button
-                          onClick={() => handleApprove(txn._id)}
-                          className="px-2 py-0.5 bg-emerald-500 text-white text-[10px] rounded hover:bg-emerald-600 transition-colors shadow-sm"
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => handleReject(txn._id)}
-                          className="px-2 py-0.5 bg-rose-500 text-white text-[10px] rounded hover:bg-rose-600 transition-colors shadow-sm"
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    )}
+                    {/* Manual approval removed as requested */}
                   </td>
                   <td className="py-2 px-4 font-bold text-[12px] text-[var(--text-tertiary)] whitespace-nowrap">
                     {new Date(txn.date).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
