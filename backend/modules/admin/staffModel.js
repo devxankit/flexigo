@@ -71,8 +71,13 @@ const StaffSchema = new mongoose.Schema({
   isContractAccepted: { type: Boolean, default: false },
   assignedRole: {
     type: String,
-    default: null  // matches Role.name in Security Matrix e.g. "Operations Lead"
+    default: null
   },
+  attachments: [{
+    name: String,
+    url: String,
+    uploadedAt: { type: Date, default: Date.now }
+  }],
   createdAt: {
     type: Date,
     default: Date.now

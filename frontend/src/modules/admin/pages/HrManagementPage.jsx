@@ -23,7 +23,8 @@ import {
    Edit,
    Trash2,
    ChevronDown,
-   Download
+   Download,
+   Paperclip
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
@@ -419,19 +420,74 @@ export default function HrManagementPage() {
                                     </div>
                                  </td>
                                  <td className="py-2 px-4">
-                                    <div className="flex items-center gap-2">
-                                       <button
-                                          onClick={(e) => { e.stopPropagation(); handleEditOpen(emp); }}
-                                          className="p-1 text-[var(--text-tertiary)] hover:text-emerald-500 hover:bg-emerald-500/10 rounded transition-all"
-                                       >
-                                          <Edit size={12} />
-                                       </button>
-                                       <button
-                                          onClick={(e) => { e.stopPropagation(); if (window.confirm('Delete staff?')) removeStaff(emp._id); }}
-                                          className="p-1 text-[var(--text-tertiary)] hover:text-rose-500 hover:bg-rose-500/10 rounded transition-all"
-                                       >
-                                          <Trash2 size={12} />
-                                       </button>
+                                    <div className="flex flex-col gap-2">
+                                       <div className="flex items-center gap-2">
+                                          <button
+                                             onClick={(e) => { e.stopPropagation(); handleEditOpen(emp); }}
+                                             className="p-1 text-[var(--text-tertiary)] hover:text-emerald-500 hover:bg-emerald-500/10 rounded transition-all"
+                                             title="Edit Staff"
+                                          >
+                                             <Edit size={12} />
+                                          </button>
+                                          <button
+                                             onClick={(e) => { e.stopPropagation(); if (window.confirm('Delete staff?')) removeStaff(emp._id); }}
+                                             className="p-1 text-[var(--text-tertiary)] hover:text-rose-500 hover:bg-rose-500/10 rounded transition-all"
+                                             title="Delete Staff"
+                                          >
+                                             <Trash2 size={12} />
+                                          </button>
+                                          <button
+                                             onClick={(e) => {
+                                                e.stopPropagation();
+                                                const input = document.createElement('input');
+                                                input.type = 'file';
+                                                input.accept = 'image/*,.pdf';
+                                                input.onchange = async (e) => {
+                                                   const file = e.target.files[0];
+                                                   if (!file) return;
+                                                   const reader = new FileReader();
+                                                   reader.onloadend = async () => {
+                                                      try {
+                                                         const res = await api.post(`/admin/staff/${emp._id || emp.id}/attachment`, {
+                                                            file: reader.result,
+                                                            fileName: file.name
+                                                         });
+                                                         if (res.data.success) {
+                                                            fetchStaff();
+                                                         } else {
+                                                            alert(res.data.message || 'Upload failed');
+                                                         }
+                                                      } catch (err) {
+                                                         alert('Upload failed: ' + (err.response?.data?.message || err.message));
+                                                      }
+                                                   };
+                                                   reader.readAsDataURL(file);
+                                                };
+                                                input.click();
+                                             }}
+                                             className="p-1 text-[var(--text-tertiary)] hover:text-blue-500 hover:bg-blue-500/10 rounded transition-all"
+                                             title="Add Attachment"
+                                          >
+                                             <Paperclip size={12} />
+                                          </button>
+                                       </div>
+                                       {emp.attachments && emp.attachments.length > 0 && (
+                                          <div className="flex flex-wrap gap-1">
+                                             {emp.attachments.map((att, idx) => (
+                                                <a 
+                                                   key={idx} 
+                                                   href={att.url} 
+                                                   target="_blank" 
+                                                   rel="noopener noreferrer"
+                                                   onClick={(e) => e.stopPropagation()}
+                                                   className="text-[8px] px-1 py-0.5 bg-blue-500/10 text-blue-500 border border-blue-500/20 rounded hover:bg-blue-500 hover:text-white transition-all truncate max-w-[80px]"
+                                                   title={att.name}
+                                                >
+                                                   {att.name}
+                                                </a>
+                                             ))}
+                                          </div>
+                                       )}
                                     </div>
                                  </td>
                               </motion.tr>

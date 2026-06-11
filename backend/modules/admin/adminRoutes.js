@@ -146,6 +146,26 @@ router.put('/staff/:id', updateStaff);
 router.delete('/staff/:id', deleteStaff);
 router.get('/staff/:id/attendance', getStaffAttendance);
 router.post('/staff/:id/attendance', updateStaffAttendance);
+router.post('/staff/:id/attachment', protectAdmin, async (req, res) => {
+  try {
+    const { file, fileName } = req.body;
+    const Staff = (await import('./staffModel.js')).default;
+    const cloudinary = (await import('../../config/cloudinary.js')).default;
+    
+    const staff = await Staff.findById(req.params.id);
+    if (!staff) return res.status(404).json({ success: false, message: 'Staff not found' });
+    
+    const result = await cloudinary.uploader.upload(file, { folder: 'flexigo/staff_attachments' });
+    
+    if (!staff.attachments) staff.attachments = [];
+    staff.attachments.push({ name: fileName || 'Attachment', url: result.secure_url });
+    await staff.save();
+    
+    res.json({ success: true, message: 'Attachment uploaded', attachments: staff.attachments });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
 router.get('/staff/attendance/report', getMonthlyAttendanceReport);
 router.post('/staff/generate-aadhaar-otp', generateStaffAadhaarOTP);
 router.post('/staff/verify-aadhaar-otp', verifyStaffAadhaarOTP);
