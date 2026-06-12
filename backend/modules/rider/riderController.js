@@ -192,6 +192,30 @@ export const verifyAadhaarOTP = async (req, res) => {
   }
 };
 
+export const uploadAttachment = async (req, res) => {
+  try {
+    const { phone, file, fileName } = req.body;
+    const rider = await Rider.findOne({ phone });
+    if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
+
+    if (!file) return res.status(400).json({ success: false, message: 'No file provided' });
+
+    const result = await cloudinary.uploader.upload(file, { folder: `flexigo/riders/${rider._id}/attachments` });
+    
+    rider.kycDetails = rider.kycDetails || {};
+    rider.kycDetails.certificate = result.secure_url;
+    
+    rider.kycDetails.attachments = rider.kycDetails.attachments || [];
+    rider.kycDetails.attachments.push({ name: fileName || 'Certificate', url: result.secure_url });
+    
+    await rider.save();
+
+    res.status(200).json({ success: true, message: 'Attachment uploaded successfully', rider });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const getRiderProfile = async (req, res) => {
   try {
     const rider = await Rider.findOne({ phone: req.params.phone }).populate('subscriptionPlan');

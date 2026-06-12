@@ -102,11 +102,23 @@ export const useAuthStore = create(
           const { phone } = get();
           const res = await api.post('/rider/kyc/aadhaar/verify-otp', { client_id: clientId, otp, phone });
           if (res.data.success) {
-             // Profile will be auto-updated by fetchProfile later or we can set it here if we want
              return { success: true, data: res.data.data };
           }
         } catch (error) {
           return { success: false, message: error.response?.data?.message || 'Verification failed' };
+        }
+      },
+
+      uploadProfileAttachment: async (file, fileName) => {
+        try {
+          const { phone } = get();
+          const res = await api.post('/rider/profile/attachment', { phone, file, fileName });
+          if (res.data.success) {
+            set({ user: res.data.rider });
+            return { success: true };
+          }
+        } catch (error) {
+          return { success: false, message: error.response?.data?.message || 'Failed to upload attachment' };
         }
       },
 

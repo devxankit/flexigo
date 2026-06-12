@@ -8,7 +8,7 @@ import { useSubscriptionStore } from '../store/subscriptionStore';
 import { useNavigate } from 'react-router-dom';
 
 export default function ProfileScreen() {
-  const { user, logout, kycStatus, fetchProfile } = useAuthStore();
+  const { user, logout, kycStatus, fetchProfile, uploadProfileAttachment } = useAuthStore();
   const { theme } = useThemeStore();
   const navigate = useNavigate();
   const { activePlan } = useSubscriptionStore();
@@ -24,11 +24,47 @@ export default function ProfileScreen() {
   };
 
   const handleViewDocument = (label) => {
-    const docUrl = label === 'Driving License' ? user?.kycDetails?.drivingLicense : null;
+    const docUrl = label === 'Driving License' 
+      ? user?.kycDetails?.drivingLicense 
+      : label === 'Certificate' ? user?.kycDetails?.certificate : null;
+      
     if (docUrl) {
       window.open(docUrl, '_blank');
     } else {
       alert(`Viewing verified ${label} document...`);
+    }
+  };
+
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleUploadCertificate = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Quick size check (optional)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File too large. Please upload an image under 5MB.");
+      return;
+    }
+
+    try {
+      // Create a small loading state or use alert for now
+      const base64 = await fileToBase64(file);
+      const res = await uploadProfileAttachment(base64, file.name);
+      if (res.success) {
+        alert("Certificate uploaded successfully!");
+      } else {
+        alert(res.message || "Failed to upload certificate");
+      }
+    } catch (err) {
+      alert("Error uploading file");
     }
   };
 
@@ -55,7 +91,15 @@ export default function ProfileScreen() {
                 ? (kycStatus === 'approved' ? 'Verified' : 'Pending') 
                 : 'Not Uploaded', 
             color: user?.kycDetails?.drivingLicense ? '#39FF14' : (isDark ? '#4b5563' : '#94a3b8'), 
-            canView: !!user?.kycDetails?.drivingLicense 
+            canView: !!user?.kycDetails?.drivingLicense,
+            canUpload: false
+        },
+        {
+            label: 'Certificate',
+            value: user?.kycDetails?.certificate ? 'Uploaded' : 'Not Uploaded',
+            color: user?.kycDetails?.certificate ? '#39FF14' : (isDark ? '#4b5563' : '#94a3b8'),
+            canView: !!user?.kycDetails?.certificate,
+            canUpload: !user?.kycDetails?.certificate
         }
       ]
     }
@@ -63,6 +107,14 @@ export default function ProfileScreen() {
 
   return (
     <PageWrapper className="flex flex-col p-6 pt-2 pb-24">
+      {/* Hidden file input for uploading */}
+      <input 
+        type="file" 
+        id="certificate-upload" 
+        className="hidden" 
+        accept="image/*,.pdf" 
+        onChange={handleUploadCertificate} 
+      />
       <div className="mb-10 flex flex-col items-center">
         <div className="relative mb-6">
           <div className={`absolute inset-0 bg-flexigo-teal/20 rounded-full blur-2xl transition-opacity duration-500 ${isDark ? 'opacity-100' : 'opacity-40'}`} />
@@ -103,17 +155,30 @@ export default function ProfileScreen() {
                     </span>
                   </div>
 
-                  {item.canView && (
-                    <button
-                      onClick={() => handleViewDocument(item.label)}
-                      className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border transition-all ${isDark
-                          ? 'bg-white/5 border-white/10 text-flexigo-teal hover:bg-white/10'
-                          : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200 shadow-sm'
-                        }`}
-                    >
-                      View
-                    </button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {item.canUpload && (
+                      <button
+                        onClick={() => document.getElementById('certificate-upload').click()}
+                        className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border transition-all ${isDark
+                            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20'
+                            : 'bg-emerald-50 border-emerald-200 text-emerald-600 hover:bg-emerald-100 shadow-sm'
+                          }`}
+                      >
+                        Upload
+                      </button>
+                    )}
+                    {item.canView && (
+                      <button
+                        onClick={() => handleViewDocument(item.label)}
+                        className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border transition-all ${isDark
+                            ? 'bg-white/5 border-white/10 text-flexigo-teal hover:bg-white/10'
+                            : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200 shadow-sm'
+                          }`}
+                      >
+                        View
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </GlassCard>
