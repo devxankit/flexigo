@@ -27,7 +27,7 @@ import OpsFilter from '../components/OpsFilter';
 
 export default function SubscriberConsole() {
   const navigate = useNavigate();
-  const { subscribers = [], fetchSubscribers } = useRiderAssignmentStore();
+  const { subscribers = [], fetchSubscribers, payRiderPlan, payRiderDeposit } = useRiderAssignmentStore();
   const { vehicles = [], fetchVehicles } = useFleetStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState({
@@ -231,16 +231,43 @@ export default function SubscriberConsole() {
            {
              header: '',
              accessor: 'actions',
-             render: (row) => (
-               <div className="flex items-center gap-1.5">
-                  <button className="p-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl hover:bg-blue-600/10 hover:border-blue-500/20 hover:text-blue-500 transition-all text-slate-600 shadow-inner">
-                     <MessageSquare size={12} strokeWidth={2.5} />
-                  </button>
-                  <button className="p-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl hover:bg-white/5 hover:border-[var(--border-subtle)] hover:text-white transition-all text-slate-600 shadow-inner">
-                     <MoreVertical size={12} strokeWidth={2.5} />
-                  </button>
-               </div>
-            )
+             render: (row) => {
+               const isOverdue = row.subscriptionEnd && new Date(row.subscriptionEnd) < new Date();
+               const needsPlanPayment = row.depositPaid && (!row.subscriptionEnd || isOverdue);
+
+               return (
+                 <div className="flex items-center gap-1.5">
+                    {!row.depositPaid && (
+                       <button 
+                         onClick={async (e) => {
+                            e.stopPropagation();
+                            await payRiderDeposit(row._id || row.id);
+                            fetchSubscribers();
+                         }}
+                         className="px-2 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded border border-emerald-500/20 text-[7px] font-black uppercase tracking-widest transition-all shadow-md active:scale-95 italic">
+                          Pay Deposit
+                       </button>
+                    )}
+                    {needsPlanPayment && (
+                       <button 
+                         onClick={async (e) => {
+                            e.stopPropagation();
+                            await payRiderPlan(row._id || row.id);
+                            fetchSubscribers();
+                         }}
+                         className="px-2 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded border border-amber-500/20 text-[7px] font-black uppercase tracking-widest transition-all shadow-md active:scale-95 italic">
+                          Pay Plan
+                       </button>
+                    )}
+                    <button className="p-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl hover:bg-blue-600/10 hover:border-blue-500/20 hover:text-blue-500 transition-all text-slate-600 shadow-inner">
+                       <MessageSquare size={12} strokeWidth={2.5} />
+                    </button>
+                    <button className="p-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl hover:bg-white/5 hover:border-[var(--border-subtle)] hover:text-white transition-all text-slate-600 shadow-inner">
+                       <MoreVertical size={12} strokeWidth={2.5} />
+                    </button>
+                 </div>
+               );
+             }
            }
          ]} 
          data={filteredSubscribers} 

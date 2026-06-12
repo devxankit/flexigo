@@ -62,6 +62,24 @@ export const useSubscriberStore = create((set, get) => ({
     }));
   },
 
+  payRiderPlan: async (riderId) => {
+    try {
+      const res = await api.post('/franchise/riders/pay-plan', { riderId });
+      return res.data;
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Failed to pay plan' };
+    }
+  },
+
+  payRiderDeposit: async (riderId) => {
+    try {
+      const res = await api.post('/franchise/riders/pay-deposit', { riderId });
+      return res.data;
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Failed to pay deposit' };
+    }
+  },
+
   generateAadhaarOTP: async (aadhaarNumber) => {
     try {
       const res = await api.post('/rider/kyc/aadhaar/generate-otp', { aadhaarNumber });

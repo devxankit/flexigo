@@ -192,21 +192,27 @@ export const getVehicles = async (req, res) => {
           }
 
           if (assignment) {
-             const rider = await Rider.findById(assignment.rider).select('name phone lastLocation currentSpeed').lean();
+             const rider = await Rider.findById(assignment.rider).select('name phone lastLocation currentSpeed depositPaid subscriptionEnd subscriptionPlan').populate('subscriptionPlan').lean();
              if (rider) {
                 vehicle.rider = rider.name || 'Assigned';
                 vehicle.riderPhone = rider.phone;
                 vehicle.lastLocation = rider.lastLocation;
                 vehicle.currentSpeed = rider.currentSpeed;
+                vehicle.depositPaid = rider.depositPaid;
+                vehicle.subscriptionPlan = rider.subscriptionPlan;
+                vehicle.subscriptionEnd = rider.subscriptionEnd;
              }
           } else {
              // Reconcile legacy or manual assignment state using rider.vehicleId
-             const rider = await Rider.findOne({ vehicleId: vehicle._id }).select('name phone lastLocation currentSpeed').lean();
+             const rider = await Rider.findOne({ vehicleId: vehicle._id }).select('name phone lastLocation currentSpeed depositPaid subscriptionEnd subscriptionPlan').populate('subscriptionPlan').lean();
              if (rider) {
                 vehicle.rider = rider.name || 'Assigned';
                 vehicle.riderPhone = rider.phone;
                 vehicle.lastLocation = rider.lastLocation;
                 vehicle.currentSpeed = rider.currentSpeed;
+                vehicle.depositPaid = rider.depositPaid;
+                vehicle.subscriptionPlan = rider.subscriptionPlan;
+                vehicle.subscriptionEnd = rider.subscriptionEnd;
 
                 if (vehicle.status === 'unassigned') {
                    vehicle.status = 'assigned';

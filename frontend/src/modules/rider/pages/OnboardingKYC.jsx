@@ -176,7 +176,23 @@ export default function OnboardingKYC() {
 
   useEffect(() => {
     localStorage.setItem('onboarding_step', currentStep.toString());
-  }, [currentStep]);
+    
+    // Push state so hardware back button doesn't leave the page immediately
+    window.history.pushState({ kycStep: currentStep }, '', window.location.href);
+    
+    const handlePopState = (e) => {
+      if (currentStep > 1) {
+        // Prevent leaving page, go back one step
+        setCurrentStep(prev => prev - 1);
+      } else {
+        // Allow leaving if on step 1
+        navigate(-1);
+      }
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [currentStep, navigate]);
 
   const fileToBase64 = (file) => {
     console.log(`UTIL: Converting file to base64: ${file?.name}`);
@@ -489,8 +505,24 @@ export default function OnboardingKYC() {
         )}
       </AnimatePresence>
       <div className="flex items-center justify-between mb-8">
-        <h1 className={`text-2xl font-heading font-black transition-colors duration-500 ${isDark ? 'text-white' : 'text-slate-900'
-          }`}>KYC Verification</h1>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => {
+              if (currentStep > 1) {
+                setCurrentStep(prev => prev - 1);
+              } else {
+                navigate(-1);
+              }
+            }}
+            className={`p-2 -ml-2 rounded-full transition-colors ${isDark ? 'hover:bg-white/10 text-white' : 'hover:bg-slate-100 text-slate-900'}`}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5">
+              <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+          <h1 className={`text-2xl font-heading font-black transition-colors duration-500 ${isDark ? 'text-white' : 'text-slate-900'
+            }`}>KYC Verification</h1>
+        </div>
         <div className="text-flexigo-teal font-black text-[10px] uppercase tracking-widest">Step {currentStep}/{steps.length}</div>
       </div>
 

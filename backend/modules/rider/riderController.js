@@ -477,7 +477,7 @@ export const saveRiderPlan = async (req, res) => {
     const { planId, phone } = req.body;
     const plan = await SubscriptionPlan.findById(planId);
     if (!plan) return res.status(404).json({ success: false, message: 'Plan not found' });
-    
+
     const rider = await Rider.findOne({ phone });
     if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
 
@@ -702,13 +702,13 @@ export const approveQRPayment = async (req, res) => {
     if (transaction.description && transaction.description.includes('Deposit')) {
       rider.depositPaid = true;
       if (plan) {
-         rider.subscriptionPlan = plan._id;
+        rider.subscriptionPlan = plan._id;
       }
       transaction.status = 'success';
       transaction.description = `Security Deposit (QR Verified)`;
       await rider.save();
       await transaction.save();
-      
+
       try {
         const msg = `Flexigo: Your security deposit has been verified.`;
         await sendSMS(rider.phone, msg);

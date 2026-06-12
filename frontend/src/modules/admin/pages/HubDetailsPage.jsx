@@ -294,6 +294,7 @@ export default function HubDetailsPage() {
                     <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Plate</th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Model</th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Rider</th>
+                    <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Plan & Dues</th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Battery</th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Status</th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Action</th>
@@ -302,11 +303,11 @@ export default function HubDetailsPage() {
                 <tbody className="divide-y divide-[var(--border-subtle)]">
                   {loadingVehicles ? (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-[10px] font-medium text-[var(--text-tertiary)]">Loading fleet data...</td>
+                      <td colSpan={7} className="py-12 text-center text-[10px] font-medium text-[var(--text-tertiary)]">Loading fleet data...</td>
                     </tr>
                   ) : vehicles.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center">
+                      <td colSpan={7} className="py-12 text-center">
                         <div className="space-y-3">
                           <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">No vehicles registered yet</p>
                           <button
@@ -328,6 +329,25 @@ export default function HubDetailsPage() {
                       </td>
                       <td className="px-4 py-2 text-xs font-medium text-[var(--text-tertiary)]">{v.model}</td>
                       <td className="px-4 py-2 text-xs font-medium text-[var(--text-tertiary)]">{v.rider || '—'}</td>
+                      <td className="px-4 py-2">
+                        {v.subscriptionPlan ? (
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[10px] font-bold text-[var(--text-primary)] uppercase tracking-widest italic">{v.subscriptionPlan.name || v.subscriptionPlan.label || 'Plan Active'}</span>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              {v.depositPaid ? (
+                                <span className="text-[7.5px] font-black text-emerald-500 uppercase tracking-widest border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 rounded italic">Deposit Paid</span>
+                              ) : (
+                                <span className="text-[7.5px] font-black text-rose-500 uppercase tracking-widest border border-rose-500/20 bg-rose-500/10 px-1.5 py-0.5 rounded italic">Pending Deposit</span>
+                              )}
+                              {v.subscriptionEnd && new Date(v.subscriptionEnd) < new Date() && (
+                                <span className="text-[7.5px] font-black text-rose-500 uppercase tracking-widest border border-rose-500/20 bg-rose-500/10 px-1.5 py-0.5 rounded italic">Plan Overdue</span>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-[9px] text-[var(--text-tertiary)] font-black uppercase tracking-widest italic opacity-60">No Plan</span>
+                        )}
+                      </td>
                       <td className="px-4 py-2">
                         <div className="flex items-center gap-2">
                           <Battery size={12} className={v.battery < 20 ? 'text-rose-500' : 'text-emerald-500'} />
