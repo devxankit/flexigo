@@ -711,3 +711,146 @@ export const markAllNotificationsRead = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Get All Riders and their Dues for the Franchise
+// @route   GET /api/v1/franchise/riders/dues
+export const getRiderDues = async (req, res) => {
+  try {
+    const riders = await Rider.find({ franchise: req.franchise._id }).populate('subscriptionPlan');
+    
+    const dues = riders.map(rider => {
+      let isPlanDue = false;
+      let planAmount = 0;
+      let depositDue = !rider.depositPaid;
+
+      if (rider.subscriptionPlan) {
+        planAmount = rider.subscriptionPlan.price;
+        if (!rider.subscriptionEnd || new Date(rider.subscriptionEnd) < new Date()) {
+          isPlanDue = true;
+        }
+      }
+
+      return {
+        riderId: rider._id,
+        name: rider.name || rider.phone,
+        phone: rider.phone,
+        status: rider.status,
+        subscriptionPlan: rider.subscriptionPlan ? rider.subscriptionPlan.name : 'None',
+        planAmount: planAmount,
+        isPlanDue: isPlanDue,
+        nextDueDate: rider.subscriptionEnd,
+        depositPaid: rider.depositPaid,
+        depositDue: depositDue
+      };
+    });
+
+    res.status(200).json({ success: true, dues });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Franchise Owner pays a Rider's Plan
+// @route   POST /api/v1/franchise/riders/pay-plan
+export const payRiderPlan = async (req, res) => {
+  try {
+    const { riderId, planId } = req.body;
+    
+    const rider = await Rider.findById(riderId);
+    if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
+    if (rider.franchise.toString() !== req.franchise._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Rider does not belong to your franchise' });
+    }
+
+    const plan = await SubscriptionPlan.findById(planId || rider.subscriptionPlan);
+    if (!plan) return res.status(404).json({ success: false, message: 'Plan not found' });
+
+    const franchiseToUpdate = await Franchise.findById(req.franchise._id);
+    if ((franchiseToUpdate.walletBalance || 0) < plan.price) {
+      return res.status(400).json({ success: false, message: 'Insufficient franchise wallet balance' });
+    }
+
+    // Deduct from Franchise Wallet
+    franchiseToUpdate.walletBalance -= plan.price;
+    await franchiseToUpdate.save();
+
+    // Create Transaction
+    await FranchiseTransaction.create({
+      franchiseId: franchiseToUpdate._id,
+      amount: plan.price,
+      type: 'Subscription',
+      status: 'completed',
+      subscriberName: rider.name || rider.phone,
+      description: `Subscription paid for rider ${rider.name || rider.phone}`,
+      paymentMethod: 'wallet'
+    });
+
+    // Update Rider Plan
+    const durationMs = plan.type === 'Daily' ? 86400000 : plan.type === 'Weekly' ? 604800000 : 2592000000;
+    const expiresAt = new Date(Date.now() + durationMs);
+
+    rider.status = 'active';
+    rider.subscriptionPlan = plan._id;
+    rider.subscriptionStart = new Date();
+    rider.subscriptionEnd = expiresAt;
+    await rider.save();
+
+    // Notify Rider
+    const msg = `Flexigo: Your franchise owner has paid your plan fee of ₹${plan.price}. Subscription is now active.`;
+    try { await sendSMS(rider.phone, msg); } catch (e) {}
+
+    res.status(200).json({ success: true, message: 'Rider plan paid successfully', walletBalance: franchiseToUpdate.walletBalance });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Franchise Owner pays a Rider's Deposit
+// @route   POST /api/v1/franchise/riders/pay-deposit
+export const payRiderDeposit = async (req, res) => {
+  try {
+    const { riderId, depositAmount } = req.body; // Default could be fetched from settings, but keeping it flexible
+
+    const rider = await Rider.findById(riderId);
+    if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
+    if (rider.franchise.toString() !== req.franchise._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Rider does not belong to your franchise' });
+    }
+    
+    if (rider.depositPaid) {
+      return res.status(400).json({ success: false, message: 'Deposit already paid for this rider' });
+    }
+
+    const amount = Number(depositAmount);
+    if (isNaN(amount) || amount <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid deposit amount' });
+    }
+
+    const franchiseToUpdate = await Franchise.findById(req.franchise._id);
+    if ((franchiseToUpdate.walletBalance || 0) < amount) {
+      return res.status(400).json({ success: false, message: 'Insufficient franchise wallet balance for deposit' });
+    }
+
+    // Deduct from Franchise Wallet
+    franchiseToUpdate.walletBalance -= amount;
+    await franchiseToUpdate.save();
+
+    // Create Transaction
+    await FranchiseTransaction.create({
+      franchiseId: franchiseToUpdate._id,
+      amount: amount,
+      type: 'Deposit Paid',
+      status: 'completed',
+      subscriberName: rider.name || rider.phone,
+      description: `Security deposit paid for rider ${rider.name || rider.phone}`,
+      paymentMethod: 'wallet'
+    });
+
+    rider.depositPaid = true;
+    await rider.save();
+
+    res.status(200).json({ success: true, message: 'Rider deposit paid successfully', walletBalance: franchiseToUpdate.walletBalance });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

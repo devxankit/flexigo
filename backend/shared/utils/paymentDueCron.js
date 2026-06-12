@@ -2,6 +2,8 @@ import cron from 'node-cron';
 import Rider from '../../modules/rider/riderModel.js';
 import SubscriptionPlan from '../../modules/admin/subscriptionPlanModel.js';
 import Admin from '../../modules/admin/adminModel.js';
+import Franchise from '../../modules/franchise/franchiseModel.js';
+import FranchiseNotification from '../../modules/franchise/franchiseNotificationModel.js';
 import { sendPushNotification } from './firebase.js';
 import { sendSMS } from './smsService.js';
 
@@ -61,7 +63,53 @@ export const startPaymentDueCron = () => {
 
         const dueMessage = `Payment Due: Your ${planName} (₹${amount}) due on ${dueDateString} has expired. Please renew to continue using your vehicle.`;
 
-        // Push notification to rider
+        // Check if Rider belongs to a Franchise
+        if (rider.franchise) {
+          const franchise = await Franchise.findById(rider.franchise);
+          if (franchise) {
+            const franchiseDueMsg = `Payment Due: Rider ${rider.name || rider.phone} has an expired ${planName} (₹${amount}) due since ${dueDateString}. Please pay to avoid service interruption.`;
+            
+            // Push to Franchise Owner
+            const franchiseToken = franchise.fcmToken || franchise.fcmTokenMobile;
+            if (franchiseToken) {
+              try {
+                await sendPushNotification(
+                  franchiseToken,
+                  '⚠️ Rider Payment Due',
+                  franchiseDueMsg,
+                  { type: 'rider_payment_due', amount: amount.toString(), planName, dueDate: dueDateString, riderId: rider._id.toString() }
+                );
+                console.log(`📱 [CRON] Notification sent to franchise: ${franchise.phone}`);
+              } catch (e) {
+                console.error(`❌ [CRON] Failed to notify franchise ${franchise.phone}:`, e.message);
+              }
+            }
+
+            // SMS to Franchise Owner
+            try {
+              await sendSMS(franchise.phone, franchiseDueMsg);
+            } catch (e) {
+              console.error(`❌ [CRON] SMS failed for franchise ${franchise.phone}:`, e.message);
+            }
+
+            // Create DB Notification for Franchise App
+            try {
+              await FranchiseNotification.create({
+                franchiseId: franchise._id,
+                title: 'Rider Payment Due',
+                message: franchiseDueMsg,
+                type: 'payment_due'
+              });
+            } catch (e) {
+              console.error(`❌ [CRON] Failed to create DB notification for franchise ${franchise.phone}:`, e.message);
+            }
+
+            // Skip sending to the Rider directly
+            continue;
+          }
+        }
+
+        // Push notification to rider (if independent)
         const riderToken = rider.fcmToken || rider.fcmTokenMobile;
         if (riderToken) {
           try {
@@ -77,7 +125,7 @@ export const startPaymentDueCron = () => {
           }
         }
 
-        // SMS to rider
+        // SMS to rider (if independent)
         try {
           await sendSMS(rider.phone, dueMessage);
         } catch (e) {

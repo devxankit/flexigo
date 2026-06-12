@@ -17,7 +17,10 @@ import {
   markAllNotificationsRead,
   addWalletFunds,
   createWalletOrder,
-  verifyWalletPayment
+  verifyWalletPayment,
+  getRiderDues,
+  payRiderPlan,
+  payRiderDeposit
 } from './franchiseController.js';
 import { protectFranchise } from '../../shared/middleware/authMiddleware.js';
 
@@ -43,5 +46,10 @@ router.post('/fleet/add', protectFranchise, addVehicle);
 router.get('/notifications', protectFranchise, getNotifications);
 router.patch('/notifications/:id/read', protectFranchise, markNotificationRead);
 router.patch('/notifications/mark-all-read', protectFranchise, markAllNotificationsRead);
+
+// Rider Management (Payments & Dues)
+router.get('/riders/dues', protectFranchise, getRiderDues);
+router.post('/riders/pay-plan', protectFranchise, payRiderPlan);
+router.post('/riders/pay-deposit', protectFranchise, payRiderDeposit);
 
 export default router;
