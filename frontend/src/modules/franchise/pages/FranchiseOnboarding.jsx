@@ -90,7 +90,23 @@ export default function FranchiseOnboarding() {
   // Update persisted step when local step changes
   useEffect(() => {
      setPersistedStep(step);
-  }, [step]);
+     
+     // Push state so hardware back button doesn't leave the page immediately
+     window.history.pushState({ franchiseStep: step }, '', window.location.href);
+     
+     const handlePopState = (e) => {
+       if (step > 1) {
+         // Prevent leaving page, go back one step
+         setStep(prev => prev - 1);
+       } else {
+         // Allow leaving if on step 1
+         navigate(-1);
+       }
+     };
+     
+     window.addEventListener('popstate', handlePopState);
+     return () => window.removeEventListener('popstate', handlePopState);
+  }, [step, navigate]);
 
   // Update persisted verified status
   useEffect(() => {
