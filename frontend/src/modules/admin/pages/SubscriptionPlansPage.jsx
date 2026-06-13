@@ -226,9 +226,7 @@ export default function SubscriptionPlansPage() {
                     <h3 className="text-lg font-bold text-[var(--text-primary)] leading-tight">
                       {plan.name}
                     </h3>
-                    <p className="text-[10px] text-[var(--text-tertiary)] opacity-60 font-medium mt-1">
-                      ID: {plan._id || plan.id}
-                    </p>
+
                   </div>
 
                   {/* Pricing Section */}

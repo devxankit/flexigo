@@ -84,7 +84,6 @@ export default function FranchiseOpsPage() {
                            <td className="py-2 px-4">
                               <div className="flex flex-col">
                                  <span className="font-medium text-[var(--text-primary)] group-hover:text-emerald-500 transition-colors">{fr.name}</span>
-                                 <span className="font-medium text-[var(--text-tertiary)]   mt-1">{fr.id}</span>
                               </div>
                            </td>
                            <td className="py-2 px-4">
