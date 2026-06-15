@@ -311,85 +311,13 @@ export default function SubscriptionPlans() {
         )}
       </AnimatePresence>
 
-      {user?.depositPaid === false ? (
-        <div className="mb-10 space-y-6 pb-6 border-b border-white/10">
-          <div className="mb-6 text-left">
-            <h1 className={`text-3xl font-heading font-black transition-colors duration-500 ${isDark ? 'text-white' : 'text-slate-900'}`}>Security <span className="text-flexigo-teal">Deposit</span></h1>
-            <p className={`text-xs ml-1 font-black uppercase tracking-[0.2em] transition-colors duration-500 ${isDark ? 'text-gray-500' : 'text-slate-600'}`}>Mandatory one-time deposit required.</p>
-          </div>
-          <GlassCard className="p-6 border-flexigo-teal/30 bg-flexigo-teal/[0.03] relative overflow-hidden shadow-2xl">
-            <div className="flex justify-between items-center relative z-10">
-              <div><h4 className={`text-xl font-heading font-black transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>Security Deposit</h4><p className="text-[10px] font-black uppercase tracking-widest text-flexigo-teal mt-1">One-time & Refundable</p></div>
-              <div className="text-right"><span className={`text-2xl font-black transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>₹{systemSettings.securityDepositAmount}</span></div>
-            </div>
-          </GlassCard>
-
-          {/* Adhoc Payment Section */}
-          <GlassCard className={`p-4 mt-4 border shadow-md ${isDark ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-white'}`}>
-            <div className="flex flex-col gap-3">
-              <div className="flex justify-between items-center">
-                <span className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>Adhoc Payment</span>
-              </div>
-              <div className="flex flex-col gap-2">
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    placeholder="Enter Amount"
-                    value={addOffAmount}
-                    onChange={(e) => setAddOffAmount(e.target.value)}
-                    className={`flex-1 rounded-xl px-4 py-2 text-sm font-bold border ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'} focus:outline-none focus:border-flexigo-teal transition-all`}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddOffPayment}
-                    className="bg-slate-900 text-white px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-black transition-all active:scale-95"
-                  >
-                    PAY NOW
-                  </button>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Payment Description (Optional)"
-                  value={adhocDescription}
-                  onChange={(e) => setAdhocDescription(e.target.value)}
-                  className={`w-full rounded-xl px-4 py-2 text-xs font-bold border ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'} focus:outline-none focus:border-flexigo-teal transition-all`}
-                />
-              </div>
-            </div>
-          </GlassCard>
-          <div className="space-y-4">
-            <p className={`text-[8px] font-black uppercase tracking-[0.3em] ${isDark ? 'text-white/40' : 'text-slate-950 font-black opacity-80'}`}>Select Payment Method</p>
-            <div className="space-y-3">
-              {paymentMethods.map((method) => (
-                <div key={method.id} onClick={() => setDepositMethod(method.id)} className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${depositMethod === method.id ? 'border-flexigo-teal bg-flexigo-teal/5 shadow-[0_0_20px_rgba(57,255,20,0.1)]' : (isDark ? 'border-white/5 bg-white/[0.02] hover:border-white/10' : 'border-slate-300 bg-white hover:border-slate-300')}`}>
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${depositMethod === method.id ? 'bg-flexigo-teal text-white shadow-neon-sm' : (isDark ? 'bg-white/10 text-gray-500' : 'bg-slate-100 text-slate-500')}`}>{method.icon}</div>
-                    <div><p className={`text-[10px] font-black uppercase tracking-widest ${isDark ? (depositMethod === method.id ? 'text-white' : 'text-gray-400') : (depositMethod === method.id ? 'text-flexigo-teal' : 'text-slate-950')}`}>{method.label}</p><p className={`text-[8px] font-black italic ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>{method.sub}</p></div>
-                  </div>
-                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${depositMethod === method.id ? 'border-flexigo-teal bg-flexigo-teal shadow-[0_0_8px_#39FF1444]' : (isDark ? 'border-white/10' : 'border-slate-300')}`}>{depositMethod === method.id && <div className="w-1.5 h-1.5 rounded-full bg-white" />}</div>
-                </div>
-              ))}
-            </div>
-            <div className="pt-4">
-              <NeonButton variant="solid" size="full" onClick={() => {
-                if (!selectedPlan) {
-                  alert("Please select a Subscription Plan first!");
-                  return;
-                }
-                setIsPayingDeposit(true);
-              }}>Pay Security Deposit & Save Plan</NeonButton>
-            </div>
-          </div>
+      <div className="mb-6 text-left">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-1.5 h-8 bg-flexigo-teal rounded-full" />
+          <h1 className={`text-3xl font-heading font-black transition-colors duration-500 ${isDark ? 'text-white' : 'text-slate-900'}`}>Subscription <span className="text-flexigo-teal">Management</span></h1>
         </div>
-      ) : (
-        <div className="mb-6 text-left">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-1.5 h-8 bg-flexigo-teal rounded-full" />
-            <h1 className={`text-3xl font-heading font-black transition-colors duration-500 ${isDark ? 'text-white' : 'text-slate-900'}`}>Subscription <span className="text-flexigo-teal">Management</span></h1>
-          </div>
-          <p className={`text-xs ml-4 font-black uppercase tracking-[0.2em] transition-colors duration-500 ${isDark ? 'text-gray-500' : 'text-slate-600'}`}>Manage your fleet access and billing tiers.</p>
-        </div>
-      )}
+        <p className={`text-xs ml-4 font-black uppercase tracking-[0.2em] transition-colors duration-500 ${isDark ? 'text-gray-500' : 'text-slate-600'}`}>Manage your fleet access and billing tiers.</p>
+      </div>
 
       {/* Current Active Plan Banner */}
       {activePlan && (
@@ -478,6 +406,78 @@ export default function SubscriptionPlans() {
           </motion.div>
         ))}
       </div>
+
+      {user?.depositPaid === false && (
+        <div className="mt-8 mb-4 space-y-6 pt-6 border-t border-white/10">
+          <div className="mb-6 text-left">
+            <h1 className={`text-3xl font-heading font-black transition-colors duration-500 ${isDark ? 'text-white' : 'text-slate-900'}`}>Security <span className="text-flexigo-teal">Deposit</span></h1>
+            <p className={`text-xs ml-1 font-black uppercase tracking-[0.2em] transition-colors duration-500 ${isDark ? 'text-gray-500' : 'text-slate-600'}`}>Mandatory one-time deposit required.</p>
+          </div>
+          <GlassCard className="p-6 border-flexigo-teal/30 bg-flexigo-teal/[0.03] relative overflow-hidden shadow-2xl">
+            <div className="flex justify-between items-center relative z-10">
+              <div><h4 className={`text-xl font-heading font-black transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>Security Deposit</h4><p className="text-[10px] font-black uppercase tracking-widest text-flexigo-teal mt-1">One-time & Refundable</p></div>
+              <div className="text-right"><span className={`text-2xl font-black transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>₹{systemSettings.securityDepositAmount}</span></div>
+            </div>
+          </GlassCard>
+
+          {/* Adhoc Payment Section */}
+          <GlassCard className={`p-4 mt-4 border shadow-md ${isDark ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-white'}`}>
+            <div className="flex flex-col gap-3">
+              <div className="flex justify-between items-center">
+                <span className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>Adhoc Payment</span>
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    placeholder="Enter Amount"
+                    value={addOffAmount}
+                    onChange={(e) => setAddOffAmount(e.target.value)}
+                    className={`flex-1 rounded-xl px-4 py-2 text-sm font-bold border ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'} focus:outline-none focus:border-flexigo-teal transition-all`}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddOffPayment}
+                    className="bg-slate-900 text-white px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-black transition-all active:scale-95"
+                  >
+                    PAY NOW
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Payment Description (Optional)"
+                  value={adhocDescription}
+                  onChange={(e) => setAdhocDescription(e.target.value)}
+                  className={`w-full rounded-xl px-4 py-2 text-xs font-bold border ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'} focus:outline-none focus:border-flexigo-teal transition-all`}
+                />
+              </div>
+            </div>
+          </GlassCard>
+          <div className="space-y-4">
+            <p className={`text-[8px] font-black uppercase tracking-[0.3em] ${isDark ? 'text-white/40' : 'text-slate-950 font-black opacity-80'}`}>Select Payment Method</p>
+            <div className="space-y-3">
+              {paymentMethods.map((method) => (
+                <div key={method.id} onClick={() => setDepositMethod(method.id)} className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${depositMethod === method.id ? 'border-flexigo-teal bg-flexigo-teal/5 shadow-[0_0_20px_rgba(57,255,20,0.1)]' : (isDark ? 'border-white/5 bg-white/[0.02] hover:border-white/10' : 'border-slate-300 bg-white hover:border-slate-300')}`}>
+                  <div className="flex items-center gap-4">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${depositMethod === method.id ? 'bg-flexigo-teal text-white shadow-neon-sm' : (isDark ? 'bg-white/10 text-gray-500' : 'bg-slate-100 text-slate-500')}`}>{method.icon}</div>
+                    <div><p className={`text-[10px] font-black uppercase tracking-widest ${isDark ? (depositMethod === method.id ? 'text-white' : 'text-gray-400') : (depositMethod === method.id ? 'text-flexigo-teal' : 'text-slate-950')}`}>{method.label}</p><p className={`text-[8px] font-black italic ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>{method.sub}</p></div>
+                  </div>
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${depositMethod === method.id ? 'border-flexigo-teal bg-flexigo-teal shadow-[0_0_8px_#39FF1444]' : (isDark ? 'border-white/10' : 'border-slate-300')}`}>{depositMethod === method.id && <div className="w-1.5 h-1.5 rounded-full bg-white" />}</div>
+                </div>
+              ))}
+            </div>
+            <div className="pt-4">
+              <NeonButton variant="solid" size="full" onClick={() => {
+                if (!selectedPlan) {
+                  alert("Please select a Subscription Plan first!");
+                  return;
+                }
+                setIsPayingDeposit(true);
+              }}>Pay Security Deposit & Save Plan</NeonButton>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mt-12 space-y-4">
         <NeonButton
