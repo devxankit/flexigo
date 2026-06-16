@@ -26,7 +26,7 @@ const FloatingContactButtons = () => {
         transition={{ delay: 0.1 }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
-        href="https://wa.me/919922968093"
+        href="https://wa.me/919684019619"
         target="_blank"
         rel="noopener noreferrer"
         className="w-12 h-12 flex items-center justify-center bg-[#25D366] text-white rounded-full shadow-2xl hover:bg-[#128C7E] transition-colors group relative"
