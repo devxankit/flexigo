@@ -17,6 +17,7 @@ import {
 import { useFranchiseWalletStore } from '../store/walletStore';
 import GlassTable from '../components/GlassTable';
 import StatusBadge from '../components/StatusBadge';
+import api from '../../../lib/axios';
 
 export default function WalletFinancials() {
    const { balance, ledger = [], fetchWallet, requestPayout, addFunds } = useFranchiseWalletStore();
@@ -77,7 +78,7 @@ export default function WalletFinancials() {
             }
 
             try {
-               const { data: orderRes } = await import('../../../lib/axios').then(m => m.default).then(api => api.post('/franchise/wallet/create-order', { amount }));
+               const { data: orderRes } = await api.post('/franchise/wallet/create-order', { amount });
                
                if (!orderRes.success) {
                   alert('Failed to create order');
@@ -94,10 +95,10 @@ export default function WalletFinancials() {
                   order_id: orderRes.order.id,
                   handler: async function (response) {
                      try {
-                        const { data: verifyRes } = await import('../../../lib/axios').then(m => m.default).then(api => api.post('/franchise/wallet/verify-payment', {
+                        const { data: verifyRes } = await api.post('/franchise/wallet/verify-payment', {
                            ...response,
                            amount
-                        }));
+                        });
                         if (verifyRes.success) {
                            alert('Payment Successful!');
                            setAddFundsModalOpen(false);

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useRiderAssignmentStore } from '../store/riderAssignmentStore';
 import { useFleetStore } from '../store/fleetStore';
+import { useFranchiseAuthStore } from '../store/franchiseAuthStore';
 import GlassTable from '../components/GlassTable';
 import StatusBadge from '../components/StatusBadge';
 import OpsFilter from '../components/OpsFilter';
@@ -35,10 +36,15 @@ export default function SubscriberConsole() {
     metrics: {}
   });
 
+  const { user } = useFranchiseAuthStore();
+
   useEffect(() => {
     fetchSubscribers();
-    fetchVehicles();
-  }, [fetchSubscribers, fetchVehicles]);
+    const fId = user?.id || user?._id;
+    if (fId) {
+       fetchVehicles(fId);
+    }
+  }, [fetchSubscribers, fetchVehicles, user]);
 
   const handleFilterChange = (newFilters) => {
     setActiveFilters(newFilters);
