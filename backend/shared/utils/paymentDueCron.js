@@ -104,8 +104,7 @@ export const startPaymentDueCron = () => {
               console.error(`❌ [CRON] Failed to create DB notification for franchise ${franchise.phone}:`, e.message);
             }
 
-            // Skip sending to the Rider directly
-            continue;
+            // Continue to send to Rider as well, so both are notified
           }
         }
 
