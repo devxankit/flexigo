@@ -237,17 +237,7 @@ export default function SubscriberConsole() {
 
                return (
                  <div className="flex items-center gap-1.5">
-                    {!row.depositPaid && (
-                       <button 
-                         onClick={async (e) => {
-                            e.stopPropagation();
-                            await payRiderDeposit(row._id || row.id);
-                            fetchSubscribers();
-                         }}
-                         className="px-2 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded border border-emerald-500/20 text-[7px] font-black uppercase tracking-widest transition-all shadow-md active:scale-95 italic">
-                          Pay Deposit
-                       </button>
-                    )}
+
                     {needsPlanPayment && (
                        <button 
                          onClick={async (e) => {

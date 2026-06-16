@@ -480,20 +480,16 @@ export default function SubscriptionPlans() {
       )}
 
       <div className="mt-12 space-y-4">
-        <NeonButton
-          variant="solid"
-          size="full"
-          disabled={!selectedPlan || user?.depositPaid === false}
-          onClick={() => {
-            if (user?.depositPaid === false) {
-              alert("Please pay the Security Deposit first.");
-              return;
-            }
-            handleUpdatePlan();
-          }}
-        >
-          {user?.depositPaid === false ? "Pay Deposit First" : "Confirm Plan Upgrade"}
-        </NeonButton>
+        {user?.depositPaid !== false && (
+          <NeonButton
+            variant="solid"
+            size="full"
+            disabled={!selectedPlan}
+            onClick={handleUpdatePlan}
+          >
+            Confirm Plan Upgrade
+          </NeonButton>
+        )}
         <p className={`text-center text-[9px] uppercase font-black tracking-[0.2em] transition-colors ${isDark ? 'text-gray-600' : 'text-slate-700'}`}>
           Next billing on {activePlan ? 'the next cycle' : 'Immediately'}
         </p>
