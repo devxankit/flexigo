@@ -22,11 +22,12 @@ import logo from '../../../assets/logo.png';
 
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/franchise/dashboard' },
+  { id: 'tracking', label: 'Riders', icon: Users, path: '/franchise/tracking' },
   { id: 'fleet', label: 'Fleet Ops', icon: Truck, path: '/franchise/fleet' },
   { id: 'maintenance', label: 'Service Hub', icon: Wrench, path: '/franchise/maintenance' },
   { id: 'handover', label: 'Handover', icon: RefreshCw, path: '/franchise/handover' },
   { id: 'wallet', label: 'Settlements', icon: Wallet, path: '/franchise/wallet' },
-  { id: 'staff', label: 'Personnel', icon: Users, path: '/franchise/staff' },
+  { id: 'staff', label: 'Staff', icon: UserIcon, path: '/franchise/staff' },
   { id: 'notifications', label: 'Alerts', icon: Bell, path: '/franchise/notifications' },
 ];
 
