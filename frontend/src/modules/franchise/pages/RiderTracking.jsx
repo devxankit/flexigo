@@ -178,9 +178,17 @@ export default function SubscriberConsole() {
              accessor: 'subscriptionPlan',
              render: (row) => (
                <div className="flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-1.5">
                      <span className="text-[8.5px] font-black text-[var(--text-primary)] uppercase italic tracking-[0.2em] leading-none">
                         {row.subscriptionPlan ? (row.subscriptionPlan.name || row.subscriptionPlan.label || 'Standard') : 'No Plan Selected'}
+                     </span>
+                     {row.subscriptionPlan && (
+                        <span className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-80 leading-none">
+                           Plan Price: ₹{row.subscriptionPlan.price || 0}
+                        </span>
+                     )}
+                     <span className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-widest italic opacity-80 leading-none">
+                        Deposit: ₹2800
                      </span>
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">

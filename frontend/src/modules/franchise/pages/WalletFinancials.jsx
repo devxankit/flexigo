@@ -122,7 +122,7 @@ export default function WalletFinancials() {
                rzp.open();
             } catch (error) {
                console.error('Payment flow error', error);
-               alert('Something went wrong during payment');
+               alert(error.response?.data?.message || error.message || 'Something went wrong during payment');
             } finally {
                setIsProcessingAddFunds(false);
             }
