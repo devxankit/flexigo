@@ -289,12 +289,12 @@ export default function FleetOversightPage() {
                                   }}
                                   className={`px-2 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg shadow-sm transition-all ${
                                     vehicle.status === 'assigned' 
-                                      ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500 hover:text-white' 
+                                      ? 'bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white' 
                                       : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white'
                                   }`}
-                                  title={vehicle.status === 'assigned' ? "Mark as Unassigned" : "Mark as Assigned"}
+                                  title={vehicle.status === 'assigned' ? "Click to Unblock" : "Click to Block"}
                                 >
-                                  {vehicle.status === 'assigned' ? 'UNASSIGN' : 'ASSIGN'}
+                                  {vehicle.status === 'assigned' ? 'BLOCKED' : 'UNBLOCKED'}
                                 </button>
                                 <button
                                   onClick={(e) => {

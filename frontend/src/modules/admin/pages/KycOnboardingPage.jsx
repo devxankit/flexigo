@@ -895,7 +895,7 @@ export default function KycOnboardingPage() {
                               className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all text-[var(--text-primary)]"
                            >
                               <option value="">Select Vehicle Plate</option>
-                              {vehicles.filter(v => !v.rider && v.status !== 'assigned').map(v => (
+                              {vehicles.filter(v => v.status !== 'assigned').map(v => (
                                 <option key={v._id || v.id} value={v.plate}>
                                   {v.plate} — {v.model || 'Vehicle'}
                                 </option>
