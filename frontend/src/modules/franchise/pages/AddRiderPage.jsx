@@ -41,6 +41,25 @@ export default function AddRiderPage() {
   const [clientId, setClientId] = useState('');
   const [otp, setOtp] = useState('');
   const [isAadhaarVerified, setIsAadhaarVerified] = useState(false);
+  const [availablePlans, setAvailablePlans] = useState([]);
+
+  const [depositAmount, setDepositAmount] = useState(2800);
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const api = await import('../../../lib/axios').then(m => m.default);
+        const { data } = await api.get('/franchise/plans');
+        if (data.success) setAvailablePlans(data.plans);
+
+        const res = await api.get('/rider/settings');
+        if (res.data.success && res.data.securityDepositAmount) {
+           setDepositAmount(res.data.securityDepositAmount);
+        }
+      } catch (err) {}
+    };
+    fetchData();
+  }, []);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -50,7 +69,7 @@ export default function AddRiderPage() {
     pan: '',
     licenseNo: '',
     address: '',
-    subscriptionPlan: 'Standard Weekly',
+    subscriptionPlan: '',
     vehicleId: ''
   });
 
@@ -292,23 +311,6 @@ export default function AddRiderPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-[7px] font-black text-slate-500 uppercase tracking-widest italic ml-1 leading-none">SUBSCRIPTION_PLAN</label>
-                <div className="relative p-2.5 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 rounded-xl flex items-center gap-2 focus-within:border-blue-500/30 transition-all shadow-inner group">
-                  <CreditCard size={12} strokeWidth={3} className="text-slate-400 dark:text-slate-700 group-focus-within:text-blue-500 transition-colors" />
-                  <select
-                    className="bg-transparent border-none outline-none text-[8.5px] font-black uppercase italic text-[var(--text-primary)] w-full appearance-none cursor-pointer tracking-widest"
-                    value={formData.subscriptionPlan}
-                    onChange={(e) => setFormData({ ...formData, subscriptionPlan: e.target.value })}
-                  >
-                    <option value="Standard Weekly" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Standard Weekly (₹1,500)</option>
-                    <option value="Premium Monthly" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Premium Monthly (₹5,000)</option>
-                    <option value="Enterprise Daily" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Enterprise Daily (₹300)</option>
-                  </select>
-                  <ChevronRight size={10} strokeWidth={3} className="absolute right-2 rotate-90 text-slate-800 pointer-events-none" />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
                 <label className="text-[7px] font-black text-slate-500 uppercase tracking-widest italic ml-1 leading-none">ASSIGN_VEHICLE</label>
                 <div className="relative p-2.5 bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 rounded-xl flex items-center gap-2 focus-within:border-blue-500/30 transition-all shadow-inner group">
                   <Truck size={12} strokeWidth={3} className="text-slate-400 dark:text-slate-700 group-focus-within:text-blue-500 transition-colors" />
@@ -391,11 +393,11 @@ export default function AddRiderPage() {
             <div className="space-y-2 relative z-10">
               <div className="flex justify-between items-center bg-slate-50 dark:bg-black/20 p-2 rounded-lg border border-slate-200 dark:border-white/5 shadow-inner">
                 <span className="text-[6.5px] font-black uppercase text-slate-500 italic opacity-60 leading-none">SECURITY_DEPOSIT</span>
-                <span className="text-[8.5px] font-black text-[var(--text-primary)] italic leading-none tracking-tighter">₹5,000.00</span>
+                <span className="text-[8.5px] font-black text-[var(--text-primary)] italic leading-none tracking-tighter">₹{depositAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between items-center bg-slate-50 dark:bg-black/20 p-2 rounded-lg border border-slate-200 dark:border-white/5 shadow-inner">
                 <span className="text-[6.5px] font-black uppercase text-slate-500 italic opacity-60 leading-none">AADHAAR_STATUS</span>
-                <span className="text-[8.5px] font-black text-emerald-500 italic leading-none tracking-tighter">VERIFIED</span>
+                <span className={`text-[8.5px] font-black italic leading-none tracking-tighter ${isAadhaarVerified ? 'text-emerald-500' : 'text-slate-500'}`}>{isAadhaarVerified ? 'VERIFIED' : 'PENDING'}</span>
               </div>
               <div className="h-px bg-emerald-500/10 my-2" />
               <button

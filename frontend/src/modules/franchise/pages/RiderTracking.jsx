@@ -25,12 +25,14 @@ import { useFranchiseAuthStore } from '../store/franchiseAuthStore';
 import GlassTable from '../components/GlassTable';
 import StatusBadge from '../components/StatusBadge';
 import OpsFilter from '../components/OpsFilter';
+import FranchisePaymentModal from '../components/FranchisePaymentModal';
 
 export default function SubscriberConsole() {
   const navigate = useNavigate();
   const { subscribers = [], fetchSubscribers, payRiderPlan, payRiderDeposit } = useRiderAssignmentStore();
   const { vehicles = [], fetchVehicles } = useFleetStore();
   const [searchQuery, setSearchQuery] = useState('');
+  const [modalConfig, setModalConfig] = useState({ isOpen: false, type: null, rider: null });
   const [activeFilters, setActiveFilters] = useState({
     range: 'Last 7 Days',
     metrics: {}
@@ -247,28 +249,30 @@ export default function SubscriberConsole() {
              accessor: 'actions',
              render: (row) => {
                const isOverdue = row.subscriptionEnd && new Date(row.subscriptionEnd) < new Date();
-               const needsPlanPayment = row.depositPaid && (!row.subscriptionEnd || isOverdue);
+               const needsPlanPayment = (!row.subscriptionEnd || isOverdue);
 
                return (
                  <div className="flex items-center gap-1.5">
-
-                    {needsPlanPayment && (
+                    {!row.depositPaid && (
                        <button 
-                         onClick={async (e) => {
-                            e.stopPropagation();
-                            await payRiderPlan(row._id || row.id);
-                            fetchSubscribers();
+                         onClick={(e) => {
+                             e.stopPropagation();
+                             setModalConfig({ isOpen: true, type: 'deposit', rider: row });
                          }}
-                         className="px-2 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded border border-amber-500/20 text-[7px] font-black uppercase tracking-widest transition-all shadow-md active:scale-95 italic">
-                          Pay Plan
+                         className="px-2 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded border border-indigo-500/20 text-[7px] font-black uppercase tracking-widest transition-all shadow-md active:scale-95 italic">
+                          Pay Deposit
                        </button>
                     )}
-                    <button className="p-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl hover:bg-blue-600/10 hover:border-blue-500/20 hover:text-blue-500 transition-all text-slate-600 shadow-inner">
-                       <MessageSquare size={12} strokeWidth={2.5} />
-                    </button>
-                    <button className="p-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl hover:bg-white/5 hover:border-[var(--border-subtle)] hover:text-white transition-all text-slate-600 shadow-inner">
-                       <MoreVertical size={12} strokeWidth={2.5} />
-                    </button>
+                    {needsPlanPayment && (
+                       <button 
+                         onClick={(e) => {
+                             e.stopPropagation();
+                             setModalConfig({ isOpen: true, type: 'plan', rider: row });
+                         }}
+                         className="px-2 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded border border-amber-500/20 text-[7px] font-black uppercase tracking-widest transition-all shadow-md active:scale-95 italic">
+                          {row.subscriptionPlan ? 'Pay Plan' : 'Select Plan'}
+                       </button>
+                    )}
                  </div>
                );
              }
@@ -276,6 +280,17 @@ export default function SubscriberConsole() {
          ]} 
          data={filteredSubscribers} 
          onRowClick={(row) => console.log('Viewing Personnel:', row)} 
+      />
+
+      <FranchisePaymentModal
+        isOpen={modalConfig.isOpen}
+        type={modalConfig.type}
+        rider={modalConfig.rider}
+        onClose={() => setModalConfig({ isOpen: false, type: null, rider: null })}
+        onSuccess={() => {
+          setModalConfig({ isOpen: false, type: null, rider: null });
+          fetchSubscribers();
+        }}
       />
     </div>
   );

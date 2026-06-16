@@ -21,6 +21,9 @@ import {
   getRiderDues,
   payRiderPlan,
   payRiderDeposit,
+  createDepositOrder,
+  createPlanOrder,
+  verifyPlanPayment,
   addRider
 } from './franchiseController.js';
 import { protectFranchise } from '../../shared/middleware/authMiddleware.js';
@@ -52,6 +55,10 @@ router.patch('/notifications/mark-all-read', protectFranchise, markAllNotificati
 router.get('/riders/dues', protectFranchise, getRiderDues);
 router.post('/riders/pay-plan', protectFranchise, payRiderPlan);
 router.post('/riders/pay-deposit', protectFranchise, payRiderDeposit);
+router.post('/riders/deposit-create-order', protectFranchise, createDepositOrder);
+router.post('/riders/deposit-verify', protectFranchise, verifyDepositPayment);
+router.post('/riders/plan-create-order', protectFranchise, createPlanOrder);
+router.post('/riders/plan-verify', protectFranchise, verifyPlanPayment);
 router.post('/riders/add', protectFranchise, addRider);
 
 export default router;

@@ -75,18 +75,18 @@ export const useSubscriberStore = create((set, get) => ({
     }));
   },
 
-  payRiderPlan: async (riderId) => {
+  payRiderPlan: async (riderId, planId) => {
     try {
-      const res = await api.post('/franchise/riders/pay-plan', { riderId });
+      const res = await api.post('/franchise/riders/pay-plan', { riderId, planId });
       return res.data;
     } catch (error) {
       return { success: false, message: error.response?.data?.message || 'Failed to pay plan' };
     }
   },
 
-  payRiderDeposit: async (riderId) => {
+  payRiderDeposit: async (riderId, depositAmount = 2800) => {
     try {
-      const res = await api.post('/franchise/riders/pay-deposit', { riderId });
+      const res = await api.post('/franchise/riders/pay-deposit', { riderId, depositAmount });
       return res.data;
     } catch (error) {
       return { success: false, message: error.response?.data?.message || 'Failed to pay deposit' };
