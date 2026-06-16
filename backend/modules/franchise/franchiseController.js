@@ -854,3 +854,53 @@ export const payRiderDeposit = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Add Rider from Franchise
+// @route   POST /api/v1/franchise/riders/add
+export const addRider = async (req, res) => {
+  try {
+    const { phone, name, email, aadhaar, pan, licenseNo, address, vehicleId, subscriptionPlan } = req.body;
+    
+    if (!phone) {
+      return res.status(400).json({ success: false, message: 'Phone number is required' });
+    }
+
+    let rider = await Rider.findOne({ phone });
+    if (rider) {
+      return res.status(400).json({ success: false, message: 'Rider with this phone already exists' });
+    }
+
+    // Try to find the plan by name
+    let planId = null;
+    if (subscriptionPlan) {
+       const planDoc = await SubscriptionPlan.findOne({ name: new RegExp(subscriptionPlan, 'i') });
+       if (planDoc) {
+          planId = planDoc._id;
+       }
+    }
+
+    rider = await Rider.create({
+      phone,
+      name,
+      email,
+      franchise: req.franchise._id,
+      isPhoneVerified: true,
+      isRegistered: true,
+      status: 'pending',
+      kycStatus: 'approved',
+      subscriptionPlan: planId,
+      kycDetails: { 
+        aadhaarNumber: aadhaar, 
+        panCard: pan, 
+        drivingLicense: licenseNo, 
+        ekycVerified: true, 
+        address 
+      }
+    });
+
+    res.status(201).json({ success: true, rider });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+

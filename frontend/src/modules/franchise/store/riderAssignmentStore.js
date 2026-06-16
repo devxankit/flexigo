@@ -19,6 +19,19 @@ export const useSubscriberStore = create((set, get) => ({
     }
   },
 
+  addSubscriber: async (riderData) => {
+    try {
+      const res = await api.post('/franchise/riders/add', riderData);
+      if (res.data.success) {
+        set((state) => ({ subscribers: [...state.subscribers, res.data.rider] }));
+        return { success: true, rider: res.data.rider };
+      }
+      return { success: false, message: 'Failed to add rider' };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || 'Failed to add rider' };
+    }
+  },
+
   assignVehicle: async (subscriberId, vehicleId) => {
     try {
       // Logic would be linked to backend: api.post('/rider/assign', { subscriberId, vehicleId })

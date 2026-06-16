@@ -83,7 +83,7 @@ export default function AddRiderPage() {
     }
   }, [formData.aadhaar, otpSent, ekycLoading, isAadhaarVerified]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isAadhaarVerified) {
       alert('Please verify Aadhaar first');
@@ -91,23 +91,23 @@ export default function AddRiderPage() {
     }
     setLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
       if (addSubscriber) {
-        addSubscriber({
-          ...formData,
-          id: `RID-${Math.floor(Math.random() * 9000) + 1000}`,
-          status: 'pending',
-          subscriptionStart: new Date().toISOString()
-        });
+        const res = await addSubscriber(formData);
+        if (res.success) {
+          setSuccess(true);
+          setTimeout(() => {
+            navigate('/franchise/tracking');
+          }, 2000);
+        } else {
+          alert(res.message || 'Failed to add rider');
+        }
       }
+    } catch (err) {
+      alert('An error occurred');
+    } finally {
       setLoading(false);
-      setSuccess(true);
-
-      setTimeout(() => {
-        navigate('/franchise/tracking');
-      }, 2000);
-    }, 1500);
+    }
   };
 
   if (success) {
