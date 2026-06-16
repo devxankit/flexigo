@@ -22,6 +22,7 @@ import {
   payRiderPlan,
   payRiderDeposit,
   createDepositOrder,
+  verifyDepositPayment,
   createPlanOrder,
   verifyPlanPayment,
   addRider
