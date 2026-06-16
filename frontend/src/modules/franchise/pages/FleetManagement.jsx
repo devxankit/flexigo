@@ -21,6 +21,7 @@ import {
    Paperclip
 } from 'lucide-react';
 import { GoogleMap, useJsApiLoader, MarkerF, CircleF } from '@react-google-maps/api';
+import { useRiderAssignmentStore } from '../store/riderAssignmentStore';
 import { useFleetStore } from '../store/fleetStore';
 import { useFranchiseAuthStore } from '../store/franchiseAuthStore';
 import GlassTable from '../components/GlassTable';
@@ -67,10 +68,11 @@ const mapStyles = [
 export default function FleetManagement() {
    const navigate = useNavigate();
    const { vehicles, filter, setFilter, fetchVehicles, isLoading } = useFleetStore();
+   const { subscribers, fetchSubscribers } = useRiderAssignmentStore();
    const { user } = useFranchiseAuthStore();
    const [searchQuery, setSearchQuery] = useState('');
-   const [selectedVehicle, setSelectedVehicle] = useState(null); // Controls Detail Drawer
-   const [focusedVehicle, setFocusedVehicle] = useState(null);   // Controls Map Widget & Focus
+   const [selectedVehicle, setSelectedVehicle] = useState(null); // Controls Detail Drawer (now Rider)
+   const [focusedVehicle, setFocusedVehicle] = useState(null);   // Controls Map Widget & Focus (now Rider)
    const [map, setMap] = useState(null);
 
    const [firebaseLocations, setFirebaseLocations] = useState({});
@@ -96,7 +98,7 @@ export default function FleetManagement() {
    }, []);
 
    const getVehicleLiveLocation = useCallback((v) => {
-      const riderId = v?.riderId?._id || v?.riderId?.id || v?.riderId;
+      const riderId = v?._id || v?.id;
       if (riderId && firebaseLocations[riderId]) {
          const fbLoc = firebaseLocations[riderId];
          return {
@@ -156,16 +158,20 @@ export default function FleetManagement() {
       const fId = user?.id || user?._id;
       if (fId) {
          fetchVehicles(fId);
+         fetchSubscribers();
          // Live polling every 5 seconds for "Exact Live Location"
-         const interval = setInterval(() => fetchVehicles(fId), 5000);
+         const interval = setInterval(() => {
+            fetchVehicles(fId);
+            fetchSubscribers();
+         }, 5000);
          return () => clearInterval(interval);
       }
-   }, [user]);
+   }, [user, fetchSubscribers]);
 
    // Automatically follow focused vehicle and SYNC state when its location updates (live tracking)
    useEffect(() => {
       if (focusedVehicle) {
-         const latest = vehicles.find(v => (v._id || v.id) === (focusedVehicle._id || focusedVehicle.id));
+         const latest = subscribers.find(v => (v._id || v.id) === (focusedVehicle._id || focusedVehicle.id));
          if (latest) {
             // Sync the focusedVehicle state with the latest data from the store
             // This ensures the "Live Grid Monitor" header and "Last Location" boxes are always up-to-date
@@ -190,13 +196,13 @@ export default function FleetManagement() {
    }, [focusedVehicle?._id, focusedVehicle?.id, map]);
 
    const filteredVehicles = useMemo(() => {
-      return vehicles.filter(v => {
+      return subscribers.filter(v => {
          const matchesFilter = filter === 'all' || v.status === filter;
-         const matchesSearch = v.plate.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            v.vin.toLowerCase().includes(searchQuery.toLowerCase());
+         const matchesSearch = (v.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (v.phone || '').toLowerCase().includes(searchQuery.toLowerCase());
          return matchesFilter && matchesSearch;
       });
-   }, [vehicles, filter, searchQuery]);
+   }, [subscribers, filter, searchQuery]);
 
    const handleRowClick = (vehicle) => {
       setFocusedVehicle(vehicle);
@@ -211,29 +217,29 @@ export default function FleetManagement() {
 
    const columns = [
       {
-         header: 'Vehicle Identifier',
-         accessor: 'plate',
+         header: 'Rider Profile',
+         accessor: 'name',
          render: (row) => (
             <div className="flex flex-col gap-0">
-               <span className="text-emerald-500 text-[9px] font-black italic tracking-[0.2em] uppercase leading-tight">{row.plate}</span>
-               <span className="text-[6.5px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.3em] italic opacity-60 leading-none">{row.model}</span>
+               <span className="text-emerald-500 text-[9px] font-black italic tracking-[0.2em] uppercase leading-tight">{row.name || 'Unknown'}</span>
+               <span className="text-[6.5px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.3em] italic opacity-60 leading-none">{row.phone}</span>
             </div>
          )
       },
       {
-         header: 'VIN Number',
-         accessor: 'vin',
-         render: (row) => <span className="text-[7px] font-black text-[var(--text-tertiary)] font-mono tracking-[0.2em] italic uppercase opacity-60">{row.vin}</span>
+         header: 'Vehicle Assigned',
+         accessor: 'vehicle',
+         render: (row) => <span className="text-[7px] font-black text-[var(--text-tertiary)] font-mono tracking-[0.2em] italic uppercase opacity-60">{row.vehicleId?.plate || 'NO VEHICLE'}</span>
       },
       {
-         header: 'Compliance Registry',
+         header: 'Verification Docs',
          accessor: 'attachment',
          render: (row) => (
             <div className="flex items-center gap-2">
-               {row.attachmentUrl ? (
+               {row.aadhaarDocUrl ? (
                   <div className="flex items-center gap-1.5">
                      <a
-                        href={row.attachmentUrl}
+                        href={row.aadhaarDocUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-1.5 bg-emerald-500/10 text-emerald-500 rounded-lg hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
@@ -241,38 +247,9 @@ export default function FleetManagement() {
                      >
                         <Eye size={12} strokeWidth={3} />
                      </a>
-                     <a
-                        href={row.attachmentUrl.replace('/upload/', '/upload/fl_attachment/')}
-                        download
-                        className="p-1.5 bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-all shadow-sm"
-                        onClick={(e) => e.stopPropagation()}
-                     >
-                        <FileDown size={12} strokeWidth={3} />
-                     </a>
                   </div>
                ) : (
-                  <label
-                     className="p-1.5 bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] rounded-lg hover:text-emerald-500 hover:border-emerald-500/50 border border-transparent transition-all cursor-pointer shadow-sm"
-                     onClick={(e) => e.stopPropagation()}
-                  >
-                     <input
-                        type="file"
-                        className="hidden"
-                        accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
-                        onChange={async (e) => {
-                           const file = e.target.files[0];
-                           if (!file) return;
-                           const reader = new FileReader();
-                           reader.onload = async (event) => {
-                              const base64 = event.target.result;
-                              await useFleetStore.getState().updateVehicleAttachment(row._id, base64);
-                              alert("Compliance document synced ✓");
-                           };
-                           reader.readAsDataURL(file);
-                        }}
-                     />
-                     <Paperclip size={12} strokeWidth={3} />
-                  </label>
+                  <span className="text-[7px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] italic opacity-60">PENDING</span>
                )}
             </div>
          )
@@ -428,7 +405,7 @@ export default function FleetManagement() {
                                     onClick={() => handleRowClick(v)}
                                     icon={{
                                        url: v.status === 'assigned'
-                                          ? 'http://maps.google.com/mapfiles/ms/icons/green-dot.png' // Standard high-visibility green for active riders
+                                          ? 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
                                           : 'https://maps.google.com/mapfiles/ms/icons/purple-dot.png',
                                        scaledSize: v.status === 'assigned'
                                           ? new window.google.maps.Size(35, 35)
@@ -525,10 +502,10 @@ export default function FleetManagement() {
                            </button>
                            <div className="h-4 w-px bg-[var(--border-subtle)]" />
                            <button
-                              onClick={() => navigate(`/franchise/fleet/${selectedVehicle.id || selectedVehicle._id}`)}
+                              onClick={() => navigate(`/franchise/riders`)}
                               className="text-[7.5px] font-black uppercase tracking-[0.2em] italic text-emerald-500 hover:text-emerald-400 group flex items-center gap-1"
                            >
-                              DETAILED_PROFILE <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
+                              RIDER_REGISTRY <ArrowRight size={10} className="group-hover:translate-x-0.5 transition-transform" />
                            </button>
                         </div>
                         <div className="flex items-center gap-3 scale-90">
@@ -537,21 +514,21 @@ export default function FleetManagement() {
                      </div>
 
                      <div className="flex-1 overflow-y-auto no-scrollbar p-6">
-                        {/* Vehicle Identity */}
+                        {/* Rider Identity */}
                         <div className="flex items-start gap-4 mb-8">
                            <div className="w-14 h-14 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] shadow-inner flex items-center justify-center text-emerald-500">
                               <Zap size={24} strokeWidth={1.5} />
                            </div>
                            <div className="flex-1 min-w-0 pt-1">
                               <h2 className="text-xl font-black tracking-tighter italic text-[var(--text-primary)] leading-none">
-                                 {selectedVehicle.plate}
+                                 {selectedVehicle.name || 'Unknown Rider'}
                               </h2>
                               <div className="flex items-center gap-2 mt-2">
                                  <span className="text-[7.5px] font-black text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded uppercase tracking-[0.2em] italic leading-none">
-                                    {selectedVehicle.model}
+                                    {selectedVehicle.phone}
                                  </span>
                                  <span className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] italic leading-none opacity-60">
-                                    VIN: {selectedVehicle.vin}
+                                    VEHICLE: {selectedVehicle.vehicleId?.plate || 'NONE'}
                                  </span>
                               </div>
                            </div>
@@ -562,58 +539,40 @@ export default function FleetManagement() {
                            <div className="p-3 rounded-xl bg-black border border-[var(--border-subtle)] space-y-1.5 shadow-inner relative overflow-hidden">
                               <div className="text-emerald-500 flex items-center gap-1.5 mb-2 relative z-10">
                                  <Battery size={10} strokeWidth={3} />
-                                 <span className="text-[6.5px] font-black uppercase tracking-[0.2em] opacity-60 text-emerald-500 italic leading-none">EFFICIENCY</span>
+                                 <span className="text-[6.5px] font-black uppercase tracking-[0.2em] opacity-60 text-emerald-500 italic leading-none">PLAN STATUS</span>
                               </div>
-                              <p className="text-lg font-black italic text-white leading-none relative z-10">{selectedVehicle.battery}%</p>
+                              <p className="text-lg font-black italic text-white leading-none relative z-10">{selectedVehicle.subscriptionPlan ? 'ACTIVE' : 'NO PLAN'}</p>
                            </div>
                            <div className="p-3 rounded-xl bg-black border border-[var(--border-subtle)] space-y-1.5 shadow-inner relative overflow-hidden">
                               <div className="text-blue-500 flex items-center gap-1.5 mb-2 relative z-10">
                                  <Navigation size={10} strokeWidth={3} />
-                                 <span className="text-[6.5px] font-black uppercase tracking-[0.2em] opacity-60 text-blue-500 italic leading-none">MAX_RANGE</span>
+                                 <span className="text-[6.5px] font-black uppercase tracking-[0.2em] opacity-60 text-blue-500 italic leading-none">DEPOSIT</span>
                               </div>
-                              <p className="text-lg font-black italic text-white leading-none relative z-10">{selectedVehicle.range} <span className="text-[8px] opacity-40">KM</span></p>
+                              <p className="text-lg font-black italic text-white leading-none relative z-10">{selectedVehicle.depositPaid ? 'PAID' : 'PENDING'}</p>
                            </div>
                            <div className="p-3 rounded-xl bg-black border border-[var(--border-subtle)] space-y-1.5 shadow-inner relative overflow-hidden">
                               <div className="text-amber-500 flex items-center gap-1.5 mb-2 relative z-10">
                                  <ShieldCheck size={10} strokeWidth={3} />
-                                 <span className="text-[6.5px] font-black uppercase tracking-[0.2em] opacity-60 text-amber-500 italic leading-none">SYS_HEALTH</span>
+                                 <span className="text-[6.5px] font-black uppercase tracking-[0.2em] opacity-60 text-amber-500 italic leading-none">VERIFICATION</span>
                               </div>
-                              <p className="text-lg font-black italic text-white leading-none relative z-10 uppercase tracking-tighter">OPTIMUM</p>
+                              <p className="text-lg font-black italic text-white leading-none relative z-10 uppercase tracking-tighter">{selectedVehicle.aadhaarDocUrl ? 'VERIFIED' : 'PENDING'}</p>
                            </div>
                         </div>
 
-                        {/* History Section */}
+                        {/* Location History Section */}
                         <div className="space-y-4">
                            <div className="flex items-center gap-6 border-b border-[var(--border-subtle)]">
-                              <button className="px-1 py-2 text-[7.5px] font-black uppercase tracking-[0.2em] italic text-emerald-500 border-b-2 border-emerald-500 flex gap-2"><History size={10} /> MAINT_ACTIVITY</button>
-                              <button className="px-1 py-2 text-[7.5px] font-black uppercase tracking-[0.2em] italic text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors opacity-60 flex gap-2"><FileText size={10} /> DOCUMENTATION</button>
+                              <button className="px-1 py-2 text-[7.5px] font-black uppercase tracking-[0.2em] italic text-emerald-500 border-b-2 border-emerald-500 flex gap-2"><MapPin size={10} /> LIVE TRACKING</button>
                            </div>
 
                            <div className="space-y-2">
-                              {selectedVehicle.maintenanceLogs?.length > 0 ? (
-                                 selectedVehicle.maintenanceLogs.map((log, i) => (
-                                    <div key={i} className="flex gap-3 p-3 bg-[var(--bg-tertiary)]/10 border border-[var(--border-subtle)] rounded-xl group hover:border-emerald-500/20 transition-all shadow-inner">
-                                       <div className="w-8 h-8 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)] shadow-inner flex items-center justify-center shrink-0">
-                                          <History size={12} className="text-emerald-500" />
-                                       </div>
-                                       <div className="flex-1 min-w-0">
-                                          <div className="flex items-center justify-between mb-1">
-                                             <h4 className="text-[9px] font-black text-[var(--text-primary)] uppercase tracking-tight italic truncate">{log.type}</h4>
-                                             <span className="text-[6.5px] font-black uppercase tracking-widest text-[var(--text-tertiary)] italic leading-none">{log.date}</span>
-                                          </div>
-                                          <p className="text-[6.5px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] italic opacity-60 truncate">CERT_TECH: {log.staff}</p>
-                                       </div>
-                                    </div>
-                                 ))
-                              ) : (
                                  <div className="py-8 border border-dashed border-[var(--border-subtle)] rounded-xl flex flex-col items-center justify-center gap-2 text-center bg-[var(--bg-secondary)] shadow-inner">
-                                    <History size={18} className="text-[var(--text-tertiary)] opacity-30" />
+                                    <MapPin size={18} className="text-[var(--text-tertiary)] opacity-30" />
                                     <div className="space-y-1">
-                                       <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] italic">LOG_UNDER_REVIEW</p>
-                                       <p className="text-[6.5px] font-black text-[var(--text-tertiary)] opacity-40 uppercase tracking-[0.3em] italic">HEALTHY_ASSET_HISTORY</p>
+                                       <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] italic">LOCATION STREAM ACTIVE</p>
+                                       <p className="text-[6.5px] font-black text-[var(--text-tertiary)] opacity-40 uppercase tracking-[0.3em] italic">SYNCING FROM RIDER DEVICE</p>
                                     </div>
                                  </div>
-                              )}
                            </div>
                         </div>
                      </div>

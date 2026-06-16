@@ -12,6 +12,7 @@ import axios from 'axios';
 import FranchiseNotification from './franchiseNotificationModel.js';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
+import Transaction from '../rider/transactionModel.js';
 
 // @desc    Send OTP to Franchise
 // @route   POST /api/v1/franchise/auth/send-otp
@@ -982,6 +983,16 @@ export const payRiderPlan = async (req, res) => {
       paymentMethod: 'wallet'
     });
 
+    await Transaction.create({
+      riderId: rider._id,
+      amount: plan.price,
+      type: 'debit',
+      status: 'success',
+      description: `Plan Subscription (Paid by Franchise Wallet)`,
+      method: 'wallet',
+      planId: plan._id
+    });
+
     // Update Rider Plan
     const durationMs = plan.type === 'Daily' ? 86400000 : plan.type === 'Weekly' ? 604800000 : 2592000000;
     const expiresAt = new Date(Date.now() + durationMs);
@@ -1043,6 +1054,16 @@ export const payRiderDeposit = async (req, res) => {
       subscriberName: rider.name || rider.phone,
       description: `Security deposit paid for rider ${rider.name || rider.phone}`,
       paymentMethod: 'wallet'
+    });
+
+    await Transaction.create({
+      riderId: rider._id,
+      amount: amount,
+      type: 'debit',
+      status: 'success',
+      description: `Security Deposit (Paid by Franchise Wallet)`,
+      method: 'wallet',
+      planId: planId || null
     });
 
     rider.depositPaid = true;
@@ -1137,6 +1158,12 @@ export const addRider = async (req, res) => {
         drivingLicense: licenseNo, 
         ekycVerified: true, 
         address 
+      },
+      lastLocation: {
+        lat: req.franchise.businessDetails?.latitude || 22.7196,
+        lng: req.franchise.businessDetails?.longitude || 75.8577,
+        address: req.franchise.businessDetails?.address || 'Franchise Hub, Indore',
+        updatedAt: new Date()
       }
     });
 
@@ -1189,6 +1216,16 @@ export const verifyPlanPayment = async (req, res) => {
         subscriberName: rider.name || rider.phone,
         description: `Subscription paid via Razorpay for rider ${rider.name || rider.phone}`,
         paymentMethod: 'razorpay'
+      });
+
+      await Transaction.create({
+        riderId: rider._id,
+        amount: plan.price,
+        type: 'debit',
+        status: 'success',
+        description: `Plan Subscription (Paid by Franchise via Razorpay)`,
+        method: 'razorpay',
+        planId: plan._id
       });
 
       // Update Rider Plan
@@ -1258,6 +1295,16 @@ export const verifyDepositPayment = async (req, res) => {
         subscriberName: rider.name || rider.phone,
         description: `Security deposit paid via Razorpay for rider ${rider.name || rider.phone}`,
         paymentMethod: 'razorpay'
+      });
+
+      await Transaction.create({
+        riderId: rider._id,
+        amount: depositAmount,
+        type: 'debit',
+        status: 'success',
+        description: `Security Deposit (Paid by Franchise via Razorpay)`,
+        method: 'razorpay',
+        planId: planId || null
       });
 
       res.status(200).json({ success: true, message: 'Payment verified and deposit paid' });

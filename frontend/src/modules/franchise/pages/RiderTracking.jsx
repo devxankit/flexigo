@@ -249,7 +249,7 @@ export default function SubscriberConsole() {
              accessor: 'actions',
              render: (row) => {
                const isOverdue = row.subscriptionEnd && new Date(row.subscriptionEnd) < new Date();
-               const needsPlanPayment = (!row.subscriptionEnd || isOverdue);
+               const needsPlanPayment = row.depositPaid && (!row.subscriptionEnd || isOverdue);
 
                return (
                  <div className="flex items-center gap-1.5">
