@@ -407,7 +407,7 @@ export default function KycOnboardingPage() {
                   <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">
                      Showing {(currentPage - 1) * recordsPerPage + 1} to {Math.min(currentPage * recordsPerPage, filteredRecords.length)} of {filteredRecords.length} Entries
                   </span>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 items-center">
                      <button
                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                         disabled={currentPage === 1}
@@ -415,6 +415,27 @@ export default function KycOnboardingPage() {
                      >
                         Prev
                      </button>
+                     <div className="flex gap-1 items-center">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                           .filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+                           .map((page, index, array) => (
+                              <React.Fragment key={page}>
+                                 {index > 0 && array[index - 1] !== page - 1 && (
+                                    <span className="text-[10px] font-black text-[var(--text-tertiary)] px-1">...</span>
+                                 )}
+                                 <button
+                                    onClick={() => setCurrentPage(page)}
+                                    className={`min-w-[28px] h-7 px-1 flex items-center justify-center rounded-lg text-[10px] font-black transition-all border ${
+                                       currentPage === page 
+                                          ? 'bg-emerald-600 border-emerald-600 text-white shadow-md' 
+                                          : 'border-transparent text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] hover:border-[var(--border-subtle)]'
+                                    }`}
+                                 >
+                                    {page}
+                                 </button>
+                              </React.Fragment>
+                           ))}
+                     </div>
                      <button
                         onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                         disabled={currentPage === totalPages}
