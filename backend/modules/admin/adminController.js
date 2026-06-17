@@ -1790,16 +1790,55 @@ export const getSecurityData = async (req, res) => {
 
 export const getNotificationsFeed = async (req, res) => {
   try {
-    const logs = await AuditLog.find().sort('-timestamp').limit(15);
+    const logs = await AuditLog.find().sort('-timestamp').limit(15).lean();
     const notifications = logs.map(l => ({
-      id: l._id,
+      id: l._id.toString(),
       title: l.actionProfile,
       message: `${l.identity} performed ${l.actionProfile} on ${l.objectTarget}`,
       time: l.timestamp,
       type: l.status === 'failure' ? 'alert' : 'info'
     }));
 
-    res.status(200).json({ success: true, notifications });
+    // Add Weekly Payment Due Alerts
+    const now = new Date();
+    const Rider = (await import('../rider/riderModel.js')).default;
+    const expiredRiders = await Rider.find({
+      subscriptionEnd: { $lt: now },
+      subscriptionPlan: { $ne: null },
+      status: { $in: ['active', 'approved'] }
+    }).populate('subscriptionPlan').lean();
+
+    const dueRiders = expiredRiders.filter(r => r.subscriptionPlan && r.subscriptionPlan.type === 'Weekly');
+
+    dueRiders.forEach(r => {
+      notifications.push({
+        id: `due-${r._id}`,
+        title: 'PAYMENT_DUE',
+        message: `Weekly payment of ₹${r.subscriptionPlan.price} is due for ${r.name || r.phone}. Expired on ${new Date(r.subscriptionEnd).toLocaleDateString()}`,
+        time: r.subscriptionEnd,
+        type: 'alert'
+      });
+    });
+
+    // Add Pending Withdrawals Alerts
+    const WithdrawalRequest = (await import('../rider/models/withdrawalRequestModel.js')).default;
+    const pendingWithdrawals = await WithdrawalRequest.find({ status: 'pending' }).populate('riderId', 'name phone').lean();
+
+    pendingWithdrawals.forEach(w => {
+      notifications.push({
+        id: `withdraw-${w._id}`,
+        title: 'WITHDRAWAL_REQUEST',
+        message: `${w.riderId?.name || w.riderId?.phone || 'A rider'} requested a withdrawal of ₹${w.amount}`,
+        time: w.createdAt,
+        type: 'info' // Using info or alert based on priority
+      });
+    });
+
+    // Sort all notifications by time descending and take top 20
+    notifications.sort((a, b) => new Date(b.time) - new Date(a.time));
+    const finalNotifications = notifications.slice(0, 20);
+
+    res.status(200).json({ success: true, notifications: finalNotifications });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -2830,7 +2869,7 @@ export const processWalletRefund = async (req, res) => {
   session.startTransaction();
   try {
     const { amount, riderId, description } = req.body;
-    
+
     if (!amount || amount <= 0) throw new Error('Invalid amount');
     if (!riderId) throw new Error('Rider ID is required');
 
@@ -2922,7 +2961,7 @@ export const processWalletRefund = async (req, res) => {
 
     await session.commitTransaction();
     session.endSession();
-    
+
     res.status(200).json({ success: true, message: 'Refund processed successfully', walletBalance: admin.walletBalance });
   } catch (error) {
     await session.abortTransaction();
@@ -2997,7 +3036,7 @@ export const rejectWithdrawal = async (req, res) => {
 
     const WithdrawalRequest = (await import('../rider/models/withdrawalRequestModel.js')).default;
     const request = await WithdrawalRequest.findById(id).session(session);
-    
+
     if (!request) throw new Error('Request not found');
     if (request.status !== 'pending') throw new Error('Request is not pending');
 
@@ -3042,12 +3081,82 @@ export const rejectWithdrawal = async (req, res) => {
 
     await session.commitTransaction();
     session.endSession();
-    
+
     res.status(200).json({ success: true, message: 'Withdrawal rejected and amount refunded' });
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
     console.error('[Reject Withdrawal Error]', error);
     res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+// --- Adhoc Payment Functions ---
+
+// @desc    Process a manual adhoc payment
+// @route   POST /api/v1/admin/adhoc-payment
+export const processAdhocPayment = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const { amount, description, upiId, phone, barcodeUrl } = req.body;
+    
+    if (!amount || amount <= 0) throw new Error('Invalid amount');
+
+    const admin = await Admin.findById(req.user._id || req.user.id).session(session);
+    if (!admin) throw new Error('Admin not found');
+
+    if ((admin.walletBalance || 0) < amount) {
+      throw new Error('Insufficient Admin Wallet Balance. Please add funds first.');
+    }
+
+    let uploadedBarcodeUrl = barcodeUrl;
+
+    if (barcodeUrl && barcodeUrl.startsWith('data:image')) {
+      const cloudinary = (await import('../../config/cloudinary.js')).default;
+      const uploadResult = await cloudinary.uploader.upload(barcodeUrl, { folder: 'flexigo/adhoc_payments' });
+      uploadedBarcodeUrl = uploadResult.secure_url;
+    }
+
+    // Deduct from Admin
+    admin.walletBalance -= Number(amount);
+    await admin.save({ session });
+
+    // Record AdminTransaction
+    const adminTx = await AdminTransaction.create([{
+      adminId: admin._id,
+      amount: Number(amount),
+      type: 'debit',
+      description: description || `Adhoc Payment to ${upiId || phone || 'Unknown'}`,
+      targetType: 'Adhoc',
+      transactionId: `ADHOC-${Date.now()}`,
+      closingBalance: admin.walletBalance,
+      upiId: upiId || null,
+      phone: phone || null,
+      barcodeUrl: uploadedBarcodeUrl || null
+    }], { session });
+
+    await session.commitTransaction();
+    session.endSession();
+    
+    res.status(200).json({ success: true, message: 'Adhoc Payment processed successfully', transaction: adminTx[0], walletBalance: admin.walletBalance });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error('[Process Adhoc Payment Error]', error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Get adhoc payments history
+// @route   GET /api/v1/admin/adhoc-payments
+export const getAdhocPayments = async (req, res) => {
+  try {
+    const transactions = await AdminTransaction.find({ targetType: 'Adhoc' })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, transactions });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

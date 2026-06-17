@@ -72,7 +72,9 @@ import {
   processWalletRefund,
   getWithdrawals,
   approveWithdrawal,
-  rejectWithdrawal
+  rejectWithdrawal,
+  processAdhocPayment,
+  getAdhocPayments
 } from './adminController.js';
 import {
   getWebsitePlans,
@@ -154,16 +156,16 @@ router.post('/staff/:id/attachment', protectAdmin, async (req, res) => {
     const { file, fileName } = req.body;
     const Staff = (await import('./staffModel.js')).default;
     const cloudinary = (await import('../../config/cloudinary.js')).default;
-    
+
     const staff = await Staff.findById(req.params.id);
     if (!staff) return res.status(404).json({ success: false, message: 'Staff not found' });
-    
+
     const result = await cloudinary.uploader.upload(file, { folder: 'flexigo/staff_attachments' });
-    
+
     if (!staff.attachments) staff.attachments = [];
     staff.attachments.push({ name: fileName || 'Attachment', url: result.secure_url });
     await staff.save();
-    
+
     res.json({ success: true, message: 'Attachment uploaded', attachments: staff.attachments });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -400,5 +402,9 @@ router.post('/refund/process-wallet-refund', protectAdmin, processWalletRefund);
 router.get('/withdrawals', protectAdmin, getWithdrawals);
 router.post('/withdrawals/:id/approve', protectAdmin, approveWithdrawal);
 router.post('/withdrawals/:id/reject', protectAdmin, rejectWithdrawal);
+
+// --- Adhoc Payment Routes ---
+router.post('/adhoc-payment', protectAdmin, processAdhocPayment);
+router.get('/adhoc-payments', protectAdmin, getAdhocPayments);
 
 export default router;

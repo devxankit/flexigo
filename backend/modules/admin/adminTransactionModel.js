@@ -26,10 +26,19 @@ const adminTransactionSchema = new mongoose.Schema({
   },
   targetType: {
     type: String,
-    enum: ['Rider', 'Franchise', 'Self'],
+    enum: ['Rider', 'Franchise', 'Adhoc', 'Self'],
     default: 'Self'
   },
   transactionId: {
+    type: String
+  },
+  upiId: {
+    type: String
+  },
+  phone: {
+    type: String
+  },
+  barcodeUrl: {
     type: String
   },
   closingBalance: {

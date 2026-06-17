@@ -52,6 +52,7 @@ const FranchiseOpsPage = lazy(() => import('../pages/FranchiseOpsPage'));
 const SubscriptionPlansPage = lazy(() => import('../pages/SubscriptionPlansPage'));
 const RiderRefundPage = lazy(() => import('../pages/RiderRefundPage'));
 const WithdrawalRequestsPage = lazy(() => import('../pages/WithdrawalRequestsPage'));
+const AdhocPaymentPage = lazy(() => import('../pages/AdhocPaymentPage'));
 
 // Legal & Support Group
 const CompliancePage = lazy(() => import('../pages/CompliancePage'));
@@ -106,6 +107,7 @@ export default function AdminRoutes() {
           <Route path="subscription-plans" element={<PermGuard pageId="subscription-plans"><SubscriptionPlansPage /></PermGuard>} />
           <Route path="rider-refund" element={<PermGuard pageId="rider-refund"><RiderRefundPage /></PermGuard>} />
           <Route path="withdrawals" element={<PermGuard pageId="rider-refund"><WithdrawalRequestsPage /></PermGuard>} />
+          <Route path="adhoc-payment" element={<PermGuard pageId="rider-refund"><AdhocPaymentPage /></PermGuard>} />
           
           {/* Intelligence Group */}
           <Route path="analytics" element={<PermGuard pageId="analytics"><DeepAnalyticsPage /></PermGuard>} />

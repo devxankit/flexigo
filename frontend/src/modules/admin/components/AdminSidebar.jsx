@@ -73,6 +73,7 @@ const navigationGroups = [
       { id: 'subscription-plans', label: 'Subscription Plans', icon: Zap, path: '/admin/subscription-plans' },
       { id: 'rider-refund', label: 'Rider Refund', icon: CreditCardIcon, path: '/admin/rider-refund' },
       { id: 'withdrawals', label: 'Withdrawal Requests', icon: Banknote, path: '/admin/withdrawals' },
+      { id: 'adhoc-payment', label: 'Adhoc Payment', icon: Wallet, path: '/admin/adhoc-payment' },
     ]
   },
   {
