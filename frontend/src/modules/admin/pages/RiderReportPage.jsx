@@ -18,6 +18,8 @@ export default function RiderReportPage() {
    const { riderReport, fetchRiderReport, kycRecords, fetchKycRecords, isLoading } = useAdminDataStore();
    const [searchQuery, setSearchQuery] = React.useState('');
    const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 30 Days' });
+   const [currentPage, setCurrentPage] = React.useState(1);
+   const recordsPerPage = 10;
 
    React.useEffect(() => {
       fetchRiderReport({ range: 'Last 30 Days' });
@@ -74,6 +76,9 @@ export default function RiderReportPage() {
       });
    }, [riderReport, kycRecords, searchQuery]);
 
+   const totalPages = Math.ceil(filteredReport.length / recordsPerPage);
+   const paginatedReport = filteredReport.slice((currentPage - 1) * recordsPerPage, currentPage * recordsPerPage);
+
    return (
       <div className="space-y-6 pb-12">
          {/* Header */}
@@ -128,7 +133,7 @@ export default function RiderReportPage() {
                      </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border-subtle)]">
-                     {filteredReport.map((r) => (
+                     {paginatedReport.map((r) => (
                         <tr key={r.id} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors">
                            <td className="py-3 px-4 whitespace-nowrap">
                               <div className="flex items-center gap-3">
@@ -222,6 +227,31 @@ export default function RiderReportPage() {
                   </tbody>
                </table>
             </div>
+            
+            {/* Pagination */}
+            {totalPages > 1 && (
+               <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
+                  <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">
+                     Showing {(currentPage - 1) * recordsPerPage + 1} to {Math.min(currentPage * recordsPerPage, filteredReport.length)} of {filteredReport.length} Entries
+                  </span>
+                  <div className="flex gap-2">
+                     <button
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1.5 rounded-lg border border-[var(--border-subtle)] text-[10px] font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--bg-tertiary)] transition-all text-[var(--text-primary)]"
+                     >
+                        Prev
+                     </button>
+                     <button
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1.5 rounded-lg border border-[var(--border-subtle)] text-[10px] font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--bg-tertiary)] transition-all text-[var(--text-primary)]"
+                     >
+                        Next
+                     </button>
+                  </div>
+               </div>
+            )}
          </div>
       </div>
    );

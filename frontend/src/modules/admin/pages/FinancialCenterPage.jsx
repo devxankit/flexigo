@@ -47,12 +47,17 @@ export default function FinancialCenterPage() {
 
    const chartData = matrixView === 'weekly' ? revenueData : (networkStats.monthlyRevenue || revenueData);
    const [searchQuery, setSearchQuery] = React.useState('');
+   const [currentPage, setCurrentPage] = React.useState(1);
+   const recordsPerPage = 10;
 
    const filteredTransactions = financeTransactions.filter(txn =>
       txn.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       txn.hub?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       txn.user?.toLowerCase().includes(searchQuery.toLowerCase())
    );
+
+   const totalPages = Math.ceil(filteredTransactions.length / recordsPerPage);
+   const paginatedTransactions = filteredTransactions.slice((currentPage - 1) * recordsPerPage, currentPage * recordsPerPage);
 
    return (
       <div className="space-y-6 pb-12">
@@ -174,7 +179,7 @@ export default function FinancialCenterPage() {
                      </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border-subtle)]">
-                     {filteredTransactions.map((txn) => (
+                     {paginatedTransactions.map((txn) => (
                         <tr key={txn.id} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
                            <td className="py-2 px-4">
                               <div className="flex flex-col">
@@ -201,6 +206,31 @@ export default function FinancialCenterPage() {
                   </tbody>
                </table>
             </div>
+            
+            {/* Pagination */}
+            {totalPages > 1 && (
+               <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
+                  <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">
+                     Showing {(currentPage - 1) * recordsPerPage + 1} to {Math.min(currentPage * recordsPerPage, filteredTransactions.length)} of {filteredTransactions.length} Entries
+                  </span>
+                  <div className="flex gap-2">
+                     <button
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1.5 rounded-lg border border-[var(--border-subtle)] text-[10px] font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--bg-tertiary)] transition-all text-[var(--text-primary)]"
+                     >
+                        Prev
+                     </button>
+                     <button
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1.5 rounded-lg border border-[var(--border-subtle)] text-[10px] font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--bg-tertiary)] transition-all text-[var(--text-primary)]"
+                     >
+                        Next
+                     </button>
+                  </div>
+               </div>
+            )}
          </div>
       </div>
    );

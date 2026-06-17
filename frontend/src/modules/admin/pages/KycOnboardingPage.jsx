@@ -47,6 +47,8 @@ export default function KycOnboardingPage() {
    const [activeFilters, setActiveFilters] = useState({ range: 'Last 7 Days' });
    const [referralAmount, setReferralAmount] = useState('');
    const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, id: null });
+   const [currentPage, setCurrentPage] = useState(1);
+   const recordsPerPage = 10;
 
    React.useEffect(() => {
       localStorage.setItem('kyc_active_tab', activeTab);
@@ -99,6 +101,9 @@ export default function KycOnboardingPage() {
          (r.vehiclePlate || '').toLowerCase().includes(searchQuery.toLowerCase());
       return matchesTab && matchesSearch;
    });
+
+   const totalPages = Math.ceil(filteredRecords.length / recordsPerPage);
+   const paginatedRecords = filteredRecords.slice((currentPage - 1) * recordsPerPage, currentPage * recordsPerPage);
 
    const handleAction = async (id, newStatus) => {
       const payload = {
@@ -236,7 +241,7 @@ export default function KycOnboardingPage() {
                   </thead>
                   <tbody className="divide-y divide-[var(--border-subtle)]">
                      <AnimatePresence mode='popLayout'>
-                        {filteredRecords.map((record) => (
+                        {paginatedRecords.map((record) => (
                            <motion.tr
                               layout
                               initial={{ opacity: 0 }}
@@ -395,6 +400,31 @@ export default function KycOnboardingPage() {
                   </tbody>
                </table>
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+               <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
+                  <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">
+                     Showing {(currentPage - 1) * recordsPerPage + 1} to {Math.min(currentPage * recordsPerPage, filteredRecords.length)} of {filteredRecords.length} Entries
+                  </span>
+                  <div className="flex gap-2">
+                     <button
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1.5 rounded-lg border border-[var(--border-subtle)] text-[10px] font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--bg-tertiary)] transition-all text-[var(--text-primary)]"
+                     >
+                        Prev
+                     </button>
+                     <button
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1.5 rounded-lg border border-[var(--border-subtle)] text-[10px] font-black uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--bg-tertiary)] transition-all text-[var(--text-primary)]"
+                     >
+                        Next
+                     </button>
+                  </div>
+               </div>
+            )}
          </div>
 
          {/* Delete Confirmation Modal */}
