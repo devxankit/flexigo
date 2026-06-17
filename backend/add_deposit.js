@@ -26,7 +26,7 @@ const run = async () => {
 
   const riderId = new mongoose.Types.ObjectId('6a315422a382df60f4b83b8b');
   const amount = 2800;
-  
+
   // 1. Create Transaction
   const txn = new Transaction({
     riderId,
@@ -37,7 +37,7 @@ const run = async () => {
     method: 'razorpay',
     createdAt: new Date('2026-06-16T13:54:00.000Z') // 7:24 PM IST
   });
-  
+
   await txn.save();
   console.log('Transaction created:', txn);
 
@@ -46,7 +46,7 @@ const run = async () => {
     $inc: { walletBalance: amount },
     $set: { depositPaid: true }
   }, { new: true });
-  
+
   console.log('Rider updated:', rider.name, rider.walletBalance);
 
   process.exit(0);
