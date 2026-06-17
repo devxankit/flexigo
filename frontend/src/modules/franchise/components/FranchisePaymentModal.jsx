@@ -22,11 +22,11 @@ export default function FranchisePaymentModal({ isOpen, onClose, rider, type, on
         } catch (err) {
           console.error('Failed to fetch plans', err);
         }
-        
+
         try {
           const res = await api.get('/rider/settings');
           if (res.data.success && res.data.securityDepositAmount) {
-             setDepositAmount(res.data.securityDepositAmount);
+            setDepositAmount(res.data.securityDepositAmount);
           }
         } catch (err) {
           console.error('Failed to fetch settings', err);
@@ -53,7 +53,7 @@ export default function FranchisePaymentModal({ isOpen, onClose, rider, type, on
       setError('Please select a Subscription Tier first');
       return;
     }
-    
+
     setLoading(true);
     setError('');
     try {
@@ -88,7 +88,7 @@ export default function FranchisePaymentModal({ isOpen, onClose, rider, type, on
                 depositAmount: finalDepositAmount,
                 planId: selectedPlan?._id
               });
-              
+
               if (verifyRes.data.success) {
                 onSuccess();
               }
@@ -103,8 +103,8 @@ export default function FranchisePaymentModal({ isOpen, onClose, rider, type, on
         rzp.open();
       } else {
         // Wallet Payment
-        const res = await api.post('/franchise/riders/pay-deposit', { 
-          riderId: rider._id || rider.id, 
+        const res = await api.post('/franchise/riders/pay-deposit', {
+          riderId: rider._id || rider.id,
           depositAmount: finalDepositAmount,
           planId: selectedPlan?._id,
           paymentMethod: paymentMethod
@@ -159,7 +159,7 @@ export default function FranchisePaymentModal({ isOpen, onClose, rider, type, on
                 riderId: rider._id || rider.id,
                 planId: selectedPlan._id
               });
-              
+
               if (verifyRes.data.success) {
                 onSuccess();
               }
@@ -173,9 +173,9 @@ export default function FranchisePaymentModal({ isOpen, onClose, rider, type, on
         const rzp = new window.Razorpay(options);
         rzp.open();
       } else {
-        const res = await api.post('/franchise/riders/pay-plan', { 
-          riderId: rider._id || rider.id, 
-          planId: selectedPlan._id 
+        const res = await api.post('/franchise/riders/pay-plan', {
+          riderId: rider._id || rider.id,
+          planId: selectedPlan._id
         });
         if (res.data.success) {
           onSuccess();
@@ -228,8 +228,8 @@ export default function FranchisePaymentModal({ isOpen, onClose, rider, type, on
                 <p className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">Available Plans</p>
                 <div className="space-y-3">
                   {plans.map(plan => (
-                    <div 
-                      key={plan._id} 
+                    <div
+                      key={plan._id}
                       onClick={() => setSelectedPlan(plan)}
                       className={`relative p-4 rounded-xl border-2 cursor-pointer transition-all bg-white dark:bg-slate-900 ${selectedPlan?._id === plan._id ? 'border-emerald-500 shadow-md shadow-emerald-500/10' : 'border-slate-100 dark:border-slate-800 hover:border-emerald-500/30'}`}
                     >
@@ -283,7 +283,7 @@ export default function FranchisePaymentModal({ isOpen, onClose, rider, type, on
                     Security <span className="text-emerald-500">Deposit</span>
                   </h2>
                   <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1 leading-relaxed">
-                    MANDATORY ONE-TIME DEPOSIT<br/>REQUIRED.
+                    MANDATORY ONE-TIME DEPOSIT<br />REQUIRED.
                   </p>
                 </div>
 
@@ -298,24 +298,24 @@ export default function FranchisePaymentModal({ isOpen, onClose, rider, type, on
                 <div className="space-y-3">
                   <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">ADHOC PAYMENT</p>
                   <div className="flex gap-2">
-                    <input 
-                      type="number" 
-                      placeholder="Enter Amount" 
+                    <input
+                      type="number"
+                      placeholder="Enter Amount"
                       value={adhocAmount}
                       onChange={(e) => setAdhocAmount(e.target.value)}
                       className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 text-sm font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500 transition-colors"
                     />
-                    <button 
+                    <button
                       onClick={handlePayDeposit}
                       disabled={loading}
                       className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
                     >
-                      PAY<br/>NOW
+                      PAY<br />NOW
                     </button>
                   </div>
-                  <input 
-                    type="text" 
-                    placeholder="Payment Description (Optional)" 
+                  <input
+                    type="text"
+                    placeholder="Payment Description (Optional)"
                     className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-medium text-slate-900 dark:text-white outline-none focus:border-emerald-500 transition-colors"
                   />
                 </div>
@@ -323,49 +323,49 @@ export default function FranchisePaymentModal({ isOpen, onClose, rider, type, on
             )}
 
             {(type === 'deposit' || type === 'plan') && (
-                <div className="space-y-3 pt-2">
-                  <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">SELECT PAYMENT METHOD</p>
-                  
-                  <div 
-                    onClick={() => setPaymentMethod('wallet')}
-                    className={`p-4 rounded-xl border-2 flex items-center justify-between cursor-pointer transition-all ${paymentMethod === 'wallet' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10' : 'border-slate-200 dark:border-slate-800'}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center">
-                        <Wallet size={16} />
-                      </div>
-                      <div>
-                        <h4 className={`text-xs font-black uppercase tracking-widest ${paymentMethod === 'wallet' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white'}`}>
-                          FLEXIGO WALLET
-                        </h4>
-                        <p className="text-[9px] font-medium text-slate-500">Fast & Secure</p>
-                      </div>
+              <div className="space-y-3 pt-2">
+                <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">SELECT PAYMENT METHOD</p>
+
+                <div
+                  onClick={() => setPaymentMethod('wallet')}
+                  className={`p-4 rounded-xl border-2 flex items-center justify-between cursor-pointer transition-all ${paymentMethod === 'wallet' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10' : 'border-slate-200 dark:border-slate-800'}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center">
+                      <Wallet size={16} />
                     </div>
-                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'wallet' ? 'border-emerald-500' : 'border-slate-300'}`}>
-                      {paymentMethod === 'wallet' && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
+                    <div>
+                      <h4 className={`text-xs font-black uppercase tracking-widest ${paymentMethod === 'wallet' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white'}`}>
+                        FLEXIGO WALLET
+                      </h4>
+                      <p className="text-[9px] font-medium text-slate-500">Fast & Secure</p>
                     </div>
                   </div>
-
-                  <div 
-                    onClick={() => setPaymentMethod('razorpay')}
-                    className={`p-4 rounded-xl border-2 flex items-center justify-between cursor-pointer transition-all ${paymentMethod === 'razorpay' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10' : 'border-slate-200 dark:border-slate-800'}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center">
-                        <Info size={16} />
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">
-                          RAZORPAY UPI
-                        </h4>
-                        <p className="text-[9px] font-medium text-slate-500 italic">Instant Online Payment</p>
-                      </div>
-                    </div>
-                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'razorpay' ? 'border-emerald-500' : 'border-slate-300'}`}>
-                      {paymentMethod === 'razorpay' && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
-                    </div>
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'wallet' ? 'border-emerald-500' : 'border-slate-300'}`}>
+                    {paymentMethod === 'wallet' && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
                   </div>
                 </div>
+
+                <div
+                  onClick={() => setPaymentMethod('razorpay')}
+                  className={`p-4 rounded-xl border-2 flex items-center justify-between cursor-pointer transition-all ${paymentMethod === 'razorpay' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10' : 'border-slate-200 dark:border-slate-800'}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center">
+                      <Info size={16} />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">
+                        RAZORPAY UPI
+                      </h4>
+                      <p className="text-[9px] font-medium text-slate-500 italic">Instant Online Payment</p>
+                    </div>
+                  </div>
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'razorpay' ? 'border-emerald-500' : 'border-slate-300'}`}>
+                    {paymentMethod === 'razorpay' && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
+                  </div>
+                </div>
+              </div>
             )}
           </div>
 
