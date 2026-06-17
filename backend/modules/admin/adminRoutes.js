@@ -39,6 +39,7 @@ import {
   getComplianceData,
   getEngagementData,
   getSecurityData,
+
   getSubscriberData,
   getVehicleStats,
   getRiderBehaviour,
@@ -65,8 +66,10 @@ import {
   getSettings,
   updateSettings,
   getRidersList,
-  createRefundOrder,
-  verifyRefundPayment,
+  getAdminWalletDashboard,
+  addAdminFundsOrder,
+  verifyAdminFundsPayment,
+  processWalletRefund,
   getWithdrawals,
   approveWithdrawal,
   rejectWithdrawal
@@ -388,8 +391,10 @@ router.put('/settings', protectAdmin, updateSettings);
 
 // --- Rider Refund Routes ---
 router.get('/refund/riders-list', protectAdmin, getRidersList);
-router.post('/refund/create-order', protectAdmin, createRefundOrder);
-router.post('/refund/verify-payment', protectAdmin, verifyRefundPayment);
+router.get('/refund/dashboard', protectAdmin, getAdminWalletDashboard);
+router.post('/refund/add-funds-order', protectAdmin, addAdminFundsOrder);
+router.post('/refund/verify-add-funds', protectAdmin, verifyAdminFundsPayment);
+router.post('/refund/process-wallet-refund', protectAdmin, processWalletRefund);
 
 // --- Withdrawal Routes ---
 router.get('/withdrawals', protectAdmin, getWithdrawals);

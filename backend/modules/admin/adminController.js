@@ -14,6 +14,7 @@ import Part from './partModel.js';
 import Challan from './challanModel.js';
 import SupportTicket from './ticketModel.js';
 import axios from 'axios';
+import AdminTransaction from './adminTransactionModel.js';
 import mongoose from 'mongoose';
 import PromoCampaign from './promoModel.js';
 import AuditLog from './auditLogModel.js';
@@ -2328,6 +2329,13 @@ export const getRiderDetailedReport = async (req, res) => {
       };
     }));
 
+    // Sort report by most recent payment date
+    report.sort((a, b) => {
+      const dateA = a.recentPayments && a.recentPayments.length > 0 ? new Date(a.recentPayments[0].date).getTime() : 0;
+      const dateB = b.recentPayments && b.recentPayments.length > 0 ? new Date(b.recentPayments[0].date).getTime() : 0;
+      return dateB - dateA; // Descending order (newest first)
+    });
+
     res.status(200).json({
       success: true,
       count: report.length,
@@ -2715,30 +2723,62 @@ export const updateSettings = async (req, res) => {
 
 export const getRidersList = async (req, res) => {
   try {
+    const Franchise = (await import('../franchise/franchiseModel.js')).default;
     const riders = await Rider.find({}, 'name phone franchise status walletBalance').lean();
-    const formatted = riders.map(r => ({
+    const franchises = await Franchise.find({}, 'ownerName hubName phone walletBalance').lean();
+
+    const formattedRiders = riders.map(r => ({
       id: r._id,
-      name: r.name,
+      name: r.name || 'Unknown Rider',
       phone: r.phone,
+      type: 'Rider',
       franchiseId: r.franchise,
       walletBalance: r.walletBalance || 0
     }));
-    res.status(200).json({ success: true, riders: formatted });
+
+    const formattedFranchises = franchises.map(f => ({
+      id: f._id,
+      name: (f.ownerName || f.hubName) ? `${f.ownerName || 'Owner'} (${f.hubName || 'Franchise'})` : 'Unknown Franchise',
+      phone: f.phone,
+      type: 'Franchise',
+      walletBalance: f.walletBalance || 0
+    }));
+
+    res.status(200).json({ success: true, riders: [...formattedRiders, ...formattedFranchises] });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-export const createRefundOrder = async (req, res) => {
+export const getAdminWalletDashboard = async (req, res) => {
   try {
-    const { amount, riderId } = req.body;
+    const admin = await Admin.findById(req.user._id || req.user.id);
+    if (!admin) return res.status(404).json({ success: false, message: 'Admin not found' });
+
+    const transactions = await AdminTransaction.find()
+      .populate('targetRider', 'name phone')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      walletBalance: admin.walletBalance || 0,
+      transactions
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const addAdminFundsOrder = async (req, res) => {
+  try {
+    const { amount } = req.body;
     if (!amount || amount <= 0) return res.status(400).json({ success: false, message: 'Invalid amount' });
 
     const instance = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET });
     const options = {
       amount: Math.round(amount * 100), // amount in paise
       currency: 'INR',
-      receipt: `ref_${Date.now()}`
+      receipt: `admin_recharge_${Date.now()}`
     };
 
     const order = await instance.orders.create(options);
@@ -2746,18 +2786,161 @@ export const createRefundOrder = async (req, res) => {
 
     res.status(200).json({ success: true, order });
   } catch (error) {
-    console.error('[Admin Refund Error]', error);
+    console.error('[Admin Recharge Error]', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// ==========================================
-// WITHDRAWAL REQUESTS (MANUAL)
-// ==========================================
+export const verifyAdminFundsPayment = async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount } = req.body;
+
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET).update(body.toString()).digest('hex');
+
+    if (expectedSignature === razorpay_signature) {
+      const admin = await Admin.findById(req.user._id || req.user.id);
+      if (!admin) return res.status(404).json({ success: false, message: 'Admin not found' });
+
+      admin.walletBalance = (admin.walletBalance || 0) + Number(amount);
+      await admin.save();
+
+      await AdminTransaction.create({
+        adminId: admin._id,
+        amount: Number(amount),
+        type: 'credit',
+        description: 'Wallet Recharge via Razorpay',
+        targetType: 'Self',
+        transactionId: razorpay_payment_id,
+        closingBalance: admin.walletBalance
+      });
+
+      res.status(200).json({ success: true, message: 'Wallet recharged successfully', walletBalance: admin.walletBalance });
+    } else {
+      res.status(400).json({ success: false, message: 'Invalid payment signature' });
+    }
+  } catch (error) {
+    console.error('[Admin Recharge Verify Error]', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const processWalletRefund = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const { amount, riderId, description } = req.body;
+    
+    if (!amount || amount <= 0) throw new Error('Invalid amount');
+    if (!riderId) throw new Error('Rider ID is required');
+
+    const admin = await Admin.findById(req.user._id || req.user.id).session(session);
+    if (!admin) throw new Error('Admin not found');
+
+    if ((admin.walletBalance || 0) < amount) {
+      throw new Error('Insufficient Admin Wallet Balance. Please add funds first.');
+    }
+
+    const Franchise = (await import('../franchise/franchiseModel.js')).default;
+    let target = await Rider.findById(riderId).session(session);
+    let targetType = 'Rider';
+    if (!target) {
+      target = await Franchise.findById(riderId).session(session);
+      targetType = 'Franchise';
+    }
+    if (!target) throw new Error('Target not found');
+
+    // Deduct from Admin
+    admin.walletBalance -= Number(amount);
+    await admin.save({ session });
+
+    // Credit to Target
+    target.walletBalance = (target.walletBalance || 0) + Number(amount);
+    await target.save({ session });
+
+    // Record AdminTransaction
+    const adminTx = await AdminTransaction.create([{
+      adminId: admin._id,
+      amount: Number(amount),
+      type: 'debit',
+      description: description || `Refund to ${targetType} ${target.name || target.ownerName || target.phone}`,
+      targetRider: targetType === 'Rider' ? target._id : null,
+      targetFranchise: targetType === 'Franchise' ? target._id : null,
+      targetType: targetType,
+      transactionId: `REF-${Date.now()}`,
+      closingBalance: admin.walletBalance
+    }], { session });
+
+    if (targetType === 'Rider') {
+      // Record RiderTransaction
+      await RiderTransaction.create([{
+        riderId: target._id,
+        amount: Number(amount),
+        type: 'credit',
+        method: 'wallet',
+        status: 'success',
+        description: description || 'Refund received from Admin Wallet',
+        referenceId: adminTx[0].transactionId,
+        createdAt: new Date()
+      }], { session });
+
+      // Franchise transaction if rider belongs to franchise
+      if (target.franchise) {
+        await FranchiseTransaction.create([{
+          franchiseId: target.franchise,
+          amount: Number(amount),
+          type: 'credit',
+          description: `Rider ${target.name || target.phone} refunded from Admin`,
+          targetRider: target._id,
+          createdAt: new Date()
+        }], { session });
+      }
+
+      // Send Push Notification
+      try {
+        const { sendPushNotification } = await import('../../shared/utils/notifications.js');
+        if (target.fcmToken || target.fcmTokenMobile) {
+          await sendPushNotification(
+            [target.fcmToken, target.fcmTokenMobile].filter(Boolean),
+            'Refund Received 💰',
+            `₹${amount} has been refunded to your wallet.`,
+            { type: 'REFUND_CREDIT', amount: String(amount) }
+          );
+        }
+      } catch (err) {
+        console.error('Notification error:', err);
+      }
+    } else if (targetType === 'Franchise') {
+      await FranchiseTransaction.create([{
+        franchiseId: target._id,
+        amount: Number(amount),
+        type: 'credit',
+        description: description || 'Refund received from Admin Wallet',
+        createdAt: new Date()
+      }], { session });
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+    
+    res.status(200).json({ success: true, message: 'Refund processed successfully', walletBalance: admin.walletBalance });
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error('[Process Wallet Refund Error]', error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+// --- Withdrawal Request Functions ---
 
 export const getWithdrawals = async (req, res) => {
   try {
-    const withdrawals = await WithdrawalRequest.find().populate('riderId', 'name phone').sort({ createdAt: -1 });
+    const WithdrawalRequest = (await import('../rider/models/withdrawalRequestModel.js')).default;
+    const withdrawals = await WithdrawalRequest.find()
+      .populate('riderId', 'name phone walletBalance')
+      .sort({ createdAt: -1 });
+
     res.status(200).json({ success: true, withdrawals });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -2767,160 +2950,104 @@ export const getWithdrawals = async (req, res) => {
 export const approveWithdrawal = async (req, res) => {
   try {
     const { id } = req.params;
-    const { transactionId, adminNotes } = req.body;
+    const { adminNotes, transactionId } = req.body;
+    const WithdrawalRequest = (await import('../rider/models/withdrawalRequestModel.js')).default;
 
-    const request = await WithdrawalRequest.findById(id).populate('riderId');
+    const request = await WithdrawalRequest.findById(id);
     if (!request) return res.status(404).json({ success: false, message: 'Request not found' });
-    if (request.status !== 'pending') return res.status(400).json({ success: false, message: 'Request already processed' });
+    if (request.status !== 'pending') return res.status(400).json({ success: false, message: 'Request is not pending' });
 
     request.status = 'approved';
+    request.adminNotes = adminNotes || 'Approved by Admin';
     request.transactionId = transactionId || '';
-    request.adminNotes = adminNotes || '';
     request.processedAt = new Date();
     await request.save();
 
-    // Mark rider transaction as success if needed
-    const tx = await RiderTransaction.findOne({ riderId: request.riderId._id, amount: request.amount, status: 'pending', description: 'Withdrawal Request' }).sort({ createdAt: -1 });
-    if (tx) {
-      tx.status = 'success';
-      tx.description = `Withdrawal Approved (Ref: ${transactionId || 'Manual'})`;
-      await tx.save();
-    }
-
-    // Send push notification
-    const riderToken = request.riderId.fcmToken || request.riderId.fcmTokenMobile;
-    if (riderToken) {
-      try {
-        await sendPushNotification(riderToken, 'Withdrawal Approved', `Your withdrawal of ₹${request.amount} has been processed.`, { type: 'withdrawal_approved' });
-      } catch (e) { }
+    // Rider balance was already deducted when requesting.
+    // We just send a notification.
+    try {
+      const rider = await Rider.findById(request.riderId);
+      if (rider && (rider.fcmToken || rider.fcmTokenMobile)) {
+        const { sendPushNotification } = await import('../../shared/utils/notifications.js');
+        await sendPushNotification(
+          [rider.fcmToken, rider.fcmTokenMobile].filter(Boolean),
+          'Withdrawal Approved 💸',
+          `Your withdrawal of ₹${request.amount} has been successfully transferred to your bank/UPI.`,
+          { type: 'WITHDRAWAL_APPROVED' }
+        );
+      }
+    } catch (err) {
+      console.error('Notification error:', err);
     }
 
     res.status(200).json({ success: true, message: 'Withdrawal approved successfully' });
   } catch (error) {
+    console.error('[Approve Withdrawal Error]', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
 export const rejectWithdrawal = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { id } = req.params;
     const { adminNotes } = req.body;
+    if (!adminNotes) throw new Error('Rejection reason is required');
 
-    if (!adminNotes) return res.status(400).json({ success: false, message: 'Reason for rejection is required' });
+    const WithdrawalRequest = (await import('../rider/models/withdrawalRequestModel.js')).default;
+    const request = await WithdrawalRequest.findById(id).session(session);
+    
+    if (!request) throw new Error('Request not found');
+    if (request.status !== 'pending') throw new Error('Request is not pending');
 
-    const request = await WithdrawalRequest.findById(id).populate('riderId');
-    if (!request) return res.status(404).json({ success: false, message: 'Request not found' });
-    if (request.status !== 'pending') return res.status(400).json({ success: false, message: 'Request already processed' });
+    // Refund the amount to the Rider
+    const rider = await Rider.findById(request.riderId).session(session);
+    if (!rider) throw new Error('Rider not found');
 
-    request.status = 'rejected';
-    request.adminNotes = adminNotes;
-    request.processedAt = new Date();
-    await request.save();
+    rider.walletBalance = (rider.walletBalance || 0) + request.amount;
+    await rider.save({ session });
 
-    // Refund amount to rider wallet
-    const rider = await Rider.findById(request.riderId._id);
-    rider.walletBalance += request.amount;
-    await rider.save();
-
-    // Update original transaction to failed
-    const tx = await RiderTransaction.findOne({ riderId: request.riderId._id, amount: request.amount, status: 'pending', description: 'Withdrawal Request' }).sort({ createdAt: -1 });
-    if (tx) {
-      tx.status = 'failed';
-      tx.description = `Withdrawal Rejected: ${adminNotes}`;
-      await tx.save();
-    }
-
-    // Create a new credit transaction for refund
-    await RiderTransaction.create({
+    // Record the refund transaction
+    await RiderTransaction.create([{
       riderId: rider._id,
       amount: request.amount,
       type: 'credit',
+      method: 'wallet',
       status: 'success',
-      description: `Refund: Withdrawal Rejected (${adminNotes})`,
-      method: 'wallet'
-    });
+      description: `Refund for rejected withdrawal: ${adminNotes}`,
+      createdAt: new Date()
+    }], { session });
 
-    // Send push notification
-    const riderToken = rider.fcmToken || rider.fcmTokenMobile;
-    if (riderToken) {
-      try {
-        await sendPushNotification(riderToken, 'Withdrawal Rejected', `Your withdrawal request was rejected and ₹${request.amount} has been refunded to your wallet.`, { type: 'withdrawal_rejected' });
-      } catch (e) { }
+    // Update the request
+    request.status = 'rejected';
+    request.adminNotes = adminNotes;
+    request.processedAt = new Date();
+    await request.save({ session });
+
+    // Send notification
+    try {
+      if (rider.fcmToken || rider.fcmTokenMobile) {
+        const { sendPushNotification } = await import('../../shared/utils/notifications.js');
+        await sendPushNotification(
+          [rider.fcmToken, rider.fcmTokenMobile].filter(Boolean),
+          'Withdrawal Rejected ❌',
+          `Your withdrawal of ₹${request.amount} was rejected. Amount has been refunded to your wallet. Reason: ${adminNotes}`,
+          { type: 'WITHDRAWAL_REJECTED' }
+        );
+      }
+    } catch (err) {
+      console.error('Notification error:', err);
     }
 
+    await session.commitTransaction();
+    session.endSession();
+    
     res.status(200).json({ success: true, message: 'Withdrawal rejected and amount refunded' });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-export const verifyRefundPayment = async (req, res) => {
-  try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount, riderId, description } = req.body;
-
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
-    const expectedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET).update(body.toString()).digest('hex');
-
-    if (expectedSignature === razorpay_signature) {
-      const session = await mongoose.startSession();
-      session.startTransaction();
-
-      const rider = await Rider.findById(riderId);
-      if (!rider) {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(404).json({ success: false, message: 'Rider not found' });
-      }
-
-      // Update Rider Wallet
-      rider.walletBalance = (rider.walletBalance || 0) + Number(amount);
-      await rider.save({ session });
-
-      // Create Rider Transaction History (Refund Credit)
-      await RiderTransaction.create([{
-        riderId,
-        amount: Number(amount),
-        type: 'credit',
-        method: 'razorpay',
-        status: 'success',
-        description: description || 'Admin Refund processed via Razorpay',
-        referenceId: razorpay_payment_id,
-        createdAt: new Date()
-      }], { session });
-
-      // Create Franchise Transaction if rider belongs to one
-      if (rider.franchise) {
-        await Transaction.create([{
-          franchiseId: rider.franchise,
-          amount: amount,
-          type: 'Refund',
-          status: 'completed',
-          paymentMethod: 'razorpay',
-          description: description || `Admin refund to rider ${rider.phone}`,
-          date: new Date()
-        }], { session });
-      }
-
-      await session.commitTransaction();
-      session.endSession();
-
-      // Send Firebase Push Notification to Rider (Foreground & Background)
-      const notifTitle = "Refund Successful! 🎉";
-      const notifBody = `₹${amount} has been successfully added to your wallet.`;
-
-      if (rider.fcmToken) {
-        await sendPushNotification(rider.fcmToken, notifTitle, notifBody, { type: 'wallet_update', amount: amount.toString() });
-      }
-      if (rider.fcmTokenMobile) {
-        await sendPushNotification(rider.fcmTokenMobile, notifTitle, notifBody, { type: 'wallet_update', amount: amount.toString() });
-      }
-
-      res.status(200).json({ success: true, message: 'Payment verified and refund processed' });
-    } else {
-      res.status(400).json({ success: false, message: 'Invalid payment signature' });
-    }
-  } catch (error) {
-    console.error('[Admin Refund Verify Error]', error);
-    res.status(500).json({ success: false, message: error.message });
+    await session.abortTransaction();
+    session.endSession();
+    console.error('[Reject Withdrawal Error]', error);
+    res.status(400).json({ success: false, message: error.message });
   }
 };

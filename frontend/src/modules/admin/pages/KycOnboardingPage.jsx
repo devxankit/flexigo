@@ -425,11 +425,10 @@ export default function KycOnboardingPage() {
                                  )}
                                  <button
                                     onClick={() => setCurrentPage(page)}
-                                    className={`min-w-[28px] h-7 px-1 flex items-center justify-center rounded-lg text-[10px] font-black transition-all border ${
-                                       currentPage === page 
-                                          ? 'bg-emerald-600 border-emerald-600 text-white shadow-md' 
-                                          : 'border-transparent text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] hover:border-[var(--border-subtle)]'
-                                    }`}
+                                    className={`min-w-[28px] h-7 px-1 flex items-center justify-center rounded-lg text-[10px] font-black transition-all border ${currentPage === page
+                                       ? 'bg-emerald-600 border-emerald-600 text-white shadow-md'
+                                       : 'border-transparent text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] hover:border-[var(--border-subtle)]'
+                                       }`}
                                  >
                                     {page}
                                  </button>
