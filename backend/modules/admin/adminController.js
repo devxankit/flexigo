@@ -105,9 +105,14 @@ export const getAdminStats = async (req, res) => {
     const activeSubscribers = await Vehicle.countDocuments({ ...dateFilter, status: { $in: ['assigned', 'in-transit'] } });
 
     // Total Revenue (Sum of all completed franchise & rider transactions)
+    // Avoid double counting: exclude rider transactions that were paid by franchise wallet
     const [frTxns, riderTxns] = await Promise.all([
       Transaction.find({ ...transFilter, type: 'Subscription', status: { $in: ['completed', 'success'] } }),
-      RiderTransaction.find({ ...getDateFilter(range, 'createdAt'), status: { $in: ['completed', 'success'] } })
+      RiderTransaction.find({ 
+        ...getDateFilter(range, 'createdAt'), 
+        status: { $in: ['completed', 'success'] },
+        description: { $not: /Paid by Franchise Wallet/i }
+      })
     ]);
 
     const frRev = frTxns.reduce((acc, t) => acc + t.amount, 0);
@@ -129,7 +134,11 @@ export const getAdminStats = async (req, res) => {
 
       const [wFr, wRider] = await Promise.all([
         Transaction.find({ status: { $in: ['completed', 'success'] }, date: { $gte: start, $lte: end } }),
-        RiderTransaction.find({ status: { $in: ['completed', 'success'] }, createdAt: { $gte: start, $lte: end } })
+        RiderTransaction.find({ 
+          status: { $in: ['completed', 'success'] }, 
+          createdAt: { $gte: start, $lte: end },
+          description: { $not: /Paid by Franchise Wallet/i }
+        })
       ]);
 
       const dailySum = wFr.reduce((acc, t) => acc + t.amount, 0) + wRider.reduce((acc, t) => acc + t.amount, 0);
@@ -149,7 +158,11 @@ export const getAdminStats = async (req, res) => {
 
       const [wFr, wRider] = await Promise.all([
         Transaction.find({ status: { $in: ['completed', 'success'] }, date: { $gte: start, $lt: end } }),
-        RiderTransaction.find({ status: { $in: ['completed', 'success'] }, createdAt: { $gte: start, $lt: end } })
+        RiderTransaction.find({ 
+          status: { $in: ['completed', 'success'] }, 
+          createdAt: { $gte: start, $lt: end },
+          description: { $not: /Paid by Franchise Wallet/i }
+        })
       ]);
 
       const weekSum = wFr.reduce((acc, t) => acc + t.amount, 0) + wRider.reduce((acc, t) => acc + t.amount, 0);
