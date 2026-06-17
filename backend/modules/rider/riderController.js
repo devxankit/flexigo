@@ -404,7 +404,20 @@ export const getWalletData = async (req, res) => {
 export const getSubscribersByFranchise = async (req, res) => {
   try {
     const franchiseId = req.franchise ? req.franchise._id : req.query.franchiseId;
-    const subscribers = await Rider.find({ franchise: franchiseId }).populate('subscriptionPlan');
+    
+    // Find vehicles belonging to this franchise
+    const Franchise = (await import('../franchise/franchiseModel.js')).default;
+    const Vehicle = (await import('../fleet/vehicleModel.js')).default;
+    const vehicles = await Vehicle.find({ franchise: franchiseId });
+    const vehicleIds = vehicles.map(v => v._id);
+
+    const subscribers = await Rider.find({ 
+      $or: [
+        { franchise: franchiseId },
+        { vehicleId: { $in: vehicleIds } }
+      ]
+    }).populate('subscriptionPlan');
+    
     res.status(200).json({ success: true, subscribers });
   } catch (error) { res.status(500).json({ success: false, message: error.message }); }
 };
@@ -517,6 +530,9 @@ export const createPaymentOrder = async (req, res) => {
     const { planId, phone } = req.body;
     const plan = await SubscriptionPlan.findById(planId);
     const rider = await Rider.findOne({ phone });
+    if (rider && rider.franchise) {
+      return res.status(403).json({ success: false, message: 'Payments are managed by your franchise owner.' });
+    }
     const walletBalance = rider?.walletBalance || 0;
 
     const amountToPay = Math.max(0, plan.price - walletBalance);
@@ -1053,6 +1069,11 @@ export const payDepositViaWallet = async (req, res) => {
     const { phone, planId } = req.body;
     const rider = await Rider.findOne({ phone }).populate('franchise');
     if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
+    
+    if (rider.franchise) {
+      return res.status(403).json({ success: false, message: 'Payments are managed by your franchise owner.' });
+    }
+
     if (rider.depositPaid) return res.status(400).json({ success: false, message: 'Deposit already paid' });
 
     let settings = await SystemSetting.findOne();
@@ -1120,6 +1141,9 @@ export const createDepositOrder = async (req, res) => {
     const DEPOSIT_AMOUNT = settings?.securityDepositAmount || 2800;
 
     const rider = await Rider.findOne({ phone });
+    if (rider && rider.franchise) {
+      return res.status(403).json({ success: false, message: 'Payments are managed by your franchise owner.' });
+    }
     const walletBalance = rider?.walletBalance || 0;
     const amountToPay = Math.max(0, DEPOSIT_AMOUNT - walletBalance);
 

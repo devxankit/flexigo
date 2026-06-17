@@ -9,7 +9,7 @@ export default function AdhocPaymentPage() {
   const [upiId, setUpiId] = useState('');
   const [phone, setPhone] = useState('');
   const [barcodeImage, setBarcodeImage] = useState(null); // base64
-  
+
   const [adminWallet, setAdminWallet] = useState(0);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -161,7 +161,7 @@ export default function AdhocPaymentPage() {
                   className="hidden"
                   id="barcode-upload"
                 />
-                <label 
+                <label
                   htmlFor="barcode-upload"
                   className="flex-1 bg-[var(--bg-tertiary)] border border-dashed border-[var(--border-subtle)] hover:border-emerald-500 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition-colors"
                 >
@@ -170,13 +170,13 @@ export default function AdhocPaymentPage() {
                 </label>
                 {barcodeImage && (
                   <div className="relative w-24 h-24 rounded-xl overflow-hidden border border-emerald-500/30">
-                     <img src={barcodeImage} alt="Barcode Preview" className="w-full h-full object-cover" />
-                     <button 
-                       onClick={() => { setBarcodeImage(null); if(fileInputRef.current) fileInputRef.current.value = ''; }}
-                       className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow-md"
-                     >
-                        <X size={12} />
-                     </button>
+                    <img src={barcodeImage} alt="Barcode Preview" className="w-full h-full object-cover" />
+                    <button
+                      onClick={() => { setBarcodeImage(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow-md"
+                    >
+                      <X size={12} />
+                    </button>
                   </div>
                 )}
               </div>
@@ -297,7 +297,7 @@ export default function AdhocPaymentPage() {
                     </td>
                     <td className="py-4 px-4 text-center">
                       {tx.barcodeUrl ? (
-                        <button 
+                        <button
                           onClick={() => setSelectedImage(tx.barcodeUrl)}
                           className="inline-flex items-center gap-1 bg-emerald-500/10 text-emerald-500 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-emerald-500/20 transition-colors"
                         >
@@ -318,15 +318,15 @@ export default function AdhocPaymentPage() {
       {/* Image Modal */}
       {selectedImage && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedImage(null)}>
-           <div className="relative max-w-md w-full max-h-[80vh] flex items-center justify-center" onClick={e => e.stopPropagation()}>
-              <button 
-                onClick={() => setSelectedImage(null)}
-                className="absolute -top-12 right-0 bg-white/10 hover:bg-white/20 text-white rounded-full p-2 transition-colors"
-              >
-                <X size={20} />
-              </button>
-              <img src={selectedImage} alt="Uploaded Barcode" className="max-w-full max-h-full rounded-2xl shadow-2xl object-contain" />
-           </div>
+          <div className="relative max-w-md w-full max-h-[80vh] flex items-center justify-center" onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute -top-12 right-0 bg-white/10 hover:bg-white/20 text-white rounded-full p-2 transition-colors"
+            >
+              <X size={20} />
+            </button>
+            <img src={selectedImage} alt="Uploaded Barcode" className="max-w-full max-h-full rounded-2xl shadow-2xl object-contain" />
+          </div>
         </div>
       )}
     </div>

@@ -292,7 +292,7 @@ export default function FranchisePaymentModal({ isOpen, onClose, rider, type, on
                     <h3 className="font-black text-slate-900 dark:text-white text-base">Security Deposit</h3>
                     <p className="text-[9px] text-emerald-500 font-black uppercase tracking-[0.2em] mt-1">ONE-TIME & REFUNDABLE</p>
                   </div>
-                  <p className="text-2xl font-black text-slate-900 dark:text-white">₹{depositAmount}</p>
+                  <p className="text-2xl font-black text-slate-900 dark:text-white">₹{adhocAmount ? adhocAmount : depositAmount}</p>
                 </div>
 
                 <div className="space-y-3">
@@ -379,7 +379,7 @@ export default function FranchisePaymentModal({ isOpen, onClose, rider, type, on
               {loading ? (
                 <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
-                type === 'deposit' ? 'PAY SECURITY DEPOSIT & SAVE PLAN' : 'PAY & ACTIVATE PLAN NOW'
+                type === 'deposit' ? `PAY ₹${adhocAmount ? adhocAmount : depositAmount} SECURITY DEPOSIT & SAVE PLAN` : 'PAY & ACTIVATE PLAN NOW'
               )}
             </button>
             {type === 'deposit' && (

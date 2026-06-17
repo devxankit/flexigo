@@ -759,7 +759,20 @@ export const payRiderPlan = async (req, res) => {
     
     const rider = await Rider.findById(riderId);
     if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
-    if (rider.franchise.toString() !== req.franchise._id.toString()) {
+    let isOwner = false;
+    const franchiseIdStr = req.franchise && req.franchise._id ? String(req.franchise._id) : '';
+    if (franchiseIdStr) {
+      if (rider.franchise && String(rider.franchise) === franchiseIdStr) {
+        isOwner = true;
+      } else if (rider.vehicleId) {
+        const Vehicle = (await import('../fleet/vehicleModel.js')).default;
+        const vehicle = await Vehicle.findById(rider.vehicleId);
+        if (vehicle && vehicle.franchise && String(vehicle.franchise) === franchiseIdStr) {
+          isOwner = true;
+        }
+      }
+    }
+    if (!isOwner) {
       return res.status(403).json({ success: false, message: 'Rider does not belong to your franchise' });
     }
 
@@ -814,7 +827,20 @@ export const payRiderDeposit = async (req, res) => {
 
     const rider = await Rider.findById(riderId);
     if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
-    if (rider.franchise.toString() !== req.franchise._id.toString()) {
+    let isOwner = false;
+    const franchiseIdStr = req.franchise && req.franchise._id ? String(req.franchise._id) : '';
+    if (franchiseIdStr) {
+      if (rider.franchise && String(rider.franchise) === franchiseIdStr) {
+        isOwner = true;
+      } else if (rider.vehicleId) {
+        const Vehicle = (await import('../fleet/vehicleModel.js')).default;
+        const vehicle = await Vehicle.findById(rider.vehicleId);
+        if (vehicle && vehicle.franchise && String(vehicle.franchise) === franchiseIdStr) {
+          isOwner = true;
+        }
+      }
+    }
+    if (!isOwner) {
       return res.status(403).json({ success: false, message: 'Rider does not belong to your franchise' });
     }
     
@@ -914,7 +940,16 @@ export const markAllNotificationsRead = async (req, res) => {
 // @route   GET /api/v1/franchise/riders/dues
 export const getRiderDues = async (req, res) => {
   try {
-    const riders = await Rider.find({ franchise: req.franchise._id }).populate('subscriptionPlan');
+    const Vehicle = (await import('../fleet/vehicleModel.js')).default;
+    const vehicles = await Vehicle.find({ franchise: req.franchise._id });
+    const vehicleIds = vehicles.map(v => v._id);
+
+    const riders = await Rider.find({ 
+      $or: [
+        { franchise: req.franchise._id },
+        { vehicleId: { $in: vehicleIds } }
+      ]
+    }).populate('subscriptionPlan');
     
     const dues = riders.map(rider => {
       let isPlanDue = false;
@@ -956,7 +991,23 @@ export const payRiderPlan = async (req, res) => {
     
     const rider = await Rider.findById(riderId);
     if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
-    if (rider.franchise.toString() !== req.franchise._id.toString()) {
+
+    let isOwner = false;
+    const franchiseIdStr = req.franchise && req.franchise._id ? String(req.franchise._id) : '';
+    
+    if (franchiseIdStr) {
+      if (rider.franchise && String(rider.franchise) === franchiseIdStr) {
+        isOwner = true;
+      } else if (rider.vehicleId) {
+        const Vehicle = (await import('../fleet/vehicleModel.js')).default;
+        const vehicle = await Vehicle.findById(rider.vehicleId);
+        if (vehicle && vehicle.franchise && String(vehicle.franchise) === franchiseIdStr) {
+          isOwner = true;
+        }
+      }
+    }
+
+    if (!isOwner) {
       return res.status(403).json({ success: false, message: 'Rider does not belong to your franchise' });
     }
 
@@ -1019,7 +1070,23 @@ export const payRiderDeposit = async (req, res) => {
 
     const rider = await Rider.findById(riderId);
     if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
-    if (rider.franchise.toString() !== req.franchise._id.toString()) {
+
+    let isOwner = false;
+    const franchiseIdStr = req.franchise && req.franchise._id ? String(req.franchise._id) : '';
+
+    if (franchiseIdStr) {
+      if (rider.franchise && String(rider.franchise) === franchiseIdStr) {
+        isOwner = true;
+      } else if (rider.vehicleId) {
+        const Vehicle = (await import('../fleet/vehicleModel.js')).default;
+        const vehicle = await Vehicle.findById(rider.vehicleId);
+        if (vehicle && vehicle.franchise && String(vehicle.franchise) === franchiseIdStr) {
+          isOwner = true;
+        }
+      }
+    }
+
+    if (!isOwner) {
       return res.status(403).json({ success: false, message: 'Rider does not belong to your franchise' });
     }
     
@@ -1077,7 +1144,10 @@ export const payRiderDeposit = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
+// @desc    Create Razorpay Order for Rider Deposit
+// @route   POST /api/v1/franchise/riders/deposit-create-order
+export const createDepositOrder = async (req, res) => {
+  try {
     const { amount } = req.body;
     if (!amount || amount <= 0) return res.status(400).json({ success: false, message: 'Invalid amount' });
 
