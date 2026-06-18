@@ -106,6 +106,7 @@ export const getAdminStats = async (req, res) => {
 
     // Total Revenue (Sum of all completed franchise & rider transactions)
     // Avoid double counting: exclude rider transactions that were paid by franchise wallet
+    // Avoid double counting: exclude rider transactions that were paid by franchise wallet
     const [frTxns, riderTxns] = await Promise.all([
       Transaction.find({ ...transFilter, type: 'Subscription', status: { $in: ['completed', 'success'] } }),
       RiderTransaction.find({
