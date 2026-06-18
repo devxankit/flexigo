@@ -98,18 +98,18 @@ export const getAdminStats = async (req, res) => {
     const dateFilter = getDateFilter(range, 'createdAt');
     const transFilter = getDateFilter(range, 'date');
 
-    const totalHubs = await Franchise.countDocuments({ ...dateFilter, kycStatus: 'approved' });
-    const activeFleet = await Rider.countDocuments({ ...dateFilter, kycStatus: 'approved' });
+    const totalHubs = await Franchise.countDocuments({ kycStatus: 'approved' });
+    const activeFleet = await Rider.countDocuments({ kycStatus: 'approved' });
 
     // Calculate total subscribers (riders assigned to vehicles)
-    const activeSubscribers = await Vehicle.countDocuments({ ...dateFilter, status: { $in: ['assigned', 'in-transit'] } });
+    const activeSubscribers = await Vehicle.countDocuments({ status: { $in: ['assigned', 'in-transit'] } });
 
     // Total Revenue (Sum of all completed franchise & rider transactions)
     // Avoid double counting: exclude rider transactions that were paid by franchise wallet
     const [frTxns, riderTxns] = await Promise.all([
       Transaction.find({ ...transFilter, type: 'Subscription', status: { $in: ['completed', 'success'] } }),
-      RiderTransaction.find({ 
-        ...getDateFilter(range, 'createdAt'), 
+      RiderTransaction.find({
+        ...getDateFilter(range, 'createdAt'),
         status: { $in: ['completed', 'success'] },
         description: { $not: /Paid by Franchise Wallet/i }
       })
@@ -120,7 +120,7 @@ export const getAdminStats = async (req, res) => {
     const grossRevenue = frRev + riderRev;
 
     // Maintenance Alerts
-    const maintenanceAlerts = await Vehicle.countDocuments({ ...dateFilter, status: 'in-service' });
+    const maintenanceAlerts = await Vehicle.countDocuments({ status: 'in-service' });
 
     // Calculate Weekly Revenue for Chart (Last 7 Days - Daily)
     const now = new Date();
@@ -134,8 +134,8 @@ export const getAdminStats = async (req, res) => {
 
       const [wFr, wRider] = await Promise.all([
         Transaction.find({ status: { $in: ['completed', 'success'] }, date: { $gte: start, $lte: end } }),
-        RiderTransaction.find({ 
-          status: { $in: ['completed', 'success'] }, 
+        RiderTransaction.find({
+          status: { $in: ['completed', 'success'] },
           createdAt: { $gte: start, $lte: end },
           description: { $not: /Paid by Franchise Wallet/i }
         })
@@ -158,8 +158,8 @@ export const getAdminStats = async (req, res) => {
 
       const [wFr, wRider] = await Promise.all([
         Transaction.find({ status: { $in: ['completed', 'success'] }, date: { $gte: start, $lt: end } }),
-        RiderTransaction.find({ 
-          status: { $in: ['completed', 'success'] }, 
+        RiderTransaction.find({
+          status: { $in: ['completed', 'success'] },
           createdAt: { $gte: start, $lt: end },
           description: { $not: /Paid by Franchise Wallet/i }
         })
@@ -341,7 +341,7 @@ export const getAllHubs = async (req, res) => {
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     };
 
-    const franchises = await Franchise.find({ ...dateFilter, kycStatus: 'approved' }).sort('-createdAt');
+    const franchises = await Franchise.find({ kycStatus: 'approved' }).sort('-createdAt');
 
     const hubs = await Promise.all(franchises.map(async (f) => {
       const fleetCount = await Vehicle.countDocuments({ franchise: f._id });
@@ -427,10 +427,10 @@ export const getFleetDistribution = async (req, res) => {
     const { range } = req.query;
     const dateFilter = getDateFilter(range, 'createdAt');
 
-    const inTransit = await Vehicle.countDocuments({ ...dateFilter, status: { $in: ['assigned', 'in-transit'] } });
-    const atHub = await Vehicle.countDocuments({ ...dateFilter, status: 'available' });
-    const maintenance = await Vehicle.countDocuments({ ...dateFilter, status: 'in-service' });
-    const offline = await Vehicle.countDocuments({ ...dateFilter, status: 'quarantined' });
+    const inTransit = await Vehicle.countDocuments({ status: { $in: ['assigned', 'in-transit'] } });
+    const atHub = await Vehicle.countDocuments({ status: 'available' });
+    const maintenance = await Vehicle.countDocuments({ status: 'in-service' });
+    const offline = await Vehicle.countDocuments({ status: 'quarantined' });
 
     res.status(200).json({
       success: true,
@@ -3113,7 +3113,7 @@ export const processAdhocPayment = async (req, res) => {
   session.startTransaction();
   try {
     const { amount, description, upiId, phone, barcodeUrl } = req.body;
-    
+
     if (!amount || amount <= 0) throw new Error('Invalid amount');
 
     const admin = await Admin.findById(req.user._id || req.user.id).session(session);
@@ -3151,7 +3151,7 @@ export const processAdhocPayment = async (req, res) => {
 
     await session.commitTransaction();
     session.endSession();
-    
+
     res.status(200).json({ success: true, message: 'Adhoc Payment processed successfully', transaction: adminTx[0], walletBalance: admin.walletBalance });
   } catch (error) {
     await session.abortTransaction();

@@ -61,7 +61,7 @@ export const useAdminDataStore = create((set, get) => ({
       const res = await api.get(`/admin/dashboard-stats?${params.toString()}`);
       if (res.data.success) {
         set({
-          networkStats: res.data.stats,
+          networkStats: { ...get().networkStats, ...res.data.stats },
           revenueData: res.data.stats.revenueData || get().revenueData
         });
       }
