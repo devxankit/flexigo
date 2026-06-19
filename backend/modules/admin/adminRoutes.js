@@ -74,7 +74,10 @@ import {
   approveWithdrawal,
   rejectWithdrawal,
   processAdhocPayment,
-  getAdhocPayments
+  getAdhocPayments,
+  getStaffLeaves,
+  createStaffLeave,
+  updateStaffLeave
 } from './adminController.js';
 import {
   getWebsitePlans,
@@ -151,6 +154,9 @@ router.put('/staff/:id', updateStaff);
 router.delete('/staff/:id', deleteStaff);
 router.get('/staff/:id/attendance', getStaffAttendance);
 router.post('/staff/:id/attendance', updateStaffAttendance);
+router.get('/staff-leaves', protectAdmin, getStaffLeaves);
+router.post('/staff-leaves', protectAdmin, createStaffLeave);
+router.put('/staff-leaves/:id', protectAdmin, updateStaffLeave);
 router.post('/staff/:id/attachment', protectAdmin, async (req, res) => {
   try {
     const { file, fileName } = req.body;

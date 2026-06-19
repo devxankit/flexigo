@@ -29,6 +29,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
 import OpsFilter from '../components/OpsFilter';
+import LeavesCalendarView from '../components/LeavesCalendarView';
 import { useAdminDataStore } from '../store/adminDataStore';
 import api from '../../../lib/axios';
 
@@ -496,6 +497,8 @@ export default function HrManagementPage() {
                      </tbody>
                   </table>
                </div>
+            ) : activeTab === 'leaves' ? (
+               <LeavesCalendarView />
             ) : (
                <div className="py-20 flex flex-col items-center justify-center text-center space-y-4">
                   <div className="w-16 h-16 bg-emerald-500/5 rounded-3xl flex items-center justify-center border border-emerald-500/10 shadow-inner">

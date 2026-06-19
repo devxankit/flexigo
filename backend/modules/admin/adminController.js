@@ -1397,6 +1397,67 @@ export const deleteStaff = async (req, res) => {
   }
 };
 
+export const getStaffLeaves = async (req, res) => {
+  try {
+    const Leave = (await import('./leaveModel.js')).default;
+    const { month, year } = req.query;
+    let query = {};
+    
+    if (month && year) {
+      const start = new Date(year, month - 1, 1);
+      const end = new Date(year, month, 0, 23, 59, 59);
+      query = {
+        $or: [
+          { startDate: { $lte: end, $gte: start } },
+          { endDate: { $lte: end, $gte: start } },
+          { startDate: { $lte: start }, endDate: { $gte: end } }
+        ]
+      };
+    }
+    
+    const leaves = await Leave.find(query).populate('staffId', 'name role dept').sort({ startDate: -1 });
+    res.status(200).json({ success: true, leaves });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const createStaffLeave = async (req, res) => {
+  try {
+    const Leave = (await import('./leaveModel.js')).default;
+    const { staffId, startDate, endDate, leaveType, reason } = req.body;
+    
+    const newLeave = await Leave.create({
+      staffId,
+      startDate,
+      endDate,
+      leaveType,
+      reason,
+      status: 'Approved' // auto-approve for now based on request
+    });
+    
+    const populatedLeave = await Leave.findById(newLeave._id).populate('staffId', 'name role dept');
+    
+    res.status(201).json({ success: true, message: 'Leave created', leave: populatedLeave });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const updateStaffLeave = async (req, res) => {
+  try {
+    const Leave = (await import('./leaveModel.js')).default;
+    const { status } = req.body;
+    
+    const leave = await Leave.findByIdAndUpdate(req.params.id, { status }, { new: true }).populate('staffId', 'name role dept');
+    if (!leave) return res.status(404).json({ success: false, message: 'Leave not found' });
+    
+    res.status(200).json({ success: true, message: 'Leave updated', leave });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const getFinanceData = async (req, res) => {
   try {
     const { range } = req.query;

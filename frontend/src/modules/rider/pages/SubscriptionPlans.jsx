@@ -177,7 +177,12 @@ export default function SubscriptionPlans() {
 
   const paymentMethods = [
     { id: 'WALLET', label: 'Flexigo Wallet', sub: `Balance: ₹${balance}`, icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M21 18c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h9v1zm-9-10v6h9V8h-9zM3 13V6c0-.55.45-1 1-1h16c.55 0 1 .45 1 1v2h-9c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h9v2c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1v-2z" /></svg> },
-    { id: 'RAZORPAY', label: balance > 0 ? 'Razorpay + Wallet' : 'Razorpay UPI', sub: balance > 0 ? 'Wallet balance auto-applied' : 'Instant Online Payment', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" /></svg> },
+    { id: 'RAZORPAY', label: balance > 0 ? 'Razorpay + Redeem Amount' : 'Razorpay UPI', sub: balance > 0 ? 'Redeem Amount auto-applied' : 'Instant Online Payment', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" /></svg> },
+  ];
+
+  const depositMethods = [
+    { id: 'WALLET', label: 'Flexigo Wallet', sub: `Balance: ₹${balance}`, icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M21 18c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h9v1zm-9-10v6h9V8h-9zM3 13V6c0-.55.45-1 1-1h16c.55 0 1 .45 1 1v2h-9c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h9v2c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1v-2z" /></svg> },
+    { id: 'RAZORPAY', label: 'Razorpay UPI', sub: 'Instant Online Payment', icon: <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" /></svg> },
   ];
 
   const [isPayingDeposit, setIsPayingDeposit] = useState(false);
@@ -292,15 +297,9 @@ export default function SubscriptionPlans() {
                       <span>Total Deposit</span>
                       <span>₹{systemSettings.securityDepositAmount}</span>
                     </div>
-                    {depositMethod === 'RAZORPAY' && balance > 0 && (
-                      <div className="flex justify-between text-xs font-black uppercase text-emerald-500">
-                        <span>Wallet Applied</span>
-                        <span>-₹{Math.min(systemSettings.securityDepositAmount, balance)}</span>
-                      </div>
-                    )}
                     <div className="pt-2 border-t border-[var(--border-subtle)] flex justify-between text-sm font-black uppercase text-[var(--text-primary)]">
                       <span>Net Payable</span>
-                      <span>₹{depositMethod === 'RAZORPAY' ? Math.max(0, systemSettings.securityDepositAmount - balance) : systemSettings.securityDepositAmount}</span>
+                      <span>₹{systemSettings.securityDepositAmount}</span>
                     </div>
                   </div>
                   <NeonButton variant="solid" size="full" onClick={handleDepositRazorpay}>Complete Secure Purchase</NeonButton>
@@ -698,7 +697,7 @@ export default function SubscriptionPlans() {
                     {selectedMethod === 'RAZORPAY' && balance > 0 && (
                       <div className="flex justify-between items-center mb-6 pt-4 border-t border-slate-200 border-dashed">
                         <div>
-                          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] mb-1">Wallet Applied</p>
+                          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] mb-1">Redeem Amount</p>
                         </div>
                         <div className="text-right">
                           <p className="text-lg font-black text-emerald-600 leading-none italic">-₹{Math.min(selectedPlan?.price, balance)}</p>

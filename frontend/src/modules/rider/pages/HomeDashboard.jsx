@@ -335,9 +335,9 @@ export default function HomeDashboard() {
                   Hello, <span className="text-flexigo-teal">{user?.name?.split(' ')?.[0] || 'Rider'}</span>!
                 </h1>
               </div>
-              {activePlan && (
+              {(activePlan || selectedPlan) && (
                 <p className={`text-[10px] font-black uppercase tracking-[0.2em] ml-4 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                  Active Plan: <span className="text-flexigo-teal font-bold">{activePlan?.name}</span>
+                  {activePlan ? 'Active Plan' : 'Selected Plan'}: <span className="text-flexigo-teal font-bold">{activePlan?.name || selectedPlan?.label || user?.subscriptionPlan?.name}</span>
                 </p>
               )}
             </motion.div>
@@ -377,7 +377,7 @@ export default function HomeDashboard() {
               </GlassCard>
             </motion.div>
 
-            {activePlan && (
+            {(activePlan || selectedPlan) && (
               <motion.div
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -388,13 +388,15 @@ export default function HomeDashboard() {
                 <GlassCard className={`p-4 transition-all duration-500 hover:shadow-2xl border flex flex-col gap-1.5 ${isDark ? 'bg-white/[0.03] border-white/10' : 'bg-white border-slate-200 shadow-sm'
                   }`}>
                   <div className="flex items-center justify-between">
-                    <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#00D4FF" strokeWidth="2.5" className="w-4 h-4">
+                    <div className={`w-7 h-7 rounded-lg ${activePlan ? 'bg-blue-500/10' : 'bg-rose-500/10'} flex items-center justify-center`}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke={activePlan ? "#00D4FF" : "#F43F5E"} strokeWidth="2.5" className="w-4 h-4">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </div>
                     <div className="flex flex-col items-end">
-                      <div className="text-[9px] font-black text-[#00D4FF] uppercase tracking-tighter shadow-sm">Active</div>
+                      <div className={`text-[9px] font-black uppercase tracking-tighter shadow-sm ${activePlan ? 'text-[#00D4FF]' : 'text-rose-500'}`}>
+                        {activePlan ? 'Active' : 'Pending'}
+                      </div>
                       {activePlan?.expiresAt && (
                         <div className="text-[7px] font-bold text-slate-500 uppercase mt-0.5">
                           Due: {activePlan.expiresAt ? new Date(activePlan.expiresAt).toLocaleDateString([], { day: 'numeric', month: 'short' }) : 'N/A'}
@@ -402,7 +404,9 @@ export default function HomeDashboard() {
                       )}
                     </div>
                   </div>
-                  <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>Current Plan</span>
+                  <span className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>
+                    {activePlan ? 'Current Plan' : (selectedPlan?.label || user?.subscriptionPlan?.name || 'Selected Plan')}
+                  </span>
                 </GlassCard>
               </motion.div>
             )}
@@ -470,7 +474,7 @@ export default function HomeDashboard() {
                 </h3>
                 <p className={`text-[9px] font-bold uppercase tracking-widest mt-1 ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>
                   {user?.subscriptionPlan && user?.status !== 'active'
-                    ? `Pay for ${user.subscriptionPlan.name || 'Saved Plan'} to activate.`
+                    ? `Pay for ${selectedPlan?.label || user.subscriptionPlan.name || 'Saved Plan'} to activate.`
                     : 'Please complete your payment to get your vehicle'}
                 </p>
               </div>

@@ -867,6 +867,49 @@ export const useAdminDataStore = create((set, get) => ({
     }
   },
 
+  leaves: [],
+  fetchLeaves: async (month, year) => {
+    try {
+      const params = new URLSearchParams();
+      if (month) params.append('month', month);
+      if (year) params.append('year', year);
+      const res = await api.get(`/admin/staff-leaves?${params.toString()}`);
+      if (res.data.success) {
+        set({ leaves: res.data.leaves });
+      }
+    } catch (err) {
+      console.error("Failed to fetch leaves:", err);
+    }
+  },
+
+  addLeave: async (data) => {
+    try {
+      const res = await api.post('/admin/staff-leaves', data);
+      if (res.data.success) {
+        set(state => ({ leaves: [res.data.leave, ...state.leaves] }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to add leave:", err);
+      return { success: false, message: err.response?.data?.message || err.message };
+    }
+  },
+
+  updateLeaveStatus: async (id, status) => {
+    try {
+      const res = await api.put(`/admin/staff-leaves/${id}`, { status });
+      if (res.data.success) {
+        set(state => ({
+          leaves: state.leaves.map(l => l._id === id ? res.data.leave : l)
+        }));
+        return res.data;
+      }
+    } catch (err) {
+      console.error("Failed to update leave:", err);
+      return { success: false, message: err.response?.data?.message || err.message };
+    }
+  },
+
   vehicleStats: {
     fleetHealth: '0%',
     bmsTags: '0',

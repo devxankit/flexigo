@@ -530,9 +530,6 @@ export const createPaymentOrder = async (req, res) => {
     const { planId, phone } = req.body;
     const plan = await SubscriptionPlan.findById(planId);
     const rider = await Rider.findOne({ phone });
-    if (rider && rider.franchise) {
-      return res.status(403).json({ success: false, message: 'Payments are managed by your franchise owner.' });
-    }
     const walletBalance = rider?.walletBalance || 0;
 
     const amountToPay = Math.max(0, plan.price - walletBalance);
@@ -1141,19 +1138,11 @@ export const createDepositOrder = async (req, res) => {
     const DEPOSIT_AMOUNT = settings?.securityDepositAmount || 2800;
 
     const rider = await Rider.findOne({ phone });
-    if (rider && rider.franchise) {
-      return res.status(403).json({ success: false, message: 'Payments are managed by your franchise owner.' });
-    }
-    const walletBalance = rider?.walletBalance || 0;
-    const amountToPay = Math.max(0, DEPOSIT_AMOUNT - walletBalance);
-
-    if (amountToPay === 0) {
-      return res.status(200).json({ success: true, amountPayable: 0, walletApplied: DEPOSIT_AMOUNT });
-    }
+    const amountToPay = DEPOSIT_AMOUNT;
 
     const instance = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET });
     const order = await instance.orders.create({ amount: amountToPay * 100, currency: 'INR', receipt: `dep_receipt_${Date.now()}` });
-    res.status(200).json({ success: true, order, walletApplied: DEPOSIT_AMOUNT - amountToPay, amountPayable: amountToPay });
+    res.status(200).json({ success: true, order, walletApplied: 0, amountPayable: amountToPay });
   } catch (error) { res.status(500).json({ success: false, message: error.message }); }
 };
 
@@ -1169,20 +1158,6 @@ export const verifyDepositPayment = async (req, res) => {
         let settings = await SystemSetting.findOne();
         const DEPOSIT_AMOUNT = settings?.securityDepositAmount || 2800;
 
-        const walletUsed = Math.min(DEPOSIT_AMOUNT, rider.walletBalance || 0);
-        if (walletUsed > 0) {
-          rider.walletBalance -= walletUsed;
-          await Transaction.create({
-            riderId: rider._id,
-            amount: walletUsed,
-            type: 'debit',
-            status: 'success',
-            description: `Wallet applied to Security Deposit`,
-            method: 'wallet',
-            planId: planId || null
-          });
-        }
-
         rider.depositPaid = true;
         if (planId) {
           const plan = await SubscriptionPlan.findById(planId);
@@ -1192,18 +1167,15 @@ export const verifyDepositPayment = async (req, res) => {
         }
         await rider.save();
 
-        const razorpayAmount = DEPOSIT_AMOUNT - walletUsed;
-        if (razorpayAmount > 0) {
-          await Transaction.create({
-            riderId: rider._id,
-            amount: razorpayAmount,
-            type: 'debit',
-            status: 'success',
-            description: `Security Deposit`,
-            method: 'razorpay',
-            planId: planId || null
-          });
-        }
+        await Transaction.create({
+          riderId: rider._id,
+          amount: DEPOSIT_AMOUNT,
+          type: 'debit',
+          status: 'success',
+          description: `Security Deposit`,
+          method: 'razorpay',
+          planId: planId || null
+        });
       }
       res.status(200).json({ success: true, message: 'Deposit Payment verified' });
     } else res.status(400).json({ success: false, message: 'Invalid signature' });
