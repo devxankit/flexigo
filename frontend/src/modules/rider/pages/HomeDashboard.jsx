@@ -176,6 +176,7 @@ export default function HomeDashboard() {
   const { user } = useAuthStore();
   const { activePlan } = useSubscriptionStore();
   const { balance } = useWalletStore();
+  const selectedPlan = user?.subscriptionPlan;
   const {
     vehicle,
     isDiagnosticsOpen,
