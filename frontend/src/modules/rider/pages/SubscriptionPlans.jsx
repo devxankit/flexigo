@@ -418,40 +418,6 @@ export default function SubscriptionPlans() {
               <div className="text-right"><span className={`text-2xl font-black transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>₹{systemSettings.securityDepositAmount}</span></div>
             </div>
           </GlassCard>
-
-          {/* Adhoc Payment Section */}
-          <GlassCard className={`p-4 mt-4 border shadow-md ${isDark ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-white'}`}>
-            <div className="flex flex-col gap-3">
-              <div className="flex justify-between items-center">
-                <span className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>Adhoc Payment</span>
-              </div>
-              <div className="flex flex-col gap-2">
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    placeholder="Enter Amount"
-                    value={addOffAmount}
-                    onChange={(e) => setAddOffAmount(e.target.value)}
-                    className={`flex-1 rounded-xl px-4 py-2 text-sm font-bold border ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'} focus:outline-none focus:border-flexigo-teal transition-all`}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddOffPayment}
-                    className="bg-slate-900 text-white px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-black transition-all active:scale-95"
-                  >
-                    PAY NOW
-                  </button>
-                </div>
-                <input
-                  type="text"
-                  placeholder="Payment Description (Optional)"
-                  value={adhocDescription}
-                  onChange={(e) => setAdhocDescription(e.target.value)}
-                  className={`w-full rounded-xl px-4 py-2 text-xs font-bold border ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'} focus:outline-none focus:border-flexigo-teal transition-all`}
-                />
-              </div>
-            </div>
-          </GlassCard>
           <div className="space-y-4">
             <p className={`text-[8px] font-black uppercase tracking-[0.3em] ${isDark ? 'text-white/40' : 'text-slate-950 font-black opacity-80'}`}>Select Payment Method</p>
             <div className="space-y-3">
@@ -477,6 +443,42 @@ export default function SubscriptionPlans() {
           </div>
         </div>
       )}
+
+      {/* Adhoc Payment Section (Always Visible) */}
+      <div className="mt-8">
+        <GlassCard className={`p-4 border shadow-md ${isDark ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-white'}`}>
+          <div className="flex flex-col gap-3">
+            <div className="flex justify-between items-center">
+              <span className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-gray-400' : 'text-slate-600'}`}>Adhoc Payment</span>
+            </div>
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  placeholder="Enter Amount"
+                  value={addOffAmount}
+                  onChange={(e) => setAddOffAmount(e.target.value)}
+                  className={`flex-1 rounded-xl px-4 py-2 text-sm font-bold border ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'} focus:outline-none focus:border-flexigo-teal transition-all`}
+                />
+                <button
+                  type="button"
+                  onClick={handleAddOffPayment}
+                  className="bg-slate-900 text-white px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-black transition-all active:scale-95"
+                >
+                  PAY NOW
+                </button>
+              </div>
+              <input
+                type="text"
+                placeholder="Payment Description (Optional)"
+                value={adhocDescription}
+                onChange={(e) => setAdhocDescription(e.target.value)}
+                className={`w-full rounded-xl px-4 py-2 text-xs font-bold border ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'} focus:outline-none focus:border-flexigo-teal transition-all`}
+              />
+            </div>
+          </div>
+        </GlassCard>
+      </div>
 
       <div className="mt-12 space-y-4">
         {user?.depositPaid !== false && (
