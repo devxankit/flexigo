@@ -476,7 +476,6 @@ export const getKycRecords = async (req, res) => {
           details: r.kycDetails,
           walletBalance: r.walletBalance || 0,
           adminAssignedStartDate: r.adminAssignedStartDate || null,
-          hasPlan: !!r.subscriptionPlan,
           isBlocked: r.isBlocked || false
         };
       }),
@@ -494,7 +493,6 @@ export const getKycRecords = async (req, res) => {
           details: f.kycDetails,
           walletBalance: f.walletBalance || 0,
           hubs: 1,
-          hasPlan: !!f.hubPlan?.id,
           isBlocked: f.isBlocked || false
         };
       })

@@ -276,18 +276,14 @@ export default function KycOnboardingPage() {
                               </td>
                               <td className="py-2 px-2 font-medium text-[var(--text-tertiary)]">{record.role}</td>
                               <td className="py-2 px-2" onClick={(e) => e.stopPropagation()}>
-                                 {!record.hasPlan ? (
-                                    <input
-                                       type="date"
-                                       value={record.adminAssignedStartDate ? record.adminAssignedStartDate.split('T')[0] : ''}
-                                       onChange={async (e) => {
-                                          await updateKycStatus(record._id || record.id, { adminAssignedStartDate: e.target.value });
-                                       }}
-                                       className="px-2 py-1 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded text-[10px] text-[var(--text-primary)] outline-none focus:border-emerald-500/50 cursor-pointer"
-                                    />
-                                 ) : (
-                                    <span className="text-[10px] font-medium text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">Plan Active</span>
-                                 )}
+                                 <input
+                                    type="date"
+                                    value={record.adminAssignedStartDate ? record.adminAssignedStartDate.split('T')[0] : ''}
+                                    onChange={async (e) => {
+                                       await updateKycStatus(record._id || record.id, { adminAssignedStartDate: e.target.value });
+                                    }}
+                                    className="px-2 py-1 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded text-[10px] text-[var(--text-primary)] outline-none focus:border-emerald-500/50 cursor-pointer"
+                                 />
                               </td>
                               <td className="py-2 px-2 font-medium text-[var(--text-tertiary)] whitespace-nowrap">{new Date(record.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</td>
                               <td className="py-2 px-2">
