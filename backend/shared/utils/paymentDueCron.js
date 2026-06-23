@@ -159,4 +159,105 @@ export const startPaymentDueCron = () => {
   });
 
   console.log('✅ [CRON] Weekly payment due checker scheduled (daily at 9:00 AM)');
+
+  // Run every day at 9:15 AM - check for admin assigned start date (8th day reminder)
+  cron.schedule('15 9 * * *', async () => {
+    console.log('⏰ [CRON] Running admin assigned start date 8-day check...');
+    try {
+      const now = new Date();
+      const todayStart = new Date(now);
+      todayStart.setHours(0, 0, 0, 0);
+
+      // Find riders with an adminAssignedStartDate but no active subscriptionPlan
+      const unpaidRiders = await Rider.find({
+        adminAssignedStartDate: { $ne: null },
+        subscriptionPlan: null, // No plan payment made yet
+        status: { $nin: ['rejected', 'inactive'] } // Skip inactive/rejected
+      });
+
+      const ridersToNotify = unpaidRiders.filter(rider => {
+        const startDate = new Date(rider.adminAssignedStartDate);
+        startDate.setHours(0, 0, 0, 0);
+
+        const diffTime = todayStart.getTime() - startDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        // Send reminder exactly on the 8th day (diffDays === 8)
+        return diffDays === 8;
+      });
+
+      if (ridersToNotify.length === 0) {
+        console.log('✅ [CRON] No 8-day admin start date dues found for today.');
+        return;
+      }
+
+      console.log(`⚠️ [CRON] Found ${ridersToNotify.length} riders unpaid 8 days after admin start date.`);
+
+      for (const rider of ridersToNotify) {
+        const message = `Reminder: 8 days have passed since your assigned start date. Please complete your subscription payment to continue using the service.`;
+
+        // Notify Rider
+        const riderToken = rider.fcmToken || rider.fcmTokenMobile;
+        if (riderToken) {
+          try {
+            await sendPushNotification(
+              riderToken,
+              '⚠️ Payment Required',
+              message,
+              { type: 'admin_start_date_due' }
+            );
+          } catch (e) {
+            console.error(`❌ [CRON] Failed to notify rider ${rider.phone}:`, e.message);
+          }
+        }
+        try {
+          await sendSMS(rider.phone, message);
+        } catch (e) {
+          console.error(`❌ [CRON] SMS failed for ${rider.phone}:`, e.message);
+        }
+
+        // Notify Franchise if exists
+        if (rider.franchise) {
+          const franchise = await Franchise.findById(rider.franchise);
+          if (franchise) {
+            const franchiseMsg = `Reminder: Rider ${rider.name || rider.phone} has not completed plan payment 8 days after admin-assigned start date.`;
+            const franchiseToken = franchise.fcmToken || franchise.fcmTokenMobile;
+            if (franchiseToken) {
+              try {
+                await sendPushNotification(
+                  franchiseToken,
+                  '⚠️ Rider Payment Required',
+                  franchiseMsg,
+                  { type: 'admin_start_date_due', riderId: rider._id.toString() }
+                );
+              } catch (e) {
+                console.error(`❌ [CRON] Failed to notify franchise ${franchise.phone}:`, e.message);
+              }
+            }
+            try {
+              await sendSMS(franchise.phone, franchiseMsg);
+            } catch (e) {
+              console.error(`❌ [CRON] SMS failed for franchise ${franchise.phone}:`, e.message);
+            }
+            try {
+              await FranchiseNotification.create({
+                franchiseId: franchise._id,
+                title: 'Rider Payment Required',
+                message: franchiseMsg,
+                type: 'payment_due'
+              });
+            } catch (e) {
+              console.error(`❌ [CRON] Failed to create DB notification for franchise ${franchise.phone}:`, e.message);
+            }
+          }
+        }
+      }
+
+      console.log(`✅ [CRON] 8-day reminders sent to ${ridersToNotify.length} riders.`);
+    } catch (error) {
+      console.error('❌ [CRON] 8-day check failed:', error.message);
+    }
+  });
+
+  console.log('✅ [CRON] Admin start date 8-day checker scheduled (daily at 9:15 AM)');
 };

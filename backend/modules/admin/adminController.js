@@ -475,6 +475,8 @@ export const getKycRecords = async (req, res) => {
           date: r.createdAt,
           details: r.kycDetails,
           walletBalance: r.walletBalance || 0,
+          adminAssignedStartDate: r.adminAssignedStartDate || null,
+          hasPlan: !!r.subscriptionPlan,
           isBlocked: r.isBlocked || false
         };
       }),
@@ -492,6 +494,7 @@ export const getKycRecords = async (req, res) => {
           details: f.kycDetails,
           walletBalance: f.walletBalance || 0,
           hubs: 1,
+          hasPlan: !!f.hubPlan?.id,
           isBlocked: f.isBlocked || false
         };
       })
@@ -519,7 +522,7 @@ export const getKycRecords = async (req, res) => {
 
 export const updateKycStatus = async (req, res) => {
   try {
-    const { status, name, phone, referenceName, referenceNumber, referenceName2, referenceNumber2, kycDetails } = req.body;
+    const { status, name, phone, referenceName, referenceNumber, referenceName2, referenceNumber2, kycDetails, adminAssignedStartDate } = req.body;
     const id = req.params.id;
 
     const updateFields = {};
@@ -529,6 +532,7 @@ export const updateKycStatus = async (req, res) => {
     }
     if (name !== undefined) updateFields.name = name;
     if (phone !== undefined) updateFields.phone = phone;
+    if (adminAssignedStartDate !== undefined) updateFields.adminAssignedStartDate = adminAssignedStartDate;
 
     // Extract dynamic reference fields (checking flat fields first, then falling back to nested)
     const refName = referenceName !== undefined ? referenceName : kycDetails?.referenceName;

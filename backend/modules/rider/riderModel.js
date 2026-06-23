@@ -19,7 +19,7 @@ const RiderSchema = new mongoose.Schema({
   },
   kycStatus: {
     type: String,
-    enum: ['pending', 'approved', 'rejected'],
+    enum: ['pending', 'approved', 'rejected', 'inactive'],
     default: 'pending',
   },
   kycDetails: {
@@ -67,6 +67,10 @@ const RiderSchema = new mongoose.Schema({
   },
   subscriptionStart: Date,
   subscriptionEnd: Date,
+  adminAssignedStartDate: {
+    type: Date,
+    default: null
+  },
   vehicleId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Vehicle',

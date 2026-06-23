@@ -68,7 +68,7 @@ const FranchiseSchema = new mongoose.Schema({
 
   kycStatus: {
     type: String,
-    enum: ['uninitiated', 'pending', 'approved', 'rejected'],
+    enum: ['uninitiated', 'pending', 'approved', 'rejected', 'inactive'],
     default: 'uninitiated',
   },
 

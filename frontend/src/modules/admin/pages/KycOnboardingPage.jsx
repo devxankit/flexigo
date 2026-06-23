@@ -234,7 +234,7 @@ export default function KycOnboardingPage() {
                <table className="w-full">
                   <thead>
                      <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
-                        {['Identity', 'Wallet Balance', 'Persona', 'Liveness Check', 'Registry Date', 'Status', 'Actions'].map((header) => (
+                        {['Identity', 'Wallet Balance', 'Persona', 'Start Date', 'Registry Date', 'Status', 'Actions'].map((header) => (
                            <th key={header} className="text-left py-3 px-2 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                         ))}
                      </tr>
@@ -275,18 +275,25 @@ export default function KycOnboardingPage() {
                                  </div>
                               </td>
                               <td className="py-2 px-2 font-medium text-[var(--text-tertiary)]">{record.role}</td>
-                              <td className="py-2 px-2">
-                                 {(record.status === 'approved' || record.details?.ekycVerified) && !record.vehicleId ? (
-                                    <div className="flex items-center gap-1.5 px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full w-fit">
-                                       <Camera size={8} className="text-emerald-500" />
-                                       <span className="font-medium text-emerald-500">LIVE_MATCH_OK</span>
-                                    </div>
-                                 ) : null}
+                              <td className="py-2 px-2" onClick={(e) => e.stopPropagation()}>
+                                 {!record.hasPlan ? (
+                                    <input
+                                       type="date"
+                                       value={record.adminAssignedStartDate ? record.adminAssignedStartDate.split('T')[0] : ''}
+                                       onChange={async (e) => {
+                                          await updateKycStatus(record._id || record.id, { adminAssignedStartDate: e.target.value });
+                                       }}
+                                       className="px-2 py-1 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded text-[10px] text-[var(--text-primary)] outline-none focus:border-emerald-500/50 cursor-pointer"
+                                    />
+                                 ) : (
+                                    <span className="text-[10px] font-medium text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">Plan Active</span>
+                                 )}
                               </td>
                               <td className="py-2 px-2 font-medium text-[var(--text-tertiary)] whitespace-nowrap">{new Date(record.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</td>
                               <td className="py-2 px-2">
                                  <div className={`inline-flex px-1.5 py-0.5 rounded  font-medium   border  ${record.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' :
                                     record.status === 'pending' ? 'bg-blue-500/10 text-blue-500 border-blue-500/10' :
+                                    record.status === 'inactive' ? 'bg-gray-500/10 text-gray-500 border-gray-500/10' :
                                        'bg-rose-500/10 text-rose-500 border-rose-500/10'
                                     }`}>
                                     {record.status}
@@ -1028,6 +1035,7 @@ export default function KycOnboardingPage() {
                               <option value="pending">Pending</option>
                               <option value="approved">Approved</option>
                               <option value="rejected">Rejected</option>
+                              <option value="inactive">Inactive</option>
                            </select>
                         </div>
                         <button
