@@ -537,7 +537,8 @@ export default function KycOnboardingPage() {
                               </h4>
                               <div className="space-y-1.5">
                                  {[
-                                    { label: 'Aadhaar Card', key: 'aadhaarFront', verified: selectedRecord.details?.ekycVerified },
+                                    { label: 'Aadhaar Front', key: 'aadhaarFront', verified: selectedRecord.details?.ekycVerified },
+                                    { label: 'Aadhaar Back', key: 'aadhaarBack' },
                                     { label: 'PAN Card', key: 'panCard' },
                                     { label: 'Driving License', key: 'drivingLicense' },
                                     { label: 'Certificate', key: 'certificate', isUploadable: true }
