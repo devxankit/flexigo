@@ -66,41 +66,41 @@ export default function OnboardingKYC() {
   const isFlutterApp = () => typeof window !== 'undefined' && !!window.flutter_inappwebview;
 
   // Handle camera via Flutter native handler (app) or show picker modal (web)
-  const handleCameraCapture = async (type, fileInputId) => {
-    if (isFlutterApp()) {
-      try {
-        console.log(`FLUTTER_CAM: Calling openCamera handler for [${type}]`);
-        const result = await window.flutter_inappwebview.callHandler('openCamera');
-        console.log(`FLUTTER_CAM: Result received for [${type}]:`, result?.success);
+  const captureWithFlutter = async (type, fileInputId) => {
+    try {
+      console.log(`FLUTTER_CAM: Calling openCamera handler for [${type}]`);
+      const result = await window.flutter_inappwebview.callHandler('openCamera');
+      console.log(`FLUTTER_CAM: Result received for [${type}]:`, result?.success);
 
-        if (result?.success && result?.base64) {
-          const byteString = atob(result.base64);
-          const ab = new ArrayBuffer(byteString.length);
-          const ia = new Uint8Array(ab);
-          for (let i = 0; i < byteString.length; i++) {
-            ia[i] = byteString.charCodeAt(i);
-          }
-          const mimeType = result.mimeType || 'image/jpeg';
-          const blob = new Blob([ab], { type: mimeType });
-          const file = new File([blob], result.fileName || `${type}_photo.jpg`, { type: mimeType });
-
-          setPreviews(prev => {
-            if (prev[type]) URL.revokeObjectURL(prev[type]);
-            return { ...prev, [type]: URL.createObjectURL(file) };
-          });
-          setUploads(prev => ({ ...prev, [type]: file }));
-          console.log(`FLUTTER_CAM: Photo captured and stored for [${type}]`);
-        } else {
-          console.log(`FLUTTER_CAM: No photo returned for [${type}]`);
+      if (result?.success && result?.base64) {
+        const byteString = atob(result.base64);
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
         }
-      } catch (err) {
-        console.error('FLUTTER_CAM: Error calling Flutter camera handler:', err);
-        document.getElementById(fileInputId)?.click();
+        const mimeType = result.mimeType || 'image/jpeg';
+        const blob = new Blob([ab], { type: mimeType });
+        const file = new File([blob], result.fileName || `${type}_photo.jpg`, { type: mimeType });
+
+        setPreviews(prev => {
+          if (prev[type]) URL.revokeObjectURL(prev[type]);
+          return { ...prev, [type]: URL.createObjectURL(file) };
+        });
+        setUploads(prev => ({ ...prev, [type]: file }));
+        console.log(`FLUTTER_CAM: Photo captured and stored for [${type}]`);
+      } else {
+        console.log(`FLUTTER_CAM: No photo returned for [${type}]`);
       }
-    } else {
-      // Web browser: show Camera vs Upload picker modal
-      setPickerModal({ open: true, type, fileInputId });
+    } catch (err) {
+      console.error('FLUTTER_CAM: Error calling Flutter camera handler:', err);
+      document.getElementById(fileInputId)?.click();
     }
+  };
+
+  const handleCameraCapture = (type, fileInputId) => {
+    // Show picker modal for both web browser and flutter app
+    setPickerModal({ open: true, type, fileInputId });
   };
 
   const closePickerModal = () => setPickerModal({ open: false, type: null, fileInputId: null });
@@ -456,9 +456,16 @@ export default function OnboardingKYC() {
                 }`}>Choose Option</p>
 
               <div className="grid grid-cols-2 gap-4 mb-5">
-                {/* Camera Option — opens getUserMedia live camera */}
+                {/* Camera Option — opens getUserMedia live camera or Flutter Camera */}
                 <button
-                  onClick={() => openWebCamera(pickerModal.type)}
+                  onClick={() => {
+                    if (isFlutterApp()) {
+                      closePickerModal();
+                      captureWithFlutter(pickerModal.type, pickerModal.fileInputId);
+                    } else {
+                      openWebCamera(pickerModal.type);
+                    }
+                  }}
                   className={`flex flex-col items-center gap-3 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${isDark
                     ? 'border-white/10 bg-white/5 hover:border-[#39FF14] hover:bg-[#39FF14]/10'
                     : 'border-slate-200 bg-slate-50 hover:border-emerald-500 hover:bg-emerald-50'
