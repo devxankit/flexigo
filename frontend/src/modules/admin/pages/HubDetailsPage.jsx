@@ -26,9 +26,9 @@ import {
   Wallet
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import AdminStatCard from '../components/AdminStatCard';
-import OpsFilter from '../components/OpsFilter';
-import { useAdminDataStore } from '../store/adminDataStore';
+import AdminStatCard from '../components/AdminStatCard.jsx';
+import OpsFilter from '../components/OpsFilter.jsx';
+import { useAdminDataStore } from '../store/adminDataStore.js';
 
 export default function HubDetailsPage() {
   const { hubId } = useParams();
@@ -328,7 +328,14 @@ export default function HubDetailsPage() {
                         </div>
                       </td>
                       <td className="px-4 py-2 text-xs font-medium text-[var(--text-tertiary)]">{v.model}</td>
-                      <td className="px-4 py-2 text-xs font-medium text-[var(--text-tertiary)]">{v.rider || '—'}</td>
+                      <td className="px-4 py-2">
+                        <div className="flex flex-col">
+                          <span className="text-xs font-medium text-[var(--text-tertiary)]">{v.rider || '—'}</span>
+                          {v.adminAssignedStartDate && (
+                            <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mt-0.5">Start: {new Date(v.adminAssignedStartDate).toLocaleDateString()}</span>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-4 py-2">
                         {v.subscriptionPlan ? (
                           <div className="flex flex-col gap-0.5">

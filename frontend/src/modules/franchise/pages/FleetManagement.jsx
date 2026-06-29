@@ -220,9 +220,15 @@ export default function FleetManagement() {
          header: 'Rider Profile',
          accessor: 'name',
          render: (row) => (
-            <div className="flex flex-col gap-0">
+            <div className="flex flex-col gap-0.5">
                <span className="text-emerald-500 text-[9px] font-black italic tracking-[0.2em] uppercase leading-tight">{row.name || 'Unknown'}</span>
                <span className="text-[6.5px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.3em] italic opacity-60 leading-none">{row.phone}</span>
+               {row.adminAssignedStartDate && (
+                  <span className="text-[7.5px] font-bold text-emerald-500 uppercase tracking-widest mt-1">Start: {new Date(row.adminAssignedStartDate).toLocaleDateString()}</span>
+               )}
+               {row.subscriptionPlan && (
+                  <span className="text-[7.5px] font-bold text-blue-500 uppercase tracking-widest leading-none mt-0.5">Plan: {row.subscriptionPlan.name || row.subscriptionPlan.label || 'Active'}</span>
+               )}
             </div>
          )
       },

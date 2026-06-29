@@ -48,6 +48,7 @@ export default function KycOnboardingPage() {
    const [referralAmount, setReferralAmount] = useState('');
    const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, id: null });
    const [currentPage, setCurrentPage] = useState(1);
+   const [selectedFranchiseRiders, setSelectedFranchiseRiders] = useState({});
    const recordsPerPage = 10;
 
    React.useEffect(() => {
@@ -274,16 +275,59 @@ export default function KycOnboardingPage() {
                                     ₹{record.walletBalance || 0}
                                  </div>
                               </td>
-                              <td className="py-2 px-2 font-medium text-[var(--text-tertiary)]">{record.role}</td>
+                              <td className="py-2 px-2 font-medium text-[var(--text-tertiary)]" onClick={(e) => e.stopPropagation()}>
+                                 <div className="flex flex-col gap-1.5">
+                                    <span>{record.role}</span>
+                                    {record.role?.toLowerCase() === 'franchise' && (() => {
+                                       const franchiseRiders = kycRecords.filter(r => r.role?.toLowerCase() === 'rider' && r.franchise && r.franchise.toString() === (record._id || record.id).toString());
+                                       if (franchiseRiders.length === 0) return null;
+                                       
+                                       const selectedRiderId = selectedFranchiseRiders[record._id || record.id] || franchiseRiders[0]?._id || franchiseRiders[0]?.id;
+                                       
+                                       return (
+                                          <select
+                                             value={selectedRiderId}
+                                             onChange={(e) => setSelectedFranchiseRiders(prev => ({ ...prev, [record._id || record.id]: e.target.value }))}
+                                             className="px-2 py-1 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded text-[10px] font-semibold text-[var(--text-primary)] outline-none focus:border-emerald-500/50 cursor-pointer min-w-[160px] max-w-[200px]"
+                                          >
+                                             {franchiseRiders.map(r => (
+                                                <option key={r._id || r.id} value={r._id || r.id}>{r.name || r.phone}</option>
+                                             ))}
+                                          </select>
+                                       );
+                                    })()}
+                                 </div>
+                              </td>
                               <td className="py-2 px-2" onClick={(e) => e.stopPropagation()}>
-                                 <input
-                                    type="date"
-                                    value={record.adminAssignedStartDate ? record.adminAssignedStartDate.split('T')[0] : ''}
-                                    onChange={async (e) => {
-                                       await updateKycStatus(record._id || record.id, { adminAssignedStartDate: e.target.value });
-                                    }}
-                                    className="px-2 py-1 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded text-[10px] text-[var(--text-primary)] outline-none focus:border-emerald-500/50 cursor-pointer"
-                                 />
+                                 {record.role?.toLowerCase() === 'franchise' ? (() => {
+                                    const franchiseRiders = kycRecords.filter(r => r.role?.toLowerCase() === 'rider' && r.franchise && r.franchise.toString() === (record._id || record.id).toString());
+                                    if (franchiseRiders.length === 0) return <span className="text-[10px] text-[var(--text-tertiary)] italic">No Riders</span>;
+                                    
+                                    const selectedRiderId = selectedFranchiseRiders[record._id || record.id] || franchiseRiders[0]?._id || franchiseRiders[0]?.id;
+                                    const selectedRider = franchiseRiders.find(r => (r._id || r.id) === selectedRiderId);
+                                    
+                                    return selectedRider ? (
+                                       <input
+                                          type="date"
+                                          value={selectedRider.adminAssignedStartDate ? selectedRider.adminAssignedStartDate.split('T')[0] : ''}
+                                          onChange={async (e) => {
+                                             await updateKycStatus(selectedRiderId, { adminAssignedStartDate: e.target.value });
+                                             fetchKycRecords(); // Refresh to ensure UI updates
+                                          }}
+                                          className="px-2 py-1 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded text-[9px] text-[var(--text-primary)] outline-none focus:border-emerald-500/50 cursor-pointer w-[120px]"
+                                       />
+                                    ) : null;
+                                 })() : (
+                                    <input
+                                       type="date"
+                                       value={record.adminAssignedStartDate ? record.adminAssignedStartDate.split('T')[0] : ''}
+                                       onChange={async (e) => {
+                                          await updateKycStatus(record._id || record.id, { adminAssignedStartDate: e.target.value });
+                                          fetchKycRecords();
+                                       }}
+                                       className="px-2 py-1 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded text-[10px] text-[var(--text-primary)] outline-none focus:border-emerald-500/50 cursor-pointer"
+                                    />
+                                 )}
                               </td>
                               <td className="py-2 px-2 font-medium text-[var(--text-tertiary)] whitespace-nowrap">{new Date(record.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}</td>
                               <td className="py-2 px-2">

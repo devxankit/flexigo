@@ -454,14 +454,27 @@ export const getKycRecords = async (req, res) => {
     const { range } = req.query;
     const dateFilter = getDateFilter(range, 'createdAt');
 
-    const [riders, franchises] = await Promise.all([
-      Rider.find({ ...dateFilter, kycStatus: { $ne: 'uninitiated' } }).populate('vehicleId', 'plate').sort('-createdAt'),
-      Franchise.find(dateFilter).sort('-createdAt')
+    const [riders, franchises, activeAssignments] = await Promise.all([
+      Rider.find({ ...dateFilter, kycStatus: { $ne: 'uninitiated' } })
+        .populate({ path: 'vehicleId', populate: { path: 'franchise' } })
+        .sort('-createdAt')
+        .lean(),
+      Franchise.find(dateFilter).sort('-createdAt').lean(),
+      Assignment.find({ status: 'active' }).populate({ path: 'vehicle', select: 'franchise plate' }).lean()
     ]);
 
     const records = [
       ...riders.map(r => {
         const normalizedKycStatus = r.kycStatus === 'uninitiated' ? 'pending' : r.kycStatus;
+        let franchiseId = r.franchise || r.vehicleId?.franchise?._id || r.vehicleId?.franchise || null;
+        
+        if (!franchiseId) {
+           const assignment = activeAssignments.find(a => String(a.rider) === String(r._id));
+           if (assignment && assignment.vehicle) {
+             franchiseId = assignment.vehicle.franchise?._id || assignment.vehicle.franchise || null;
+           }
+        }
+
         return {
           id: r._id,
           name: r.name || r.phone,
@@ -476,7 +489,8 @@ export const getKycRecords = async (req, res) => {
           details: r.kycDetails,
           walletBalance: r.walletBalance || 0,
           adminAssignedStartDate: r.adminAssignedStartDate || null,
-          isBlocked: r.isBlocked || false
+          isBlocked: r.isBlocked || false,
+          franchise: franchiseId
         };
       }),
       ...franchises.map(f => {
@@ -2476,8 +2490,17 @@ export const getHubVehicles = async (req, res) => {
           assignment = await Assignment.findOne({ vehicle: vehicle._id }).sort('-startTime').lean();
         }
         if (assignment) {
-          const rider = await Rider.findById(assignment.rider).select('name phone').lean();
-          if (rider) vehicle.rider = rider.name || rider.phone;
+          const rider = await Rider.findById(assignment.rider)
+            .populate('subscriptionPlan')
+            .select('name phone subscriptionPlan adminAssignedStartDate depositPaid subscriptionEnd')
+            .lean();
+          if (rider) {
+            vehicle.rider = rider.name || rider.phone;
+            vehicle.subscriptionPlan = rider.subscriptionPlan;
+            vehicle.adminAssignedStartDate = rider.adminAssignedStartDate;
+            vehicle.depositPaid = rider.depositPaid;
+            vehicle.subscriptionEnd = rider.subscriptionEnd;
+          }
         }
       } catch (_) { }
     }

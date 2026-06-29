@@ -5,11 +5,11 @@ import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function LeavesCalendarView() {
   const { leaves, fetchLeaves, staff, addLeave, updateLeaveStatus } = useAdminDataStore();
-  
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const [newLeave, setNewLeave] = useState({
     staffId: '',
     startDate: '',
@@ -36,7 +36,7 @@ export default function LeavesCalendarView() {
   const handleAddLeave = async (e) => {
     e.preventDefault();
     if (!newLeave.staffId || !newLeave.startDate || !newLeave.endDate || !newLeave.reason) return;
-    
+
     setIsSubmitting(true);
     await addLeave(newLeave);
     setIsSubmitting(false);
@@ -117,15 +117,27 @@ export default function LeavesCalendarView() {
                     {day}
                   </span>
                 </div>
-                
+
                 <div className="space-y-1.5">
                   {dayLeaves.slice(0, 3).map(leave => (
-                    <div 
-                      key={leave._id} 
-                      title={leave.reason}
-                      className={`px-1.5 py-1 text-[8px] font-bold uppercase truncate rounded border ${getLeaveColor(leave.leaveType)}`}
+                    <div
+                      key={leave._id}
+                      title={`${leave.reason}\nApplied on: ${new Date(leave.createdAt).toLocaleDateString()}`}
+                      className={`px-2 py-1.5 flex flex-col gap-0.5 rounded-md border ${getLeaveColor(leave.leaveType)}`}
                     >
-                      {leave.staffId?.name || 'Unknown'} - {leave.leaveType}
+                      <span className="text-[10px] font-black uppercase truncate">
+                        {leave.staffId?.name || 'Unknown'} - {leave.leaveType}
+                      </span>
+                      {leave.createdAt && (
+                        <div className="flex flex-col gap-0.5 mt-0.5">
+                          <span className="text-[8px] font-bold opacity-80 uppercase tracking-widest truncate">
+                            Duration: {new Date(leave.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} - {new Date(leave.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                          </span>
+                          <span className="text-[8px] font-bold opacity-60 uppercase tracking-widest truncate">
+                            Applied: {new Date(leave.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   ))}
                   {dayLeaves.length > 3 && (
