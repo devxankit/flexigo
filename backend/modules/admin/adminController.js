@@ -467,12 +467,12 @@ export const getKycRecords = async (req, res) => {
       ...riders.map(r => {
         const normalizedKycStatus = r.kycStatus === 'uninitiated' ? 'pending' : r.kycStatus;
         let franchiseId = r.franchise || r.vehicleId?.franchise?._id || r.vehicleId?.franchise || null;
-        
+
         if (!franchiseId) {
-           const assignment = activeAssignments.find(a => String(a.rider) === String(r._id));
-           if (assignment && assignment.vehicle) {
-             franchiseId = assignment.vehicle.franchise?._id || assignment.vehicle.franchise || null;
-           }
+          const assignment = activeAssignments.find(a => String(a.rider) === String(r._id));
+          if (assignment && assignment.vehicle) {
+            franchiseId = assignment.vehicle.franchise?._id || assignment.vehicle.franchise || null;
+          }
         }
 
         return {
@@ -534,7 +534,7 @@ export const getKycRecords = async (req, res) => {
 
 export const updateKycStatus = async (req, res) => {
   try {
-    const { status, name, phone, referenceName, referenceNumber, referenceName2, referenceNumber2, kycDetails, adminAssignedStartDate } = req.body;
+    const { status, name, phone, referenceName, referenceNumber, referenceName2, referenceNumber2, kycDetails, adminAssignedStartDate, franchise } = req.body;
     const id = req.params.id;
 
     const updateFields = {};
@@ -545,6 +545,7 @@ export const updateKycStatus = async (req, res) => {
     if (name !== undefined) updateFields.name = name;
     if (phone !== undefined) updateFields.phone = phone;
     if (adminAssignedStartDate !== undefined) updateFields.adminAssignedStartDate = adminAssignedStartDate;
+    if (franchise !== undefined) updateFields.franchise = franchise || null;
 
     // Extract dynamic reference fields (checking flat fields first, then falling back to nested)
     const refName = referenceName !== undefined ? referenceName : kycDetails?.referenceName;
@@ -1418,7 +1419,7 @@ export const getStaffLeaves = async (req, res) => {
     const Leave = (await import('./leaveModel.js')).default;
     const { month, year } = req.query;
     let query = {};
-    
+
     if (month && year) {
       const start = new Date(year, month - 1, 1);
       const end = new Date(year, month, 0, 23, 59, 59);
@@ -1430,7 +1431,7 @@ export const getStaffLeaves = async (req, res) => {
         ]
       };
     }
-    
+
     const leaves = await Leave.find(query).populate('staffId', 'name role dept').sort({ startDate: -1 });
     res.status(200).json({ success: true, leaves });
   } catch (error) {
@@ -1442,7 +1443,7 @@ export const createStaffLeave = async (req, res) => {
   try {
     const Leave = (await import('./leaveModel.js')).default;
     const { staffId, startDate, endDate, leaveType, reason } = req.body;
-    
+
     const newLeave = await Leave.create({
       staffId,
       startDate,
@@ -1451,9 +1452,9 @@ export const createStaffLeave = async (req, res) => {
       reason,
       status: 'Approved' // auto-approve for now based on request
     });
-    
+
     const populatedLeave = await Leave.findById(newLeave._id).populate('staffId', 'name role dept');
-    
+
     res.status(201).json({ success: true, message: 'Leave created', leave: populatedLeave });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -1464,10 +1465,10 @@ export const updateStaffLeave = async (req, res) => {
   try {
     const Leave = (await import('./leaveModel.js')).default;
     const { status } = req.body;
-    
+
     const leave = await Leave.findByIdAndUpdate(req.params.id, { status }, { new: true }).populate('staffId', 'name role dept');
     if (!leave) return res.status(404).json({ success: false, message: 'Leave not found' });
-    
+
     res.status(200).json({ success: true, message: 'Leave updated', leave });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

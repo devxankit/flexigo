@@ -278,6 +278,24 @@ export default function KycOnboardingPage() {
                               <td className="py-2 px-2 font-medium text-[var(--text-tertiary)]" onClick={(e) => e.stopPropagation()}>
                                  <div className="flex flex-col gap-1.5">
                                     <span>{record.role}</span>
+                                    {record.role?.toLowerCase() === 'rider' && (
+                                       <select
+                                          value={record.franchise || ''}
+                                          onChange={async (e) => {
+                                             const newFranchise = e.target.value;
+                                             await updateKycStatus(record._id || record.id, { franchise: newFranchise });
+                                          }}
+                                          className="px-2 py-1 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded text-[10px] font-semibold text-[var(--text-primary)] outline-none focus:border-emerald-500/50 cursor-pointer min-w-[120px]"
+                                       >
+                                          <option value="">No Franchise</option>
+                                          {kycRecords
+                                             .filter(r => r.role?.toLowerCase() === 'franchise' && r.status === 'approved')
+                                             .map(f => (
+                                                <option key={f._id || f.id} value={f._id || f.id}>{f.name || f.phone}</option>
+                                             ))
+                                          }
+                                       </select>
+                                    )}
                                     {record.role?.toLowerCase() === 'franchise' && (() => {
                                        const franchiseRiders = kycRecords.filter(r => r.role?.toLowerCase() === 'rider' && r.franchise && r.franchise.toString() === (record._id || record.id).toString());
                                        if (franchiseRiders.length === 0) return null;
@@ -563,6 +581,29 @@ export default function KycOnboardingPage() {
                                  <div className={`px-1.5 py-0.5 rounded text-xs font-medium border border-[var(--border-subtle)]`}>
                                     {selectedRecord.role}
                                  </div>
+                                 {selectedRecord.role?.toLowerCase() === 'rider' && (
+                                    <div className="flex items-center gap-1.5 ml-2">
+                                       <span className="text-[9px] text-[var(--text-tertiary)] uppercase tracking-widest font-black">Franchise:</span>
+                                       <select 
+                                          value={selectedRecord.franchise || ''}
+                                          onChange={async (e) => {
+                                             const newFranchise = e.target.value;
+                                             const id = selectedRecord.id || selectedRecord._id;
+                                             await updateKycStatus(id, { franchise: newFranchise });
+                                          }}
+                                          className="px-2 py-1 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded text-[9px] font-semibold text-[var(--text-primary)] outline-none focus:border-emerald-500/50 cursor-pointer min-w-[140px]"
+                                       >
+                                          <option value="">No Franchise</option>
+                                          {kycRecords
+                                             .filter(r => r.role?.toLowerCase() === 'franchise' && r.status === 'approved')
+                                             .map(f => (
+                                                <option key={f._id || f.id} value={f._id || f.id}>
+                                                   {f.name || f.phone}
+                                                </option>
+                                          ))}
+                                       </select>
+                                    </div>
+                                 )}
                               </div>
                            </div>
                         </div>
