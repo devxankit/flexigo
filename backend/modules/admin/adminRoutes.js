@@ -324,7 +324,18 @@ router.get('/payments/due-alerts', protectAdmin, async (req, res) => {
     }).populate('subscriptionPlan');
 
     const expiredDueRiders = expiredRiders
-      .filter(r => r.subscriptionPlan && r.subscriptionPlan.type === 'Weekly')
+      .filter(r => {
+        if (!r.subscriptionPlan || r.subscriptionPlan.type !== 'Weekly') return false;
+        
+        const subEnd = new Date(r.subscriptionEnd);
+        subEnd.setHours(0, 0, 0, 0);
+        
+        const diffTime = todayStart.getTime() - subEnd.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
+        // Show ONLY exactly on the expiry day (0), 7th day, 14th day, etc. (roj roj nahi)
+        return diffDays >= 0 && diffDays % 7 === 0;
+      })
       .map(r => ({
         _id: r._id,
         name: r.name,
@@ -347,8 +358,9 @@ router.get('/payments/due-alerts', protectAdmin, async (req, res) => {
         startDate.setHours(0, 0, 0, 0);
         const diffTime = todayStart.getTime() - startDate.getTime();
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        // Show if 7 days or more have passed
-        return diffDays >= 7;
+        
+        // Show ONLY exactly on 7th, 14th, 21st day etc. (roj roj nahi)
+        return diffDays > 0 && diffDays % 7 === 0;
       })
       .map(r => {
         // Calculate the exact due date (7 days after start date)

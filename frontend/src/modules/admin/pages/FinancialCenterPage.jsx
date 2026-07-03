@@ -206,7 +206,7 @@ export default function FinancialCenterPage() {
                   </tbody>
                </table>
             </div>
-            
+
             {/* Pagination */}
             {totalPages > 1 && (
                <div className="flex items-center justify-between px-4 py-3 border-t border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
@@ -231,11 +231,10 @@ export default function FinancialCenterPage() {
                                  )}
                                  <button
                                     onClick={() => setCurrentPage(page)}
-                                    className={`min-w-[28px] h-7 px-1 flex items-center justify-center rounded-lg text-[10px] font-black transition-all border ${
-                                       currentPage === page 
-                                          ? 'bg-emerald-600 border-emerald-600 text-white shadow-md' 
+                                    className={`min-w-[28px] h-7 px-1 flex items-center justify-center rounded-lg text-[10px] font-black transition-all border ${currentPage === page
+                                          ? 'bg-emerald-600 border-emerald-600 text-white shadow-md'
                                           : 'border-transparent text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)] hover:border-[var(--border-subtle)]'
-                                    }`}
+                                       }`}
                                  >
                                     {page}
                                  </button>
