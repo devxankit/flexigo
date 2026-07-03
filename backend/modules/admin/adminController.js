@@ -3249,8 +3249,9 @@ export const processAdhocPayment = async (req, res) => {
   }
 };
 
-// @desc    Get adhoc payments history
-// @route   GET /api/v1/admin/adhoc-payments
+// @desc Get adhoc payments history
+// @route GET /api/v1/admin/adhoc-payments
+
 export const getAdhocPayments = async (req, res) => {
   try {
     const transactions = await AdminTransaction.find({ targetType: 'Adhoc' })

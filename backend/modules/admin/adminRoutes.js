@@ -310,17 +310,20 @@ router.post('/payments/fix-pending-qr', protectAdmin, async (req, res) => {
 router.get('/payments/due-alerts', protectAdmin, async (req, res) => {
   try {
     const now = new Date();
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+
     const Rider = (await import('../rider/riderModel.js')).default;
     const SubscriptionPlan = (await import('./subscriptionPlanModel.js')).default;
 
-    // Find riders with expired subscriptions that were Weekly plans
+    // 1. Find riders with expired subscriptions that were Weekly plans
     const expiredRiders = await Rider.find({
       subscriptionEnd: { $lt: now },
       subscriptionPlan: { $ne: null },
-      status: { $in: ['active', 'approved'] }
+      status: { $in: ['active', 'approved', 'suspended'] } // Include suspended as they might have been suspended due to non-payment
     }).populate('subscriptionPlan');
 
-    const dueRiders = expiredRiders
+    const expiredDueRiders = expiredRiders
       .filter(r => r.subscriptionPlan && r.subscriptionPlan.type === 'Weekly')
       .map(r => ({
         _id: r._id,
@@ -330,6 +333,40 @@ router.get('/payments/due-alerts', protectAdmin, async (req, res) => {
         amount: r.subscriptionPlan.price,
         expiredAt: r.subscriptionEnd
       }));
+
+    // 2. Find riders who are >= 8 days past their adminAssignedStartDate and have no active plan
+    const unpaidRiders = await Rider.find({
+      adminAssignedStartDate: { $ne: null },
+      subscriptionPlan: null,
+      status: { $nin: ['rejected', 'inactive'] }
+    });
+
+    const startDateDueRiders = unpaidRiders
+      .filter(r => {
+        const startDate = new Date(r.adminAssignedStartDate);
+        startDate.setHours(0, 0, 0, 0);
+        const diffTime = todayStart.getTime() - startDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        // Show if 7 days or more have passed
+        return diffDays >= 7;
+      })
+      .map(r => {
+        // Calculate the exact due date (7 days after start date)
+        const expiredAt = new Date(r.adminAssignedStartDate);
+        expiredAt.setDate(expiredAt.getDate() + 7);
+
+        return {
+          _id: r._id,
+          name: r.name,
+          phone: r.phone,
+          planName: 'Initial Weekly Plan',
+          amount: '1750', // Default fallback for UI
+          expiredAt: expiredAt
+        };
+      });
+
+    // Combine both arrays
+    const dueRiders = [...expiredDueRiders, ...startDateDueRiders];
 
     res.status(200).json({ success: true, riders: dueRiders });
   } catch (error) {

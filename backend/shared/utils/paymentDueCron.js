@@ -18,9 +18,12 @@ export const startPaymentDueCron = () => {
       const todayStart = new Date(now);
       todayStart.setHours(0, 0, 0, 0);
 
-      // Find ALL riders whose subscription ended before today
+      // Find ALL riders whose subscription ends today or ended before today
+      const endOfToday = new Date(todayStart);
+      endOfToday.setHours(23, 59, 59, 999);
+
       const expiredRiders = await Rider.find({
-        subscriptionEnd: { $lt: todayStart },
+        subscriptionEnd: { $lte: endOfToday },
         subscriptionPlan: { $ne: null },
         status: { $in: ['active', 'approved', 'suspended'] } // Include suspended in case they were suspended for non-payment
       }).populate('subscriptionPlan');
@@ -35,11 +38,11 @@ export const startPaymentDueCron = () => {
         const diffTime = todayStart.getTime() - subEnd.getTime();
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-        // Notify on Day 1 (exactly next day / 8th day from start), Day 8 (15th day from start), Day 15, etc.
+        // Notify on Day 0 (7th day from start / exactly the day it expires), Day 7 (14th day), etc.
         // E.g. Plan starts June 9 -> Ends June 16.
-        // June 17: diffDays = 1 -> Alert 1
-        // June 24: diffDays = 8 -> Alert 2
-        return diffDays >= 1 && (diffDays - 1) % 7 === 0;
+        // June 16: diffDays = 0 -> Alert 1
+        // June 23: diffDays = 7 -> Alert 2
+        return diffDays >= 0 && diffDays % 7 === 0;
       });
 
       if (weeklyExpiredRiders.length === 0) {
@@ -68,7 +71,7 @@ export const startPaymentDueCron = () => {
           const franchise = await Franchise.findById(rider.franchise);
           if (franchise) {
             const franchiseDueMsg = `Payment Due: Rider ${rider.name || rider.phone} has an expired ${planName} (₹${amount}) due since ${dueDateString}. Please pay to avoid service interruption.`;
-            
+
             // Push to Franchise Owner
             const franchiseToken = franchise.fcmToken || franchise.fcmTokenMobile;
             if (franchiseToken) {
@@ -182,19 +185,19 @@ export const startPaymentDueCron = () => {
         const diffTime = todayStart.getTime() - startDate.getTime();
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-        // Send reminder exactly on the 8th day (diffDays === 8)
-        return diffDays === 8;
+        // Send reminder exactly on the 7th day (diffDays === 7)
+        return diffDays === 7;
       });
 
       if (ridersToNotify.length === 0) {
-        console.log('✅ [CRON] No 8-day admin start date dues found for today.');
+        console.log('✅ [CRON] No 7-day admin start date dues found for today.');
         return;
       }
 
-      console.log(`⚠️ [CRON] Found ${ridersToNotify.length} riders unpaid 8 days after admin start date.`);
+      console.log(`⚠️ [CRON] Found ${ridersToNotify.length} riders unpaid 7 days after admin start date.`);
 
       for (const rider of ridersToNotify) {
-        const message = `Reminder: 8 days have passed since your assigned start date. Please complete your subscription payment to continue using the service.`;
+        const message = `Reminder: 7 days have passed since your assigned start date. Please complete your subscription payment to continue using the service.`;
 
         // Notify Rider
         const riderToken = rider.fcmToken || rider.fcmTokenMobile;
@@ -220,7 +223,7 @@ export const startPaymentDueCron = () => {
         if (rider.franchise) {
           const franchise = await Franchise.findById(rider.franchise);
           if (franchise) {
-            const franchiseMsg = `Reminder: Rider ${rider.name || rider.phone} has not completed plan payment 8 days after admin-assigned start date.`;
+            const franchiseMsg = `Reminder: Rider ${rider.name || rider.phone} has not completed plan payment 7 days after admin-assigned start date.`;
             const franchiseToken = franchise.fcmToken || franchise.fcmTokenMobile;
             if (franchiseToken) {
               try {
