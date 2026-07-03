@@ -378,9 +378,25 @@ router.get('/payments/due-alerts', protectAdmin, async (req, res) => {
       });
 
     // Combine both arrays
-    const dueRiders = [...expiredDueRiders, ...startDateDueRiders];
+    const combinedDueRiders = [...expiredDueRiders, ...startDateDueRiders];
 
-    res.status(200).json({ success: true, riders: dueRiders });
+    // Final safety check: if a rider has a successful transaction in the last 7 days, don't show them as due
+    const Transaction = (await import('../rider/transactionModel.js')).default;
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    
+    const finalDueRiders = [];
+    for (const rider of combinedDueRiders) {
+      const recentTxn = await Transaction.findOne({
+        riderId: rider._id,
+        status: 'success',
+        createdAt: { $gte: sevenDaysAgo }
+      });
+      if (!recentTxn) {
+        finalDueRiders.push(rider);
+      }
+    }
+
+    res.status(200).json({ success: true, riders: finalDueRiders });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
