@@ -157,14 +157,7 @@ export default function WalletScreen() {
             <span className="text-flexigo-teal font-black uppercase text-[10px] tracking-widest shadow-sm">Active</span>
           </div>
           <div className="mt-4 flex gap-3">
-            <NeonButton
-              onClick={() => { setAmount(''); setIsTopUpOpen(true); }}
-              className="px-8"
-              variant="solid"
-              size="md"
-            >
-              Add Money →
-            </NeonButton>
+            {/* Add Money button removed as per requirement: only Admin can add bonus/funds */}
             {!isFranchiseRider ? (
               <button
                 onClick={() => { setAmount(''); setUpiId(''); setIsWithdrawOpen(true); }}

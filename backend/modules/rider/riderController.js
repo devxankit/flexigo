@@ -264,13 +264,13 @@ export const uploadAttachment = async (req, res) => {
     if (!file) return res.status(400).json({ success: false, message: 'No file provided' });
 
     const result = await cloudinary.uploader.upload(file, { folder: `flexigo/riders/${rider._id}/attachments` });
-    
+
     rider.kycDetails = rider.kycDetails || {};
     rider.kycDetails.certificate = result.secure_url;
-    
+
     rider.kycDetails.attachments = rider.kycDetails.attachments || [];
     rider.kycDetails.attachments.push({ name: fileName || 'Certificate', url: result.secure_url });
-    
+
     await rider.save();
 
     res.status(200).json({ success: true, message: 'Attachment uploaded successfully', rider });
@@ -467,20 +467,20 @@ export const getWalletData = async (req, res) => {
 export const getSubscribersByFranchise = async (req, res) => {
   try {
     const franchiseId = req.franchise ? req.franchise._id : req.query.franchiseId;
-    
+
     // Find vehicles belonging to this franchise
     const Franchise = (await import('../franchise/franchiseModel.js')).default;
     const Vehicle = (await import('../fleet/vehicleModel.js')).default;
     const vehicles = await Vehicle.find({ franchise: franchiseId });
     const vehicleIds = vehicles.map(v => v._id);
 
-    const subscribers = await Rider.find({ 
+    const subscribers = await Rider.find({
       $or: [
         { franchise: franchiseId },
         { vehicleId: { $in: vehicleIds } }
       ]
     }).populate('subscriptionPlan');
-    
+
     res.status(200).json({ success: true, subscribers });
   } catch (error) { res.status(500).json({ success: false, message: error.message }); }
 };
@@ -731,7 +731,7 @@ export const getRiderPayments = async (req, res) => {
 
       if (!rider.subscriptionEnd || new Date(rider.subscriptionEnd) < new Date()) {
         isDue = true;
-        
+
         if (rider.addOff >= dueAmount) {
           // Auto-heal: Renew subscription if addOff covers the due amount
           rider.addOff -= dueAmount;
@@ -739,7 +739,7 @@ export const getRiderPayments = async (req, res) => {
           rider.subscriptionEnd = new Date(Date.now() + durationMs);
           rider.status = 'active';
           await rider.save();
-          
+
           isDue = false;
           dueAmount = 0;
           nextDueDate = rider.subscriptionEnd;
@@ -1144,7 +1144,7 @@ export const payDepositViaWallet = async (req, res) => {
     const { phone, planId } = req.body;
     const rider = await Rider.findOne({ phone }).populate('franchise');
     if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
-    
+
     if (rider.franchise) {
       return res.status(403).json({ success: false, message: 'Payments are managed by your franchise owner.' });
     }
