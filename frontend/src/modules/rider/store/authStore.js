@@ -75,6 +75,34 @@ export const useAuthStore = create(
         }
       },
 
+      loginWithPassword: async (phone, password) => {
+        try {
+          const res = await api.post('/rider/auth/login', { phone, password });
+          if (res.data.success) {
+            set({ 
+              isAuthenticated: true, 
+              user: res.data.rider, 
+              token: res.data.token,
+              kycStatus: res.data.rider.kycStatus 
+            });
+            return { success: true, rider: res.data.rider };
+          }
+        } catch (error) {
+          return { success: false, message: error.response?.data?.message || 'Invalid Credentials' };
+        }
+      },
+
+      resetPassword: async (phone, otp, newPassword) => {
+        try {
+          const res = await api.post('/rider/auth/reset-password', { phone, otp, newPassword });
+          if (res.data.success) {
+            return { success: true };
+          }
+        } catch (error) {
+          return { success: false, message: error.response?.data?.message || 'Failed to reset password' };
+        }
+      },
+
       updateKYC: async (kycData) => {
         try {
           const { phone } = get();

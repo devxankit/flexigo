@@ -75,7 +75,13 @@ export default function RiderRoutes() {
         <Route path="/support" element={<SupportScreen />} />
         <Route path="/history" element={<PickupHistoryScreen />} />
         <Route path="/notifications" element={<RiderNotificationsScreen />} />
+        
+        {/* Catch-all for unmatched protected routes */}
+        <Route path="*" element={<HomeDashboard />} />
       </Route>
+      
+      {/* Global Catch-all */}
+      <Route path="*" element={<AuthPhone />} />
     </Routes>
   );
 }

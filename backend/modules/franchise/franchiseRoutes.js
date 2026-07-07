@@ -12,6 +12,7 @@ import {
   saveFcmToken,
   addVehicle,
   franchiseLogin,
+  resetPassword,
   getNotifications,
   markNotificationRead,
   markAllNotificationsRead,
@@ -34,6 +35,7 @@ const router = express.Router();
 router.post('/auth/send-otp', sendOTP);
 router.post('/auth/verify-otp', verifyOTP);
 router.post('/auth/login', franchiseLogin);
+router.post('/auth/reset-password', resetPassword);
 router.post('/auth/save-fcm-token', protectFranchise, saveFcmToken);
 router.get('/plans', getFranchisePlans);
 router.post('/update-registration', protectFranchise, updateRegistration);

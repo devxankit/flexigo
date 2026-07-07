@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useThemeStore } from '../store/themeStore';
+import { Eye, EyeOff } from 'lucide-react';
 
 export function AnimatedInput({
   label,
@@ -18,6 +19,7 @@ export function AnimatedInput({
   variant = 'default', // 'default' | 'minimal'
 }) {
   const [focused, setFocused] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
 
@@ -45,7 +47,7 @@ export function AnimatedInput({
           }`}>{prefix}</span>
         )}
         <input
-          type={type}
+          type={type === 'password' && showPassword ? 'text' : type}
           name={name}
           value={value}
           onChange={onChange}
@@ -60,6 +62,17 @@ export function AnimatedInput({
             isDark ? 'text-white placeholder:text-gray-600' : 'text-slate-900 placeholder:text-slate-400'
           }`}
         />
+        {type === 'password' && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className={`pr-4 pl-2 focus:outline-none transition-colors duration-500 ${
+              isDark ? 'text-gray-400 hover:text-white' : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        )}
       </div>
     </div>
   );

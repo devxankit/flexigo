@@ -13,9 +13,15 @@ export default function AuthPhone() {
   const navigate = useNavigate();
   const [phone, setPhone] = useState('');
   const [showLegal, setShowLegal] = useState(false);
-  const { sendOTP } = useAuthStore();
+  const { sendOTP, verifyOTP, loginWithPassword, resetPassword } = useAuthStore();
   const { theme } = useThemeStore();
   const [loading, setLoading] = useState(false);
+
+  const [loginMode, setLoginMode] = useState('otp'); // 'otp', 'password', 'reset'
+  const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
 
   const isDark = theme === 'dark';
   const isValid = phone.length === 10 && /^\d+$/.test(phone);
@@ -40,7 +46,60 @@ export default function AuthPhone() {
     setLoading(false);
 
     if (result.success) {
-      navigate('/rider/auth/otp');
+      if (loginMode === 'otp') {
+        navigate('/rider/auth/otp');
+      } else {
+        setOtpSent(true);
+      }
+    } else {
+      setError(result.message);
+      setIsShake(true);
+      setTimeout(() => setIsShake(false), 500);
+    }
+  };
+
+  const handlePasswordLogin = async () => {
+    if (!isValid || !password) {
+      setError('Please enter valid details');
+      setIsShake(true);
+      setTimeout(() => setIsShake(false), 500);
+      return;
+    }
+    setLoading(true);
+    setError('');
+    const result = await loginWithPassword(phone, password);
+    setLoading(false);
+    if (result.success) {
+      if (result.rider?.isRegistered || result.rider?.kycStatus === 'approved') {
+        navigate('/rider/home'); 
+      } else {
+        navigate('/rider/onboarding');
+      }
+    } else {
+      setError(result.message);
+      setIsShake(true);
+      setTimeout(() => setIsShake(false), 500);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!isValid || !otp || !newPassword) {
+      setError('Please enter valid details');
+      setIsShake(true);
+      setTimeout(() => setIsShake(false), 500);
+      return;
+    }
+    setLoading(true);
+    setError('');
+    const result = await resetPassword(phone, otp, newPassword);
+    setLoading(false);
+    if (result.success) {
+      setLoginMode('password');
+      setOtpSent(false);
+      setPhone('');
+      setPassword('');
+      setNewPassword('');
+      setOtp('');
     } else {
       setError(result.message);
       setIsShake(true);
@@ -49,11 +108,11 @@ export default function AuthPhone() {
   };
 
   useEffect(() => {
-    if (isValid && !loading && !hasAutoSent) {
+    if (isValid && !loading && !hasAutoSent && loginMode === 'otp') {
       setHasAutoSent(true);
       handleSendOTP();
     }
-  }, [phone, isValid, loading, hasAutoSent]);
+  }, [phone, isValid, loading, hasAutoSent, loginMode]);
 
   return (
     <PageWrapper noHeader>
@@ -111,7 +170,28 @@ export default function AuthPhone() {
           transition={{ delay: 0.2 }}
           className="flex-1 flex flex-col gap-6 items-center text-center"
         >
-          <div className="w-full text-left">
+          <div className="flex bg-black/5 p-1 rounded-2xl border border-black/5 dark:border-white/5 mb-2 w-full max-w-[280px]">
+            <button 
+              onClick={() => { setLoginMode('otp'); setHasAutoSent(false); }}
+              className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${loginMode === 'otp' ? 'bg-flexigo-teal text-white shadow-lg' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'}`}
+            >
+              OTP
+            </button>
+            <button 
+              onClick={() => { setLoginMode('password'); setHasAutoSent(false); }}
+              className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${loginMode === 'password' ? 'bg-flexigo-teal text-white shadow-lg' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'}`}
+            >
+              Password
+            </button>
+            <button 
+              onClick={() => { setLoginMode('reset'); setHasAutoSent(false); setOtpSent(false); }}
+              className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${loginMode === 'reset' ? 'bg-flexigo-teal text-white shadow-lg' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'}`}
+            >
+              Reset
+            </button>
+          </div>
+
+          <div className="w-full text-left space-y-4">
             <AnimatedInput
               label="Mobile Number"
               type="tel"
@@ -127,11 +207,55 @@ export default function AuthPhone() {
               autoFocus
               status={error ? 'error' : (isValid ? 'success' : '')}
             />
+
+            {loginMode === 'password' && (
+              <AnimatedInput
+                label="Password"
+                type="password"
+                value={password}
+                onChange={(e) => {
+                  setError('');
+                  setPassword(e.target.value);
+                }}
+                placeholder="Enter password"
+                status={error ? 'error' : ''}
+              />
+            )}
+
+            {loginMode === 'reset' && otpSent && (
+              <>
+                <AnimatedInput
+                  label="OTP"
+                  type="text"
+                  inputMode="numeric"
+                  value={otp}
+                  onChange={(e) => {
+                    setError('');
+                    setOtp(e.target.value.replace(/\D/, '').slice(0, 6));
+                  }}
+                  placeholder="Enter 6-digit OTP"
+                  maxLength={6}
+                  status={error ? 'error' : ''}
+                />
+                <AnimatedInput
+                  label="New Password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => {
+                    setError('');
+                    setNewPassword(e.target.value);
+                  }}
+                  placeholder="Enter new password"
+                  status={error ? 'error' : ''}
+                />
+              </>
+            )}
+
             {error && (
               <motion.p 
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-rose-500 text-[10px] font-bold uppercase tracking-widest mt-2 ml-1"
+                className="text-rose-500 text-[10px] font-bold uppercase tracking-widest mt-2 ml-1 text-center"
               >
                 {error}
               </motion.p>
@@ -149,10 +273,26 @@ export default function AuthPhone() {
           <NeonButton
             variant={isValid ? 'solid' : 'green'}
             size="full"
-            onClick={handleSendOTP}
+            onClick={() => {
+              if (loginMode === 'otp') {
+                handleSendOTP();
+              } else if (loginMode === 'password') {
+                handlePasswordLogin();
+              } else if (loginMode === 'reset') {
+                if (otpSent) {
+                  handleResetPassword();
+                } else {
+                  handleSendOTP();
+                }
+              }
+            }}
             disabled={!isValid || loading}
           >
-            {loading ? 'Sending OTP...' : (isValid ? 'Send OTP →' : 'Enter your number')}
+            {loading ? 'Processing...' : 
+              loginMode === 'otp' ? (isValid ? 'Send OTP →' : 'Enter your number') : 
+              loginMode === 'password' ? 'Login' :
+              (otpSent ? 'Reset Password' : 'Send Reset OTP')
+            }
           </NeonButton>
         </motion.div>
 

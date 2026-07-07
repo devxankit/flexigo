@@ -12,7 +12,9 @@ import {
   Plus,
   Cpu,
   Lock,
-  Network
+  Network,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { useFranchiseAuthStore } from '../store/franchiseAuthStore';
 import { requestForToken, onMessageListener } from '../../../lib/firebase';
@@ -20,10 +22,10 @@ import logo from '../../../assets/logo.png';
 
 export default function FranchiseLogin() {
   const navigate = useNavigate();
-  const { sendOTP, verifyOTP, loginWithPassword } = useFranchiseAuthStore();
+  const { sendOTP, verifyOTP, loginWithPassword, resetPassword } = useFranchiseAuthStore();
   const [loading, setLoading] = useState(false);
   
-  // Login Mode: 'otp' or 'password'
+  // Login Mode: 'otp', 'password', or 'reset'
   const [loginMode, setLoginMode] = useState('otp');
   
   // OTP States
@@ -34,8 +36,10 @@ export default function FranchiseLogin() {
   // Password States
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
-  const [errors, setErrors] = useState({ phone: '', otp: '', email: '', password: '' });
+  const [errors, setErrors] = useState({ phone: '', otp: '', email: '', password: '', newPassword: '' });
   const [isErrorShake, setIsErrorShake] = useState(false);
   
   useEffect(() => {
@@ -69,7 +73,13 @@ export default function FranchiseLogin() {
     const fcmToken = await requestForToken();
     const res = await verifyOTP(otp, fcmToken);
     setLoading(false);
-    if (res.success) navigate('/franchise/dashboard');
+    if (res.success) {
+      if (res.franchise?.isRegistered || res.franchise?.kycStatus === 'approved') {
+        navigate('/franchise/dashboard');
+      } else {
+        navigate('/franchise/onboarding');
+      }
+    }
     else {
       setErrors({ ...errors, otp: res.message });
       setIsErrorShake(true);
@@ -83,9 +93,34 @@ export default function FranchiseLogin() {
     setLoading(true);
     const res = await loginWithPassword(email, password);
     setLoading(false);
-    if (res.success) navigate('/franchise/dashboard');
+    if (res.success) {
+      if (res.franchise?.isRegistered || res.franchise?.kycStatus === 'approved') {
+        navigate('/franchise/dashboard');
+      } else {
+        navigate('/franchise/onboarding');
+      }
+    }
     else {
       setErrors({ ...errors, email: res.message });
+      setIsErrorShake(true);
+      setTimeout(() => setIsErrorShake(false), 500);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    if (e) e.preventDefault();
+    if (!phone || !otp || !newPassword) return;
+    setLoading(true);
+    const res = await resetPassword(phone, otp, newPassword);
+    setLoading(false);
+    if (res.success) {
+      setLoginMode('password');
+      setOtpSent(false);
+      setPhone('');
+      setOtp('');
+      setNewPassword('');
+    } else {
+      setErrors({ ...errors, newPassword: res.message });
       setIsErrorShake(true);
       setTimeout(() => setIsErrorShake(false), 500);
     }
@@ -138,10 +173,16 @@ export default function FranchiseLogin() {
             OTP Security
           </button>
           <button 
-            onClick={() => setLoginMode('password')}
+            onClick={() => { setLoginMode('password'); setOtpSent(false); }}
             className={`flex-1 py-2 text-[8px] font-black uppercase tracking-widest rounded-xl transition-all ${loginMode === 'password' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-950/40' : 'text-slate-500 hover:text-white'}`}
           >
             Vault Password
+          </button>
+          <button 
+            onClick={() => { setLoginMode('reset'); setOtpSent(false); }}
+            className={`flex-1 py-2 text-[8px] font-black uppercase tracking-widest rounded-xl transition-all ${loginMode === 'reset' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-950/40' : 'text-slate-500 hover:text-white'}`}
+          >
+            Reset
           </button>
         </div>
 
@@ -151,13 +192,16 @@ export default function FranchiseLogin() {
             if (loginMode === 'otp') {
               if(!otpSent) handleSendOTP(e);
               else handleVerifyOTP(e);
+            } else if (loginMode === 'reset') {
+              if(!otpSent) handleSendOTP(e);
+              else handleResetPassword(e);
             } else {
               handlePasswordLogin(e);
             }
           }} 
           className="space-y-4 relative z-10"
         >
-          {loginMode === 'otp' ? (
+          {loginMode === 'otp' || loginMode === 'reset' ? (
             <div className="space-y-4">
                <div className="space-y-1.5">
                   <div className="flex justify-between items-center px-1">
@@ -195,6 +239,28 @@ export default function FranchiseLogin() {
                     </div>
                  </div>
                )}
+
+               {otpSent && loginMode === 'reset' && (
+                 <div className="space-y-1.5 mt-4">
+                    <div className="flex justify-between items-center px-1">
+                       <label className="text-[7.5px] font-black uppercase tracking-widest text-emerald-500 italic opacity-60">New Password</label>
+                    </div>
+                    <div className={`p-3 bg-black/30 border rounded-xl flex items-center gap-3 transition-all ${errors.newPassword ? 'border-rose-500/40' : 'border-white/5 focus-within:border-emerald-500/40'}`}>
+                      <Lock className="text-slate-500" size={14} />
+                      <input 
+                        required
+                        type={showPassword ? 'text' : 'password'}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="bg-transparent border-none outline-none text-[10px] text-[var(--text-primary)] w-full font-black tracking-[0.6em] italic"
+                        placeholder="••••••••"
+                      />
+                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-slate-500 hover:text-white transition-colors">
+                        {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                    </div>
+                 </div>
+               )}
             </div>
           ) : (
             <div className="space-y-4">
@@ -218,12 +284,15 @@ export default function FranchiseLogin() {
                     <Lock className="text-slate-500" size={14} />
                     <input 
                       required
-                      type="password" 
+                      type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="bg-transparent border-none outline-none text-[10px] text-[var(--text-primary)] w-full font-black tracking-widest italic"
                       placeholder="••••••••"
                     />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-slate-500 hover:text-white transition-colors">
+                      {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
                   </div>
                </div>
             </div>
@@ -235,7 +304,7 @@ export default function FranchiseLogin() {
           >
             {loading ? 'AUTHENTICATING...' : (
               <>
-                {loginMode === 'otp' ? (otpSent ? 'VERIFY ACCESS' : 'INITIALIZE SESSION') : 'UNLOCK VAULT'} 
+                {loginMode === 'otp' ? (otpSent ? 'VERIFY ACCESS' : 'INITIALIZE SESSION') : loginMode === 'reset' ? (otpSent ? 'RESET PASSWORD' : 'SEND RESET OTP') : 'UNLOCK VAULT'} 
                 <Network size={12} className="group-hover:translate-x-1 transition-transform" />
               </>
             )}

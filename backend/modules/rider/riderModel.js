@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 const RiderSchema = new mongoose.Schema({
   phone: {
@@ -10,6 +11,10 @@ const RiderSchema = new mongoose.Schema({
   role: {
     type: String,
     default: 'rider',
+  },
+  password: {
+    type: String,
+    required: false,
   },
   otp: String,
   otpExpire: Date,
@@ -114,5 +119,20 @@ const RiderSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
+
+// Hash password before saving
+RiderSchema.pre('save', async function() {
+  if (!this.isModified('password') || !this.password) {
+    return;
+  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+});
+
+// Match password
+RiderSchema.methods.matchPassword = async function(enteredPassword) {
+  if (!this.password) return false;
+  return await bcrypt.compare(enteredPassword, this.password);
+};
 
 export default mongoose.model('Rider', RiderSchema);

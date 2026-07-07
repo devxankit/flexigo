@@ -178,6 +178,44 @@ export const franchiseLogin = async (req, res) => {
   }
 };
 
+// @desc    Reset Franchise Password
+// @route   POST /api/v1/franchise/auth/reset-password
+export const resetPassword = async (req, res) => {
+  try {
+    const { phone, otp, newPassword } = req.body;
+
+    if (!phone || !otp || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Please provide phone, otp, and new password' });
+    }
+
+    const franchise = await Franchise.findOne({ phone });
+
+    if (!franchise) {
+      return res.status(404).json({ success: false, message: 'Franchise not found' });
+    }
+
+    if (franchise.otp !== otp || franchise.otpExpire < Date.now()) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
+    }
+
+    // Set new password and clear OTP
+    franchise.password = newPassword;
+    franchise.otp = undefined;
+    franchise.otpExpire = undefined;
+    franchise.isPhoneVerified = true;
+
+    await franchise.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset successfully',
+      token: generateToken(franchise._id),
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @desc    Save FCM Token
 // @route   POST /api/v1/franchise/auth/save-fcm-token
 export const saveFcmToken = async (req, res) => {

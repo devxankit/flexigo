@@ -59,6 +59,17 @@ export const useFranchiseAuthStore = create(
         }
       },
 
+      resetPassword: async (phone, otp, newPassword) => {
+        try {
+          const res = await api.post('/franchise/auth/reset-password', { phone, otp, newPassword });
+          if (res.data.success) {
+            return { success: true };
+          }
+        } catch (error) {
+          return { success: false, message: error.response?.data?.message || 'Failed to reset password' };
+        }
+      },
+
       loginWithPassword: async (email, password) => {
         try {
           const res = await api.post('/franchise/auth/login', { email, password });

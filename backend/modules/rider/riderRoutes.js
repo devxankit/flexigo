@@ -31,7 +31,9 @@ import {
   verifyWalletTopUp,
   createAddOffOrder,
   verifyAddOffPayment,
-  requestWithdrawal
+  requestWithdrawal,
+  riderLogin,
+  resetPassword
 } from './riderController.js';
 import { protectFranchise, protectRider } from '../../shared/middleware/authMiddleware.js';
 
@@ -39,6 +41,8 @@ const router = express.Router();
 
 router.post('/auth/send-otp', sendOTP);
 router.post('/auth/verify-otp', verifyOTP);
+router.post('/auth/login', riderLogin);
+router.post('/auth/reset-password', resetPassword);
 router.post('/kyc/update', updateKYC);
 router.post('/kyc/aadhaar/generate-otp', generateAadhaarOTP);
 router.post('/kyc/aadhaar/verify-otp', verifyAadhaarOTP);

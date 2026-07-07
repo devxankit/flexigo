@@ -76,6 +76,69 @@ export const verifyOTP = async (req, res) => {
   }
 };
 
+// @desc Rider Login (Email/Password)
+// @route POST /api/v1/rider/auth/login
+export const riderLogin = async (req, res) => {
+  try {
+    const { phone, password } = req.body;
+
+    if (!phone || !password) {
+      return res.status(400).json({ success: false, message: 'Please provide phone and password' });
+    }
+
+    const rider = await Rider.findOne({ phone }).select('+password');
+
+    if (!rider || !(await rider.matchPassword(password))) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+
+    res.status(200).json({
+      success: true,
+      token: generateToken(rider._id),
+      rider: { id: rider._id, phone: rider.phone, kycStatus: rider.kycStatus, isRegistered: rider.isRegistered },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc Reset Rider Password
+// @route POST /api/v1/rider/auth/reset-password
+export const resetPassword = async (req, res) => {
+  try {
+    const { phone, otp, newPassword } = req.body;
+
+    if (!phone || !otp || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Please provide phone, otp, and new password' });
+    }
+
+    const rider = await Rider.findOne({ phone });
+
+    if (!rider) {
+      return res.status(404).json({ success: false, message: 'Rider not found' });
+    }
+
+    if (rider.otp !== otp || rider.otpExpire < Date.now()) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired OTP' });
+    }
+
+    rider.password = newPassword;
+    rider.otp = undefined;
+    rider.otpExpire = undefined;
+    rider.isPhoneVerified = true;
+
+    await rider.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset successfully',
+      token: generateToken(rider._id),
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // @desc    Save FCM Token
 export const saveFcmToken = async (req, res) => {
   try {
@@ -668,6 +731,21 @@ export const getRiderPayments = async (req, res) => {
 
       if (!rider.subscriptionEnd || new Date(rider.subscriptionEnd) < new Date()) {
         isDue = true;
+        
+        if (rider.addOff >= dueAmount) {
+          // Auto-heal: Renew subscription if addOff covers the due amount
+          rider.addOff -= dueAmount;
+          const durationMs = rider.subscriptionPlan.type === 'Daily' ? 86400000 : rider.subscriptionPlan.type === 'Weekly' ? 604800000 : 2592000000;
+          rider.subscriptionEnd = new Date(Date.now() + durationMs);
+          rider.status = 'active';
+          await rider.save();
+          
+          isDue = false;
+          dueAmount = 0;
+          nextDueDate = rider.subscriptionEnd;
+        } else if (rider.addOff > 0) {
+          dueAmount -= rider.addOff;
+        }
       }
     } else {
       // If they don't have a plan yet, we don't mark as due here (they should go to Plans page)
