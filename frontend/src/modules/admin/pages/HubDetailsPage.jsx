@@ -23,7 +23,8 @@ import {
   Pencil,
   X,
   Save,
-  Wallet
+  Wallet,
+  Truck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard.jsx';

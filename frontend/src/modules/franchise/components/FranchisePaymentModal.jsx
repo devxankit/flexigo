@@ -9,7 +9,7 @@ export default function FranchisePaymentModal({ isOpen, onClose, rider, type, on
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [error, setError] = useState('');
   const [adhocAmount, setAdhocAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('wallet'); // 'wallet' or 'razorpay'
+  const [paymentMethod, setPaymentMethod] = useState('razorpay'); // 'wallet' or 'razorpay'
   const [depositAmount, setDepositAmount] = useState(2800);
 
   // Fetch plans always when modal opens for 'deposit' or 'plan'
@@ -325,26 +325,6 @@ export default function FranchisePaymentModal({ isOpen, onClose, rider, type, on
             {(type === 'deposit' || type === 'plan') && (
               <div className="space-y-3 pt-2">
                 <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">SELECT PAYMENT METHOD</p>
-
-                <div
-                  onClick={() => setPaymentMethod('wallet')}
-                  className={`p-4 rounded-xl border-2 flex items-center justify-between cursor-pointer transition-all ${paymentMethod === 'wallet' ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10' : 'border-slate-200 dark:border-slate-800'}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center">
-                      <Wallet size={16} />
-                    </div>
-                    <div>
-                      <h4 className={`text-xs font-black uppercase tracking-widest ${paymentMethod === 'wallet' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white'}`}>
-                        FLEXIGO WALLET
-                      </h4>
-                      <p className="text-[9px] font-medium text-slate-500">Fast & Secure</p>
-                    </div>
-                  </div>
-                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'wallet' ? 'border-emerald-500' : 'border-slate-300'}`}>
-                    {paymentMethod === 'wallet' && <div className="w-2 h-2 rounded-full bg-emerald-500" />}
-                  </div>
-                </div>
 
                 <div
                   onClick={() => setPaymentMethod('razorpay')}
