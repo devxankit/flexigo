@@ -74,6 +74,8 @@ export default function FleetManagement() {
    const [selectedVehicle, setSelectedVehicle] = useState(null); // Controls Detail Drawer (now Rider)
    const [focusedVehicle, setFocusedVehicle] = useState(null);   // Controls Map Widget & Focus (now Rider)
    const [map, setMap] = useState(null);
+   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+   const [assignmentData, setAssignmentData] = useState({ riderName: '', riderPhone: '', vehiclePlate: '' });
 
    const [firebaseLocations, setFirebaseLocations] = useState({});
 
@@ -269,16 +271,30 @@ export default function FleetManagement() {
          header: '',
          accessor: 'actions',
          render: (row) => (
-            <button
-               onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedVehicle(row);
-                  setFocusedVehicle(row);
-               }}
-               className="p-2 hover:bg-[var(--bg-tertiary)] rounded-lg transition-all text-[var(--text-tertiary)] hover:text-emerald-500"
-            >
-               <ChevronRight size={18} />
-            </button>
+            <div className="flex items-center gap-2">
+               {!row.vehicleId && (
+                  <button
+                     onClick={(e) => {
+                        e.stopPropagation();
+                        setAssignmentData({ riderName: row.name || row.fullName, riderPhone: row.phone, vehiclePlate: '' });
+                        setIsAssignModalOpen(true);
+                     }}
+                     className="flex items-center gap-1 px-2 py-1 bg-emerald-600/10 text-emerald-500 rounded border border-emerald-500/20 text-[9px] font-black uppercase hover:bg-emerald-600 hover:text-white transition-colors"
+                  >
+                     <Zap size={10} /> Assign
+                  </button>
+               )}
+               <button
+                  onClick={(e) => {
+                     e.stopPropagation();
+                     setSelectedVehicle(row);
+                     setFocusedVehicle(row);
+                  }}
+                  className="p-2 hover:bg-[var(--bg-tertiary)] rounded-lg transition-all text-[var(--text-tertiary)] hover:text-emerald-500"
+               >
+                  <ChevronRight size={18} />
+               </button>
+            </div>
          )
       }
    ];
@@ -594,6 +610,105 @@ export default function FleetManagement() {
                      </div>
                   </motion.div>
                </>
+            )}
+         </AnimatePresence>
+         <AnimatePresence>
+            {isAssignModalOpen && (
+               <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                  <motion.div
+                     initial={{ opacity: 0, scale: 0.95 }}
+                     animate={{ opacity: 1, scale: 1 }}
+                     exit={{ opacity: 0, scale: 0.95 }}
+                     className="w-full max-w-md bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-8 shadow-2xl space-y-6"
+                  >
+                     <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                           <h2 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-tighter italic leading-none">Vehicle <span className="text-emerald-500">Assignment</span></h2>
+                           <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">PROVISION_DISPATCH_PROTOCOL</p>
+                        </div>
+                        <button onClick={() => setIsAssignModalOpen(false)} className="p-1.5 hover:bg-rose-600/10 hover:text-rose-500 transition-all rounded-lg">
+                           <X size={16} />
+                        </button>
+                     </div>
+
+                     <form
+                        onSubmit={async (e) => {
+                           e.preventDefault();
+                           try {
+                              const api = (await import('../../../lib/axios')).default;
+                              const res = await api.post('/fleet/assignments', {
+                                 vehiclePlate: assignmentData.vehiclePlate,
+                                 riderPhone: assignmentData.riderPhone,
+                                 type: 'Manual',
+                                 hubName: user?.name || user?.hubName || 'Hub'
+                              });
+                              if (res.data.success) {
+                                 setIsAssignModalOpen(false);
+                                 alert("Vehicle Assigned Successfully!");
+                                 fetchSubscribers();
+                                 fetchVehicles(user?.id || user?._id);
+                              } else {
+                                 alert(res.data.message || "Assignment Failed");
+                              }
+                           } catch (err) {
+                              alert(err.response?.data?.message || "Assignment Failed");
+                           }
+                        }}
+                        className="space-y-6"
+                     >
+                        <div className="space-y-4">
+                           <div className="space-y-1.5">
+                              <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Rider Name</label>
+                              <input
+                                 value={assignmentData.riderName}
+                                 onChange={(e) => setAssignmentData({ ...assignmentData, riderName: e.target.value })}
+                                 placeholder="Rider Name"
+                                 className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
+                              />
+                           </div>
+
+                           <div className="space-y-1.5">
+                              <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Mobile Number</label>
+                              <input
+                                 value={assignmentData.riderPhone}
+                                 onChange={(e) => {
+                                    const val = e.target.value.replace(/\D/g, '');
+                                    if (val.length <= 10) {
+                                       setAssignmentData({ ...assignmentData, riderPhone: val });
+                                    }
+                                 }}
+                                 placeholder="Mobile Number"
+                                 className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
+                              />
+                           </div>
+
+                           <div className="space-y-1.5">
+                              <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Vehicle Plate Number</label>
+                              <select
+                                 required
+                                 value={assignmentData.vehiclePlate}
+                                 onChange={(e) => setAssignmentData({ ...assignmentData, vehiclePlate: e.target.value })}
+                                 className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all text-[var(--text-primary)]"
+                              >
+                                 <option value="">Select Vehicle Plate</option>
+                                 {vehicles.filter(v => v.status !== 'assigned').map(v => (
+                                    <option key={v._id || v.id} value={v.plate}>
+                                       {v.plate} — {v.model || 'Vehicle'}
+                                    </option>
+                                 ))}
+                              </select>
+                           </div>
+                        </div>
+
+                        <button
+                           type="submit"
+                           className="w-full py-3 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-emerald-950/20 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+                        >
+                           <Zap size={14} fill="white" /> Save & Assign Vehicle
+                        </button>
+                     </form>
+                  </motion.div>
+               </div>
             )}
          </AnimatePresence>
       </div>

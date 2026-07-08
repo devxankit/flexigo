@@ -33,12 +33,15 @@ import { useAdminDataStore } from '../store/adminDataStore.js';
 export default function HubDetailsPage() {
   const { hubId } = useParams();
   const navigate = useNavigate();
-  const { hubs, fetchHubById, fetchHubVehicles, updateHub } = useAdminDataStore();
+  const { hubs, fetchHubById, fetchHubVehicles, updateHub, kycRecords, fetchKycRecords, assignVehicle } = useAdminDataStore();
   const [hub, setHub] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeMenu, setActiveMenu] = useState(null);
   const [vehicles, setVehicles] = useState([]);
   const [loadingVehicles, setLoadingVehicles] = useState(true);
+  const [activeTab, setActiveTab] = useState('vehicles');
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [assignmentData, setAssignmentData] = useState({ riderName: '', riderPhone: '', vehiclePlate: '' });
   const [isEditing, setIsEditing] = useState(false);
   const [isCrediting, setIsCrediting] = useState(false);
   const [creditAmount, setCreditAmount] = useState('');
@@ -63,6 +66,7 @@ export default function HubDetailsPage() {
       if (found) {
         setHub(found);
         loadVehicles();
+        fetchKycRecords();
       }
       setLoading(false);
     };
@@ -134,6 +138,12 @@ export default function HubDetailsPage() {
     alert(`${action.toUpperCase()} requested for ${vehicleId}`);
     setActiveMenu(null);
   };
+
+  const assignedRiders = (kycRecords || []).filter(r => 
+    r.status === 'approved' && 
+    r.role?.toLowerCase() === 'rider' && 
+    (r.franchiseId === hubId || r.franchise?._id === hubId || r.franchise === hubId)
+  );
 
   return (
     <div className="space-y-6 pb-12">
@@ -279,11 +289,18 @@ export default function HubDetailsPage() {
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-sm">
             <div className="px-6 py-3 border-b border-[var(--border-subtle)] flex items-center justify-between bg-[var(--bg-tertiary)]/20">
               <div className="flex gap-4">
-                {['ALL', 'MOVING', 'IDLE', 'ERROR'].map((tab, i) => (
-                  <button key={tab} className={`text-[8px] font-black uppercase tracking-widest ${i === 0 ? 'text-emerald-500' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'} transition-colors`}>
-                    {tab}
-                  </button>
-                ))}
+                <button
+                   onClick={() => setActiveTab('vehicles')}
+                   className={`text-[9px] font-black uppercase tracking-widest transition-colors ${activeTab === 'vehicles' ? 'text-emerald-500 border-b-2 border-emerald-500 pb-1' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] pb-1'}`}
+                >
+                   Vehicles ({vehicles.length})
+                </button>
+                <button
+                   onClick={() => setActiveTab('riders')}
+                   className={`text-[9px] font-black uppercase tracking-widest transition-colors ${activeTab === 'riders' ? 'text-emerald-500 border-b-2 border-emerald-500 pb-1' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] pb-1'}`}
+                >
+                   Assigned Riders ({assignedRiders.length})
+                </button>
               </div>
             </div>
 
@@ -291,17 +308,30 @@ export default function HubDetailsPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Plate</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Model</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Rider</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Plan & Dues</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Battery</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Status</th>
-                    <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Action</th>
+                    {activeTab === 'vehicles' ? (
+                      <>
+                        <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Plate</th>
+                        <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Model</th>
+                        <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Rider</th>
+                        <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Plan & Dues</th>
+                        <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Battery</th>
+                        <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Status</th>
+                        <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Action</th>
+                      </>
+                    ) : (
+                      <>
+                        <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Identity</th>
+                        <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Contact</th>
+                        <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Wallet Balance</th>
+                        <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Vehicle</th>
+                        <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Action</th>
+                      </>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border-subtle)]">
-                  {loadingVehicles ? (
+                  {activeTab === 'vehicles' ? (
+                    loadingVehicles ? (
                     <tr>
                       <td colSpan={7} className="py-12 text-center text-[10px] font-medium text-[var(--text-tertiary)]">Loading fleet data...</td>
                     </tr>
@@ -404,7 +434,57 @@ export default function HubDetailsPage() {
                         </AnimatePresence>
                       </td>
                     </tr>
-                  ))}
+                  ))
+                  ) : (
+                    assignedRiders.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-12 text-center">
+                          <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">No riders assigned</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      assignedRiders.map(r => (
+                        <tr key={r._id || r.id} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
+                          <td className="px-4 py-3">
+                            <div className="flex flex-col">
+                              <span className="font-bold text-[var(--text-primary)] text-xs truncate max-w-[150px]">{r.name || r.fullName || '—'}</span>
+                              <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-0.5">ID: {(r._id || r.id).substring(0,6)}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-xs font-medium text-[var(--text-tertiary)]">{r.phone}</td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1">
+                              <IndianRupee size={12} className="text-[var(--text-tertiary)]" />
+                              <span className="text-xs font-bold text-[var(--text-primary)]">{r.walletBalance || 0}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            {r.vehicleId ? (
+                              <div className="flex items-center gap-2">
+                                <Truck size={14} className="text-emerald-500" />
+                                <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">{vehicles.find(v => (v._id || v.id) === r.vehicleId)?.plate || 'Assigned'}</span>
+                              </div>
+                            ) : (
+                              <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest bg-rose-500/10 px-2 py-0.5 rounded-lg border border-rose-500/20">Unassigned</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            {!r.vehicleId && (
+                              <button
+                                onClick={() => {
+                                  setAssignmentData({ riderName: r.name || r.fullName, riderPhone: r.phone, vehiclePlate: '' });
+                                  setIsAssignModalOpen(true);
+                                }}
+                                className="flex items-center gap-2 px-3 py-1.5 bg-emerald-600/10 border border-emerald-500/20 text-emerald-500 hover:bg-emerald-600 hover:text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition-all"
+                              >
+                                <Zap size={12} /> Assign Vehicle
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )
+                  )}
                 </tbody>
               </table>
             </div>
@@ -614,6 +694,100 @@ export default function HubDetailsPage() {
             </motion.div>
           </div>
         )}
+      </AnimatePresence>
+      <AnimatePresence>
+         {isAssignModalOpen && (
+            <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+               <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="w-full max-w-md bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-8 shadow-2xl space-y-6"
+               >
+                  <div className="flex items-center justify-between">
+                     <div className="space-y-0.5">
+                        <h2 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-tighter italic leading-none">Vehicle <span className="text-emerald-500">Assignment</span></h2>
+                        <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">PROVISION_DISPATCH_PROTOCOL</p>
+                     </div>
+                     <button onClick={() => setIsAssignModalOpen(false)} className="p-1.5 hover:bg-rose-600/10 hover:text-rose-500 transition-all rounded-lg">
+                        <X size={16} />
+                     </button>
+                  </div>
+
+                  <form
+                     onSubmit={async (e) => {
+                        e.preventDefault();
+                        const res = await assignVehicle({
+                           vehiclePlate: assignmentData.vehiclePlate,
+                           riderPhone: assignmentData.riderPhone,
+                           type: 'Manual',
+                           hubName: hub.name || hub.hubName
+                        });
+                        if (res.success) {
+                           setIsAssignModalOpen(false);
+                           alert("Vehicle Assigned Successfully!");
+                           fetchKycRecords();
+                           loadVehicles();
+                        } else {
+                           alert(res.message || "Assignment Failed");
+                        }
+                     }}
+                     className="space-y-6"
+                  >
+                     <div className="space-y-4">
+                        <div className="space-y-1.5">
+                           <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Rider Name</label>
+                           <input
+                              value={assignmentData.riderName}
+                              onChange={(e) => setAssignmentData({ ...assignmentData, riderName: e.target.value })}
+                              placeholder="Rider Name"
+                              className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
+                           />
+                        </div>
+
+                        <div className="space-y-1.5">
+                           <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Mobile Number</label>
+                           <input
+                              value={assignmentData.riderPhone}
+                              onChange={(e) => {
+                                 const val = e.target.value.replace(/\D/g, '');
+                                 if (val.length <= 10) {
+                                    setAssignmentData({ ...assignmentData, riderPhone: val });
+                                 }
+                              }}
+                              placeholder="Mobile Number"
+                              className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all"
+                           />
+                        </div>
+
+                        <div className="space-y-1.5">
+                           <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Vehicle Plate Number</label>
+                           <select
+                              required
+                              value={assignmentData.vehiclePlate}
+                              onChange={(e) => setAssignmentData({ ...assignmentData, vehiclePlate: e.target.value })}
+                              className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all text-[var(--text-primary)]"
+                           >
+                              <option value="">Select Vehicle Plate</option>
+                              {vehicles.filter(v => v.status !== 'assigned').map(v => (
+                                 <option key={v._id || v.id} value={v.plate}>
+                                    {v.plate} — {v.model || 'Vehicle'}
+                                 </option>
+                              ))}
+                           </select>
+                        </div>
+                     </div>
+
+                     <button
+                        type="submit"
+                        className="w-full py-3 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-emerald-950/20 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+                     >
+                        <Zap size={14} fill="white" /> Save & Assign Vehicle
+                     </button>
+                  </form>
+               </motion.div>
+            </div>
+         )}
       </AnimatePresence>
     </div>
   );
