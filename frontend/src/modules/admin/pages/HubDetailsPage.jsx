@@ -278,12 +278,6 @@ export default function HubDetailsPage() {
                 {vehicles.length} vehicle{vehicles.length !== 1 ? 's' : ''} registered
               </p>
             </div>
-            <button
-              onClick={() => navigate(`/admin/fleet/add?hubId=${hubId}`)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/10 border border-emerald-500/20 text-emerald-500 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-emerald-600 hover:text-white transition-all"
-            >
-              <Plus size={11} /> Add Vehicle
-            </button>
           </div>
 
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-sm">
@@ -443,31 +437,38 @@ export default function HubDetailsPage() {
                         </td>
                       </tr>
                     ) : (
-                      assignedRiders.map(r => (
-                        <tr key={r._id || r.id} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
-                          <td className="px-4 py-3">
-                            <div className="flex flex-col">
-                              <span className="font-bold text-[var(--text-primary)] text-xs truncate max-w-[150px]">{r.name || r.fullName || '—'}</span>
-                              <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-0.5">ID: {(r._id || r.id).substring(0,6)}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-xs font-medium text-[var(--text-tertiary)]">{r.phone}</td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-1">
-                              <IndianRupee size={12} className="text-[var(--text-tertiary)]" />
-                              <span className="text-xs font-bold text-[var(--text-primary)]">{r.walletBalance || 0}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            {r.vehicleId ? (
-                              <div className="flex items-center gap-2">
-                                <Truck size={14} className="text-emerald-500" />
-                                <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">{vehicles.find(v => (v._id || v.id) === r.vehicleId)?.plate || 'Assigned'}</span>
+                      assignedRiders.map(r => {
+                        const rId = r._id || r.id || 'N/A';
+                        const displayId = rId.toString().substring(0, 6);
+                        
+                        // Handle case where vehicleId might be an object
+                        const vehiclePlate = r.vehicleId ? (typeof r.vehicleId === 'object' ? r.vehicleId.plate : vehicles.find(v => (v._id || v.id) === r.vehicleId)?.plate) : null;
+                        
+                        return (
+                          <tr key={rId} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
+                            <td className="px-4 py-3">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-[var(--text-primary)] text-xs truncate max-w-[150px]">{r.name || r.fullName || '—'}</span>
+                                <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-0.5">ID: {displayId}</span>
                               </div>
-                            ) : (
-                              <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest bg-rose-500/10 px-2 py-0.5 rounded-lg border border-rose-500/20">Unassigned</span>
-                            )}
-                          </td>
+                            </td>
+                            <td className="px-4 py-3 text-xs font-medium text-[var(--text-tertiary)]">{r.phone}</td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-1">
+                                <IndianRupee size={12} className="text-[var(--text-tertiary)]" />
+                                <span className="text-xs font-bold text-[var(--text-primary)]">{r.walletBalance || 0}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              {r.vehicleId ? (
+                                <div className="flex items-center gap-2">
+                                  <Truck size={14} className="text-emerald-500" />
+                                  <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">{vehiclePlate || 'Assigned'}</span>
+                                </div>
+                              ) : (
+                                <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest bg-rose-500/10 px-2 py-0.5 rounded-lg border border-rose-500/20">Unassigned</span>
+                              )}
+                            </td>
                           <td className="px-4 py-3">
                             {!r.vehicleId && (
                               <button
@@ -482,7 +483,8 @@ export default function HubDetailsPage() {
                             )}
                           </td>
                         </tr>
-                      ))
+                        );
+                      })
                     )
                   )}
                 </tbody>
