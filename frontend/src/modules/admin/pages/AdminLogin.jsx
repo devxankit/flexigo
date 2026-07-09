@@ -156,6 +156,12 @@ export default function AdminLogin() {
            </button>
         </form>
 
+        <p className="mt-4 text-center text-[10px] text-slate-500">
+           By continuing, you agree to our{' '}
+           <a href="https://flexigoemobility.com/terms" target="_blank" rel="noopener noreferrer" className="text-emerald-500 hover:underline">Terms of Service</a> &amp;{' '}
+           <a href="https://flexigoemobility.com/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-emerald-500 hover:underline">Privacy Policy</a>
+        </p>
+
         {/* Tactical Footer Stats */}
         <div className="mt-12 pt-8 border-t border-white/5 flex items-center justify-between opacity-30">
            <div className="flex flex-col gap-1">

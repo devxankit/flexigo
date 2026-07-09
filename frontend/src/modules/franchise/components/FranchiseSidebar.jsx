@@ -178,6 +178,20 @@ export default function FranchiseSidebar({ mobileMenuOpen, setMobileMenuOpen }) 
               )}
             </div>
           </div>
+          <AnimatePresence>
+            {!collapsed && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="flex items-center justify-between px-2 text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest mt-2"
+              >
+                 <a href="https://flexigoemobility.com/terms" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-500 transition-colors">Terms of Service</a>
+                 <span className="opacity-40">•</span>
+                 <a href="https://flexigoemobility.com/privacy-policy" target="_blank" rel="noopener noreferrer" className="hover:text-emerald-500 transition-colors">Privacy Policy</a>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </motion.aside>
     </>

@@ -298,6 +298,12 @@ export default function FranchiseLogin() {
             </div>
           )}
 
+          <p className="mt-4 text-center text-[10px] text-slate-500">
+             By continuing, you agree to our{' '}
+             <a href="https://flexigoemobility.com/terms" target="_blank" rel="noopener noreferrer" className="text-emerald-500 hover:underline">Terms of Service</a> &amp;{' '}
+             <a href="https://flexigoemobility.com/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-emerald-500 hover:underline">Privacy Policy</a>
+          </p>
+
           <button 
             disabled={loading}
             className="w-full h-12 rounded-xl bg-emerald-600 text-white text-[9px] font-black uppercase tracking-[0.3em] shadow-lg shadow-emerald-950/40 hover:bg-emerald-500 active:scale-[0.98] transition-all flex items-center justify-center gap-2 italic group mt-6"

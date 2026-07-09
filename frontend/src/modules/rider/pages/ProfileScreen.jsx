@@ -102,6 +102,25 @@ export default function ProfileScreen() {
             canUpload: !user?.kycDetails?.certificate
         }
       ]
+    },
+    {
+      title: 'Legal & Support',
+      items: [
+        { 
+            label: 'Terms of Service', 
+            value: 'View Terms', 
+            color: isDark ? '#9ca3af' : '#64748b', 
+            canView: true,
+            link: 'https://flexigoemobility.com/terms'
+        },
+        { 
+            label: 'Privacy Policy', 
+            value: 'View Policy', 
+            color: isDark ? '#9ca3af' : '#64748b', 
+            canView: true,
+            link: 'https://flexigoemobility.com/privacy-policy'
+        }
+      ]
     }
   ];
 
@@ -169,7 +188,7 @@ export default function ProfileScreen() {
                     )}
                     {item.canView && (
                       <button
-                        onClick={() => handleViewDocument(item.label)}
+                        onClick={() => item.link ? window.open(item.link, '_blank') : handleViewDocument(item.label)}
                         className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border transition-all ${isDark
                             ? 'bg-white/5 border-white/10 text-flexigo-teal hover:bg-white/10'
                             : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200 shadow-sm'

@@ -38,10 +38,10 @@ export default function AuthPhone() {
       setTimeout(() => setIsShake(false), 500);
       return;
     }
-    
+
     setLoading(true);
     setError('');
-    
+
     const result = await sendOTP(phone);
     setLoading(false);
 
@@ -71,7 +71,7 @@ export default function AuthPhone() {
     setLoading(false);
     if (result.success) {
       if (result.rider?.isRegistered || result.rider?.kycStatus === 'approved') {
-        navigate('/rider/home'); 
+        navigate('/rider/home');
       } else {
         navigate('/rider/onboarding');
       }
@@ -116,16 +116,15 @@ export default function AuthPhone() {
 
   return (
     <PageWrapper noHeader>
-      <div className={`min-h-[100dvh] flex flex-col px-6 pt-16 pb-10 transition-colors duration-500 relative overflow-hidden ${
-        isDark ? 'bg-[#0A0A0F]' : 'bg-slate-50'
-      }`}>
+      <div className={`min-h-[100dvh] flex flex-col px-6 pt-16 pb-10 transition-colors duration-500 relative overflow-hidden ${isDark ? 'bg-[#0A0A0F]' : 'bg-slate-50'
+        }`}>
         {/* Top glow */}
         <div
           className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full pointer-events-none"
-          style={{ 
-            background: isDark 
+          style={{
+            background: isDark
               ? 'radial-gradient(circle, rgba(57,255,20,0.08) 0%, transparent 70%)'
-              : 'radial-gradient(circle, rgba(57,255,20,0.15) 0%, transparent 70%)' 
+              : 'radial-gradient(circle, rgba(57,255,20,0.15) 0%, transparent 70%)'
           }}
         />
 
@@ -138,23 +137,21 @@ export default function AuthPhone() {
         >
           <div
             className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 overflow-hidden p-0 transition-shadow mx-auto shadow-2xl"
-            style={{ 
-              background: 'linear-gradient(135deg, #39FF14, #22c55e)', 
-              boxShadow: isDark ? '0 0 24px #39FF1444' : '0 4px 12px rgba(57,255,20,0.3)' 
+            style={{
+              background: 'linear-gradient(135deg, #39FF14, #22c55e)',
+              boxShadow: isDark ? '0 0 24px #39FF1444' : '0 4px 12px rgba(57,255,20,0.3)'
             }}
           >
             <img src={logo} alt="Flexigo" className="w-full h-full object-contain brightness-0 scale-[1.8]" />
           </div>
 
-          <h1 className={`text-3xl font-heading font-black mb-2 transition-colors duration-500 ${
-            isDark ? 'text-white' : 'text-slate-900'
-          }`}>
+          <h1 className={`text-3xl font-heading font-black mb-2 transition-colors duration-500 ${isDark ? 'text-white' : 'text-slate-900'
+            }`}>
             Welcome to<br />
             <span className="text-flexigo-teal">FlexiGo Rider</span>
           </h1>
-          <p className={`text-sm leading-relaxed transition-colors duration-500 ${
-            isDark ? 'text-gray-500' : 'text-slate-500'
-          }`}>
+          <p className={`text-sm leading-relaxed transition-colors duration-500 ${isDark ? 'text-gray-500' : 'text-slate-500'
+            }`}>
             India's electric subscription platform.<br />Subscribe. Unlock. Ride.
           </p>
         </motion.div>
@@ -162,8 +159,8 @@ export default function AuthPhone() {
         {/* Form */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
-          animate={{ 
-            opacity: 1, 
+          animate={{
+            opacity: 1,
             y: 0,
             x: isShake ? [-10, 10, -10, 10, 0] : 0
           }}
@@ -171,19 +168,19 @@ export default function AuthPhone() {
           className="flex-1 flex flex-col gap-6 items-center text-center"
         >
           <div className="flex bg-black/5 p-1 rounded-2xl border border-black/5 dark:border-white/5 mb-2 w-full max-w-[280px]">
-            <button 
+            <button
               onClick={() => { setLoginMode('otp'); setHasAutoSent(false); }}
               className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${loginMode === 'otp' ? 'bg-flexigo-teal text-white shadow-lg' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'}`}
             >
               OTP
             </button>
-            <button 
+            <button
               onClick={() => { setLoginMode('password'); setHasAutoSent(false); }}
               className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${loginMode === 'password' ? 'bg-flexigo-teal text-white shadow-lg' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'}`}
             >
               Password
             </button>
-            <button 
+            <button
               onClick={() => { setLoginMode('reset'); setHasAutoSent(false); setOtpSent(false); }}
               className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${loginMode === 'reset' ? 'bg-flexigo-teal text-white shadow-lg' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'}`}
             >
@@ -252,7 +249,7 @@ export default function AuthPhone() {
             )}
 
             {error && (
-              <motion.p 
+              <motion.p
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="text-rose-500 text-[10px] font-bold uppercase tracking-widest mt-2 ml-1 text-center"
@@ -262,12 +259,11 @@ export default function AuthPhone() {
             )}
           </div>
 
-          <p className={`text-xs transition-colors duration-500 max-w-[280px] ${
-            isDark ? 'text-gray-600' : 'text-slate-500'
-          }`}>
+          <p className={`text-xs transition-colors duration-500 max-w-[280px] ${isDark ? 'text-gray-600' : 'text-slate-500'
+            }`}>
             By continuing, you agree to our{' '}
-            <span onClick={() => setShowLegal(true)} className="cursor-pointer text-flexigo-teal font-bold underline underline-offset-2">Terms of Service</span> &amp;{' '}
-            <span onClick={() => setShowLegal(true)} className="cursor-pointer text-flexigo-teal font-bold underline underline-offset-2">Privacy Policy</span>
+            <a href="https://flexigoemobility.com/terms" target="_blank" rel="noopener noreferrer" className="cursor-pointer text-flexigo-teal font-bold underline underline-offset-2">Terms of Service</a> &amp;{' '}
+            <a href="https://flexigoemobility.com/privacy-policy" target="_blank" rel="noopener noreferrer" className="cursor-pointer text-flexigo-teal font-bold underline underline-offset-2">Privacy Policy</a>
           </p>
 
           <NeonButton
@@ -288,10 +284,10 @@ export default function AuthPhone() {
             }}
             disabled={!isValid || loading}
           >
-            {loading ? 'Processing...' : 
-              loginMode === 'otp' ? (isValid ? 'Send OTP →' : 'Enter your number') : 
-              loginMode === 'password' ? 'Login' :
-              (otpSent ? 'Reset Password' : 'Send Reset OTP')
+            {loading ? 'Processing...' :
+              loginMode === 'otp' ? (isValid ? 'Send OTP →' : 'Enter your number') :
+                loginMode === 'password' ? 'Login' :
+                  (otpSent ? 'Reset Password' : 'Send Reset OTP')
             }
           </NeonButton>
         </motion.div>
@@ -300,13 +296,13 @@ export default function AuthPhone() {
         <AnimatePresence>
           {showLegal && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
                 className="w-full max-w-sm bg-slate-900 border border-white/10 rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden"
               >
-                <button 
+                <button
                   onClick={() => setShowLegal(false)}
                   className="absolute top-6 right-6 p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors"
                 >
@@ -335,9 +331,8 @@ export default function AuthPhone() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className={`text-center text-[10px] uppercase font-black transition-colors duration-500 tracking-[0.2em] mt-8 ${
-            isDark ? 'text-gray-800' : 'text-slate-400'
-          }`}
+          className={`text-center text-[10px] uppercase font-black transition-colors duration-500 tracking-[0.2em] mt-8 ${isDark ? 'text-gray-800' : 'text-slate-400'
+            }`}
         >
           Powered by FlexiGo Mobility • v2.0
         </motion.p>
