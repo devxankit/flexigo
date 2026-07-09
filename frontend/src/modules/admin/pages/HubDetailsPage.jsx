@@ -127,9 +127,15 @@ export default function HubDetailsPage() {
     );
   }
 
+  const assignedRiders = (kycRecords || []).filter(r => 
+    r.status === 'approved' && 
+    r.role?.toLowerCase() === 'rider' && 
+    (r.franchiseId === hubId || r.franchise?._id === hubId || r.franchise === hubId)
+  );
+
   const sections = [
     { title: 'Fleet Count', icon: Box, count: hub.fleet ?? 0, color: 'emerald' },
-    { title: 'Active Users', icon: Users, count: hub.subs ?? 0, color: 'blue' },
+    { title: 'Assigned Riders', icon: Users, count: assignedRiders.length, color: 'blue' },
     { title: 'Hub Health', icon: Activity, count: hub.health ?? '100%', color: 'rose' },
     { title: 'Revenue', icon: IndianRupee, count: `₹${((hub.revenue || 0) / 1000).toFixed(0)}k`, color: 'amber' },
   ];
@@ -139,12 +145,6 @@ export default function HubDetailsPage() {
     alert(`${action.toUpperCase()} requested for ${vehicleId}`);
     setActiveMenu(null);
   };
-
-  const assignedRiders = (kycRecords || []).filter(r => 
-    r.status === 'approved' && 
-    r.role?.toLowerCase() === 'rider' && 
-    (r.franchiseId === hubId || r.franchise?._id === hubId || r.franchise === hubId)
-  );
 
   return (
     <div className="space-y-6 pb-12">

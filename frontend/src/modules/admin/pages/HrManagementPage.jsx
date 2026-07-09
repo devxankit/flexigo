@@ -46,6 +46,25 @@ export default function HrManagementPage() {
       fetchMonthlyAttendanceReport
    } = useAdminDataStore();
 
+   const handleImageDownload = async (e, url, filename) => {
+      e.stopPropagation();
+      try {
+         const response = await fetch(url);
+         const blob = await response.blob();
+         const objectUrl = window.URL.createObjectURL(blob);
+         const link = document.createElement('a');
+         link.href = objectUrl;
+         link.download = filename;
+         document.body.appendChild(link);
+         link.click();
+         document.body.removeChild(link);
+         window.URL.revokeObjectURL(objectUrl);
+      } catch (error) {
+         console.error('Download failed:', error);
+         window.open(url, '_blank');
+      }
+   };
+
    const handleDownloadReport = async () => {
       const month = prompt("Enter month (YYYY-MM)", new Date().toISOString().slice(0, 7));
       if (!month) return;
@@ -122,6 +141,7 @@ export default function HrManagementPage() {
       phone: '',
       email: '',
       password: '',
+      status: 'active',
       joiningDate: new Date().toISOString().split('T')[0],
       aadhaarFront: null,
       aadhaarBack: null
@@ -195,6 +215,7 @@ export default function HrManagementPage() {
          phone: emp.phone || '',
          email: emp.email || '',
          password: '', // never prefill password
+         status: emp.status || 'active',
          joiningDate: emp.joiningDate ? new Date(emp.joiningDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
          aadhaarFront: emp.kycDetails?.aadhaarFront || null,
          aadhaarBack: emp.kycDetails?.aadhaarBack || null
@@ -232,7 +253,8 @@ export default function HrManagementPage() {
             shift: 'Regular',
             kycDetails: {
                aadhaarFront: newEmployee.aadhaarFront,
-               aadhaarBack: newEmployee.aadhaarBack
+               aadhaarBack: newEmployee.aadhaarBack,
+               ...(modalType === 'edit' && selectedStaff?.kycDetails?.isVerified !== undefined ? { isVerified: selectedStaff.kycDetails.isVerified } : {})
             }
          };
 
@@ -249,6 +271,7 @@ export default function HrManagementPage() {
             phone: '',
             email: '',
             password: '',
+            status: 'active',
             joiningDate: new Date().toISOString().split('T')[0],
             aadhaarFront: null,
             aadhaarBack: null
@@ -409,13 +432,25 @@ export default function HrManagementPage() {
                                     {emp.role.includes('Lead') ? 'Level_4' : 'Level_2'}
                                  </td>
                                  <td className="py-2 px-4">
-                                    <div className={`inline-flex px-1.5 py-0.5 rounded  font-medium   border ${emp.kycDetails?.isVerified ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-rose-500/10 text-rose-500 border-rose-500/10'
+                                    <button 
+                                       onClick={async (e) => {
+                                          e.stopPropagation();
+                                          if(window.confirm(`Change KYC status to ${emp.kycDetails?.isVerified ? 'Pending' : 'Approved'}?`)) {
+                                             await updateStaff(emp._id || emp.id, { 
+                                                kycDetails: { 
+                                                   ...emp.kycDetails, 
+                                                   isVerified: !emp.kycDetails?.isVerified 
+                                                } 
+                                             });
+                                          }
+                                       }}
+                                       className={`inline-flex px-1.5 py-0.5 rounded font-medium border cursor-pointer hover:opacity-80 transition-opacity ${emp.kycDetails?.isVerified ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-rose-500/10 text-rose-500 border-rose-500/10'
                                        }`}>
                                        {emp.kycDetails?.isVerified ? 'Approved' : 'Pending'}
-                                    </div>
+                                    </button>
                                  </td>
                                  <td className="py-2 px-4">
-                                    <div className={`inline-flex px-1.5 py-0.5 rounded  font-medium   border ${emp.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-slate-500/10 text-slate-500 border-slate-500/10'
+                                    <div className={`inline-flex px-1.5 py-0.5 rounded font-medium border ${emp.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' : 'bg-slate-500/10 text-slate-500 border-slate-500/10'
                                        }`}>
                                        {emp.status}
                                     </div>
@@ -806,6 +841,20 @@ export default function HrManagementPage() {
                                  </div>
                               </div>
 
+                              {modalType === 'edit' && (
+                                 <div className="space-y-1.5">
+                                    <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Account Status</label>
+                                    <select
+                                       value={newEmployee.status}
+                                       onChange={(e) => setNewEmployee({ ...newEmployee, status: e.target.value })}
+                                       className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic text-[var(--text-primary)]"
+                                    >
+                                       <option value="active">Active</option>
+                                       <option value="inactive">Inactive</option>
+                                    </select>
+                                 </div>
+                              )}
+
                               <div className="grid grid-cols-2 gap-4">
                                  <div className="space-y-1.5">
                                     <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Aadhaar Front</label>
@@ -814,7 +863,17 @@ export default function HrManagementPage() {
                                        onClick={() => document.getElementById('aadhaar-front-input').click()}
                                     >
                                        {newEmployee.aadhaarFront ? (
-                                          <img src={newEmployee.aadhaarFront} alt="Aadhaar Front" className="w-full h-full object-cover" />
+                                          <>
+                                             <img src={newEmployee.aadhaarFront} alt="Aadhaar Front" className="w-full h-full object-cover" />
+                                             <button 
+                                                type="button"
+                                                onClick={(e) => handleImageDownload(e, newEmployee.aadhaarFront, `aadhaar_front_${newEmployee.name ? newEmployee.name.replace(/\s+/g, '_') : 'document'}.jpg`)}
+                                                className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-all backdrop-blur-sm shadow-md"
+                                                title="Download Document"
+                                             >
+                                                <Download size={14} />
+                                             </button>
+                                          </>
                                        ) : (
                                           <>
                                              <Plus size={20} className="text-[var(--text-tertiary)]" />
@@ -844,7 +903,17 @@ export default function HrManagementPage() {
                                        onClick={() => document.getElementById('aadhaar-back-input').click()}
                                     >
                                        {newEmployee.aadhaarBack ? (
-                                          <img src={newEmployee.aadhaarBack} alt="Aadhaar Back" className="w-full h-full object-cover" />
+                                          <>
+                                             <img src={newEmployee.aadhaarBack} alt="Aadhaar Back" className="w-full h-full object-cover" />
+                                             <button 
+                                                type="button"
+                                                onClick={(e) => handleImageDownload(e, newEmployee.aadhaarBack, `aadhaar_back_${newEmployee.name ? newEmployee.name.replace(/\s+/g, '_') : 'document'}.jpg`)}
+                                                className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-all backdrop-blur-sm shadow-md"
+                                                title="Download Document"
+                                             >
+                                                <Download size={14} />
+                                             </button>
+                                          </>
                                        ) : (
                                           <>
                                              <Plus size={20} className="text-[var(--text-tertiary)]" />
@@ -898,7 +967,17 @@ export default function HrManagementPage() {
                                  <p className="text-[8px] font-black text-emerald-500 uppercase tracking-widest text-center">Front Side</p>
                                  <div className="aspect-video bg-black/20 rounded-2xl overflow-hidden border border-white/5">
                                     {selectedStaff.kycDetails?.aadhaarFront ? (
-                                       <img src={selectedStaff.kycDetails.aadhaarFront} className="w-full h-full object-contain" alt="Aadhaar Front" />
+                                       <div className="relative w-full h-full group">
+                                          <img src={selectedStaff.kycDetails.aadhaarFront} className="w-full h-full object-contain" alt="Aadhaar Front" />
+                                          <button 
+                                             type="button"
+                                             onClick={(e) => handleImageDownload(e, selectedStaff.kycDetails.aadhaarFront, `aadhaar_front_${selectedStaff.name ? selectedStaff.name.replace(/\s+/g, '_') : 'document'}.jpg`)}
+                                             className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-all backdrop-blur-sm shadow-md opacity-0 group-hover:opacity-100"
+                                             title="Download Document"
+                                          >
+                                             <Download size={14} />
+                                          </button>
+                                       </div>
                                     ) : (
                                        <div className="w-full h-full flex items-center justify-center text-[8px] font-bold text-white/20 uppercase tracking-widest">No Front Image</div>
                                     )}
@@ -908,7 +987,17 @@ export default function HrManagementPage() {
                                  <p className="text-[8px] font-black text-emerald-500 uppercase tracking-widest text-center">Back Side</p>
                                  <div className="aspect-video bg-black/20 rounded-2xl overflow-hidden border border-white/5">
                                     {selectedStaff.kycDetails?.aadhaarBack ? (
-                                       <img src={selectedStaff.kycDetails.aadhaarBack} className="w-full h-full object-contain" alt="Aadhaar Back" />
+                                       <div className="relative w-full h-full group">
+                                          <img src={selectedStaff.kycDetails.aadhaarBack} className="w-full h-full object-contain" alt="Aadhaar Back" />
+                                          <button 
+                                             type="button"
+                                             onClick={(e) => handleImageDownload(e, selectedStaff.kycDetails.aadhaarBack, `aadhaar_back_${selectedStaff.name ? selectedStaff.name.replace(/\s+/g, '_') : 'document'}.jpg`)}
+                                             className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-all backdrop-blur-sm shadow-md opacity-0 group-hover:opacity-100"
+                                             title="Download Document"
+                                          >
+                                             <Download size={14} />
+                                          </button>
+                                       </div>
                                     ) : (
                                        <div className="w-full h-full flex items-center justify-center text-[8px] font-bold text-white/20 uppercase tracking-widest">No Back Image</div>
                                     )}

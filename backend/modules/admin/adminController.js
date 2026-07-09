@@ -1204,11 +1204,15 @@ export const updateStaff = async (req, res) => {
       if (kycDetails.aadhaarBack) staff.kycDetails.aadhaarBack = await uploadToCloudinary(kycDetails.aadhaarBack, 'kyc');
       if (kycDetails.aadhaar !== undefined) staff.kycDetails.aadhaar = kycDetails.aadhaar;
 
-      // Dynamically set isVerified based on image presence
-      if (staff.kycDetails.aadhaarFront && staff.kycDetails.aadhaarBack) {
-        staff.kycDetails.isVerified = true;
+      // Allow explicit manual override from frontend, else fallback to automatic check
+      if (kycDetails.isVerified !== undefined) {
+        staff.kycDetails.isVerified = kycDetails.isVerified;
       } else {
-        staff.kycDetails.isVerified = false;
+        if (staff.kycDetails.aadhaarFront && staff.kycDetails.aadhaarBack) {
+          staff.kycDetails.isVerified = true;
+        } else {
+          staff.kycDetails.isVerified = false;
+        }
       }
 
       staff.markModified('kycDetails');
