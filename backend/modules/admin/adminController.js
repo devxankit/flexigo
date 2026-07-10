@@ -346,6 +346,7 @@ export const getAllHubs = async (req, res) => {
 
     const hubs = await Promise.all(franchises.map(async (f) => {
       const fleetCount = await Vehicle.countDocuments({ franchise: f._id });
+      const subsCount = await Rider.countDocuments({ franchise: f._id, status: 'approved', role: 'rider' });
       const revenueData = await Transaction.find({ franchise: f._id, type: 'Subscription', status: 'completed' });
       const totalRevenue = revenueData.reduce((acc, t) => acc + t.amount, 0);
 
@@ -377,7 +378,7 @@ export const getAllHubs = async (req, res) => {
         email: f.email,
         city: displayCity,
         fleet: fleetCount,
-        subs: fleetCount,
+        subs: subsCount,
         revenue: totalRevenue,
         status: f.kycStatus === 'approved' ? 'approved' : (f.kycStatus === 'rejected' ? 'rejected' : (f.kycStatus || 'pending')),
         health: `${healthVal}%`,
@@ -2526,6 +2527,7 @@ export const getFranchiseById = async (req, res) => {
     }
 
     const fleetCount = await Vehicle.countDocuments({ franchise: franchise._id });
+    const subsCount = await Rider.countDocuments({ franchise: franchise._id, status: 'approved', role: 'rider' });
     const revenueData = await Transaction.find({ franchise: franchise._id, type: 'Subscription', status: 'completed' });
     const totalRevenue = revenueData.reduce((acc, t) => acc + t.amount, 0);
     const serviceCount = await Vehicle.countDocuments({ franchise: franchise._id, status: 'in-service' });
@@ -2562,7 +2564,7 @@ export const getFranchiseById = async (req, res) => {
         lat: franchise.businessDetails?.latitude || null,
         lng: franchise.businessDetails?.longitude || null,
         fleet: fleetCount,
-        subs: fleetCount,
+        subs: subsCount,
         revenue: totalRevenue,
         status: franchise.status || 'active',
         health: `${healthVal}%`,
