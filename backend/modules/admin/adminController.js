@@ -346,8 +346,26 @@ export const getAllHubs = async (req, res) => {
 
     const hubs = await Promise.all(franchises.map(async (f) => {
       const fleetCount = await Vehicle.countDocuments({ franchise: f._id });
-      const subsCount = await Rider.countDocuments({ franchise: f._id, status: 'approved', role: 'rider' });
-      const revenueData = await Transaction.find({ franchise: f._id, type: 'Subscription', status: 'completed' });
+      
+      const franchiseVehicles = await Vehicle.find({ franchise: f._id }).select('_id');
+      const vehicleIds = franchiseVehicles.map(v => v._id);
+      
+      const activeAssignments = await Assignment.find({
+        vehicle: { $in: vehicleIds },
+        status: 'active'
+      }).select('rider');
+      const assignedRiderIds = activeAssignments.map(a => a.rider);
+
+      const subsCount = await Rider.countDocuments({
+        $or: [
+          { franchise: f._id },
+          { vehicleId: { $in: vehicleIds } },
+          { _id: { $in: assignedRiderIds } }
+        ],
+        status: 'approved',
+        role: 'rider'
+      });
+      const revenueData = await Transaction.find({ franchiseId: f._id, type: 'Subscription', status: 'completed' });
       const totalRevenue = revenueData.reduce((acc, t) => acc + t.amount, 0);
 
       // Calculate Health based on maintenance status
@@ -2527,8 +2545,26 @@ export const getFranchiseById = async (req, res) => {
     }
 
     const fleetCount = await Vehicle.countDocuments({ franchise: franchise._id });
-    const subsCount = await Rider.countDocuments({ franchise: franchise._id, status: 'approved', role: 'rider' });
-    const revenueData = await Transaction.find({ franchise: franchise._id, type: 'Subscription', status: 'completed' });
+    
+    const franchiseVehicles = await Vehicle.find({ franchise: franchise._id }).select('_id');
+    const vehicleIds = franchiseVehicles.map(v => v._id);
+    
+    const activeAssignments = await Assignment.find({
+      vehicle: { $in: vehicleIds },
+      status: 'active'
+    }).select('rider');
+    const assignedRiderIds = activeAssignments.map(a => a.rider);
+
+    const subsCount = await Rider.countDocuments({
+      $or: [
+        { franchise: franchise._id },
+        { vehicleId: { $in: vehicleIds } },
+        { _id: { $in: assignedRiderIds } }
+      ],
+      status: 'approved',
+      role: 'rider'
+    });
+    const revenueData = await Transaction.find({ franchiseId: franchise._id, type: 'Subscription', status: 'completed' });
     const totalRevenue = revenueData.reduce((acc, t) => acc + t.amount, 0);
     const serviceCount = await Vehicle.countDocuments({ franchise: franchise._id, status: 'in-service' });
     const healthVal = fleetCount > 0 ? Math.round(((fleetCount - serviceCount) / fleetCount) * 100) : 100;
