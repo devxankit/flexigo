@@ -274,7 +274,7 @@ export default function HubManagementPage() {
                   <p className="text-sm font-black text-[var(--text-primary)] tracking-tight">{hub.fleet}</p>
                 </div>
                 <div>
-                  <p className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Subs</p>
+                  <p className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Assigned Riders</p>
                   <p className="text-sm font-black text-[var(--text-primary)] tracking-tight">{hub.subs}</p>
                 </div>
                 <div>
