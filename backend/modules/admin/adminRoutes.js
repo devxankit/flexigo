@@ -380,21 +380,8 @@ router.get('/payments/due-alerts', protectAdmin, async (req, res) => {
     // Combine both arrays
     const combinedDueRiders = [...expiredDueRiders, ...startDateDueRiders];
 
-    // Final safety check: if a rider has a successful transaction in the last 7 days, don't show them as due
-    const Transaction = (await import('../rider/transactionModel.js')).default;
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    
-    const finalDueRiders = [];
-    for (const rider of combinedDueRiders) {
-      const recentTxn = await Transaction.findOne({
-        riderId: rider._id,
-        status: 'success',
-        createdAt: { $gte: sevenDaysAgo }
-      });
-      if (!recentTxn) {
-        finalDueRiders.push(rider);
-      }
-    }
+    // Removed flawed safety check that was hiding riders based on deposit transactions
+    const finalDueRiders = combinedDueRiders;
 
     res.status(200).json({ success: true, riders: finalDueRiders });
   } catch (error) {

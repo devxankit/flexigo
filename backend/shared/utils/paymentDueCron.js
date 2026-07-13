@@ -185,8 +185,8 @@ export const startPaymentDueCron = () => {
         const diffTime = todayStart.getTime() - startDate.getTime();
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-        // Send reminder exactly on the 7th day (diffDays === 7)
-        return diffDays === 7;
+        // Send reminder exactly on the 7th day, 14th day, 21st day etc (diffDays % 7 === 0)
+        return diffDays > 0 && diffDays % 7 === 0;
       });
 
       if (ridersToNotify.length === 0) {
