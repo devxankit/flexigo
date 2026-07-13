@@ -1,11 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-  History, 
-  MapPin, 
-  TrendingUp, 
-  Zap, 
-  ChevronRight, 
+import {
+  History,
+  MapPin,
+  TrendingUp,
+  Zap,
+  ChevronRight,
   Calendar,
   IndianRupee,
   ChevronLeft
@@ -60,7 +60,7 @@ export default function PickupHistoryScreen() {
     <PageWrapper className={`min-h-screen pb-24 ${isDark ? 'bg-[#0A1120]' : 'bg-slate-50'}`}>
       {/* Header */}
       <div className="px-6 pt-8 pb-4 flex items-center justify-between sticky top-0 z-20 bg-inherit/90 backdrop-blur-md">
-        <button 
+        <button
           onClick={() => navigate(-1)}
           className={`p-2 rounded-full ${isDark ? 'bg-white/5' : 'bg-slate-200'}`}
         >
@@ -73,8 +73,8 @@ export default function PickupHistoryScreen() {
       <div className="px-6 space-y-6 mt-4">
         {/* Savings Hero Card */}
         <motion.div
-           initial={{ opacity: 0, y: 20 }}
-           animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
         >
           <GlassCard className="p-6 bg-gradient-to-br from-emerald-500 to-teal-600 border-none relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-10">
@@ -113,43 +113,43 @@ export default function PickupHistoryScreen() {
             >
               <GlassCard className={`p-4 border ${isDark ? 'border-white/5 bg-white/5' : 'border-slate-200 bg-white'}`}>
                 <div className="flex justify-between items-start mb-4">
-                   <div className="space-y-1">
-                      <div className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{item.planName}</div>
-                      <div className="flex items-center gap-1.5 text-[10px] text-[var(--text-tertiary)] uppercase font-bold tracking-wider">
-                         <Calendar size={12} /> {item.pickupDate}
-                      </div>
-                   </div>
-                   <div className="px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                      {item.status}
-                   </div>
+                  <div className="space-y-1">
+                    <div className={`text-sm font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{item.planName}</div>
+                    <div className="flex items-center gap-1.5 text-[10px] text-[var(--text-tertiary)] uppercase font-bold tracking-wider">
+                      <Calendar size={12} /> {item.pickupDate}
+                    </div>
+                  </div>
+                  <div className="px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                    {item.status}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-4">
-                   <div className={`p-3 rounded-xl ${isDark ? 'bg-white/5' : 'bg-slate-50'} border ${isDark ? 'border-white/5' : 'border-slate-100'}`}>
-                      <div className="text-[9px] uppercase font-black text-[var(--text-tertiary)] tracking-widest mb-1">Distance</div>
-                      <div className={`text-sm font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{item.distance} km</div>
-                   </div>
-                   <div className={`p-3 rounded-xl ${isDark ? 'bg-white/5' : 'bg-slate-50'} border ${isDark ? 'border-white/5' : 'border-slate-100'}`}>
-                      <div className="text-[9px] uppercase font-black text-[var(--text-tertiary)] tracking-widest mb-1">Cost</div>
-                      <div className={`text-sm font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>₹{item.cost}</div>
-                   </div>
+                  <div className={`p-3 rounded-xl ${isDark ? 'bg-white/5' : 'bg-slate-50'} border ${isDark ? 'border-white/5' : 'border-slate-100'}`}>
+                    <div className="text-[9px] uppercase font-black text-[var(--text-tertiary)] tracking-widest mb-1">Distance</div>
+                    <div className={`text-sm font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{item.distance} km</div>
+                  </div>
+                  <div className={`p-3 rounded-xl ${isDark ? 'bg-white/5' : 'bg-slate-50'} border ${isDark ? 'border-white/5' : 'border-slate-100'}`}>
+                    <div className="text-[9px] uppercase font-black text-[var(--text-tertiary)] tracking-widest mb-1">Cost</div>
+                    <div className={`text-sm font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>₹{item.cost}</div>
+                  </div>
                 </div>
 
                 <div className={`flex items-center justify-between p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10`}>
-                   <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-500">
-                         <TrendingUp size={12} />
-                      </div>
-                      <span className="text-[10px] font-black uppercase text-emerald-500 tracking-wider">Savings Profile</span>
-                   </div>
-                   <div className="text-[11px] font-black text-emerald-500 tracking-tighter">
-                      + ₹{item.savings} Saved
-                   </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-500">
+                      <TrendingUp size={12} />
+                    </div>
+                    <span className="text-[10px] font-black uppercase text-emerald-500 tracking-wider">Savings Profile</span>
+                  </div>
+                  <div className="text-[11px] font-black text-emerald-500 tracking-tighter">
+                    + ₹{item.savings} Saved
+                  </div>
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-[var(--border-subtle)] flex items-center gap-2 text-[10px] text-[var(--text-tertiary)]">
-                   <MapPin size={12} className="text-emerald-500" />
-                   <span className="uppercase font-bold tracking-widest">{item.hub}</span>
+                  <MapPin size={12} className="text-emerald-500" />
+                  <span className="uppercase font-bold tracking-widest">{item.hub}</span>
                 </div>
               </GlassCard>
             </motion.div>

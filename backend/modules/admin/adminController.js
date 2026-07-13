@@ -1606,6 +1606,7 @@ export const getInventoryData = async (req, res) => {
       partId: b.partId?._id || b.partId || '',
       partName: b.partId?.name || 'N/A',
       partsRepair: b.partsRepair,
+      riderName: b.riderName,
       amount: b.amount,
       formattedAmount: `₹${b.amount.toLocaleString()}`,
       status: b.status,
@@ -1636,7 +1637,7 @@ export const getInventoryData = async (req, res) => {
 
 export const createBill = async (req, res) => {
   try {
-    const { vehicleNo, chasisNo, partId, partsRepair, amount, supplier } = req.body;
+    const { vehicleNo, chasisNo, partId, partsRepair, riderName, amount, supplier } = req.body;
     const billId = `BILL-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
     const newBill = await VendorBill.create({
       billId,
@@ -1644,6 +1645,7 @@ export const createBill = async (req, res) => {
       chasisNo,
       partId,
       partsRepair,
+      riderName,
       amount,
       supplier: supplier || 'Internal'
     });

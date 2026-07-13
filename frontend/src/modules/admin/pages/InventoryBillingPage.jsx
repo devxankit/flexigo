@@ -41,13 +41,17 @@ export default function InventoryBillingPage() {
       removeBill,
       addPart,
       updatePart,
-      removePart
+      removePart,
+      riders,
+      fetchRiders
    } = useAdminDataStore();
    const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
 
    const [isModalOpen, setIsModalOpen] = useState(false);
    const [modalType, setModalType] = useState('add');
    const [selectedBill, setSelectedBill] = useState(null);
+   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+   const [billToDelete, setBillToDelete] = useState(null);
    const [isSubmitting, setIsSubmitting] = useState(false);
 
    const [billForm, setBillForm] = useState({
@@ -55,6 +59,7 @@ export default function InventoryBillingPage() {
       chasisNo: '',
       partId: '',
       partsRepair: '',
+      riderName: '',
       amount: '',
       supplier: ''
    });
@@ -68,6 +73,7 @@ export default function InventoryBillingPage() {
    useEffect(() => {
       fetchInventoryData(activeFilters);
       fetchParts();
+      fetchRiders();
       if (searchParams.get('modal') === 'add') {
          handleOpenAdd();
       }
@@ -87,6 +93,7 @@ export default function InventoryBillingPage() {
          chasisNo: '',
          partId: '',
          partsRepair: '',
+         riderName: '',
          amount: '',
          supplier: 'Internal'
       });
@@ -102,6 +109,7 @@ export default function InventoryBillingPage() {
          chasisNo: bill.chasisNo,
          partId: bill.partId || '',
          partsRepair: bill.partsRepair,
+         riderName: bill.riderName || '',
          amount: bill.amount,
          supplier: bill.supplier
       });
@@ -129,8 +137,22 @@ export default function InventoryBillingPage() {
       }
    };
 
-   const handleDelete = async (id) => {
-      await removeBill(id);
+   const handleDeleteClick = (bill) => {
+      setBillToDelete(bill);
+      setIsDeleteModalOpen(true);
+   };
+
+   const handleConfirmDelete = async () => {
+      if (billToDelete) {
+         await removeBill(billToDelete._id);
+         setBillToDelete(null);
+         setIsDeleteModalOpen(false);
+      }
+   };
+
+   const handleCloseDeleteModal = () => {
+      setBillToDelete(null);
+      setIsDeleteModalOpen(false);
    };
 
    const handleOpenPartsModal = () => {
@@ -304,6 +326,9 @@ export default function InventoryBillingPage() {
                               <div className="flex flex-col">
                                  <span className="font-bold text-emerald-500 text-sm tracking-tight">{bill.partName || 'N/A'}</span>
                                  <span className="text-[11px] text-[var(--text-tertiary)] mt-0.5">{bill.partsRepair}</span>
+                                 {bill.riderName && (
+                                    <span className="text-[10px] text-amber-500/80 italic mt-0.5 leading-none">Rider/Cmnt: {bill.riderName}</span>
+                                 )}
                               </div>
                            </td>
                            <td className="py-2 px-4 font-black text-emerald-500">
@@ -319,7 +344,7 @@ export default function InventoryBillingPage() {
                                     <Edit size={12} />
                                  </button>
                                  <button
-                                    onClick={() => handleDelete(bill._id)}
+                                    onClick={() => handleDeleteClick(bill)}
                                     className="p-1 text-[var(--text-tertiary)] hover:text-rose-500 hover:bg-rose-500/10 rounded transition-all"
                                  >
                                     <Trash2 size={12} />
@@ -404,6 +429,17 @@ export default function InventoryBillingPage() {
                               value={billForm.partsRepair}
                               onChange={(e) => setBillForm({ ...billForm, partsRepair: e.target.value })}
                               placeholder="e.g. Battery Replacement, Brake Pad sync"
+                              className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic text-[var(--text-primary)]"
+                           />
+                        </div>
+
+                        <div className="space-y-1.5">
+                           <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Rider Name / Comments</label>
+                           <input
+                              type="text"
+                              value={billForm.riderName}
+                              onChange={(e) => setBillForm({ ...billForm, riderName: e.target.value })}
+                              placeholder="e.g. Sanoj Yadav or Custom Comment"
                               className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold tracking-widest focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all italic text-[var(--text-primary)]"
                            />
                         </div>
@@ -539,6 +575,43 @@ export default function InventoryBillingPage() {
                               </div>
                            ))
                         )}
+                     </div>
+                  </motion.div>
+               </div>
+            )}
+         </AnimatePresence>
+         
+         {/* Delete Confirmation Modal */}
+         <AnimatePresence>
+            {isDeleteModalOpen && (
+               <div className="fixed inset-0 z-[1100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                  <motion.div
+                     initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                     animate={{ opacity: 1, scale: 1, y: 0 }}
+                     exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                     className="bg-white rounded-3xl w-full max-w-sm overflow-hidden flex flex-col p-8 text-center items-center shadow-2xl"
+                  >
+                     <div className="w-16 h-16 rounded-2xl bg-rose-50 flex items-center justify-center mb-6">
+                        <AlertTriangle size={32} className="text-rose-500" />
+                     </div>
+                     <h3 className="text-xl font-black text-slate-900 tracking-tighter uppercase italic mb-3">Confirm Deletion</h3>
+                     <p className="text-xs font-bold text-slate-500 uppercase tracking-widest leading-relaxed mb-8">
+                        Are you sure you want to permanently delete this record? This action cannot be undone.
+                     </p>
+                     
+                     <div className="flex gap-3 w-full">
+                        <button
+                           onClick={handleCloseDeleteModal}
+                           className="flex-1 py-3.5 px-4 rounded-xl border-2 border-slate-200 text-slate-600 text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-all"
+                        >
+                           Cancel
+                        </button>
+                        <button
+                           onClick={handleConfirmDelete}
+                           className="flex-1 py-3.5 px-4 rounded-xl bg-rose-500 text-white text-xs font-black uppercase tracking-widest hover:bg-rose-600 transition-all shadow-lg shadow-rose-500/30"
+                        >
+                           Delete
+                        </button>
                      </div>
                   </motion.div>
                </div>

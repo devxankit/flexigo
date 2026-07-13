@@ -7,6 +7,7 @@ const VendorBillSchema = new mongoose.Schema({
   chasisNo: { type: String, required: true },
   partId: { type: mongoose.Schema.Types.ObjectId, ref: 'Part', required: true },
   partsRepair: { type: String, required: true },
+  riderName: { type: String },
   amount: { type: Number, required: true },
   status: {
     type: String,
