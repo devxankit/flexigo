@@ -550,18 +550,26 @@ export const useAdminDataStore = create((set, get) => ({
 
   inventory: [],
   billing: [],
+  billingPagination: { page: 1, limit: 10, total: 0, totalPages: 1 },
   parts: [],
   inventoryStats: { totalItems: 0, restockCount: '0', stockValue: '₹0L', unpaidAmount: '₹0L' },
-  fetchInventoryData: async (filters = {}) => {
+  lastInventoryFilters: { page: 1, limit: 10, range: 'Last 7 Days' },
+  fetchInventoryData: async (filters) => {
     try {
+      const currentFilters = filters ? { ...get().lastInventoryFilters, ...filters } : get().lastInventoryFilters;
+      set({ lastInventoryFilters: currentFilters });
+
       const params = new URLSearchParams();
-      if (filters.range) params.append('range', typeof filters.range === 'object' ? JSON.stringify(filters.range) : filters.range);
+      if (currentFilters.range) params.append('range', typeof currentFilters.range === 'object' ? JSON.stringify(currentFilters.range) : currentFilters.range);
+      if (currentFilters.page) params.append('page', currentFilters.page);
+      if (currentFilters.limit) params.append('limit', currentFilters.limit);
 
       const res = await api.get(`/admin/inventory?${params.toString()}`);
       if (res.data.success) {
         set({
           inventory: res.data.inventory,
           billing: res.data.billing,
+          billingPagination: res.data.billingPagination || get().billingPagination,
           inventoryStats: res.data.stats || get().inventoryStats
         });
       }
@@ -584,6 +592,13 @@ export const useAdminDataStore = create((set, get) => ({
   },
 
   updateBill: async (id, billData) => {
+    const previousBilling = get().billing;
+    set({
+      billing: previousBilling.map(bill =>
+        bill._id === id ? { ...bill, ...billData } : bill
+      )
+    });
+    
     try {
       const res = await api.put(`/admin/billing/${id}`, billData);
       if (res.data.success) {
@@ -592,6 +607,7 @@ export const useAdminDataStore = create((set, get) => ({
       }
     } catch (err) {
       console.error("Failed to update bill:", err);
+      set({ billing: previousBilling });
       return { success: false, message: err.message };
     }
   },

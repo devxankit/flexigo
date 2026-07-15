@@ -42,10 +42,24 @@ export default function InventoryBillingPage() {
       addPart,
       updatePart,
       removePart,
-      riders,
-      fetchRiders
+      fetchRiders,
+      billingPagination
    } = useAdminDataStore();
    const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
+   const initialPage = parseInt(searchParams.get('page')) || 1;
+   const [billingPage, setBillingPage] = useState(initialPage);
+
+   useEffect(() => {
+      setSearchParams(prev => {
+         const newParams = new URLSearchParams(prev);
+         if (billingPage > 1) {
+            newParams.set('page', billingPage);
+         } else {
+            newParams.delete('page');
+         }
+         return newParams;
+      });
+   }, [billingPage, setSearchParams]);
 
    const [isModalOpen, setIsModalOpen] = useState(false);
    const [modalType, setModalType] = useState('add');
@@ -71,7 +85,10 @@ export default function InventoryBillingPage() {
    const [isPartSubmitting, setIsPartSubmitting] = useState(false);
 
    useEffect(() => {
-      fetchInventoryData(activeFilters);
+      fetchInventoryData({ ...activeFilters, page: billingPage, limit: 10 });
+   }, [activeFilters, billingPage]);
+
+   useEffect(() => {
       fetchParts();
       fetchRiders();
       if (searchParams.get('modal') === 'add') {
@@ -84,7 +101,7 @@ export default function InventoryBillingPage() {
 
    const handleFilterChange = (newFilters) => {
       setActiveFilters(newFilters);
-      fetchInventoryData(newFilters);
+      setBillingPage(1);
    };
 
    const handleOpenAdd = () => {
@@ -95,7 +112,8 @@ export default function InventoryBillingPage() {
          partsRepair: '',
          riderName: '',
          amount: '',
-         supplier: 'Internal'
+         supplier: 'Internal',
+         status: 'pending'
       });
       setModalType('add');
       setIsModalOpen(true);
@@ -111,7 +129,8 @@ export default function InventoryBillingPage() {
          partsRepair: bill.partsRepair,
          riderName: bill.riderName || '',
          amount: bill.amount,
-         supplier: bill.supplier
+         supplier: bill.supplier,
+         status: bill.status || 'pending'
       });
       setModalType('edit');
       setIsModalOpen(true);
@@ -320,19 +339,33 @@ export default function InventoryBillingPage() {
                               <div className="flex flex-col">
                                  <span className="font-medium text-[var(--text-primary)] uppercase tracking-tighter italic">{bill.vehicleNo}</span>
                                  <span className="text-[10px] text-[var(--text-tertiary)] opacity-50">{bill.chasisNo}</span>
+                                 <span className="text-[10px] text-amber-500/80 italic mt-1 font-semibold leading-none">Rider/Cmnt: {bill.riderName || 'N/A'}</span>
                               </div>
                            </td>
                            <td className="py-2 px-4 whitespace-nowrap">
                               <div className="flex flex-col">
                                  <span className="font-bold text-emerald-500 text-sm tracking-tight">{bill.partName || 'N/A'}</span>
                                  <span className="text-[11px] text-[var(--text-tertiary)] mt-0.5">{bill.partsRepair}</span>
-                                 {bill.riderName && (
-                                    <span className="text-[10px] text-amber-500/80 italic mt-0.5 leading-none">Rider/Cmnt: {bill.riderName}</span>
-                                 )}
                               </div>
                            </td>
                            <td className="py-2 px-4 font-black text-emerald-500">
-                              {bill.formattedAmount}
+                              <div className="flex flex-col gap-1.5">
+                                 <span>{bill.formattedAmount}</span>
+                                 <label className="flex items-center gap-1.5 cursor-pointer group/label w-fit">
+                                    <input 
+                                       type="checkbox" 
+                                       checked={bill.status === 'paid'}
+                                       onChange={async (e) => {
+                                          const newStatus = e.target.checked ? 'paid' : 'pending';
+                                          await updateBill(bill._id, { status: newStatus });
+                                       }}
+                                       className="w-3.5 h-3.5 rounded border-[var(--border-subtle)] text-emerald-500 focus:ring-emerald-500/20 focus:ring-1 transition-all cursor-pointer accent-emerald-500"
+                                    />
+                                    <span className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-tertiary)] group-hover/label:text-[var(--text-primary)] transition-colors">
+                                       {bill.status === 'paid' ? 'Paid' : 'Not Paid'}
+                                    </span>
+                                 </label>
+                              </div>
                            </td>
 
                            <td className="py-2 px-4">
@@ -356,6 +389,47 @@ export default function InventoryBillingPage() {
                   </tbody>
                </table>
             </div>
+            {/* Pagination Controls */}
+            {billingPagination && billingPagination.totalPages > 1 && (
+               <div className="px-6 py-4 border-t border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5 flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">
+                     Showing {((billingPagination.page - 1) * billingPagination.limit) + 1} to {Math.min(billingPagination.page * billingPagination.limit, billingPagination.total)} of {billingPagination.total} Entries
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                     <button
+                        disabled={billingPagination.page === 1}
+                        onClick={() => setBillingPage(p => p - 1)}
+                        className="px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                     >
+                        Prev
+                     </button>
+                     {Array.from({ length: billingPagination.totalPages }, (_, i) => i + 1).map(page => {
+                        if (page === 1 || page === billingPagination.totalPages || (page >= billingPagination.page - 1 && page <= billingPagination.page + 1)) {
+                           return (
+                              <button
+                                 key={page}
+                                 onClick={() => setBillingPage(page)}
+                                 className={`w-7 h-7 rounded-lg text-[10px] font-black flex items-center justify-center transition-all ${billingPagination.page === page ? 'bg-emerald-600 text-white shadow-md' : 'text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'}`}
+                              >
+                                 {page}
+                              </button>
+                           );
+                        }
+                        if (page === billingPagination.page - 2 || page === billingPagination.page + 2) {
+                           return <span key={page} className="text-[var(--text-tertiary)] text-[10px] font-bold">...</span>;
+                        }
+                        return null;
+                     })}
+                     <button
+                        disabled={billingPagination.page === billingPagination.totalPages}
+                        onClick={() => setBillingPage(p => p + 1)}
+                        className="px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                     >
+                        Next
+                     </button>
+                  </div>
+               </div>
+            )}
          </div>
 
          {/* Bill Modal */}

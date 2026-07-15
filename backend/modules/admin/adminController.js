@@ -1573,19 +1573,29 @@ export const getFinanceData = async (req, res) => {
 
 export const getInventoryData = async (req, res) => {
   try {
-    const { range } = req.query;
+    const { range, page = 1, limit = 10 } = req.query;
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+
     const dateFilter = getDateFilter(range, 'createdAt');
     const billFilter = getDateFilter(range, 'date');
 
-    const [items, bills] = await Promise.all([
+    const unpaidAmtResult = await VendorBill.aggregate([
+      { $match: { ...billFilter, status: 'pending' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const unpaidAmt = unpaidAmtResult[0]?.total || 0;
+
+    const [items, bills, totalBills] = await Promise.all([
       Inventory.find(dateFilter).sort('name'),
-      VendorBill.find(billFilter).populate('partId').sort('-date').limit(20)
+      VendorBill.find(billFilter).populate('partId').sort('-date').skip(skip).limit(limitNum),
+      VendorBill.countDocuments(billFilter)
     ]);
 
     const totalItems = items.reduce((acc, item) => acc + item.stock, 0);
     const lowStockCount = items.filter(item => item.stock <= item.minThreshold).length;
     const stockValue = items.reduce((acc, item) => acc + (item.stock * (item.pricePerUnit || 0)), 0);
-    const unpaidAmt = bills.filter(b => b.status === 'pending').reduce((acc, b) => acc + b.amount, 0);
 
     const formattedItems = items.map(item => ({
       id: item.sku,
@@ -1623,6 +1633,12 @@ export const getInventoryData = async (req, res) => {
       success: true,
       inventory: formattedItems,
       billing: formattedBills,
+      billingPagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: totalBills,
+        totalPages: Math.ceil(totalBills / limitNum)
+      },
       stats: {
         totalItems: totalItems.toLocaleString(),
         restockCount: lowStockCount < 10 ? `0${lowStockCount}` : lowStockCount,
