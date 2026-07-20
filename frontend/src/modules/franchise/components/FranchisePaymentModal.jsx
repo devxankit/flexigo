@@ -96,6 +96,7 @@ export default function FranchisePaymentModal({ isOpen, onClose, rider, type, on
               setError(err.response?.data?.message || 'Payment verification failed');
             }
           },
+          prefill: { email: 'franchise@flexigo.in', contact: '0000000000' },
           theme: { color: '#10b981' }
         };
 
@@ -157,7 +158,9 @@ export default function FranchisePaymentModal({ isOpen, onClose, rider, type, on
               const verifyRes = await api.post('/franchise/riders/plan-verify', {
                 ...response,
                 riderId: rider._id || rider.id,
-                planId: selectedPlan._id
+                planId: selectedPlan?._id,
+                depositAmount: depositAmount,
+                planPrice: selectedPlan.price
               });
 
               if (verifyRes.data.success) {
@@ -167,6 +170,7 @@ export default function FranchisePaymentModal({ isOpen, onClose, rider, type, on
               setError(err.response?.data?.message || 'Payment verification failed');
             }
           },
+          prefill: { email: 'franchise@flexigo.in', contact: '0000000000' },
           theme: { color: '#10b981' }
         };
 

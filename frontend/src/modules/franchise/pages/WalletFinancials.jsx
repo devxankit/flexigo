@@ -111,6 +111,7 @@ export default function WalletFinancials() {
                         alert('Verification failed: ' + err.message);
                      }
                   },
+                  prefill: { email: 'franchise@flexigo.in', contact: '0000000000' },
                   theme: {
                      color: '#10B981' // emerald-500
                   }

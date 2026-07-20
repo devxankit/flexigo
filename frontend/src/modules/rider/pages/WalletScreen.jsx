@@ -81,6 +81,7 @@ export default function WalletScreen() {
           }
         },
         prefill: {
+          email: user?.email || 'rider@flexigo.in',
           contact: phone
         },
         theme: {

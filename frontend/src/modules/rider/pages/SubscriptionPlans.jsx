@@ -152,8 +152,9 @@ export default function SubscriptionPlans() {
           }
         },
         prefill: {
-          name: user.name,
-          contact: user.phone
+          name: user?.name || "Rider",
+          email: user?.email || "rider@flexigo.in",
+          contact: user?.phone
         },
         theme: {
           color: "#39FF14"
@@ -231,7 +232,7 @@ export default function SubscriptionPlans() {
             setTimeout(() => { setIsPayingDeposit(false); fetchProfile(); }, 3000);
           }
         },
-        prefill: { name: user.name, contact: user.phone },
+        prefill: { name: user.name, email: user.email || "rider@flexigo.in", contact: user.phone },
         theme: { color: "#39FF14" }
       };
       new window.Razorpay(options).open();
@@ -259,7 +260,7 @@ export default function SubscriptionPlans() {
             fetchProfile();
           }
         },
-        prefill: { name: user?.name || "Rider", contact: user?.phone || "0000000000" },
+        prefill: { name: user?.name || "Rider", email: user?.email || "rider@flexigo.in", contact: user?.phone || "0000000000" },
         theme: { color: "#39FF14" }
       };
       new window.Razorpay(options).open();

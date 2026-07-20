@@ -94,6 +94,7 @@ export default function PaymentsScreen() {
         },
         prefill: {
           name: user?.name || 'Rider',
+          email: user?.email || 'rider@flexigo.in',
           contact: user?.phone
         },
         theme: {
