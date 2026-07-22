@@ -38,7 +38,7 @@ export const sendOTP = async (req, res) => {
       rider = await Rider.create({ phone, otp, otpExpire });
     }
 
-    const message = `Welcome to the Flexigo powered by SMSINDIAHUB. Your OTP for registration is ${otp}`;
+    const message = `Welcome to the Flexigo powered by Appzeto.Your OTP for registration is ${otp}.BGADEC`;
     if (!isTestNumber) {
       try { await sendSMS(phone, message); } catch (e) { }
     }

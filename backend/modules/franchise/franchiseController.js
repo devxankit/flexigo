@@ -50,7 +50,7 @@ export const sendOTP = async (req, res) => {
     }
 
     // Send SMS via SMSIndiaHub
-    const message = `Welcome to the Flexigo powered by SMSINDIAHUB. Your OTP for registration is ${otp}`;
+    const message = `Welcome to the Flexigo powered by Appzeto.Your OTP for registration is ${otp}.BGADEC`;
     if (!isTestNumber) {
       console.log('[FRANCHISE AUTH] Triggering SMS Service...');
       try {

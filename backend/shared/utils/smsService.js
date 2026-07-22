@@ -21,10 +21,11 @@ export const sendSMS = async (phone, message) => {
 
   try {
     // API URL for SMSIndiaHub (pushsms.aspx)
-    const url = 'http://cloud.smsindiahub.in/vendorsms/pushsms.aspx';
+    const url = 'https://cloud.smsindiahub.in/vendorsms/pushsms.aspx';
 
     const params = {
       APIKey: apiKey,
+      password: apiKey, // Some SMSIndiaHub endpoints require the API Key to be passed as 'password'
       user: process.env.SMSINDIAHUB_USERNAME,
       sid: senderId,
       msisdn: cleanPhone,
@@ -32,6 +33,20 @@ export const sendSMS = async (phone, message) => {
       fl: 0,
       gwid: 2, // Gateway ID 2 for Transactional/OTP
     };
+
+    if (templateId) {
+      params.dltTemplateId = templateId;
+      params.dlt_template_id = templateId;
+      params.template_id = templateId;
+      params.templateid = templateId;
+      params.dlttemplateid = templateId;
+    }
+    if (process.env.SMSINDIAHUB_ENTITY_ID) {
+      params.dltEntityId = process.env.SMSINDIAHUB_ENTITY_ID;
+      params.dlt_entity_id = process.env.SMSINDIAHUB_ENTITY_ID;
+      params.entityid = process.env.SMSINDIAHUB_ENTITY_ID;
+      params.dltentityid = process.env.SMSINDIAHUB_ENTITY_ID;
+    }
 
     console.log(`\n[SMS SERVICE] ----- SENDING SMS START -----`);
     console.log(`[SMS SERVICE] Username: ${process.env.SMSINDIAHUB_USERNAME}`);
