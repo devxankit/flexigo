@@ -136,15 +136,16 @@ export default function KycOnboardingPage() {
    };
 
    const handleExport = () => {
-      const headers = ['Record ID', 'Identity Identity', 'Phone', 'Persona', 'Liveness Check', 'Vehicle Plate', 'Registry Date', 'Status'];
+      const headers = ['Record ID', 'Identity', 'Phone', 'Vehicle No', 'Persona', 'Liveness Check', 'Start Date', 'Registry Date', 'Status'];
 
       const rows = filteredRecords.map(r => [
          r.id || r._id || '',
          r.name || '',
          r.phone || '',
+         r.vehiclePlate || '',
          r.role || '',
          r.details?.ekycVerified ? 'LIVE_MATCH_OK' : 'UNVERIFIED',
-         r.vehiclePlate || 'N/A',
+         r.adminAssignedStartDate ? r.adminAssignedStartDate.split('T')[0] : '',
          r.date ? new Date(r.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '',
          r.status || ''
       ]);
@@ -235,7 +236,7 @@ export default function KycOnboardingPage() {
                <table className="w-full">
                   <thead>
                      <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
-                        {['Identity', 'Wallet Balance', 'Persona', 'Start Date', 'Registry Date', 'Status', 'Actions'].map((header) => (
+                        {['Identity', 'Vehicle No', 'Persona', 'Start Date', 'Registry Date', 'Status', 'Actions'].map((header) => (
                            <th key={header} className="text-left py-3 px-2 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                         ))}
                      </tr>
@@ -272,7 +273,7 @@ export default function KycOnboardingPage() {
                               </td>
                               <td className="py-2 px-2">
                                  <div className="text-[11px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                                    ₹{record.walletBalance || 0}
+                                    {record.vehiclePlate || ''}
                                  </div>
                               </td>
                               <td className="py-2 px-2 font-medium text-[var(--text-tertiary)]" onClick={(e) => e.stopPropagation()}>
