@@ -174,8 +174,15 @@ export const updateKYC = async (req, res) => {
 
     const upload = async (data, folder) => {
       if (!data) return null;
-      const res = await cloudinary.uploader.upload(data, { folder: `flexigo/riders/${rider._id}/${folder}` });
-      return res.secure_url;
+      try {
+        console.log(`[Cloudinary] Starting upload for ${folder}...`);
+        const res = await cloudinary.uploader.upload(data, { folder: `flexigo/riders/${rider._id}/${folder}` });
+        console.log(`[Cloudinary] Upload success for ${folder}:`, res.secure_url);
+        return res.secure_url;
+      } catch (err) {
+        console.error(`❌ [Cloudinary] Upload failed for ${folder}:`, err);
+        throw new Error(`Cloudinary upload failed for ${folder}: ${err.message}`);
+      }
     };
 
     if (selfie) rider.kycDetails.selfie = await upload(selfie, 'selfie');
@@ -201,7 +208,8 @@ export const updateKYC = async (req, res) => {
 
     res.status(200).json({ success: true, message: 'KYC updated', rider });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error("❌ KYC UPDATE ERROR:", error);
+    res.status(500).json({ success: false, message: `Failed to update KYC: ${error.message}` });
   }
 };
 
