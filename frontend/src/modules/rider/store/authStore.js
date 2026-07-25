@@ -119,7 +119,12 @@ export const useAuthStore = create(
             }
           }
 
-          const res = await api.post('/rider/kyc/update', payload);
+          const headers = {};
+          if (payload instanceof FormData) {
+            headers['Content-Type'] = 'multipart/form-data';
+          }
+
+          const res = await api.post('/rider/kyc/update', payload, { headers });
           if (res.data.success) {
             set({ kycStatus: 'pending', user: res.data.rider });
             return { success: true };
