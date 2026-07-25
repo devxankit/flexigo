@@ -7,12 +7,14 @@ import {
   Clock,
   Search,
   Zap,
+  Download,
 } from 'lucide-react';
 import AdminStatCard from '../components/AdminStatCard';
 import OpsFilter from '../components/OpsFilter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAdminDataStore } from '../store/adminDataStore';
 import api from '../../../lib/axios';
+import * as XLSX from 'xlsx';
 
 const Gateways = [
   { name: 'RazorPay', status: 'active', speed: '99ms', type: 'Primary' },
@@ -45,6 +47,31 @@ export default function PaymentGatewayPage() {
       fetchFinanceData(activeFilters);
     }
   };
+
+  const handleExport = () => {
+    if (!financeTransactions || financeTransactions.length === 0) {
+      alert("No data available to export");
+      return;
+    }
+
+    const exportData = financeTransactions.map((txn) => ({
+      'Ref Identity': txn.id,
+      'Initiator': txn.user,
+      'Method': txn.method,
+      'Amount': txn.val,
+      'Status': txn.status,
+      'Sync Date': new Date(txn.date).toLocaleString('en-IN', {
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: true
+      })
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Transactions');
+    XLSX.writeFile(workbook, `Payment_Gateway_Data_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
+
 
   const fetchDueAlerts = async () => {
     try {
@@ -103,6 +130,13 @@ export default function PaymentGatewayPage() {
 
         <div className="flex items-center gap-2">
           <OpsFilter onFilterChange={handleFilterChange} />
+          <button
+            onClick={handleExport}
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl text-[11px] font-black uppercase tracking-widest text-[var(--text-primary)] hover:bg-emerald-500/10 hover:text-emerald-500 hover:border-emerald-500/30 transition-all shadow-sm"
+          >
+            <Download size={14} />
+            <span>Export</span>
+          </button>
         </div>
       </div>
 
