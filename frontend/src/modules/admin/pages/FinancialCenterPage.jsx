@@ -30,7 +30,7 @@ import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function FinancialCenterPage() {
    const { networkStats, revenueData, financeStats, financeTransactions, fetchFinanceData, fetchDashboardStats } = useAdminDataStore();
-   const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
+   const [activeFilters, setActiveFilters] = React.useState({ range: 'All Time' });
    const [matrixView, setMatrixView] = React.useState('weekly');
 
    React.useEffect(() => {

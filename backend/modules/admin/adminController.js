@@ -1551,7 +1551,7 @@ export const getFinanceData = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      transactions: combined.slice(0, 50).map(t => ({
+      transactions: combined.slice(0, 1000).map(t => ({
         ...t,
         val: `₹${t.amount.toLocaleString()}`,
         date: t.date

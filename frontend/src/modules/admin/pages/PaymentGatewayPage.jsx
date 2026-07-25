@@ -24,7 +24,7 @@ const Gateways = [
 
 export default function PaymentGatewayPage() {
   const { financeTransactions, financeStats, fetchFinanceData, approveQRPayment, rejectQRPayment } = useAdminDataStore();
-  const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
+  const [activeFilters, setActiveFilters] = React.useState({ range: 'All Time' });
   const [searchQuery, setSearchQuery] = useState('');
   const [dueAlerts, setDueAlerts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);

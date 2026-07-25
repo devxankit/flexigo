@@ -19,7 +19,7 @@ export default function OpsFilter({
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('date');
-  const [selectedRange, setSelectedRange] = useState('Last 7 Days');
+  const [selectedRange, setSelectedRange] = useState('All Time');
   const [customRange, setCustomRange] = useState({ start: '', end: '' });
   const [appliedFilters, setAppliedFilters] = useState({});
   const filterRef = useRef(null);
@@ -31,6 +31,7 @@ export default function OpsFilter({
     'Last 30 Days',
     'This Month',
     'Last Month',
+    'All Time',
     'Custom Range'
   ];
 

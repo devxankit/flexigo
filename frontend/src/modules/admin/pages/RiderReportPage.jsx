@@ -17,12 +17,12 @@ import { useAdminDataStore } from '../store/adminDataStore';
 export default function RiderReportPage() {
    const { riderReport, fetchRiderReport, kycRecords, fetchKycRecords, isLoading } = useAdminDataStore();
    const [searchQuery, setSearchQuery] = React.useState('');
-   const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 30 Days' });
+   const [activeFilters, setActiveFilters] = React.useState({ range: 'All Time' });
    const [currentPage, setCurrentPage] = React.useState(1);
    const recordsPerPage = 10;
 
    React.useEffect(() => {
-      fetchRiderReport({ range: 'Last 30 Days' });
+      fetchRiderReport({ range: 'All Time' });
       fetchKycRecords();
    }, []);
 
