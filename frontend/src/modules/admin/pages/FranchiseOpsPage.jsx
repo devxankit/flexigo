@@ -19,10 +19,10 @@ import { useAdminDataStore } from '../store/adminDataStore';
 
 export default function FranchiseOpsPage() {
    const { franchiseOps, franchiseOpsStats, fetchFranchiseOpsData } = useAdminDataStore();
-   const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
+   const [activeFilters, setActiveFilters] = React.useState({ range: 'All Time' });
 
    useEffect(() => {
-      fetchFranchiseOpsData(activeFilters);
+      fetchFranchiseOpsData({ range: 'All Time' });
    }, []);
 
    const handleFilterChange = (newFilters) => {

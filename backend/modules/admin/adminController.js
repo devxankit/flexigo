@@ -1745,7 +1745,7 @@ export const getFranchiseOpsData = async (req, res) => {
     const dateFilter = getDateFilter(range, 'createdAt');
     const txnFilter = getDateFilter(range, 'date');
 
-    const franchises = await Franchise.find({ ...dateFilter, kycStatus: 'approved' }).sort('-createdAt');
+    const franchises = await Franchise.find(dateFilter).sort('-createdAt');
     const totalPartners = franchises.length;
 
     const txns = await Transaction.find({ ...txnFilter, status: 'completed' });

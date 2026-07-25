@@ -57,16 +57,8 @@ export default function RiderReportPage() {
    };
 
    const filteredReport = React.useMemo(() => {
-      const approvedPhones = new Set(
-         (kycRecords || [])
-            .filter(record => record.status === 'approved' && (record.role?.toLowerCase() === 'rider' || record.role?.toLowerCase() === 'driver'))
-            .map(record => record.phone?.trim())
-            .filter(Boolean)
-      );
-      const approvedRiders = (riderReport || []).filter(r => approvedPhones.has(r.phone?.trim()));
-
       const q = searchQuery.toLowerCase();
-      return approvedRiders.filter(r => {
+      return (riderReport || []).filter(r => {
          return (
             (r.name?.toLowerCase() || '').includes(q) ||
             (r.phone || '').includes(q) ||
@@ -74,7 +66,7 @@ export default function RiderReportPage() {
             (r.activePlan?.toLowerCase() || '').includes(q)
          );
       });
-   }, [riderReport, kycRecords, searchQuery]);
+   }, [riderReport, searchQuery]);
 
    const totalPages = Math.ceil(filteredReport.length / recordsPerPage);
    const paginatedReport = filteredReport.slice((currentPage - 1) * recordsPerPage, currentPage * recordsPerPage);
