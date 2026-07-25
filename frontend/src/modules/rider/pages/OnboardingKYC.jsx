@@ -310,17 +310,26 @@ export default function OnboardingKYC() {
       console.log('ONBOARDING: Final step reached. Starting KYC update.');
       setLoading(true);
       try {
-        console.log('ONBOARDING: Preparing kycData object');
-        const kycData = {
-          phone: phone || user?.phone,
-          selfie: await fileToBase64(uploads.selfie),
-          aadhaarFront: await fileToBase64(uploads.aadhaarFront),
-          aadhaarBack: await fileToBase64(uploads.aadhaarBack),
-          drivingLicense: uploads.license ? await fileToBase64(uploads.license) : null
+        console.log('ONBOARDING: Preparing FormData object');
+        const formData = new FormData();
+        formData.append('phone', phone || user?.phone || '');
+
+        const appendField = (key, val) => {
+          if (!val) return;
+          if (val instanceof File || val instanceof Blob) {
+            formData.append(key, val);
+          } else if (typeof val === 'string') {
+            formData.append(key, val);
+          }
         };
-        console.log('ONBOARDING: kycData prepared. Files converted to Base64');
-        console.log('ONBOARDING: Calling updateKYC store method');
-        const result = await updateKYC(kycData);
+
+        appendField('selfie', uploads.selfie);
+        appendField('aadhaarFront', uploads.aadhaarFront);
+        appendField('aadhaarBack', uploads.aadhaarBack);
+        appendField('drivingLicense', uploads.license);
+
+        console.log('ONBOARDING: FormData prepared. Calling updateKYC store method');
+        const result = await updateKYC(formData);
         console.log('ONBOARDING: updateKYC result:', JSON.stringify(result));
         if (result.success) {
           console.log('ONBOARDING: Success! Navigating to /rider/plans');

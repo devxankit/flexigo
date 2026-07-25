@@ -36,6 +36,7 @@ import {
   resetPassword
 } from './riderController.js';
 import { protectFranchise, protectRider } from '../../shared/middleware/authMiddleware.js';
+import { upload } from '../../shared/middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
@@ -43,7 +44,12 @@ router.post('/auth/send-otp', sendOTP);
 router.post('/auth/verify-otp', verifyOTP);
 router.post('/auth/login', riderLogin);
 router.post('/auth/reset-password', resetPassword);
-router.post('/kyc/update', updateKYC);
+router.post('/kyc/update', upload.fields([
+  { name: 'selfie', maxCount: 1 },
+  { name: 'aadhaarFront', maxCount: 1 },
+  { name: 'aadhaarBack', maxCount: 1 },
+  { name: 'drivingLicense', maxCount: 1 }
+]), updateKYC);
 router.post('/kyc/aadhaar/generate-otp', generateAadhaarOTP);
 router.post('/kyc/aadhaar/verify-otp', verifyAadhaarOTP);
 router.post('/auth/save-fcm-token', protectRider, saveFcmToken);

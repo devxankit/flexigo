@@ -1,4 +1,6 @@
 import axios from 'axios';
+import fs from 'fs';
+import path from 'path';
 import Rider from './riderModel.js';
 import Transaction from './transactionModel.js';
 import Franchise from '../franchise/franchiseModel.js';
@@ -172,23 +174,44 @@ export const updateKYC = async (req, res) => {
     const rider = await Rider.findOne({ phone });
     if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
 
-    const upload = async (data, folder) => {
-      if (!data) return null;
-      try {
-        console.log(`[Cloudinary] Starting upload for ${folder}...`);
-        const res = await cloudinary.uploader.upload(data, { folder: `flexigo/riders/${rider._id}/${folder}` });
-        console.log(`[Cloudinary] Upload success for ${folder}:`, res.secure_url);
-        return res.secure_url;
-      } catch (err) {
-        console.error(`❌ [Cloudinary] Upload failed for ${folder}:`, err);
-        throw new Error(`Cloudinary upload failed for ${folder}: ${err.message}`);
+    // Helper to process files: check multer first, then check base64, then return current
+    const getFileUrl = (fieldName, base64Value) => {
+      // 1. Check if file was uploaded via Multer
+      if (req.files && req.files[fieldName] && req.files[fieldName][0]) {
+        const file = req.files[fieldName][0];
+        console.log(`[Multer] Received file upload for ${fieldName}:`, file.filename);
+        return `${req.protocol}://${req.get('host')}/images/${file.filename}`;
       }
+
+      // 2. Check if a base64 string was sent (for fallback)
+      if (base64Value && typeof base64Value === 'string' && base64Value.startsWith('data:image/')) {
+        console.log(`[Base64] Received base64 for ${fieldName}. Saving locally...`);
+        const matches = base64Value.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+        if (matches && matches.length === 3) {
+          const ext = matches[1].split('/')[1] || 'jpg';
+          const buffer = Buffer.from(matches[2], 'base64');
+          const filename = `${fieldName}-${rider._id}-${Date.now()}.${ext}`;
+          const filePath = path.join('images', filename);
+          fs.writeFileSync(filePath, buffer);
+          return `${req.protocol}://${req.get('host')}/images/${filename}`;
+        }
+      }
+
+      // 3. Fallback to existing database value
+      return rider.kycDetails?.[fieldName] || null;
     };
 
-    if (selfie) rider.kycDetails.selfie = await upload(selfie, 'selfie');
-    if (aadhaarFront) rider.kycDetails.aadhaarFront = await upload(aadhaarFront, 'aadhaar');
-    if (aadhaarBack) rider.kycDetails.aadhaarBack = await upload(aadhaarBack, 'aadhaar');
-    if (drivingLicense) rider.kycDetails.drivingLicense = await upload(drivingLicense, 'license');
+    const selfieUrl = getFileUrl('selfie', selfie);
+    if (selfieUrl) rider.kycDetails.selfie = selfieUrl;
+
+    const aadhaarFrontUrl = getFileUrl('aadhaarFront', aadhaarFront);
+    if (aadhaarFrontUrl) rider.kycDetails.aadhaarFront = aadhaarFrontUrl;
+
+    const aadhaarBackUrl = getFileUrl('aadhaarBack', aadhaarBack);
+    if (aadhaarBackUrl) rider.kycDetails.aadhaarBack = aadhaarBackUrl;
+
+    const drivingLicenseUrl = getFileUrl('drivingLicense', drivingLicense);
+    if (drivingLicenseUrl) rider.kycDetails.drivingLicense = drivingLicenseUrl;
 
     // Extract dynamic reference fields (checking flat fields first, then falling back to nested)
     const refName = referenceName !== undefined ? referenceName : req.body.kycDetails?.referenceName;

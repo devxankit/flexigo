@@ -3,6 +3,8 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
 import dns from 'dns';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import connectDB from './config/database.js';
 import './config/cloudinary.js';
 import './shared/utils/firebase.js';
@@ -49,6 +51,10 @@ const app = express();
 // Body parser
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 // Enable CORS
 app.use(cors({
