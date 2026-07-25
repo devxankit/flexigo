@@ -312,7 +312,7 @@ export default function OnboardingKYC() {
       try {
         console.log('ONBOARDING: Preparing kycData object');
         const kycData = {
-          phone,
+          phone: phone || user?.phone,
           selfie: await fileToBase64(uploads.selfie),
           aadhaarFront: await fileToBase64(uploads.aadhaarFront),
           aadhaarBack: await fileToBase64(uploads.aadhaarBack),

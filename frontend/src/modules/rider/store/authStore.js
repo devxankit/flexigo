@@ -105,7 +105,7 @@ export const useAuthStore = create(
 
       updateKYC: async (kycData) => {
         try {
-          const { phone } = get();
+          const phone = kycData.phone || get().phone || get().user?.phone;
           const res = await api.post('/rider/kyc/update', { ...kycData, phone });
           if (res.data.success) {
             set({ kycStatus: 'pending', user: res.data.rider });
