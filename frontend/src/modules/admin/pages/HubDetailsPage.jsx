@@ -315,10 +315,12 @@ export default function HubDetailsPage() {
                       </>
                     ) : (
                       <>
-                        <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Identity</th>
-                        <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Contact</th>
-                        <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Wallet Balance</th>
-                        <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Vehicle</th>
+                        <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Plate</th>
+                        <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Model</th>
+                        <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Rider</th>
+                        <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Plan & Dues</th>
+                        <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Battery</th>
+                        <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Status</th>
                         <th className="text-left py-3 px-4 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">Action</th>
                       </>
                     )}
@@ -330,118 +332,87 @@ export default function HubDetailsPage() {
                     <tr>
                       <td colSpan={7} className="py-12 text-center text-[10px] font-medium text-[var(--text-tertiary)]">Loading fleet data...</td>
                     </tr>
-                  ) : vehicles.length === 0 ? (
+                  ) : assignedRiders.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="py-12 text-center">
                         <div className="space-y-3">
-                          <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">No vehicles registered yet</p>
-                          <button
-                            onClick={() => navigate(`/admin/fleet/add?hubId=${hubId}`)}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 transition-all"
-                          >
-                            <Plus size={12} /> Add First Vehicle
-                          </button>
+                          <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">No assigned riders yet</p>
                         </div>
                       </td>
                     </tr>
-                  ) : vehicles.map(v => (
-                    <tr key={v._id} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
-                      <td className="px-4 py-2">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded bg-[var(--bg-tertiary)] flex items-center justify-center text-emerald-500 font-medium text-[9px]">EV</div>
-                          <span className="font-medium text-[var(--text-primary)] text-xs">{v.plate}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-2 text-xs font-medium text-[var(--text-tertiary)]">{v.model}</td>
-                      <td className="px-4 py-2">
-                        <div className="flex flex-col">
-                          {(() => {
-                            const dRider = assignedRiders.find(r => {
-                              if (!r.vehicleId) return false;
-                              const vid = typeof r.vehicleId === 'object' ? (r.vehicleId._id || r.vehicleId.id) : r.vehicleId;
-                              return vid === v._id || vid === v.id;
-                            });
-                            const riderName = dRider ? (dRider.name || dRider.fullName) : v.rider;
-                            return (
-                              <>
-                                <span className="text-xs font-medium text-[var(--text-tertiary)]">{riderName || '—'}</span>
-                                {v.adminAssignedStartDate && (
-                                  <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mt-0.5">Start: {new Date(v.adminAssignedStartDate).toLocaleDateString()}</span>
-                                )}
-                              </>
-                            );
-                          })()}
-                        </div>
-                      </td>
-                      <td className="px-4 py-2">
-                        {v.subscriptionPlan ? (
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-[10px] font-bold text-[var(--text-primary)] uppercase tracking-widest italic">{v.subscriptionPlan.name || v.subscriptionPlan.label || 'Plan Active'}</span>
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              {v.depositPaid ? (
-                                <span className="text-[7.5px] font-black text-emerald-500 uppercase tracking-widest border border-emerald-500/20 bg-emerald-500/10 px-1.5 py-0.5 rounded italic">Deposit Paid</span>
+                  ) : assignedRiders.map(r => {
+                        const rId = r._id || r.id || 'N/A';
+                        const displayId = rId.toString().substring(0, 6);
+                        
+                        let v = null;
+                        if (r.vehicleId) {
+                           const vId = typeof r.vehicleId === 'object' ? (r.vehicleId._id || r.vehicleId.id) : r.vehicleId;
+                           v = vehicles.find(veh => (veh._id || veh.id) === vId);
+                        }
+                        
+                        return (
+                          <tr key={rId} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
+                            <td className="px-4 py-2">
+                              {v ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-6 h-6 rounded bg-[var(--bg-tertiary)] flex items-center justify-center text-emerald-500 font-medium text-[9px]">EV</div>
+                                  <span className="font-medium text-[var(--text-primary)] text-xs">{v.plate}</span>
+                                </div>
                               ) : (
-                                <span className="text-[7.5px] font-black text-rose-500 uppercase tracking-widest border border-rose-500/20 bg-rose-500/10 px-1.5 py-0.5 rounded italic">Pending Deposit</span>
+                                <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest bg-rose-500/10 px-2 py-0.5 rounded-lg border border-rose-500/20">Unassigned</span>
                               )}
-                              {v.subscriptionEnd && new Date(v.subscriptionEnd) < new Date() && (
-                                <span className="text-[7.5px] font-black text-rose-500 uppercase tracking-widest border border-rose-500/20 bg-rose-500/10 px-1.5 py-0.5 rounded italic">Plan Overdue</span>
-                              )}
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-[9px] text-[var(--text-tertiary)] font-black uppercase tracking-widest italic opacity-60">No Plan</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-2">
-                        <div className="flex items-center gap-2">
-                          <Battery size={12} className={v.battery < 20 ? 'text-rose-500' : 'text-emerald-500'} />
-                          <span className={`text-xs font-medium ${v.battery < 20 ? 'text-rose-500' : 'text-[var(--text-primary)]'}`}>{v.battery ?? '—'}%</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-2">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${v.status === 'assigned' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : v.status === 'in-service' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'}`}>
-                          {v.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2 relative">
-                        <button
-                          onClick={e => { e.stopPropagation(); setActiveMenu(activeMenu === v._id ? null : v._id); }}
-                          className={`p-1 hover:bg-emerald-600/10 hover:text-emerald-500 rounded transition-all ${activeMenu === v._id ? 'text-emerald-500 bg-emerald-600/10' : 'text-[var(--text-tertiary)]'}`}
-                        >
-                          <MoreHorizontal size={14} />
-                        </button>
-
-                        <AnimatePresence>
-                          {activeMenu === v._id && (
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                              animate={{ opacity: 1, scale: 1, y: 0 }}
-                              exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                              className="absolute right-12 top-0 z-50 w-36 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl shadow-xl overflow-hidden"
-                            >
-                              <div className="p-1.5 flex flex-col gap-1">
-                                {[
-                                  { label: 'Remote Lock', icon: ShieldCheck, color: 'rose' },
-                                  { label: 'Ring Alarm', icon: Zap, color: 'amber' },
-                                  { label: 'Service Log', icon: Clock, color: 'blue' },
-                                  { label: 'Maintenance', icon: Settings, color: 'emerald' }
-                                ].map(item => (
-                                  <button
-                                    key={item.label}
-                                    onClick={e => handleAction(e, v.plate, item.label)}
-                                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-colors w-full text-left"
-                                  >
-                                    <item.icon size={12} className={`text-${item.color}-500`} />
-                                    {item.label}
-                                  </button>
-                                ))}
+                            </td>
+                            <td className="px-4 py-2 text-xs font-medium text-[var(--text-tertiary)]">{v ? v.model : '—'}</td>
+                            <td className="px-4 py-2">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-[var(--text-primary)] text-xs truncate max-w-[150px]">{r.name || r.fullName || '—'}</span>
+                                <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-0.5">ID: {displayId}</span>
                               </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </td>
-                    </tr>
-                  ))
+                            </td>
+                            <td className="px-4 py-2">
+                              {v && v.subscriptionPlan ? (
+                                <div className="flex flex-col gap-0.5">
+                                  <span className="text-[10px] font-bold text-[var(--text-primary)] uppercase tracking-widest italic">{v.subscriptionPlan.name || v.subscriptionPlan.label || 'Plan Active'}</span>
+                                </div>
+                              ) : (
+                                <span className="text-[9px] text-[var(--text-tertiary)] font-black uppercase tracking-widest italic opacity-60">No Plan</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-2">
+                              {v ? (
+                                <div className="flex items-center gap-2">
+                                  <Battery size={12} className={v.battery < 20 ? 'text-rose-500' : 'text-emerald-500'} />
+                                  <span className={`text-xs font-medium ${v.battery < 20 ? 'text-rose-500' : 'text-[var(--text-primary)]'}`}>{v.battery ?? '—'}%</span>
+                                </div>
+                              ) : (
+                                <span className="text-xs font-medium text-[var(--text-tertiary)]">—</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-2">
+                              {v ? (
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${v.status === 'assigned' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : v.status === 'in-service' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'}`}>
+                                  {v.status}
+                                </span>
+                              ) : (
+                                <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest">N/A</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-2 relative">
+                              {!v && (
+                                <button
+                                  onClick={() => {
+                                    setAssignmentData({ riderName: r.name || r.fullName, riderPhone: r.phone, vehiclePlate: '' });
+                                    setIsAssignModalOpen(true);
+                                  }}
+                                  className="flex items-center gap-2 px-3 py-1.5 bg-emerald-600/10 border border-emerald-500/20 text-emerald-500 hover:bg-emerald-600 hover:text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition-all"
+                                >
+                                  <Zap size={12} /> Assign
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
                   ) : (
                     assignedRiders.length === 0 ? (
                       <tr>
@@ -454,48 +425,73 @@ export default function HubDetailsPage() {
                         const rId = r._id || r.id || 'N/A';
                         const displayId = rId.toString().substring(0, 6);
                         
-                        // Handle case where vehicleId might be an object
-                        const vehiclePlate = r.vehicleId ? (typeof r.vehicleId === 'object' ? r.vehicleId.plate : vehicles.find(v => (v._id || v.id) === r.vehicleId)?.plate) : null;
+                        let v = null;
+                        if (r.vehicleId) {
+                           const vId = typeof r.vehicleId === 'object' ? (r.vehicleId._id || r.vehicleId.id) : r.vehicleId;
+                           v = vehicles.find(veh => (veh._id || veh.id) === vId);
+                        }
                         
                         return (
                           <tr key={rId} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
-                            <td className="px-4 py-3">
-                              <div className="flex flex-col">
-                                <span className="font-bold text-[var(--text-primary)] text-xs truncate max-w-[150px]">{r.name || r.fullName || '—'}</span>
-                                <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-0.5">ID: {displayId}</span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-3 text-xs font-medium text-[var(--text-tertiary)]">{r.phone}</td>
-                            <td className="px-4 py-3">
-                              <div className="flex items-center gap-1">
-                                <IndianRupee size={12} className="text-[var(--text-tertiary)]" />
-                                <span className="text-xs font-bold text-[var(--text-primary)]">{r.walletBalance || 0}</span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-3">
-                              {r.vehicleId ? (
+                            <td className="px-4 py-2">
+                              {v ? (
                                 <div className="flex items-center gap-2">
-                                  <Truck size={14} className="text-emerald-500" />
-                                  <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">{vehiclePlate || 'Assigned'}</span>
+                                  <div className="w-6 h-6 rounded bg-[var(--bg-tertiary)] flex items-center justify-center text-emerald-500 font-medium text-[9px]">EV</div>
+                                  <span className="font-medium text-[var(--text-primary)] text-xs">{v.plate}</span>
                                 </div>
                               ) : (
                                 <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest bg-rose-500/10 px-2 py-0.5 rounded-lg border border-rose-500/20">Unassigned</span>
                               )}
                             </td>
-                          <td className="px-4 py-3">
-                            {!r.vehicleId && (
-                              <button
-                                onClick={() => {
-                                  setAssignmentData({ riderName: r.name || r.fullName, riderPhone: r.phone, vehiclePlate: '' });
-                                  setIsAssignModalOpen(true);
-                                }}
-                                className="flex items-center gap-2 px-3 py-1.5 bg-emerald-600/10 border border-emerald-500/20 text-emerald-500 hover:bg-emerald-600 hover:text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition-all"
-                              >
-                                <Zap size={12} /> Assign Vehicle
-                              </button>
-                            )}
-                          </td>
-                        </tr>
+                            <td className="px-4 py-2 text-xs font-medium text-[var(--text-tertiary)]">{v ? v.model : '—'}</td>
+                            <td className="px-4 py-2">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-[var(--text-primary)] text-xs truncate max-w-[150px]">{r.name || r.fullName || '—'}</span>
+                                <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-0.5">ID: {displayId}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-2">
+                              {v && v.subscriptionPlan ? (
+                                <div className="flex flex-col gap-0.5">
+                                  <span className="text-[10px] font-bold text-[var(--text-primary)] uppercase tracking-widest italic">{v.subscriptionPlan.name || v.subscriptionPlan.label || 'Plan Active'}</span>
+                                </div>
+                              ) : (
+                                <span className="text-[9px] text-[var(--text-tertiary)] font-black uppercase tracking-widest italic opacity-60">No Plan</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-2">
+                              {v ? (
+                                <div className="flex items-center gap-2">
+                                  <Battery size={12} className={v.battery < 20 ? 'text-rose-500' : 'text-emerald-500'} />
+                                  <span className={`text-xs font-medium ${v.battery < 20 ? 'text-rose-500' : 'text-[var(--text-primary)]'}`}>{v.battery ?? '—'}%</span>
+                                </div>
+                              ) : (
+                                <span className="text-xs font-medium text-[var(--text-tertiary)]">—</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-2">
+                              {v ? (
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${v.status === 'assigned' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : v.status === 'in-service' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'}`}>
+                                  {v.status}
+                                </span>
+                              ) : (
+                                <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest">N/A</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-2 relative">
+                              {!v && (
+                                <button
+                                  onClick={() => {
+                                    setAssignmentData({ riderName: r.name || r.fullName, riderPhone: r.phone, vehiclePlate: '' });
+                                    setIsAssignModalOpen(true);
+                                  }}
+                                  className="flex items-center gap-2 px-3 py-1.5 bg-emerald-600/10 border border-emerald-500/20 text-emerald-500 hover:bg-emerald-600 hover:text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition-all"
+                                >
+                                  <Zap size={12} /> Assign
+                                </button>
+                              )}
+                            </td>
+                          </tr>
                         );
                       })
                     )
