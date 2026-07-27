@@ -355,10 +355,22 @@ export default function HubDetailsPage() {
                       <td className="px-4 py-2 text-xs font-medium text-[var(--text-tertiary)]">{v.model}</td>
                       <td className="px-4 py-2">
                         <div className="flex flex-col">
-                          <span className="text-xs font-medium text-[var(--text-tertiary)]">{v.rider || '—'}</span>
-                          {v.adminAssignedStartDate && (
-                            <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mt-0.5">Start: {new Date(v.adminAssignedStartDate).toLocaleDateString()}</span>
-                          )}
+                          {(() => {
+                            const dRider = assignedRiders.find(r => {
+                              if (!r.vehicleId) return false;
+                              const vid = typeof r.vehicleId === 'object' ? (r.vehicleId._id || r.vehicleId.id) : r.vehicleId;
+                              return vid === v._id || vid === v.id;
+                            });
+                            const riderName = dRider ? (dRider.name || dRider.fullName) : v.rider;
+                            return (
+                              <>
+                                <span className="text-xs font-medium text-[var(--text-tertiary)]">{riderName || '—'}</span>
+                                {v.adminAssignedStartDate && (
+                                  <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mt-0.5">Start: {new Date(v.adminAssignedStartDate).toLocaleDateString()}</span>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
                       </td>
                       <td className="px-4 py-2">
