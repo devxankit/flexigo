@@ -577,6 +577,23 @@ export const useAdminDataStore = create((set, get) => ({
       console.error("Failed to fetch inventory data:", err);
     }
   },
+
+  exportFullInventoryData: async () => {
+    try {
+      const currentFilters = get().lastInventoryFilters;
+      const params = new URLSearchParams();
+      if (currentFilters.range) params.append('range', typeof currentFilters.range === 'object' ? JSON.stringify(currentFilters.range) : currentFilters.range);
+
+      const res = await api.get(`/admin/inventory/export?${params.toString()}`);
+      if (res.data.success) {
+        return res.data;
+      }
+      return null;
+    } catch (err) {
+      console.error("Failed to export inventory data:", err);
+      return null;
+    }
+  },
   
   addBill: async (billData) => {
     try {

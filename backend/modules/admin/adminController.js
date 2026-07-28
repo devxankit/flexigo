@@ -1651,6 +1651,50 @@ export const getInventoryData = async (req, res) => {
   }
 };
 
+export const exportInventoryData = async (req, res) => {
+  try {
+    const { range } = req.query;
+    const dateFilter = getDateFilter(range, 'createdAt');
+    const billFilter = getDateFilter(range, 'date');
+
+    const [items, bills] = await Promise.all([
+      Inventory.find(dateFilter).sort('name'),
+      VendorBill.find(billFilter).populate('partId').sort('-date')
+    ]);
+
+    const formattedItems = items.map(item => ({
+      SKU: item.sku || 'N/A',
+      Name: item.name || 'N/A',
+      Category: item.category || 'N/A',
+      Stock: item.stock || 0,
+      MinThreshold: item.minThreshold || 0,
+      Supplier: item.supplier || 'N/A',
+      Status: item.stock <= 0 ? 'out-of-stock' : item.stock <= item.minThreshold ? 'low-stock' : 'optimal'
+    }));
+
+    const formattedBills = bills.map(b => ({
+      BillID: b.billId || 'N/A',
+      Supplier: b.supplier || 'N/A',
+      VehicleNo: b.vehicleNo || 'N/A',
+      ChasisNo: b.chasisNo || 'N/A',
+      PartName: b.partId?.name || 'N/A',
+      PartsRepair: b.partsRepair || 'N/A',
+      RiderName: b.riderName || 'N/A',
+      Amount: b.amount || 0,
+      Status: b.status || 'pending',
+      Date: b.date ? new Date(b.date).toLocaleDateString() : 'N/A'
+    }));
+
+    res.status(200).json({
+      success: true,
+      inventory: formattedItems,
+      billing: formattedBills
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const createBill = async (req, res) => {
   try {
     const { vehicleNo, chasisNo, partId, partsRepair, riderName, amount, supplier } = req.body;

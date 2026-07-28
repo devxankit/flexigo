@@ -20,12 +20,14 @@ import {
    Edit,
    Trash2,
    X,
-   Wrench
+   Wrench,
+   Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
 import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
+import * as XLSX from 'xlsx';
 
 export default function InventoryBillingPage() {
    const [searchParams, setSearchParams] = useSearchParams();
@@ -43,7 +45,8 @@ export default function InventoryBillingPage() {
       updatePart,
       removePart,
       fetchRiders,
-      billingPagination
+      billingPagination,
+      exportFullInventoryData
    } = useAdminDataStore();
    const [activeFilters, setActiveFilters] = React.useState({ range: 'Last 7 Days' });
    const initialPage = parseInt(searchParams.get('page')) || 1;
@@ -67,6 +70,7 @@ export default function InventoryBillingPage() {
    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
    const [billToDelete, setBillToDelete] = useState(null);
    const [isSubmitting, setIsSubmitting] = useState(false);
+   const [isExporting, setIsExporting] = useState(false);
 
    const [billForm, setBillForm] = useState({
       vehicleNo: '',
@@ -102,6 +106,35 @@ export default function InventoryBillingPage() {
    const handleFilterChange = (newFilters) => {
       setActiveFilters(newFilters);
       setBillingPage(1);
+   };
+
+   const handleExportData = async () => {
+      if (isExporting) return;
+      setIsExporting(true);
+      try {
+         const data = await exportFullInventoryData();
+         if (data && data.success) {
+            const wb = XLSX.utils.book_new();
+
+            // Parts Sheet
+            if (data.inventory && data.inventory.length > 0) {
+               const wsParts = XLSX.utils.json_to_sheet(data.inventory);
+               XLSX.utils.book_append_sheet(wb, wsParts, "Inventory");
+            }
+
+            // Billing Sheet
+            if (data.billing && data.billing.length > 0) {
+               const wsBilling = XLSX.utils.json_to_sheet(data.billing);
+               XLSX.utils.book_append_sheet(wb, wsBilling, "Repair Bills");
+            }
+
+            XLSX.writeFile(wb, `Inventory_Billing_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+         }
+      } catch (error) {
+         console.error("Export failed", error);
+      } finally {
+         setIsExporting(false);
+      }
    };
 
    const handleOpenAdd = () => {
@@ -237,6 +270,14 @@ export default function InventoryBillingPage() {
             </div>
 
             <div className="flex items-center gap-2">
+               <button
+                  onClick={handleExportData}
+                  disabled={isExporting}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] text-[var(--text-secondary)] rounded-lg text-[9px] font-black uppercase tracking-widest hover:text-emerald-500 hover:border-emerald-500/30 transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+               >
+                  {isExporting ? <div className="w-3.5 h-3.5 border-2 border-[var(--text-tertiary)] border-t-emerald-500 rounded-full animate-spin" /> : <Download size={14} />}
+                  Export Data
+               </button>
                <OpsFilter onFilterChange={handleFilterChange} />
             </div>
          </div>

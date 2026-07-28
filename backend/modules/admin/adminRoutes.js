@@ -77,7 +77,8 @@ import {
   getAdhocPayments,
   getStaffLeaves,
   createStaffLeave,
-  updateStaffLeave
+  updateStaffLeave,
+  exportInventoryData
 } from './adminController.js';
 import {
   getWebsitePlans,
@@ -215,6 +216,7 @@ router.delete('/kyc/:id', protectAdmin, authorize('KYC', 'delete'), deleteKycRec
 // Finance Management
 router.get('/finance', getFinanceData);
 router.get('/inventory', getInventoryData);
+router.get('/inventory/export', exportInventoryData);
 router.post('/billing', createBill);
 router.put('/billing/:id', updateBill);
 router.delete('/billing/:id', deleteBill);
