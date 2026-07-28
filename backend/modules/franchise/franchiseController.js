@@ -502,12 +502,15 @@ export const getDashboardMetrics = async (req, res) => {
 
     // Use dynamic calculations
     const vehicles = await Vehicle.find({ franchise: franchiseId });
-    const totalVehicles = vehicles.length;
+    
     const availableVehicles = vehicles.filter(v => v.status === 'available').length;
     const issuesVehicles = vehicles.filter(v => v.status === 'in-service' || v.status === 'quarantined').length;
 
-    const subscribers = await Rider.find({ franchise: franchiseId, status: 'active' });
+    const subscribers = await Rider.find({ franchise: franchiseId, status: { $in: ['approved', 'active'] } });
     const activeSubscribers = subscribers.length;
+
+    // Set totalVehicles to match activeSubscribers (to include virtual unassigned vehicles) or actual vehicles, whichever is greater, just like in Admin
+    const totalVehicles = Math.max(vehicles.length, activeSubscribers);
 
     // Utilization: Active Subs / Total Vehicles (if > 0)
     const utilization = totalVehicles > 0 ? ((activeSubscribers / totalVehicles) * 100).toFixed(1) : 0;

@@ -236,10 +236,49 @@ export const getVehicles = async (req, res) => {
        }
     }
 
+    // If a franchise is specified, include unassigned riders as virtual vehicles
+    let allEntries = [...vehicles];
+    if (resolvedFranchiseId) {
+       const ridersWithVehicle = new Set();
+       for (const v of vehicles) {
+          if (v.rider) {
+             const riderObj = await Rider.findOne({ phone: v.riderPhone }).select('_id').lean();
+             if (riderObj) ridersWithVehicle.add(riderObj._id.toString());
+          }
+       }
+
+       const franchiseRiders = await Rider.find({
+          franchise: resolvedFranchiseId,
+          role: 'rider',
+          status: { $in: ['approved', 'active'] }
+       })
+       .populate('subscriptionPlan')
+       .select('name phone subscriptionPlan adminAssignedStartDate depositPaid subscriptionEnd _id')
+       .lean();
+
+       const unassignedRiders = franchiseRiders.filter(r => !ridersWithVehicle.has(r._id.toString()));
+       const unassignedEntries = unassignedRiders.map(rider => ({
+          _id: `unassigned-${rider._id}`,
+          plate: null,
+          model: null,
+          franchise: resolvedFranchiseId,
+          status: 'unassigned',
+          rider: rider.name || rider.phone,
+          riderPhone: rider.phone,
+          riderId: rider._id,
+          subscriptionPlan: rider.subscriptionPlan,
+          adminAssignedStartDate: rider.adminAssignedStartDate,
+          depositPaid: rider.depositPaid,
+          subscriptionEnd: rider.subscriptionEnd,
+          isUnassignedRider: true
+       }));
+       allEntries = [...unassignedEntries, ...allEntries];
+    }
+
     res.status(200).json({
       success: true,
-      count: vehicles.length,
-      vehicles,
+      count: allEntries.length,
+      vehicles: allEntries,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

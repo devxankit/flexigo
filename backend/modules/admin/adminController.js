@@ -395,7 +395,7 @@ export const getAllHubs = async (req, res) => {
         phone: f.phone,
         email: f.email,
         city: displayCity,
-        fleet: fleetCount,
+        fleet: subsCount,
         subs: subsCount,
         revenue: totalRevenue,
         status: f.kycStatus === 'approved' ? 'approved' : (f.kycStatus === 'rejected' ? 'rejected' : (f.kycStatus || 'pending')),
@@ -2567,7 +2567,11 @@ export const getRiderDetailedReport = async (req, res) => {
 // @route   GET /api/v1/admin/hubs/:id/vehicles
 export const getHubVehicles = async (req, res) => {
   try {
-    const vehicles = await Vehicle.find({ franchise: req.params.id }).sort('-createdAt').lean();
+    const franchiseId = req.params.id;
+    const vehicles = await Vehicle.find({ franchise: franchiseId }).sort('-createdAt').lean();
+
+    // Track which riders are already linked via a vehicle
+    const ridersWithVehicle = new Set();
 
     for (let vehicle of vehicles) {
       try {
@@ -2578,20 +2582,51 @@ export const getHubVehicles = async (req, res) => {
         if (assignment) {
           const rider = await Rider.findById(assignment.rider)
             .populate('subscriptionPlan')
-            .select('name phone subscriptionPlan adminAssignedStartDate depositPaid subscriptionEnd')
+            .select('name phone subscriptionPlan adminAssignedStartDate depositPaid subscriptionEnd _id')
             .lean();
           if (rider) {
             vehicle.rider = rider.name || rider.phone;
+            vehicle.riderId = rider._id;
             vehicle.subscriptionPlan = rider.subscriptionPlan;
             vehicle.adminAssignedStartDate = rider.adminAssignedStartDate;
             vehicle.depositPaid = rider.depositPaid;
             vehicle.subscriptionEnd = rider.subscriptionEnd;
+            ridersWithVehicle.add(rider._id.toString());
           }
         }
       } catch (_) { }
     }
 
-    res.status(200).json({ success: true, count: vehicles.length, vehicles });
+    // Also fetch riders directly linked to this franchise who don't have a vehicle
+    const franchiseRiders = await Rider.find({
+      franchise: franchiseId,
+      role: 'rider',
+      status: { $in: ['approved', 'active'] }
+    })
+      .populate('subscriptionPlan')
+      .select('name phone subscriptionPlan adminAssignedStartDate depositPaid subscriptionEnd _id')
+      .lean();
+
+    // Create virtual "unassigned" vehicle entries for riders without a vehicle
+    const unassignedRiders = franchiseRiders.filter(r => !ridersWithVehicle.has(r._id.toString()));
+    const unassignedEntries = unassignedRiders.map(rider => ({
+      _id: `unassigned-${rider._id}`,
+      plate: null,
+      model: null,
+      franchise: franchiseId,
+      status: 'unassigned',
+      rider: rider.name || rider.phone,
+      riderId: rider._id,
+      subscriptionPlan: rider.subscriptionPlan,
+      adminAssignedStartDate: rider.adminAssignedStartDate,
+      depositPaid: rider.depositPaid,
+      subscriptionEnd: rider.subscriptionEnd,
+      isUnassignedRider: true
+    }));
+
+    const allEntries = [...unassignedEntries, ...vehicles];
+
+    res.status(200).json({ success: true, count: allEntries.length, vehicles: allEntries });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -2661,7 +2696,7 @@ export const getFranchiseById = async (req, res) => {
         capacity: franchise.businessDetails?.capacity || 0,
         lat: franchise.businessDetails?.latitude || null,
         lng: franchise.businessDetails?.longitude || null,
-        fleet: fleetCount,
+        fleet: subsCount,
         subs: subsCount,
         revenue: totalRevenue,
         status: franchise.status || 'active',
