@@ -8,7 +8,7 @@ const tabs = [
     path: '/rider/home',
     label: 'Home',
     icon: (active, theme) => (
-      <svg viewBox="0 0 24 24" fill={active ? '#39FF14' : 'none'} stroke={active ? '#39FF14' : (theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} strokeWidth="1.8" className="w-6 h-6">
+      <svg viewBox="0 0 24 24" fill={active ? '#39FF14' : 'none'} stroke={active ? '#39FF14' : (theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} strokeWidth="1.8" className="w-5 h-5 sm:w-6 sm:h-6">
         <path d="M3 12L5 10M5 10L12 3L19 10M5 10V20C5 20.552 5.448 21 6 21H9M19 10L21 12M19 10V20C19 20.552 18.552 21 18 21H15M9 21V15C9 14.448 9.448 14 10 14H14C14.552 14 15 14.448 15 15V21M9 21H15" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
@@ -18,7 +18,7 @@ const tabs = [
     path: '/rider/batteries-hubs',
     label: 'Batteries Hubs',
     icon: (active, theme) => (
-      <svg viewBox="0 0 24 24" fill="none" stroke={active ? '#39FF14' : (theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} strokeWidth="1.8" className="w-6 h-6">
+      <svg viewBox="0 0 24 24" fill="none" stroke={active ? '#39FF14' : (theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} strokeWidth="1.8" className="w-5 h-5 sm:w-6 sm:h-6">
         <path d="M13 10V3L4 14h7v7l9-11h-7z" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
     ),
@@ -28,7 +28,7 @@ const tabs = [
     path: '/rider/payments',
     label: 'Payments',
     icon: (active, theme) => (
-      <svg viewBox="0 0 24 24" fill="none" stroke={active ? '#39FF14' : (theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} strokeWidth="1.8" className="w-6 h-6">
+      <svg viewBox="0 0 24 24" fill="none" stroke={active ? '#39FF14' : (theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} strokeWidth="1.8" className="w-5 h-5 sm:w-6 sm:h-6">
         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" strokeLinecap="round" strokeLinejoin="round"/>
         <path d="M8 8.5h8M8 12.5h8M10 8.5v7M14 8.5v4" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
@@ -39,7 +39,7 @@ const tabs = [
     path: '/rider/garage',
     label: 'Hub',
     icon: (active, theme) => (
-      <svg viewBox="0 0 24 24" fill="none" stroke={active ? '#39FF14' : (theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} strokeWidth="1.8" className="w-6 h-6">
+      <svg viewBox="0 0 24 24" fill="none" stroke={active ? '#39FF14' : (theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} strokeWidth="1.8" className="w-5 h-5 sm:w-6 sm:h-6">
         <rect x="2" y="7" width="20" height="14" rx="2" />
         <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" />
         <path d="M12 12v4M10 14h4" strokeLinecap="round" />
@@ -53,7 +53,7 @@ const tabs = [
     path: '/rider/wallet',
     label: 'Wallet',
     icon: (active, theme) => (
-      <svg viewBox="0 0 24 24" fill="none" stroke={active ? '#39FF14' : (theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} strokeWidth="1.8" className="w-6 h-6">
+      <svg viewBox="0 0 24 24" fill="none" stroke={active ? '#39FF14' : (theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} strokeWidth="1.8" className="w-5 h-5 sm:w-6 sm:h-6">
         <rect x="2" y="5" width="20" height="14" rx="2" />
         <path d="M16 12a2 2 0 100-4h-4v4h4z" />
         <path d="M22 10a2 2 0 11-4 0M2 10h16M2 14h16" />
@@ -65,7 +65,7 @@ const tabs = [
     path: '/rider/plans',
     label: 'Plans',
     icon: (active, theme) => (
-      <svg viewBox="0 0 24 24" fill="none" stroke={active ? '#39FF14' : (theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} strokeWidth="1.8" className="w-6 h-6">
+      <svg viewBox="0 0 24 24" fill="none" stroke={active ? '#39FF14' : (theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} strokeWidth="1.8" className="w-5 h-5 sm:w-6 sm:h-6">
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
@@ -75,7 +75,7 @@ const tabs = [
     path: '/rider/profile',
     label: 'Profile',
     icon: (active, theme) => (
-      <svg viewBox="0 0 24 24" fill="none" stroke={active ? '#39FF14' : (theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} strokeWidth="1.8" className="w-6 h-6">
+      <svg viewBox="0 0 24 24" fill="none" stroke={active ? '#39FF14' : (theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)')} strokeWidth="1.8" className="w-5 h-5 sm:w-6 sm:h-6">
         <circle cx="12" cy="8" r="4" />
         <path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" strokeLinecap="round" />
       </svg>
@@ -98,7 +98,7 @@ export function BottomNav() {
       }`}
     >
       <div
-        className={`relative flex items-center justify-around rounded-2xl px-2 py-2 transition-all duration-500 ${
+        className={`relative flex items-center justify-between rounded-2xl px-1 py-2 transition-all duration-500 ${
           theme === 'dark' 
             ? 'bg-gradient-to-b from-white/5 to-white/[0.02] border border-white/10 shadow-[0_-4px_40px_rgba(0,0,0,0.6)]' 
             : 'bg-white border border-slate-200 shadow-lg'
@@ -114,11 +114,11 @@ export function BottomNav() {
             <button
               key={tab.id}
               onClick={() => navigate(tab.path)}
-              className="relative flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition-all duration-200"
+              className="relative flex flex-col items-center justify-center gap-1 py-1 px-0.5 flex-1 rounded-xl transition-all duration-200"
             >
               {tab.icon(active, theme)}
               <span
-                className={`text-[10px] font-medium tracking-wide transition-colors ${
+                className={`text-[7.5px] sm:text-[10px] text-center leading-tight whitespace-nowrap tracking-tighter sm:tracking-wide transition-colors ${
                   active 
                     ? 'text-flexigo-teal font-black' 
                     : (theme === 'dark' ? 'text-gray-500' : 'text-slate-400')
