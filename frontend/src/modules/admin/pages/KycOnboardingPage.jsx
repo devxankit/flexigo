@@ -448,16 +448,7 @@ export default function KycOnboardingPage() {
                                           <Zap size={12} fill="currentColor" />
                                        </button>
                                     )}
-                                    <button
-                                       onClick={(e) => {
-                                          e.stopPropagation();
-                                          setDeleteConfirm({ isOpen: true, id: record._id || record.id });
-                                       }}
-                                       className="p-1.5 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
-                                       title="Delete Record"
-                                    >
-                                       <Trash2 size={12} />
-                                    </button>
+                                    {/* Delete button removed as requested */}
                                  </div>
                               </td>
                            </motion.tr>

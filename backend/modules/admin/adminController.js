@@ -346,10 +346,10 @@ export const getAllHubs = async (req, res) => {
 
     const hubs = await Promise.all(franchises.map(async (f) => {
       const fleetCount = await Vehicle.countDocuments({ franchise: f._id });
-      
+
       const franchiseVehicles = await Vehicle.find({ franchise: f._id }).select('_id');
       const vehicleIds = franchiseVehicles.map(v => v._id);
-      
+
       const activeAssignments = await Assignment.find({
         vehicle: { $in: vehicleIds },
         status: 'active'
@@ -362,9 +362,21 @@ export const getAllHubs = async (req, res) => {
           { vehicleId: { $in: vehicleIds } },
           { _id: { $in: assignedRiderIds } }
         ],
-        status: 'approved',
+        kycStatus: 'approved',
         role: 'rider'
       });
+
+      // Calculate exact getHubVehicles equivalent count
+      const allAssignments = await Assignment.find({ vehicle: { $in: vehicleIds }, status: 'active' }).select('rider');
+      const ridersWithVehicle = new Set(allAssignments.map(a => a.rider.toString()));
+      const franchiseRiders = await Rider.find({
+        franchise: f._id,
+        role: 'rider',
+        kycStatus: 'approved'
+      }).select('_id');
+      const unassignedRidersCount = franchiseRiders.filter(r => !ridersWithVehicle.has(r._id.toString())).length;
+      const totalHubVehiclesCount = fleetCount + unassignedRidersCount;
+
       const revenueData = await Transaction.find({ franchiseId: f._id, type: 'Subscription', status: 'completed' });
       const totalRevenue = revenueData.reduce((acc, t) => acc + t.amount, 0);
 
@@ -395,7 +407,7 @@ export const getAllHubs = async (req, res) => {
         phone: f.phone,
         email: f.email,
         city: displayCity,
-        fleet: subsCount,
+        fleet: totalHubVehiclesCount,
         subs: subsCount,
         revenue: totalRevenue,
         status: f.kycStatus === 'approved' ? 'approved' : (f.kycStatus === 'rejected' ? 'rejected' : (f.kycStatus || 'pending')),
@@ -600,6 +612,9 @@ export const updateKycStatus = async (req, res) => {
 
     if (!updated) {
       updated = await Rider.findByIdAndUpdate(id, { $set: updateFields }, { new: true, returnDocument: 'after' });
+      if (franchise !== undefined && updated && updated.vehicleId) {
+        await Vehicle.findByIdAndUpdate(updated.vehicleId, { $set: { franchise: franchise || null } });
+      }
     }
 
     if (!updated) {
@@ -2576,9 +2591,6 @@ export const getHubVehicles = async (req, res) => {
     for (let vehicle of vehicles) {
       try {
         let assignment = await Assignment.findOne({ vehicle: vehicle._id, status: 'active' }).lean();
-        if (!assignment) {
-          assignment = await Assignment.findOne({ vehicle: vehicle._id }).sort('-startTime').lean();
-        }
         if (assignment) {
           const rider = await Rider.findById(assignment.rider)
             .populate('subscriptionPlan')
@@ -2597,11 +2609,10 @@ export const getHubVehicles = async (req, res) => {
       } catch (_) { }
     }
 
-    // Also fetch riders directly linked to this franchise who don't have a vehicle
     const franchiseRiders = await Rider.find({
       franchise: franchiseId,
       role: 'rider',
-      status: { $in: ['approved', 'active'] }
+      kycStatus: 'approved'
     })
       .populate('subscriptionPlan')
       .select('name phone subscriptionPlan adminAssignedStartDate depositPaid subscriptionEnd _id')
@@ -2642,10 +2653,10 @@ export const getFranchiseById = async (req, res) => {
     }
 
     const fleetCount = await Vehicle.countDocuments({ franchise: franchise._id });
-    
+
     const franchiseVehicles = await Vehicle.find({ franchise: franchise._id }).select('_id');
     const vehicleIds = franchiseVehicles.map(v => v._id);
-    
+
     const activeAssignments = await Assignment.find({
       vehicle: { $in: vehicleIds },
       status: 'active'

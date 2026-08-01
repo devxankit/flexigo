@@ -40,7 +40,7 @@ export default function HubDetailsPage() {
   const [activeMenu, setActiveMenu] = useState(null);
   const [vehicles, setVehicles] = useState([]);
   const [loadingVehicles, setLoadingVehicles] = useState(true);
-  const [activeTab, setActiveTab] = useState('vehicles');
+  const [activeTab, setActiveTab] = useState('riders');
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [assignmentData, setAssignmentData] = useState({ riderName: '', riderPhone: '', vehiclePlate: '' });
   const [isEditing, setIsEditing] = useState(false);
@@ -134,7 +134,6 @@ export default function HubDetailsPage() {
   );
 
   const sections = [
-    { title: 'Fleet Count', icon: Box, count: hub.fleet ?? 0, color: 'emerald' },
     { title: 'Assigned Riders', icon: Users, count: assignedRiders.length, color: 'blue' },
     { title: 'Hub Health', icon: Activity, count: hub.health ?? '100%', color: 'rose' },
     { title: 'Revenue', icon: IndianRupee, count: `₹${((hub.revenue || 0) / 1000).toFixed(0)}k`, color: 'amber' },
@@ -172,12 +171,7 @@ export default function HubDetailsPage() {
           >
             <Wallet size={13} /> Credit Wallet
           </button>
-          <button
-            onClick={() => navigate(`/admin/fleet/add?hubId=${hubId}`)}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-[9px] font-black uppercase tracking-wider hover:bg-emerald-700 transition-all shadow-md shadow-emerald-950/20 active:scale-95"
-          >
-            <Plus size={14} /> Add Vehicle
-          </button>
+          {/* Add Vehicle button hidden as requested */}
         </div>
       </div>
 
@@ -241,7 +235,7 @@ export default function HubDetailsPage() {
       </motion.div>
 
       {/* Grid Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {sections.map((section, idx) => (
           <motion.div
             key={idx}
@@ -273,31 +267,15 @@ export default function HubDetailsPage() {
           <div className="flex items-center justify-between px-2">
             <div>
               <h2 className="text-base font-black text-[var(--text-primary)] uppercase tracking-tighter italic">
-                Live <span className="text-emerald-500">Fleet Oversight</span>
+                Assigned <span className="text-emerald-500">Riders Registry</span>
               </h2>
               <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">
-                {vehicles.length} vehicle{vehicles.length !== 1 ? 's' : ''} registered
+                {assignedRiders.length} rider{assignedRiders.length !== 1 ? 's' : ''} assigned
               </p>
             </div>
           </div>
 
           <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-sm">
-            <div className="px-6 py-3 border-b border-[var(--border-subtle)] flex items-center justify-between bg-[var(--bg-tertiary)]/20">
-              <div className="flex gap-4">
-                <button
-                   onClick={() => setActiveTab('vehicles')}
-                   className={`text-[9px] font-black uppercase tracking-widest transition-colors ${activeTab === 'vehicles' ? 'text-emerald-500 border-b-2 border-emerald-500 pb-1' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] pb-1'}`}
-                >
-                   Vehicles ({vehicles.length})
-                </button>
-                <button
-                   onClick={() => setActiveTab('riders')}
-                   className={`text-[9px] font-black uppercase tracking-widest transition-colors ${activeTab === 'riders' ? 'text-emerald-500 border-b-2 border-emerald-500 pb-1' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] pb-1'}`}
-                >
-                   Assigned Riders ({assignedRiders.length})
-                </button>
-              </div>
-            </div>
 
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -327,101 +305,23 @@ export default function HubDetailsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--border-subtle)]">
-                  {activeTab === 'vehicles' ? (
-                    loadingVehicles ? (
+                  {loadingVehicles ? (
                     <tr>
-                      <td colSpan={7} className="py-12 text-center text-[10px] font-medium text-[var(--text-tertiary)]">Loading fleet data...</td>
+                      <td colSpan={7} className="py-12 text-center text-[10px] font-medium text-[var(--text-tertiary)]">
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-4 h-4 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+                          <span>Loading assignment data...</span>
+                        </div>
+                      </td>
                     </tr>
                   ) : assignedRiders.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="py-12 text-center">
-                        <div className="space-y-3">
-                          <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">No assigned riders yet</p>
-                        </div>
+                        <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">No riders assigned</p>
                       </td>
                     </tr>
-                  ) : assignedRiders.map(r => {
-                        const rId = r._id || r.id || 'N/A';
-                        const displayId = rId.toString().substring(0, 6);
-                        
-                        let v = null;
-                        if (r.vehicleId) {
-                           const vId = typeof r.vehicleId === 'object' ? (r.vehicleId._id || r.vehicleId.id) : r.vehicleId;
-                           v = vehicles.find(veh => (veh._id || veh.id) === vId);
-                        }
-                        
-                        return (
-                          <tr key={rId} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
-                            <td className="px-4 py-2">
-                              {v ? (
-                                <div className="flex items-center gap-2">
-                                  <div className="w-6 h-6 rounded bg-[var(--bg-tertiary)] flex items-center justify-center text-emerald-500 font-medium text-[9px]">EV</div>
-                                  <span className="font-medium text-[var(--text-primary)] text-xs">{v.plate}</span>
-                                </div>
-                              ) : (
-                                <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest bg-rose-500/10 px-2 py-0.5 rounded-lg border border-rose-500/20">Unassigned</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-2 text-xs font-medium text-[var(--text-tertiary)]">{v ? v.model : '—'}</td>
-                            <td className="px-4 py-2">
-                              <div className="flex flex-col">
-                                <span className="font-bold text-[var(--text-primary)] text-xs truncate max-w-[150px]">{r.name || r.fullName || '—'}</span>
-                                <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-0.5">ID: {displayId}</span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-2">
-                              {v && v.subscriptionPlan ? (
-                                <div className="flex flex-col gap-0.5">
-                                  <span className="text-[10px] font-bold text-[var(--text-primary)] uppercase tracking-widest italic">{v.subscriptionPlan.name || v.subscriptionPlan.label || 'Plan Active'}</span>
-                                </div>
-                              ) : (
-                                <span className="text-[9px] text-[var(--text-tertiary)] font-black uppercase tracking-widest italic opacity-60">No Plan</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-2">
-                              {v ? (
-                                <div className="flex items-center gap-2">
-                                  <Battery size={12} className={v.battery < 20 ? 'text-rose-500' : 'text-emerald-500'} />
-                                  <span className={`text-xs font-medium ${v.battery < 20 ? 'text-rose-500' : 'text-[var(--text-primary)]'}`}>{v.battery ?? '—'}%</span>
-                                </div>
-                              ) : (
-                                <span className="text-xs font-medium text-[var(--text-tertiary)]">—</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-2">
-                              {v ? (
-                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${v.status === 'assigned' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : v.status === 'in-service' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'}`}>
-                                  {v.status}
-                                </span>
-                              ) : (
-                                <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest">N/A</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-2 relative">
-                              {!v && (
-                                <button
-                                  onClick={() => {
-                                    setAssignmentData({ riderName: r.name || r.fullName, riderPhone: r.phone, vehiclePlate: '' });
-                                    setIsAssignModalOpen(true);
-                                  }}
-                                  className="flex items-center gap-2 px-3 py-1.5 bg-emerald-600/10 border border-emerald-500/20 text-emerald-500 hover:bg-emerald-600 hover:text-white rounded-lg text-[9px] font-black uppercase tracking-widest transition-all"
-                                >
-                                  <Zap size={12} /> Assign
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })
                   ) : (
-                    assignedRiders.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="py-12 text-center">
-                          <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">No riders assigned</p>
-                        </td>
-                      </tr>
-                    ) : (
-                      assignedRiders.map(r => {
+                    assignedRiders.map(r => {
                         const rId = r._id || r.id || 'N/A';
                         const displayId = rId.toString().substring(0, 6);
                         
@@ -438,6 +338,11 @@ export default function HubDetailsPage() {
                                 <div className="flex items-center gap-2">
                                   <div className="w-6 h-6 rounded bg-[var(--bg-tertiary)] flex items-center justify-center text-emerald-500 font-medium text-[9px]">EV</div>
                                   <span className="font-medium text-[var(--text-primary)] text-xs">{v.plate}</span>
+                                </div>
+                              ) : r.vehicleNo ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-6 h-6 rounded bg-[var(--bg-tertiary)] flex items-center justify-center text-emerald-500 font-medium text-[9px]">EV</div>
+                                  <span className="font-medium text-[var(--text-primary)] text-xs">{r.vehicleNo}</span>
                                 </div>
                               ) : (
                                 <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest bg-rose-500/10 px-2 py-0.5 rounded-lg border border-rose-500/20">Unassigned</span>
@@ -494,8 +399,7 @@ export default function HubDetailsPage() {
                           </tr>
                         );
                       })
-                    )
-                  )}
+                    )}
                 </tbody>
               </table>
             </div>

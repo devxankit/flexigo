@@ -38,12 +38,12 @@ const Rider = mongoose.models.Rider || mongoose.model('Rider', RiderSchema);
 
 const run = async () => {
   await connectDB();
-  
+
   // Accept coordinates dynamically from command-line arguments (e.g., node update_tushar_location.js 18.58082 73.76704)
   // Fallback to Prima Domus coordinates if no arguments are provided
   const targetLat = process.argv[2] ? parseFloat(process.argv[2]) : 18.58082;
   const targetLng = process.argv[3] ? parseFloat(process.argv[3]) : 73.76704;
-  
+
   let targetAddress = "Geocoding Fallback (Google API Offline)"; // Fallback if Google API call fails
 
   // Dynamically resolve address from coordinates using Google Maps Reverse Geocoding API

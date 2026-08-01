@@ -8,11 +8,15 @@ import {
    User,
    Activity,
    ShieldCheck,
-   Bike
+   Bike,
+   Trash2,
+   AlertCircle
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import AdminStatCard from '../components/AdminStatCard';
 import OpsFilter from '../components/OpsFilter';
 import { useAdminDataStore } from '../store/adminDataStore';
+import api from '../../../lib/axios';
 
 export default function RiderReportPage() {
    const { riderReport, fetchRiderReport, kycRecords, fetchKycRecords, isLoading } = useAdminDataStore();
@@ -20,6 +24,7 @@ export default function RiderReportPage() {
    const [activeFilters, setActiveFilters] = React.useState({ range: 'All Time' });
    const [currentPage, setCurrentPage] = React.useState(1);
    const recordsPerPage = 10;
+   const [deleteConfirm, setDeleteConfirm] = React.useState({ isOpen: false, id: null, name: '' });
 
    React.useEffect(() => {
       fetchRiderReport({ range: 'All Time' });
@@ -119,7 +124,7 @@ export default function RiderReportPage() {
                <table className="w-full text-left">
                   <thead>
                      <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
-                        {['Rider Details', 'Source', 'Vehicle Info', 'Active Plan', 'Distance (KM)', 'Total Payments', 'Wallet', 'Status'].map((header) => (
+                        {['Rider Details', 'Source', 'Vehicle Info', 'Active Plan', 'Distance (KM)', 'Total Payments', 'Wallet', 'Status', 'Actions'].map((header) => (
                            <th key={header} className="py-3 px-4 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest whitespace-nowrap">{header}</th>
                         ))}
                      </tr>
@@ -204,6 +209,18 @@ export default function RiderReportPage() {
                                  {r.status}
                               </div>
                            </td>
+                           <td className="py-3 px-4">
+                              <button
+                                 onClick={(e) => {
+                                    e.stopPropagation();
+                                    setDeleteConfirm({ isOpen: true, id: r.id, name: r.name });
+                                 }}
+                                 className="p-1.5 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
+                                 title="Delete Rider"
+                              >
+                                 <Trash2 size={12} />
+                              </button>
+                           </td>
                         </tr>
                      ))}
                      {filteredReport.length === 0 && !isLoading && (
@@ -266,6 +283,49 @@ export default function RiderReportPage() {
                </div>
             )}
          </div>
+
+         {/* Delete Confirmation Modal */}
+         <AnimatePresence>
+            {deleteConfirm.isOpen && (
+               <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs">
+                  <motion.div
+                     initial={{ opacity: 0, scale: 0.95 }}
+                     animate={{ opacity: 1, scale: 1 }}
+                     exit={{ opacity: 0, scale: 0.95 }}
+                     className="w-full max-w-sm bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl shadow-2xl p-6 relative overflow-hidden"
+                  >
+                     <div className="flex flex-col items-center text-center space-y-4">
+                        <div className="w-16 h-16 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-500 shadow-inner">
+                           <AlertCircle size={32} />
+                        </div>
+                        <div>
+                           <h3 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-tighter italic">Confirm Deletion</h3>
+                           <p className="text-[10px] text-[var(--text-tertiary)] font-bold mt-1 uppercase tracking-widest leading-relaxed">
+                              Are you sure you want to permanently delete rider {deleteConfirm.name}? This action cannot be undone.
+                           </p>
+                        </div>
+                        <div className="flex w-full gap-3 pt-4">
+                           <button onClick={() => setDeleteConfirm({ isOpen: false, id: null, name: '' })} className="flex-1 py-2.5 rounded-xl border border-[var(--border-subtle)] text-[10px] font-black uppercase tracking-widest text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-all active:scale-95">Cancel</button>
+                           <button onClick={async () => {
+                              try {
+                                 const res = await api.delete(`/admin/kyc/${deleteConfirm.id}`);
+                                 if (res.data.success) {
+                                    fetchRiderReport({ range: 'All Time' });
+                                    fetchKycRecords();
+                                    setDeleteConfirm({ isOpen: false, id: null, name: '' });
+                                 } else {
+                                    alert(res.data.message || 'Deletion failed');
+                                 }
+                              } catch(err) {
+                                 alert('Deletion failed: ' + (err.response?.data?.message || err.message));
+                              }
+                           }} className="flex-1 py-2.5 rounded-xl bg-rose-500 text-white text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 transition-all shadow-md active:scale-95 shadow-rose-500/20">Delete</button>
+                        </div>
+                     </div>
+                  </motion.div>
+               </div>
+            )}
+         </AnimatePresence>
       </div>
    );
 }

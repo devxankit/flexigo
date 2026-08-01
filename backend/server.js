@@ -16,6 +16,8 @@ import adminRoutes from './modules/admin/adminRoutes.js';
 import { seedDefaultAdmin } from './shared/utils/seedAdmin.js';
 import { seedWebsiteData } from './modules/admin/websiteSeedController.js';
 import { startPaymentDueCron } from './shared/utils/paymentDueCron.js';
+import Rider from './modules/rider/riderModel.js';
+import Vehicle from './modules/fleet/vehicleModel.js';
 
 
 // Load env vars
@@ -39,10 +41,28 @@ if (process.env.SMSINDIAHUB_API_KEY) {
 }
 
 // Connect to database
-connectDB().then(() => {
+connectDB().then(async () => {
   seedDefaultAdmin();
   seedWebsiteData();
   startPaymentDueCron();
+  
+  try {
+    const riders = await Rider.find({ franchise: { $ne: null }, vehicleId: { $ne: null } });
+    let updatedCount = 0;
+    for (const rider of riders) {
+      const vehicle = await Vehicle.findById(rider.vehicleId);
+      if (vehicle && String(vehicle.franchise) !== String(rider.franchise)) {
+        vehicle.franchise = rider.franchise;
+        await vehicle.save();
+        updatedCount++;
+      }
+    }
+    if (updatedCount > 0) {
+      console.log(`✅ Synced franchise for ${updatedCount} vehicles based on assigned riders.`);
+    }
+  } catch (err) {
+    console.error("Error syncing rider vehicle franchises:", err);
+  }
 });
 
 

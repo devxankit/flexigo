@@ -69,7 +69,7 @@ const HubFormFields = ({ data, setData }) => (
 
 export default function HubManagementPage() {
   const navigate = useNavigate();
-  const { hubs, networkStats, fetchHubs, fetchDashboardStats, addHub, updateHub, removeHub } = useAdminDataStore();
+  const { hubs, networkStats, fetchHubs, fetchDashboardStats, addHub, updateHub, removeHub, kycRecords, vehicles, fetchKycRecords, fetchAllVehicles } = useAdminDataStore();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editHub, setEditHub] = useState(null);
@@ -79,10 +79,17 @@ export default function HubManagementPage() {
   const [editFormData, setEditFormData] = useState(emptyForm);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilters, setActiveFilters] = useState({ range: 'Last 7 Days' });
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   React.useEffect(() => {
     fetchHubs();
+    fetchKycRecords();
+    fetchAllVehicles();
     if (networkStats.totalHubs === 0) fetchDashboardStats();
+    
+    // Safety timeout to prevent infinite Syncing...
+    const timer = setTimeout(() => setIsInitialLoad(false), 800);
+    return () => clearTimeout(timer);
   }, []);
 
   const filteredHubs = hubs.filter(h =>
@@ -215,7 +222,12 @@ export default function HubManagementPage() {
       {/* Hub Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         <AnimatePresence mode="popLayout">
-          {filteredHubs.map((hub, idx) => (
+          {filteredHubs.map((hub, idx) => {
+            const hubId = (hub._id || hub.id)?.toString();
+            const dynamicFleet = hub.fleet;
+            const dynamicSubs = hub.subs;
+
+            return (
             <motion.div
               layout
               initial={{ opacity: 0, scale: 0.98 }}
@@ -268,14 +280,12 @@ export default function HubManagementPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4 mb-4 py-3 border-y border-[var(--border-subtle)]">
-                <div>
-                  <p className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Fleet</p>
-                  <p className="text-sm font-black text-[var(--text-primary)] tracking-tight">{hub.fleet}</p>
-                </div>
+              <div className="grid grid-cols-2 gap-4 mb-4 py-3 border-y border-[var(--border-subtle)]">
                 <div>
                   <p className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Assigned Riders</p>
-                  <p className="text-sm font-black text-[var(--text-primary)] tracking-tight">{hub.subs}</p>
+                  <p className="text-sm font-black text-[var(--text-primary)] tracking-tight">
+                    {isInitialLoad ? <span className="text-[var(--text-tertiary)]/50 text-[10px] animate-pulse font-medium">Syncing...</span> : dynamicSubs}
+                  </p>
                 </div>
                 <div>
                   <p className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Revenue</p>
@@ -298,7 +308,8 @@ export default function HubManagementPage() {
                 </button>
               </div>
             </motion.div>
-          ))}
+            );
+          })}
         </AnimatePresence>
         {filteredHubs.length === 0 && (
           <div className="col-span-full py-20 text-center text-[var(--text-tertiary)] text-[10px] font-bold uppercase tracking-widest">
