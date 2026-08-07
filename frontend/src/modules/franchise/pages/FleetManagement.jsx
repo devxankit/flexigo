@@ -237,7 +237,7 @@ export default function FleetManagement() {
       {
          header: 'Vehicle Assigned',
          accessor: 'vehicle',
-         render: (row) => <span className="text-[7px] font-black text-[var(--text-tertiary)] font-mono tracking-[0.2em] italic uppercase opacity-60">{row.vehicleId?.plate || 'NO VEHICLE'}</span>
+         render: (row) => <span className="text-[7px] font-black text-[var(--text-tertiary)] font-mono tracking-[0.2em] italic uppercase opacity-60">{row.vehicleId?.plate || row.vehiclePlate || row.vehicleNo || 'NO VEHICLE'}</span>
       },
       {
          header: 'Verification Docs',
@@ -272,7 +272,7 @@ export default function FleetManagement() {
          accessor: 'actions',
          render: (row) => (
             <div className="flex items-center gap-2">
-               {!row.vehicleId && (
+               {!row.vehicleId && !row.vehiclePlate && !row.vehicleNo && (
                   <button
                      onClick={(e) => {
                         e.stopPropagation();
@@ -550,7 +550,7 @@ export default function FleetManagement() {
                                     {selectedVehicle.phone}
                                  </span>
                                  <span className="text-[7.5px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] italic leading-none opacity-60">
-                                    VEHICLE: {selectedVehicle.vehicleId?.plate || 'NONE'}
+                                    VEHICLE: {selectedVehicle.vehicleId?.plate || selectedVehicle.vehiclePlate || selectedVehicle.vehicleNo || 'NONE'}
                                  </span>
                               </div>
                            </div>

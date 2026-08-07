@@ -168,6 +168,28 @@ export const useAuthStore = create(
         }
       },
 
+      uploadProfileDocuments: async (formData) => {
+        try {
+          const phone = get().phone || get().user?.phone;
+          if (formData instanceof FormData) {
+            if (!formData.has('phone') && phone) {
+              formData.append('phone', phone);
+            }
+          }
+          const res = await api.post('/rider/profile/upload-documents', formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          });
+          if (res.data.success) {
+            set({ user: res.data.rider, kycStatus: res.data.rider.kycStatus });
+            return { success: true };
+          }
+        } catch (error) {
+          return { success: false, message: error.response?.data?.message || 'Failed to upload documents' };
+        }
+      },
+
       fetchProfile: async () => {
         try {
           const { user } = get();

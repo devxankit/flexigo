@@ -6,6 +6,7 @@ import {
   getRiderProfile,
   addMoney,
   uploadAttachment,
+  uploadProfileDocuments,
   getWalletData,
   getSubscribersByFranchise,
   getActiveHubs,
@@ -55,6 +56,13 @@ router.post('/kyc/aadhaar/verify-otp', verifyAadhaarOTP);
 router.post('/auth/save-fcm-token', protectRider, saveFcmToken);
 router.get('/profile/:phone', getRiderProfile);
 router.post('/profile/attachment', uploadAttachment);
+router.post('/profile/upload-documents', upload.fields([
+  { name: 'selfie', maxCount: 1 },
+  { name: 'aadhaarFront', maxCount: 1 },
+  { name: 'aadhaarBack', maxCount: 1 },
+  { name: 'drivingLicense', maxCount: 1 },
+  { name: 'certificate', maxCount: 1 }
+]), uploadProfileDocuments);
 router.post('/wallet/add', addMoney);
 router.post('/wallet/create-topup-order', createWalletTopUpOrder);
 router.post('/wallet/verify-topup', verifyWalletTopUp);
