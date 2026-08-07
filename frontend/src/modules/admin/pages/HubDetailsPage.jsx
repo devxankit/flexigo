@@ -330,6 +330,10 @@ export default function HubDetailsPage() {
                            const vId = typeof r.vehicleId === 'object' ? (r.vehicleId._id || r.vehicleId.id) : r.vehicleId;
                            v = vehicles.find(veh => (veh._id || veh.id) === vId);
                         }
+                        if (!v && (r.vehiclePlate || r.vehicleNo)) {
+                           const plateToFind = (r.vehiclePlate || r.vehicleNo).toLowerCase();
+                           v = vehicles.find(veh => veh.plate?.toLowerCase() === plateToFind);
+                        }
                         
                         return (
                           <tr key={rId} className="group/row hover:bg-[var(--bg-tertiary)]/10 transition-colors text-sm">
@@ -339,10 +343,10 @@ export default function HubDetailsPage() {
                                   <div className="w-6 h-6 rounded bg-[var(--bg-tertiary)] flex items-center justify-center text-emerald-500 font-medium text-[9px]">EV</div>
                                   <span className="font-medium text-[var(--text-primary)] text-xs">{v.plate}</span>
                                 </div>
-                              ) : r.vehicleNo ? (
+                              ) : (r.vehiclePlate || r.vehicleNo) ? (
                                 <div className="flex items-center gap-2">
                                   <div className="w-6 h-6 rounded bg-[var(--bg-tertiary)] flex items-center justify-center text-emerald-500 font-medium text-[9px]">EV</div>
-                                  <span className="font-medium text-[var(--text-primary)] text-xs">{r.vehicleNo}</span>
+                                  <span className="font-medium text-[var(--text-primary)] text-xs">{r.vehiclePlate || r.vehicleNo}</span>
                                 </div>
                               ) : (
                                 <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest bg-rose-500/10 px-2 py-0.5 rounded-lg border border-rose-500/20">Unassigned</span>
@@ -379,12 +383,16 @@ export default function HubDetailsPage() {
                                 <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${v.status === 'assigned' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : v.status === 'in-service' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'}`}>
                                   {v.status}
                                 </span>
+                              ) : (r.vehiclePlate || r.vehicleNo) ? (
+                                <span className="px-2 py-0.5 rounded-full text-xs font-medium border bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
+                                  assigned
+                                </span>
                               ) : (
                                 <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest">N/A</span>
                               )}
                             </td>
                             <td className="px-4 py-2 relative">
-                              {!v && (
+                              {!v && !r.vehiclePlate && !r.vehicleNo && (
                                 <button
                                   onClick={() => {
                                     setAssignmentData({ riderName: r.name || r.fullName, riderPhone: r.phone, vehiclePlate: '' });

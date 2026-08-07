@@ -8,11 +8,14 @@ import { useSubscriptionStore } from '../store/subscriptionStore';
 import { useNavigate } from 'react-router-dom';
 
 export default function ProfileScreen() {
-  const { user, logout, kycStatus, fetchProfile, uploadProfileAttachment } = useAuthStore();
+  const { user, logout, kycStatus, fetchProfile, uploadProfileDocuments } = useAuthStore();
   const { theme } = useThemeStore();
   const navigate = useNavigate();
   const { activePlan } = useSubscriptionStore();
   const isDark = theme === 'dark';
+  
+  const [activeUploadField, setActiveUploadField] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -24,9 +27,15 @@ export default function ProfileScreen() {
   };
 
   const handleViewDocument = (label) => {
-    const docUrl = label === 'Driving License' 
-      ? user?.kycDetails?.drivingLicense 
-      : label === 'Certificate' ? user?.kycDetails?.certificate : null;
+    const keyMap = {
+      'Selfie': 'selfie',
+      'Aadhaar Front': 'aadhaarFront',
+      'Aadhaar Back': 'aadhaarBack',
+      'Driving License': 'drivingLicense',
+      'Certificate': 'certificate'
+    };
+    const key = keyMap[label];
+    const docUrl = key ? user?.kycDetails?.[key] : null;
       
     if (docUrl) {
       window.open(docUrl, '_blank');
@@ -35,36 +44,32 @@ export default function ProfileScreen() {
     }
   };
 
-  const fileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
-  const handleUploadCertificate = async (e) => {
+  const handleFileUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-    
-    // Quick size check (optional)
-    if (file.size > 5 * 1024 * 1024) {
-      alert("File too large. Please upload an image under 5MB.");
+    if (!file || !activeUploadField) return;
+
+    if (file.size > 15 * 1024 * 1024) {
+      alert("File too large. Please upload a file under 15MB.");
       return;
     }
 
+    setUploading(true);
     try {
-      // Create a small loading state or use alert for now
-      const base64 = await fileToBase64(file);
-      const res = await uploadProfileAttachment(base64, file.name);
+      const formData = new FormData();
+      formData.append(activeUploadField, file);
+      
+      const res = await uploadProfileDocuments(formData);
       if (res.success) {
-        alert("Certificate uploaded successfully!");
+        alert(`${activeUploadField} uploaded successfully!`);
       } else {
-        alert(res.message || "Failed to upload certificate");
+        alert(res.message || "Failed to upload document");
       }
     } catch (err) {
       alert("Error uploading file");
+    } finally {
+      setUploading(false);
+      setActiveUploadField(null);
+      e.target.value = ''; // Reset file input
     }
   };
 
@@ -86,20 +91,44 @@ export default function ProfileScreen() {
             canView: false 
         },
         { 
+            label: 'Selfie', 
+            value: user?.kycDetails?.selfie ? 'Uploaded' : 'Not Uploaded', 
+            color: user?.kycDetails?.selfie ? '#39FF14' : (isDark ? '#4b5563' : '#94a3b8'), 
+            canView: !!user?.kycDetails?.selfie,
+            canUpload: !user?.kycDetails?.selfie,
+            fieldKey: 'selfie'
+        },
+        { 
+            label: 'Aadhaar Front', 
+            value: user?.kycDetails?.aadhaarFront ? 'Uploaded' : 'Not Uploaded', 
+            color: user?.kycDetails?.aadhaarFront ? '#39FF14' : (isDark ? '#4b5563' : '#94a3b8'), 
+            canView: !!user?.kycDetails?.aadhaarFront,
+            canUpload: !user?.kycDetails?.aadhaarFront,
+            fieldKey: 'aadhaarFront'
+        },
+        { 
+            label: 'Aadhaar Back', 
+            value: user?.kycDetails?.aadhaarBack ? 'Uploaded' : 'Not Uploaded', 
+            color: user?.kycDetails?.aadhaarBack ? '#39FF14' : (isDark ? '#4b5563' : '#94a3b8'), 
+            canView: !!user?.kycDetails?.aadhaarBack,
+            canUpload: !user?.kycDetails?.aadhaarBack,
+            fieldKey: 'aadhaarBack'
+        },
+        { 
             label: 'Driving License', 
-            value: user?.kycDetails?.drivingLicense 
-                ? (kycStatus === 'approved' ? 'Verified' : 'Pending') 
-                : 'Not Uploaded', 
+            value: user?.kycDetails?.drivingLicense ? 'Uploaded' : 'Not Uploaded', 
             color: user?.kycDetails?.drivingLicense ? '#39FF14' : (isDark ? '#4b5563' : '#94a3b8'), 
             canView: !!user?.kycDetails?.drivingLicense,
-            canUpload: false
+            canUpload: !user?.kycDetails?.drivingLicense,
+            fieldKey: 'drivingLicense'
         },
         {
             label: 'Certificate',
             value: user?.kycDetails?.certificate ? 'Uploaded' : 'Not Uploaded',
             color: user?.kycDetails?.certificate ? '#39FF14' : (isDark ? '#4b5563' : '#94a3b8'),
             canView: !!user?.kycDetails?.certificate,
-            canUpload: !user?.kycDetails?.certificate
+            canUpload: !user?.kycDetails?.certificate,
+            fieldKey: 'certificate'
         }
       ]
     },
@@ -129,10 +158,10 @@ export default function ProfileScreen() {
       {/* Hidden file input for uploading */}
       <input 
         type="file" 
-        id="certificate-upload" 
+        id="document-upload" 
         className="hidden" 
         accept="image/*,.pdf" 
-        onChange={handleUploadCertificate} 
+        onChange={handleFileUpload} 
       />
       <div className="mb-10 flex flex-col items-center">
         <div className="relative mb-6">
@@ -177,13 +206,19 @@ export default function ProfileScreen() {
                   <div className="flex items-center gap-2">
                     {item.canUpload && (
                       <button
-                        onClick={() => document.getElementById('certificate-upload').click()}
+                        onClick={() => {
+                          setActiveUploadField(item.fieldKey);
+                          setTimeout(() => {
+                            document.getElementById('document-upload').click();
+                          }, 50);
+                        }}
+                        disabled={uploading}
                         className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border transition-all ${isDark
                             ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20'
                             : 'bg-emerald-50 border-emerald-200 text-emerald-600 hover:bg-emerald-100 shadow-sm'
                           }`}
                       >
-                        Upload
+                        {uploading && activeUploadField === item.fieldKey ? 'Uploading...' : 'Upload'}
                       </button>
                     )}
                     {item.canView && (

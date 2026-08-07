@@ -310,6 +310,73 @@ export const uploadAttachment = async (req, res) => {
   }
 };
 
+export const uploadProfileDocuments = async (req, res) => {
+  try {
+    const { phone } = req.body;
+    const rider = await Rider.findOne({ phone });
+    if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
+
+    rider.kycDetails = rider.kycDetails || {};
+
+    const getFileUrl = (fieldName) => {
+      if (req.files && req.files[fieldName] && req.files[fieldName][0]) {
+        const file = req.files[fieldName][0];
+        console.log(`[Multer Profile] Received file upload for ${fieldName}:`, file.filename);
+        return `${req.protocol}://${req.get('host')}/images/${file.filename}`;
+      }
+      return null;
+    };
+
+    let updated = false;
+    
+    const selfieUrl = getFileUrl('selfie');
+    if (selfieUrl) {
+      rider.kycDetails.selfie = selfieUrl;
+      updated = true;
+    }
+
+    const aadhaarFrontUrl = getFileUrl('aadhaarFront');
+    if (aadhaarFrontUrl) {
+      rider.kycDetails.aadhaarFront = aadhaarFrontUrl;
+      updated = true;
+    }
+
+    const aadhaarBackUrl = getFileUrl('aadhaarBack');
+    if (aadhaarBackUrl) {
+      rider.kycDetails.aadhaarBack = aadhaarBackUrl;
+      updated = true;
+    }
+
+    const drivingLicenseUrl = getFileUrl('drivingLicense');
+    if (drivingLicenseUrl) {
+      rider.kycDetails.drivingLicense = drivingLicenseUrl;
+      updated = true;
+    }
+
+    const certificateUrl = getFileUrl('certificate');
+    if (certificateUrl) {
+      rider.kycDetails.certificate = certificateUrl;
+      // Also push to attachments array for consistency
+      rider.kycDetails.attachments = rider.kycDetails.attachments || [];
+      // Remove any existing dynamic certificate from attachments to avoid duplicates
+      rider.kycDetails.attachments = rider.kycDetails.attachments.filter(att => att.name !== 'Certificate');
+      rider.kycDetails.attachments.push({ name: 'Certificate', url: certificateUrl });
+      updated = true;
+    }
+
+    if (updated) {
+      rider.kycStatus = 'pending';
+      rider.status = 'pending';
+      await rider.save();
+    }
+
+    res.status(200).json({ success: true, message: 'Documents uploaded successfully', rider });
+  } catch (error) {
+    console.error("❌ PROFILE DOCUMENTS UPLOAD ERROR:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const getRiderProfile = async (req, res) => {
   try {
     const rider = await Rider.findOne({ phone: req.params.phone }).populate('subscriptionPlan');
