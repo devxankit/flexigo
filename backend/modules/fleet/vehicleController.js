@@ -377,6 +377,10 @@ export const createAssignment = async (req, res) => {
     });
 
     // Update statuses
+    if (rider.vehicleId) {
+      await Vehicle.findByIdAndUpdate(rider.vehicleId, { status: 'available' });
+    }
+
     vehicle.status = 'assigned';
     await vehicle.save();
 

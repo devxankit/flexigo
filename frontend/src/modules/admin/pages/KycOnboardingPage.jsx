@@ -46,7 +46,7 @@ export default function KycOnboardingPage() {
    const [searchQuery, setSearchQuery] = useState(() => localStorage.getItem('kyc_search_query') || '');
    const [activeFilters, setActiveFilters] = useState({ range: 'Last 7 Days' });
    const [referralAmount, setReferralAmount] = useState('');
-   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, id: null });
+   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, id: null, name: '' });
    const [currentPage, setCurrentPage] = useState(1);
    const [selectedFranchiseRiders, setSelectedFranchiseRiders] = useState({});
    const recordsPerPage = 10;
@@ -398,7 +398,6 @@ export default function KycOnboardingPage() {
                                     >
                                        {record.isBlocked ? <UserCheck size={12} /> : <UserX size={12} />}
                                     </button>
-                                    {/* Add Attachment Button */}
                                     <button
                                        onClick={() => {
                                           const input = document.createElement('input');
@@ -448,7 +447,31 @@ export default function KycOnboardingPage() {
                                           <Zap size={12} fill="currentColor" />
                                        </button>
                                     )}
-                                    {/* Delete button removed as requested */}
+                                    {record.status === 'approved' && record.role?.toLowerCase() === 'rider' && record.vehicleId && (
+                                       <button
+                                          onClick={() => {
+                                             setAssignmentData({
+                                                vehiclePlate: '',
+                                                riderPhone: record.phone || '',
+                                                riderName: record.name || ''
+                                             });
+                                             setIsAssignModalOpen(true);
+                                          }}
+                                          className="p-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-500 hover:bg-amber-500 hover:text-white transition-all"
+                                          title="Reassign Vehicle"
+                                       >
+                                          <Zap size={12} fill="currentColor" />
+                                       </button>
+                                    )}
+                                     <button
+                                        onClick={() => {
+                                           setDeleteConfirm({ isOpen: true, id: record._id || record.id, name: record.name });
+                                        }}
+                                        className="p-1.5 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
+                                        title="Delete KYC Record"
+                                     >
+                                        <Trash2 size={12} />
+                                     </button>
                                  </div>
                               </td>
                            </motion.tr>
@@ -520,16 +543,16 @@ export default function KycOnboardingPage() {
                         </div>
                         <div>
                            <h3 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-tighter italic">Confirm Deletion</h3>
-                           <p className="text-[10px] text-[var(--text-tertiary)] font-bold mt-1 uppercase tracking-widest leading-relaxed">Are you sure you want to permanently delete this record? This action cannot be undone.</p>
+                           <p className="text-[10px] text-[var(--text-tertiary)] font-bold mt-1 uppercase tracking-widest leading-relaxed">Are you sure you want to permanently delete record {deleteConfirm.name}? This action cannot be undone.</p>
                         </div>
                         <div className="flex w-full gap-3 pt-4">
-                           <button onClick={() => setDeleteConfirm({ isOpen: false, id: null })} className="flex-1 py-2.5 rounded-xl border border-[var(--border-subtle)] text-[10px] font-black uppercase tracking-widest text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-all active:scale-95">Cancel</button>
+                           <button onClick={() => setDeleteConfirm({ isOpen: false, id: null, name: '' })} className="flex-1 py-2.5 rounded-xl border border-[var(--border-subtle)] text-[10px] font-black uppercase tracking-widest text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-all active:scale-95">Cancel</button>
                            <button onClick={async () => {
                               try {
                                  const res = await api.delete(`/admin/kyc/${deleteConfirm.id}`);
                                  if (res.data.success) {
                                     useAdminDataStore.getState().fetchKycRecords();
-                                    setDeleteConfirm({ isOpen: false, id: null });
+                                    setDeleteConfirm({ isOpen: false, id: null, name: '' });
                                  } else {
                                     alert(res.data.message || 'Deletion failed');
                                  }
@@ -959,19 +982,31 @@ export default function KycOnboardingPage() {
                      exit={{ opacity: 0, scale: 0.95 }}
                      className="w-full max-w-md bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-8 shadow-2xl space-y-6"
                   >
-                     <div className="flex items-center justify-between">
-                        <div className="space-y-0.5">
-                           <h2 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-tighter italic leading-none">Vehicle <span className="text-emerald-500">Assignment</span></h2>
-                           <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">PROVISION_DISPATCH_PROTOCOL</p>
-                        </div>
-                        <button onClick={() => setIsAssignModalOpen(false)} className="p-1.5 hover:bg-rose-600/10 hover:text-rose-500 transition-all rounded-lg">
-                           <X size={16} />
-                        </button>
-                     </div>
+                     {(() => {
+                        const riderRecord = kycRecords.find(r => r.phone === assignmentData.riderPhone);
+                        const isReassign = !!(riderRecord?.vehicleId || (riderRecord?.vehiclePlate && riderRecord.vehiclePlate !== 'N/A'));
+                        return (
+                           <div className="flex items-center justify-between">
+                              <div className="space-y-0.5">
+                                 <h2 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-tighter italic leading-none">
+                                    Vehicle <span className={isReassign ? "text-amber-500" : "text-emerald-500"}>{isReassign ? 'Re-assignment' : 'Assignment'}</span>
+                                 </h2>
+                                 <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">
+                                    {isReassign ? 'REASSIGN_DISPATCH_PROTOCOL' : 'PROVISION_DISPATCH_PROTOCOL'}
+                                 </p>
+                              </div>
+                              <button onClick={() => setIsAssignModalOpen(false)} className="p-1.5 hover:bg-rose-600/10 hover:text-rose-500 transition-all rounded-lg">
+                                 <X size={16} />
+                              </button>
+                           </div>
+                        );
+                     })()}
 
                      <form
                         onSubmit={async (e) => {
                            e.preventDefault();
+                           const riderRecord = kycRecords.find(r => r.phone === assignmentData.riderPhone);
+                           const isReassign = !!(riderRecord?.vehicleId || (riderRecord?.vehiclePlate && riderRecord.vehiclePlate !== 'N/A'));
                            const res = await assignVehicle({
                               vehiclePlate: assignmentData.vehiclePlate,
                               riderPhone: assignmentData.riderPhone,
@@ -980,7 +1015,7 @@ export default function KycOnboardingPage() {
                            });
                            if (res.success) {
                               setIsAssignModalOpen(false);
-                              alert("Vehicle Assigned Successfully!");
+                              alert(isReassign ? "Vehicle Reassigned Successfully!" : "Vehicle Assigned Successfully!");
                            } else {
                               alert(res.message || "Assignment Failed");
                            }
@@ -1014,7 +1049,7 @@ export default function KycOnboardingPage() {
                            </div>
 
                            <div className="space-y-1.5">
-                              <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Vehicle Plate Number</label>
+                              <label className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Vehicle Plate Number (Unblocked/Available)</label>
                               <select
                                  required
                                  value={assignmentData.vehiclePlate}
@@ -1022,7 +1057,7 @@ export default function KycOnboardingPage() {
                                  className="w-full px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl text-[10px] font-bold uppercase tracking-wider focus:ring-1 focus:ring-emerald-500/20 outline-none transition-all text-[var(--text-primary)]"
                               >
                                  <option value="">Select Vehicle Plate</option>
-                                 {vehicles.filter(v => v.status !== 'assigned').map(v => (
+                                 {vehicles.filter(v => v.status === 'available' || v.status === 'unassigned' || !v.status).map(v => (
                                     <option key={v._id || v.id} value={v.plate}>
                                        {v.plate} — {v.model || 'Vehicle'}
                                     </option>
@@ -1033,9 +1068,23 @@ export default function KycOnboardingPage() {
 
                         <button
                            type="submit"
-                           className="w-full py-3 bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-emerald-950/20 hover:bg-emerald-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+                           className={`w-full py-3 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 ${
+                              (() => {
+                                 const riderRecord = kycRecords.find(r => r.phone === assignmentData.riderPhone);
+                                 return riderRecord?.vehicleId || (riderRecord?.vehiclePlate && riderRecord.vehiclePlate !== 'N/A')
+                                    ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-950/20'
+                                    : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-950/20';
+                              })()
+                           }`}
                         >
-                           <Zap size={14} fill="white" /> Save & Assign Vehicle
+                           <Zap size={14} fill="white" /> {
+                              (() => {
+                                 const riderRecord = kycRecords.find(r => r.phone === assignmentData.riderPhone);
+                                 return riderRecord?.vehicleId || (riderRecord?.vehiclePlate && riderRecord.vehiclePlate !== 'N/A')
+                                    ? 'Save & Reassign Vehicle'
+                                    : 'Save & Assign Vehicle';
+                              })()
+                           }
                         </button>
                      </form>
                   </motion.div>

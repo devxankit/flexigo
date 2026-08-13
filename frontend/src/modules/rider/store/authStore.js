@@ -16,7 +16,7 @@ export const useAuthStore = create(
       token: null,
 
       setPhone: (phone) => set({ phone }),
-      
+
       sendOTP: async (phone) => {
         try {
           const res = await api.post('/rider/auth/send-otp', { phone });
@@ -34,28 +34,28 @@ export const useAuthStore = create(
           const { phone } = get();
           const res = await api.post('/rider/auth/verify-otp', { phone, otp, fcmToken });
           if (res.data.success) {
-            set({ 
-              isAuthenticated: true, 
-              user: res.data.rider, 
+            set({
+              isAuthenticated: true,
+              user: res.data.rider,
               token: res.data.token,
-              kycStatus: res.data.rider.kycStatus 
+              kycStatus: res.data.rider.kycStatus
             });
-            
+
             // Sync with other stores
             if (res.data.rider.walletBalance !== undefined) {
               useWalletStore.setState({ balance: res.data.rider.walletBalance });
             }
             if (res.data.rider.subscriptionPlan && res.data.rider.status === 'active') {
-              useSubscriptionStore.setState({ 
-                activePlan: { 
-                  ...res.data.rider.subscriptionPlan, 
-                  expiresAt: res.data.rider.subscriptionEnd 
-                } 
+              useSubscriptionStore.setState({
+                activePlan: {
+                  ...res.data.rider.subscriptionPlan,
+                  expiresAt: res.data.rider.subscriptionEnd
+                }
               });
             } else if (res.data.rider.subscriptionPlan && res.data.rider.subscriptionPlan._id) {
               // Plan is saved but not active
               const sp = res.data.rider.subscriptionPlan;
-              useSubscriptionStore.setState({ 
+              useSubscriptionStore.setState({
                 selectedPlan: {
                   id: sp._id,
                   label: sp.name,
@@ -67,7 +67,7 @@ export const useAuthStore = create(
             } else if (res.data.rider.subscriptionPlan) {
               useSubscriptionStore.setState({ selectedPlan: { id: res.data.rider.subscriptionPlan } });
             }
-            
+
             return { success: true, rider: res.data.rider };
           }
         } catch (error) {
@@ -79,11 +79,11 @@ export const useAuthStore = create(
         try {
           const res = await api.post('/rider/auth/login', { phone, password });
           if (res.data.success) {
-            set({ 
-              isAuthenticated: true, 
-              user: res.data.rider, 
+            set({
+              isAuthenticated: true,
+              user: res.data.rider,
               token: res.data.token,
-              kycStatus: res.data.rider.kycStatus 
+              kycStatus: res.data.rider.kycStatus
             });
             return { success: true, rider: res.data.rider };
           }
@@ -107,7 +107,7 @@ export const useAuthStore = create(
         try {
           let payload = kycData;
           const phone = get().phone || get().user?.phone;
-          
+
           if (kycData instanceof FormData) {
             if (!kycData.has('phone') && phone) {
               kycData.append('phone', phone);
@@ -148,7 +148,7 @@ export const useAuthStore = create(
           const { phone } = get();
           const res = await api.post('/rider/kyc/aadhaar/verify-otp', { client_id: clientId, otp, phone });
           if (res.data.success) {
-             return { success: true, data: res.data.data };
+            return { success: true, data: res.data.data };
           }
         } catch (error) {
           return { success: false, message: error.response?.data?.message || 'Verification failed' };
@@ -197,26 +197,26 @@ export const useAuthStore = create(
           const res = await api.get(`/rider/profile/${user.phone}`);
           if (res.data.success) {
             set({ user: res.data.rider, kycStatus: res.data.rider.kycStatus });
-            
+
             // Sync only if profile location is fresher than current live GPS state
             if (res.data.rider.lastLocation && res.data.rider.lastLocation.address) {
               useRideStore.getState().syncProfileLocation(res.data.rider.lastLocation);
             }
-            
+
             // Sync with other stores
             if (res.data.rider.walletBalance !== undefined) {
               useWalletStore.setState({ balance: res.data.rider.walletBalance });
             }
             if (res.data.rider.subscriptionPlan && res.data.rider.status === 'active') {
-              useSubscriptionStore.setState({ 
-                activePlan: { 
-                  ...res.data.rider.subscriptionPlan, 
-                  expiresAt: res.data.rider.subscriptionEnd 
-                } 
+              useSubscriptionStore.setState({
+                activePlan: {
+                  ...res.data.rider.subscriptionPlan,
+                  expiresAt: res.data.rider.subscriptionEnd
+                }
               });
             } else if (res.data.rider.subscriptionPlan && res.data.rider.subscriptionPlan._id) {
               const sp = res.data.rider.subscriptionPlan;
-              useSubscriptionStore.setState({ 
+              useSubscriptionStore.setState({
                 selectedPlan: {
                   id: sp._id,
                   label: sp.name,
@@ -234,19 +234,19 @@ export const useAuthStore = create(
         }
       },
       logout: () => {
-        set({ 
-            isAuthenticated: false, 
-            phone: null, 
-            user: null, 
-            kycStatus: 'uninitiated', 
-            token: null, 
-            otpSent: false 
+        set({
+          isAuthenticated: false,
+          phone: null,
+          user: null,
+          kycStatus: 'uninitiated',
+          token: null,
+          otpSent: false
         });
         // Clear all persistent storage keys for the rider module
         localStorage.removeItem('rider-auth');
         localStorage.removeItem('rider-subscription');
         localStorage.removeItem('rider-wallet');
-        
+
         // Use window.location to ensure memory stores (Zustand) are also wiped for the next user
         window.location.href = '/rider/auth/phone';
       },
