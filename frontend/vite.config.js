@@ -8,4 +8,3 @@ export default defineConfig({
     include: ['@react-google-maps/api']
   }
 });
-
