@@ -3412,3 +3412,19 @@ export const getAdhocPayments = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc Get rider assignment history
+// @route GET /api/v1/admin/rider-history
+export const getRiderHistory = async (req, res) => {
+  try {
+    const Assignment = (await import('../fleet/assignmentModel.js')).default;
+    const assignments = await Assignment.find()
+      .populate('rider', 'name phone')
+      .populate('vehicle', 'plate model vin')
+      .sort({ startTime: -1 });
+
+    res.status(200).json({ success: true, history: assignments });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

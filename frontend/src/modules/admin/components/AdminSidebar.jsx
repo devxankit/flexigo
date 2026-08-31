@@ -58,6 +58,7 @@ const navigationGroups = [
     title: "People",
     items: [
       { id: 'rider-reports', label: 'Rider Reports', icon: Activity, path: '/admin/rider-reports' },
+      { id: 'rider-history', label: 'Rider History', icon: Users, path: '/admin/rider-history' },
       { id: 'kyc', label: 'KYC & Onboard', icon: UserCheck, path: '/admin/kyc' },
       { id: 'hr', label: 'HR Management', icon: Briefcase, path: '/admin/hr' },
       { id: 'franchise-kyc', label: 'Franchise Onboard', icon: ShieldCheck, path: '/admin/franchise-kyc' },

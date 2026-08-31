@@ -8,6 +8,7 @@ export const MODULE_MAP = {
   'fleet':              'Fleet Addition',
   'geofencing':         'Geo Fencing',
   'rider-reports':      'Rider Reports',
+  'rider-history':      'Rider Reports',
   'kyc':                'KYC & Onboard',
   'hr':                 'HR Management',
   'franchise-kyc':      'Franchise Onboard',

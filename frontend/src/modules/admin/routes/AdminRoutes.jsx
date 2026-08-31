@@ -41,6 +41,7 @@ const AddVehiclePage = lazy(() => import('../pages/AddVehiclePage'));
 // People Group
 const SubscriberRegistryPage = lazy(() => import('../pages/SubscriberRegistryPage'));
 const RiderReportPage = lazy(() => import('../pages/RiderReportPage'));
+const RiderHistoryPage = lazy(() => import('../pages/RiderHistoryPage'));
 const KycOnboardingPage = lazy(() => import('../pages/KycOnboardingPage'));
 const HrManagementPage = lazy(() => import('../pages/HrManagementPage'));
 const FranchiseKycQueue = lazy(() => import('../pages/FranchiseKycQueue'));
@@ -95,6 +96,7 @@ export default function AdminRoutes() {
           {/* People Group */}
           <Route path="subscribers" element={<PermGuard pageId="subscribers"><SubscriberRegistryPage /></PermGuard>} />
           <Route path="rider-reports" element={<PermGuard pageId="rider-reports"><RiderReportPage /></PermGuard>} />
+          <Route path="rider-history" element={<PermGuard pageId="rider-history"><RiderHistoryPage /></PermGuard>} />
           <Route path="kyc" element={<PermGuard pageId="kyc"><KycOnboardingPage /></PermGuard>} />
           <Route path="hr" element={<PermGuard pageId="hr"><HrManagementPage /></PermGuard>} />
           <Route path="franchise-kyc" element={<PermGuard pageId="franchise-kyc"><FranchiseKycQueue /></PermGuard>} />

@@ -78,7 +78,8 @@ import {
   getStaffLeaves,
   createStaffLeave,
   updateStaffLeave,
-  exportInventoryData
+  exportInventoryData,
+  getRiderHistory
 } from './adminController.js';
 import {
   getWebsitePlans,
@@ -424,6 +425,7 @@ router.post('/riders', createRider);
 router.put('/riders/:id', updateRider);
 router.delete('/riders/:id', deleteRider);
 router.get('/rider-report', getRiderDetailedReport);
+router.get('/rider-history', protectAdmin, getRiderHistory);
 
 // Website Management
 router.get('/web/plans', getWebsitePlans);
