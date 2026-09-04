@@ -14,6 +14,7 @@ import { useAuthStore } from '../store/authStore';
 import { useWalletStore } from '../store/walletStore';
 import { RefreshCw, MapPin, Zap, Info, ChevronRight, Share2, Shield, Scan, X } from 'lucide-react';
 import logo from '../../../assets/logo.png';
+import api from '../../../lib/axios';
 import scooterRender from '../../../assets/scooter_render.png';
 
 // Mock data removed as we are going dynamic
@@ -196,6 +197,45 @@ export default function HomeDashboard() {
   const [customLng, setCustomLng] = useState('');
   const [customAddress, setCustomAddress] = useState('');
   const isDark = theme === 'dark';
+
+  const [isBankModalOpen, setIsBankModalOpen] = useState(false);
+  const [bankFormData, setBankFormData] = useState({
+    accountName: '',
+    bankName: '',
+    accountNumber: '',
+    ifscCode: '',
+    attachment: null,
+  });
+  const [isSubmittingBankDetails, setIsSubmittingBankDetails] = useState(false);
+
+  const handleBankSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmittingBankDetails(true);
+    try {
+      const formData = new FormData();
+      formData.append('phone', user.phone);
+      formData.append('accountName', bankFormData.accountName);
+      formData.append('bankName', bankFormData.bankName);
+      formData.append('accountNumber', bankFormData.accountNumber);
+      formData.append('ifscCode', bankFormData.ifscCode);
+      if (bankFormData.attachment) {
+        formData.append('attachment', bankFormData.attachment);
+      }
+      
+      const res = await api.post('/rider/profile/bank-details', formData, {
+         headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (res.data.success) {
+        alert('Bank details updated successfully!');
+        setIsBankModalOpen(false);
+        setBankFormData({ accountName: '', bankName: '', accountNumber: '', ifscCode: '', attachment: null });
+      }
+    } catch (err) {
+      alert('Failed to update bank details: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setIsSubmittingBankDetails(false);
+    }
+  };
 
   const coords = (sessionStorage.getItem('simulated_gps') === 'true' && customLat && customLng)
     ? { latitude: parseFloat(customLat), longitude: parseFloat(customLng) }
@@ -414,6 +454,15 @@ export default function HomeDashboard() {
           </div>
         </div>
 
+        {/* Add Bank Details Section */}
+        <div className="px-6 pb-2">
+          <NeonButton variant="outline" className="w-full" onClick={() => setIsBankModalOpen(true)}>
+            <div className="flex items-center justify-center gap-2">
+               💳 Add Bank Details
+            </div>
+          </NeonButton>
+        </div>
+
         <div className="px-6 space-y-6 pt-2">
           {/* Pickup Location Card for new riders after payment */}
           {vehicle?.model === 'Assignment Pending' && (
@@ -487,6 +536,38 @@ export default function HomeDashboard() {
         )}
 
       </PageWrapper>
+
+      <BottomSheet
+        isOpen={isBankModalOpen}
+        onClose={() => setIsBankModalOpen(false)}
+        title="Add Bank Details"
+      >
+        <form onSubmit={handleBankSubmit} className="px-6 pb-24 pt-4 space-y-4">
+          <div>
+             <label className="text-[10px] uppercase font-bold text-slate-500">Account Name (Customer Name)</label>
+             <input type="text" required value={bankFormData.accountName} onChange={(e) => setBankFormData({...bankFormData, accountName: e.target.value})} className={`w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-flexigo-teal ${isDark ? 'text-white' : 'text-slate-900 border-slate-200'}`} />
+          </div>
+          <div>
+             <label className="text-[10px] uppercase font-bold text-slate-500">Bank Name</label>
+             <input type="text" required value={bankFormData.bankName} onChange={(e) => setBankFormData({...bankFormData, bankName: e.target.value})} className={`w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-flexigo-teal ${isDark ? 'text-white' : 'text-slate-900 border-slate-200'}`} />
+          </div>
+          <div>
+             <label className="text-[10px] uppercase font-bold text-slate-500">Account Number</label>
+             <input type="text" required value={bankFormData.accountNumber} onChange={(e) => setBankFormData({...bankFormData, accountNumber: e.target.value})} className={`w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-flexigo-teal ${isDark ? 'text-white' : 'text-slate-900 border-slate-200'}`} />
+          </div>
+          <div>
+             <label className="text-[10px] uppercase font-bold text-slate-500">IFSC Code</label>
+             <input type="text" required value={bankFormData.ifscCode} onChange={(e) => setBankFormData({...bankFormData, ifscCode: e.target.value})} className={`w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-flexigo-teal ${isDark ? 'text-white' : 'text-slate-900 border-slate-200'}`} />
+          </div>
+          <div>
+             <label className="text-[10px] uppercase font-bold text-slate-500 mb-2 block">Proof Attachment</label>
+             <input type="file" accept="image/*" capture="environment" required onChange={(e) => setBankFormData({...bankFormData, attachment: e.target.files[0]})} className={`w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-bold file:bg-flexigo-teal/10 file:text-flexigo-teal hover:file:bg-flexigo-teal/20`} />
+          </div>
+          <NeonButton variant="solid" className="w-full mt-6" type="submit" disabled={isSubmittingBankDetails}>
+             {isSubmittingBankDetails ? 'Saving...' : 'Save Bank Details'}
+          </NeonButton>
+        </form>
+      </BottomSheet>
 
       <BottomSheet
         isOpen={isDiagnosticsOpen}

@@ -236,6 +236,35 @@ export const updateKYC = async (req, res) => {
   }
 };
 
+export const updateBankDetails = async (req, res) => {
+  try {
+    const { phone, accountName, bankName, accountNumber, ifscCode } = req.body;
+    const rider = await Rider.findOne({ phone });
+    if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
+
+    let attachmentUrl = rider.bankDetails?.attachment || null;
+
+    if (req.files && req.files['attachment'] && req.files['attachment'][0]) {
+      const file = req.files['attachment'][0];
+      attachmentUrl = `${req.protocol}://${req.get('host')}/images/${file.filename}`;
+    }
+
+    rider.bankDetails = {
+      accountName: accountName || rider.bankDetails?.accountName,
+      bankName: bankName || rider.bankDetails?.bankName,
+      accountNumber: accountNumber || rider.bankDetails?.accountNumber,
+      ifscCode: ifscCode || rider.bankDetails?.ifscCode,
+      attachment: attachmentUrl
+    };
+
+    await rider.save();
+    res.status(200).json({ success: true, message: 'Bank details updated successfully', bankDetails: rider.bankDetails });
+  } catch (error) {
+    console.error("❌ BANK DETAILS UPDATE ERROR:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // Aadhaar OTP
 export const generateAadhaarOTP = async (req, res) => {
   try {

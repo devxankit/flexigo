@@ -42,6 +42,13 @@ const RiderSchema = new mongoose.Schema({
     referenceNumber2: { type: String, default: '' },
     attachments: { type: Array, default: [] },
   },
+  bankDetails: {
+    accountName: String,
+    bankName: String,
+    accountNumber: String,
+    ifscCode: String,
+    attachment: String,
+  },
   name: String,
   email: String,
   isRegistered: {

@@ -34,7 +34,8 @@ import {
   verifyAddOffPayment,
   requestWithdrawal,
   riderLogin,
-  resetPassword
+  resetPassword,
+  updateBankDetails
 } from './riderController.js';
 import { protectFranchise, protectRider } from '../../shared/middleware/authMiddleware.js';
 import { upload } from '../../shared/middleware/uploadMiddleware.js';
@@ -61,8 +62,10 @@ router.post('/profile/upload-documents', upload.fields([
   { name: 'aadhaarFront', maxCount: 1 },
   { name: 'aadhaarBack', maxCount: 1 },
   { name: 'drivingLicense', maxCount: 1 },
-  { name: 'certificate', maxCount: 1 }
 ]), uploadProfileDocuments);
+router.post('/profile/bank-details', upload.fields([
+  { name: 'attachment', maxCount: 1 }
+]), updateBankDetails);
 router.post('/wallet/add', addMoney);
 router.post('/wallet/create-topup-order', createWalletTopUpOrder);
 router.post('/wallet/verify-topup', verifyWalletTopUp);

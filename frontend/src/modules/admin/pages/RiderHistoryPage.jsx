@@ -81,7 +81,7 @@ export default function RiderHistoryPage() {
                <table className="w-full text-left">
                   <thead>
                      <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
-                        {['Rider', 'Vehicle', 'Assignment Type', 'Start Date', 'End Date', 'Status'].map((header) => (
+                        {['Rider', 'Bank Details', 'Vehicle', 'Assignment Type', 'Start Date', 'End Date', 'Status'].map((header) => (
                            <th key={header} className="py-3 px-4 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest whitespace-nowrap">{header}</th>
                         ))}
                      </tr>
@@ -99,6 +99,20 @@ export default function RiderHistoryPage() {
                                     <span className="text-[9px] font-bold text-[var(--text-tertiary)]">{h.rider?.phone || 'N/A'}</span>
                                  </div>
                               </div>
+                           </td>
+                           <td className="py-3 px-4 whitespace-nowrap">
+                              {h.rider?.bankDetails ? (
+                                 <div className="flex flex-col gap-0.5">
+                                    <span className="text-[10px] font-black text-[var(--text-primary)] uppercase">{h.rider.bankDetails.bankName || 'N/A'}</span>
+                                    <span className="text-[9px] font-bold text-[var(--text-tertiary)]">A/C: {h.rider.bankDetails.accountNumber || 'N/A'}</span>
+                                    <span className="text-[9px] font-bold text-[var(--text-tertiary)]">IFSC: {h.rider.bankDetails.ifscCode || 'N/A'}</span>
+                                    {h.rider.bankDetails.attachment && (
+                                       <a href={h.rider.bankDetails.attachment} target="_blank" rel="noreferrer" className="text-[9px] font-black text-blue-500 hover:underline">View Proof</a>
+                                    )}
+                                 </div>
+                              ) : (
+                                 <span className="text-[9px] font-bold text-[var(--text-tertiary)]">N/A</span>
+                              )}
                            </td>
                            <td className="py-3 px-4 whitespace-nowrap">
                               <div className="flex items-center gap-3">

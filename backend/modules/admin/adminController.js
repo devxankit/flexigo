@@ -3419,7 +3419,7 @@ export const getRiderHistory = async (req, res) => {
   try {
     const Assignment = (await import('../fleet/assignmentModel.js')).default;
     const assignments = await Assignment.find()
-      .populate('rider', 'name phone')
+      .populate('rider', 'name phone bankDetails')
       .populate('vehicle', 'plate model vin')
       .sort({ startTime: -1 });
 
