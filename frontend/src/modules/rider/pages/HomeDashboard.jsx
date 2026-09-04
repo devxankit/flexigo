@@ -198,17 +198,99 @@ export default function HomeDashboard() {
   const [customAddress, setCustomAddress] = useState('');
   const isDark = theme === 'dark';
 
-  const [isBankModalOpen, setIsBankModalOpen] = useState(false);
+  // Bank Details States
+  const [isBankDetailsOpen, setBankDetailsOpen] = useState(false);
   const [bankFormData, setBankFormData] = useState({
     accountName: '',
     bankName: '',
     accountNumber: '',
     ifscCode: '',
-    attachment: null,
+    attachment: null
   });
   const [isSubmittingBankDetails, setIsSubmittingBankDetails] = useState(false);
 
-  const handleBankSubmit = async (e) => {
+  // Camera/Upload picker modal for Bank Details
+  const [pickerModal, setPickerModal] = useState({ open: false, type: null, fileInputId: null });
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraType, setCameraType] = useState(null);
+  const [cameraError, setCameraError] = useState(null);
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+
+  const isFlutterApp = () => typeof window !== 'undefined' && !!window.flutter_inappwebview;
+
+  const captureWithFlutter = async (type, fileInputId) => {
+    try {
+      const result = await window.flutter_inappwebview.callHandler('openCamera');
+      if (result?.success && result?.base64) {
+        const byteString = atob(result.base64);
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+        }
+        const mimeType = result.mimeType || 'image/jpeg';
+        const blob = new Blob([ab], { type: mimeType });
+        const file = new File([blob], result.fileName || `${type}_photo.jpg`, { type: mimeType });
+        setBankFormData(prev => ({ ...prev, attachment: file }));
+      }
+    } catch (err) {
+      document.getElementById(fileInputId)?.click();
+    }
+  };
+
+  const handleCameraCapture = (type, fileInputId) => {
+    setPickerModal({ open: true, type, fileInputId });
+  };
+
+  const closePickerModal = () => setPickerModal({ open: false, type: null, fileInputId: null });
+
+  const openWebCamera = async (type) => {
+    closePickerModal();
+    setCameraError(null);
+    setCameraType(type);
+    setCameraOpen(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+      streamRef.current = stream;
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
+        }
+      }, 100);
+    } catch (err) {
+      setCameraError('Camera access denied. Please allow camera permission or use Gallery.');
+    }
+  };
+
+  const stopWebCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+    }
+    setCameraOpen(false);
+    setCameraType(null);
+    setCameraError(null);
+  };
+
+  const capturePhoto = () => {
+    if (!videoRef.current) return;
+    const video = videoRef.current;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const file = new File([blob], `${cameraType}_photo.jpg`, { type: 'image/jpeg' });
+      setBankFormData(prev => ({ ...prev, attachment: file }));
+      stopWebCamera();
+    }, 'image/jpeg', 0.9);
+  };
+
+  const handleBankDetailsSubmit = async (e) => {
     e.preventDefault();
     setIsSubmittingBankDetails(true);
     try {
@@ -227,7 +309,7 @@ export default function HomeDashboard() {
       });
       if (res.data.success) {
         alert('Bank details updated successfully!');
-        setIsBankModalOpen(false);
+        setBankDetailsOpen(false);
         setBankFormData({ accountName: '', bankName: '', accountNumber: '', ifscCode: '', attachment: null });
       }
     } catch (err) {
@@ -456,7 +538,7 @@ export default function HomeDashboard() {
 
         {/* Add Bank Details Section */}
         <div className="px-6 pb-2">
-          <NeonButton variant="outline" className="w-full" onClick={() => setIsBankModalOpen(true)}>
+          <NeonButton variant="outline" className="w-full" onClick={() => setBankDetailsOpen(true)}>
             <div className="flex items-center justify-center gap-2">
                💳 Add Bank Details
             </div>
@@ -535,14 +617,142 @@ export default function HomeDashboard() {
           </div>
         )}
 
+      {/* Live Camera Modal for Bank Details */}
+      <AnimatePresence>
+        {cameraOpen && (
+          <motion.div
+            key="camera-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex flex-col items-center justify-center"
+            style={{ background: '#000' }}
+          >
+            <button
+              onClick={stopWebCamera}
+              className="absolute top-5 right-5 z-10 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-5 h-5">
+                <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            {cameraError ? (
+              <div className="flex flex-col items-center gap-4 px-8 text-center">
+                <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" className="w-8 h-8">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M15 9l-6 6M9 9l6 6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <p className="text-white text-sm font-bold">{cameraError}</p>
+                <button
+                  onClick={stopWebCamera}
+                  className="mt-2 px-6 py-3 rounded-xl bg-white/10 text-white text-[10px] font-black uppercase tracking-widest"
+                >Close</button>
+              </div>
+            ) : (
+              <>
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="w-full h-full object-cover"
+                  style={{ maxHeight: '80vh' }}
+                />
+                <div className="absolute bottom-10 left-0 right-0 flex justify-center">
+                  <button
+                    onClick={capturePhoto}
+                    className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center"
+                    style={{ background: 'rgba(57,255,20,0.2)', boxShadow: '0 0 20px #39FF14' }}
+                  >
+                    <div className="w-14 h-14 rounded-full bg-[#39FF14]" />
+                  </button>
+                </div>
+                <p className="absolute bottom-36 left-0 right-0 text-center text-white/60 text-[10px] font-black uppercase tracking-widest">Tap to Capture</p>
+              </>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Camera / Upload Picker Modal for Bank Details */}
+      <AnimatePresence>
+        {pickerModal.open && (
+          <motion.div
+            key="picker-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={closePickerModal}
+            className="fixed inset-0 z-[60] flex items-end justify-center"
+            style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
+          >
+            <motion.div
+              key="picker-sheet"
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              onClick={e => e.stopPropagation()}
+              className={`w-full max-w-sm rounded-t-3xl p-6 pb-10 ${isDark ? 'bg-[#111] border-t border-white/10' : 'bg-white border-t border-slate-100 shadow-2xl'}`}
+            >
+              <div className="flex justify-center mb-5">
+                <div className={`w-10 h-1 rounded-full ${isDark ? 'bg-white/20' : 'bg-slate-200'}`} />
+              </div>
+              <p className={`text-center text-[10px] font-black uppercase tracking-widest mb-6 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>Choose Option</p>
+              <div className="grid grid-cols-2 gap-4 mb-5">
+                <button
+                  onClick={() => {
+                    if (isFlutterApp()) {
+                      closePickerModal();
+                      captureWithFlutter(pickerModal.type, pickerModal.fileInputId);
+                    } else {
+                      openWebCamera(pickerModal.type);
+                    }
+                  }}
+                  className={`flex flex-col items-center gap-3 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${isDark ? 'border-white/10 bg-white/5 hover:border-[#39FF14] hover:bg-[#39FF14]/10' : 'border-slate-200 bg-slate-50 hover:border-emerald-500 hover:bg-emerald-50'}`}
+                >
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-[#39FF14]/10">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-7 h-7">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <span className={`text-[10px] font-black uppercase tracking-widest text-center ${isDark ? 'text-white' : 'text-slate-700'}`}>Camera</span>
+                </button>
+                <label
+                  htmlFor={pickerModal.fileInputId}
+                  onClick={closePickerModal}
+                  className={`flex flex-col items-center gap-3 p-5 rounded-2xl border-2 cursor-pointer transition-all duration-300 ${isDark ? 'border-white/10 bg-white/5 hover:border-[#39FF14] hover:bg-[#39FF14]/10' : 'border-slate-200 bg-slate-50 hover:border-emerald-500 hover:bg-emerald-50'}`}
+                >
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-[#39FF14]/10">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-7 h-7">
+                      <rect x="3" y="3" width="18" height="18" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="8.5" cy="8.5" r="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <polyline points="21 15 16 10 5 21" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <span className={`text-[10px] font-black uppercase tracking-widest text-center ${isDark ? 'text-white' : 'text-slate-700'}`}>Gallery</span>
+                </label>
+              </div>
+              <button
+                onClick={closePickerModal}
+                className={`w-full py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${isDark ? 'text-gray-500 hover:text-white' : 'text-slate-400 hover:text-slate-800'}`}
+              >Cancel</button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       </PageWrapper>
 
       <BottomSheet
-        isOpen={isBankModalOpen}
-        onClose={() => setIsBankModalOpen(false)}
+        isOpen={isBankDetailsOpen}
+        onClose={() => setBankDetailsOpen(false)}
         title="Add Bank Details"
       >
-        <form onSubmit={handleBankSubmit} className="px-6 pb-24 pt-4 space-y-4">
+        <form onSubmit={handleBankDetailsSubmit} className="px-6 pb-24 pt-4 space-y-4">
           <div>
              <label className="text-[10px] uppercase font-bold text-slate-500">Account Name (Customer Name)</label>
              <input type="text" required value={bankFormData.accountName} onChange={(e) => setBankFormData({...bankFormData, accountName: e.target.value})} className={`w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-flexigo-teal ${isDark ? 'text-white' : 'text-slate-900 border-slate-200'}`} />
@@ -561,12 +771,22 @@ export default function HomeDashboard() {
           </div>
           <div>
              <label className="text-[10px] uppercase font-bold text-slate-500 mb-2 block">Proof Attachment</label>
-             <input type="file" accept="image/*" required onChange={(e) => setBankFormData({...bankFormData, attachment: e.target.files[0]})} className={`w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-bold file:bg-flexigo-teal/10 file:text-flexigo-teal hover:file:bg-flexigo-teal/20`} />
-             {bankFormData.attachment && (
-                <div className="mt-3">
-                   <img src={URL.createObjectURL(bankFormData.attachment)} alt="Preview" className="h-24 w-auto rounded-lg border border-slate-200 object-cover" />
-                </div>
-             )}
+             <input id="bank-attachment-input" type="file" className="hidden" accept="image/*" onChange={(e) => setBankFormData({...bankFormData, attachment: e.target.files[0]})} />
+             <div
+                onClick={() => handleCameraCapture('bankAttachment', 'bank-attachment-input')}
+                className={`p-4 rounded-2xl border-dashed border-2 flex items-center gap-4 cursor-pointer transition-all duration-500 ${bankFormData.attachment ? 'border-flexigo-teal bg-flexigo-teal/5' : isDark ? 'border-white/10 bg-white/[0.02]' : 'border-slate-200 bg-slate-50'}`}
+             >
+                {bankFormData.attachment ? (
+                   <img src={URL.createObjectURL(bankFormData.attachment)} alt="Preview" className="w-16 h-16 object-cover rounded-xl flex-shrink-0 border border-slate-200" />
+                ) : (
+                   <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-flexigo-teal/10 flex-shrink-0">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" className="w-6 h-6"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" strokeLinecap="round" strokeLinejoin="round" /><circle cx="12" cy="13" r="4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                   </div>
+                )}
+                <span className={`text-[10px] font-black uppercase tracking-widest ${bankFormData.attachment ? 'text-flexigo-teal' : isDark ? 'text-gray-400' : 'text-slate-400'}`}>
+                   {bankFormData.attachment ? 'Attachment Captured ✓ Tap to Retake' : isFlutterApp() ? 'Tap to Open Camera' : 'Tap — Camera / Upload File'}
+                </span>
+             </div>
           </div>
           <NeonButton variant="solid" className="w-full mt-6" type="submit" disabled={isSubmittingBankDetails}>
              {isSubmittingBankDetails ? 'Saving...' : 'Save Bank Details'}
