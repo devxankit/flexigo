@@ -625,7 +625,7 @@ export default function HomeDashboard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex flex-col items-center justify-center"
+            className="fixed inset-0 z-[100] flex flex-col items-center justify-center"
             style={{ background: '#000' }}
           >
             <button
@@ -685,7 +685,7 @@ export default function HomeDashboard() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closePickerModal}
-            className="fixed inset-0 z-[60] flex items-end justify-center"
+            className="fixed inset-0 z-[100] flex items-end justify-center"
             style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
           >
             <motion.div
