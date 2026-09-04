@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import SplashScreen from '../pages/SplashScreen';
 import AuthPhone from '../pages/AuthPhone';
