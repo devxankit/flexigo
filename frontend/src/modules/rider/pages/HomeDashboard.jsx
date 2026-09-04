@@ -561,7 +561,12 @@ export default function HomeDashboard() {
           </div>
           <div>
              <label className="text-[10px] uppercase font-bold text-slate-500 mb-2 block">Proof Attachment</label>
-             <input type="file" accept="image/*" capture="environment" required onChange={(e) => setBankFormData({...bankFormData, attachment: e.target.files[0]})} className={`w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-bold file:bg-flexigo-teal/10 file:text-flexigo-teal hover:file:bg-flexigo-teal/20`} />
+             <input type="file" accept="image/*" required onChange={(e) => setBankFormData({...bankFormData, attachment: e.target.files[0]})} className={`w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[10px] file:font-bold file:bg-flexigo-teal/10 file:text-flexigo-teal hover:file:bg-flexigo-teal/20`} />
+             {bankFormData.attachment && (
+                <div className="mt-3">
+                   <img src={URL.createObjectURL(bankFormData.attachment)} alt="Preview" className="h-24 w-auto rounded-lg border border-slate-200 object-cover" />
+                </div>
+             )}
           </div>
           <NeonButton variant="solid" className="w-full mt-6" type="submit" disabled={isSubmittingBankDetails}>
              {isSubmittingBankDetails ? 'Saving...' : 'Save Bank Details'}
