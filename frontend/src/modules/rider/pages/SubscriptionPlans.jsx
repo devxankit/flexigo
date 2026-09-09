@@ -348,11 +348,21 @@ export default function SubscriptionPlans() {
         <h3 className={`text-[10px] font-black uppercase tracking-[0.3em] px-2 mb-2 transition-colors duration-500 ${isDark ? 'text-gray-500' : 'text-slate-950 font-black'
           }`}>{activePlan ? 'Upgrade Options' : 'Available Plans'}</h3>
 
-        {(Array.isArray(plans) ? plans : []).filter(p => p.id !== activePlan?.id).map((plan) => (
+        {(Array.isArray(plans) ? plans : []).filter(p => p.id !== activePlan?.id).map((plan) => {
+          const savedPlanId = user?.subscriptionPlan?._id || (typeof user?.subscriptionPlan === 'string' ? user?.subscriptionPlan : null);
+          const hasSavedPlan = !!savedPlanId;
+          const isThisPlanSaved = savedPlanId === plan.id;
+          const isDisabled = hasSavedPlan && !isThisPlanSaved;
+
+          return (
           <motion.div
             key={plan.id}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => selectPlan(plan)}
+            whileTap={isDisabled ? {} : { scale: 0.98 }}
+            onClick={() => {
+              if (isDisabled) return;
+              selectPlan(plan);
+            }}
+            className={isDisabled ? "opacity-50 grayscale pointer-events-none" : "cursor-pointer"}
           >
             <GlassCard
               className={`relative p-5 overflow-hidden transition-all duration-300 border shadow-lg ${selectedPlan?.id === plan.id
@@ -391,7 +401,7 @@ export default function SubscriptionPlans() {
               <div className="flex items-center justify-between mt-4">
                 <div className={`text-[9px] font-black uppercase tracking-[0.2em] transition-colors ${selectedPlan?.id === plan.id ? 'text-flexigo-teal' : (isDark ? 'text-gray-400' : 'text-slate-400')
                   }`}>
-                  {selectedPlan?.id === plan.id ? 'Ready to Upgrade' : 'Select Tier'}
+                  {isDisabled ? 'Unavailable' : (selectedPlan?.id === plan.id ? 'Ready to Upgrade' : 'Select Tier')}
                 </div>
                 <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${selectedPlan?.id === plan.id
                   ? 'border-flexigo-teal bg-flexigo-teal/10'
@@ -402,7 +412,8 @@ export default function SubscriptionPlans() {
               </div>
             </GlassCard>
           </motion.div>
-        ))}
+          );
+        })}
       </div>
 
       {user?.depositPaid === false && (
