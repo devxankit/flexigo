@@ -284,8 +284,8 @@ export default function SubscriptionPlans() {
                 </div>
               ) : showDepositQRCode ? (
                 <div className="space-y-6 py-4 text-center">
-                  <h3 className={`text-lg font-heading font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Scan & Pay <span className="text-flexigo-teal">₹{systemSettings.securityDepositAmount}</span></h3>
-                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(`upi://pay?pa=MSFLEXIGOEMOBILITYPRIVATELIMITED.eazypay@icici&pn=Flexigo E-Mobility&am=${systemSettings.securityDepositAmount}&cu=INR&tn=Security Deposit`)}`} className="w-[220px] h-[220px] mx-auto" />
+                  <h3 className={`text-lg font-heading font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Scan & Pay <span className="text-flexigo-teal">₹{selectedPlan?.deposit || systemSettings.securityDepositAmount}</span></h3>
+                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(`upi://pay?pa=MSFLEXIGOEMOBILITYPRIVATELIMITED.eazypay@icici&pn=Flexigo E-Mobility&am=${selectedPlan?.deposit || systemSettings.securityDepositAmount}&cu=INR&tn=Security Deposit`)}`} className="w-[220px] h-[220px] mx-auto" />
                   <button onClick={handleDepositQR} className="w-full py-3 bg-flexigo-teal text-white rounded-xl text-[9px] font-black uppercase">I Have Paid</button>
                 </div>
               ) : (
@@ -294,11 +294,11 @@ export default function SubscriptionPlans() {
                   <div className="space-y-2 mb-4 p-4 rounded-xl bg-[var(--bg-tertiary)]/50 border border-[var(--border-subtle)]">
                     <div className="flex justify-between text-xs font-black uppercase text-[var(--text-secondary)]">
                       <span>Total Deposit</span>
-                      <span>₹{systemSettings.securityDepositAmount}</span>
+                      <span>₹{selectedPlan?.deposit || systemSettings.securityDepositAmount}</span>
                     </div>
                     <div className="pt-2 border-t border-[var(--border-subtle)] flex justify-between text-sm font-black uppercase text-[var(--text-primary)]">
                       <span>Net Payable</span>
-                      <span>₹{systemSettings.securityDepositAmount}</span>
+                      <span>₹{selectedPlan?.deposit || systemSettings.securityDepositAmount}</span>
                     </div>
                   </div>
                   <NeonButton variant="solid" size="full" onClick={handleDepositRazorpay}>Complete Secure Purchase</NeonButton>
@@ -358,16 +358,12 @@ export default function SubscriptionPlans() {
           <motion.div
             key={plan.id}
             whileTap={isDisabled ? {} : { scale: 0.98 }}
-            onClick={() => {
-              if (isDisabled) return;
-              selectPlan(plan);
-            }}
-            className={isDisabled ? "opacity-50 grayscale pointer-events-none" : "cursor-pointer"}
+            className={isDisabled ? "opacity-50 grayscale" : ""}
           >
             <GlassCard
               className={`relative p-5 overflow-hidden transition-all duration-300 border shadow-lg ${selectedPlan?.id === plan.id
                 ? 'border-flexigo-teal bg-flexigo-teal/5'
-                : isDark ? 'border-white/05 hover:border-white/20' : 'border-slate-300 bg-white hover:border-flexigo-teal/50'
+                : isDark ? 'border-white/05' : 'border-slate-300 bg-white'
                 }`}
             >
               <div className="flex justify-between items-center mb-3">
@@ -383,9 +379,6 @@ export default function SubscriptionPlans() {
                     <div className={`text-[9px] font-black uppercase tracking-widest ${isDark ? 'text-gray-500' : 'text-slate-500'}`}>{plan.duration} Access</div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <span className={`text-xl font-heading font-black transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>₹{plan.price}</span>
-                </div>
               </div>
 
               <div className="flex flex-wrap gap-x-4 gap-y-2 mb-4">
@@ -398,16 +391,52 @@ export default function SubscriptionPlans() {
                 ))}
               </div>
 
-              <div className="flex items-center justify-between mt-4">
-                <div className={`text-[9px] font-black uppercase tracking-[0.2em] transition-colors ${selectedPlan?.id === plan.id ? 'text-flexigo-teal' : (isDark ? 'text-gray-400' : 'text-slate-400')
-                  }`}>
-                  {isDisabled ? 'Unavailable' : (selectedPlan?.id === plan.id ? 'Ready to Upgrade' : 'Select Tier')}
+              <div className="space-y-4 mt-4 border-t border-white/10 pt-4">
+                {/* Deposit Action */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className={`text-[10px] font-black uppercase ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>Security Deposit</div>
+                    <div className={`text-sm font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>₹{plan.deposit || systemSettings.securityDepositAmount}</div>
+                  </div>
+                  <NeonButton 
+                    variant={user?.depositPaid && isThisPlanSaved ? "outline" : "solid"} 
+                    size="sm" 
+                    onClick={() => {
+                       if (isDisabled) return;
+                       if (user?.depositPaid && isThisPlanSaved) return;
+                       selectPlan(plan);
+                       setIsPayingDeposit(true);
+                    }}
+                    disabled={isDisabled || (user?.depositPaid && isThisPlanSaved)}
+                    className={`px-4 py-1.5 text-[10px] min-w-[90px] ${user?.depositPaid && isThisPlanSaved ? 'opacity-50' : ''}`}
+                  >
+                    {user?.depositPaid && isThisPlanSaved ? 'Paid' : 'Pay Now'}
+                  </NeonButton>
                 </div>
-                <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${selectedPlan?.id === plan.id
-                  ? 'border-flexigo-teal bg-flexigo-teal/10'
-                  : (isDark ? 'border-white/10' : 'border-slate-400')
-                  }`}>
-                  {selectedPlan?.id === plan.id && <div className="w-2 h-2 bg-flexigo-teal rounded-full shadow-sm" />}
+
+                {/* Rental Action */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className={`text-[10px] font-black uppercase ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>{plan.duration} Rental</div>
+                    <div className={`text-sm font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>₹{plan.price}</div>
+                  </div>
+                  <NeonButton 
+                    variant={!(user?.depositPaid && isThisPlanSaved) ? "outline" : "solid"} 
+                    size="sm"
+                    onClick={() => {
+                       if (isDisabled) return;
+                       if (!(user?.depositPaid && isThisPlanSaved)) {
+                          alert("Please pay the Security Deposit for this plan first!");
+                          return;
+                       }
+                       selectPlan(plan);
+                       handleUpdatePlan();
+                    }}
+                    disabled={isDisabled || !(user?.depositPaid && isThisPlanSaved)}
+                    className="px-4 py-1.5 text-[10px] min-w-[90px]"
+                  >
+                    Pay Now
+                  </NeonButton>
                 </div>
               </div>
             </GlassCard>
@@ -416,43 +445,7 @@ export default function SubscriptionPlans() {
         })}
       </div>
 
-      {user?.depositPaid === false && (
-        <div className="mt-8 mb-4 space-y-6 pt-6 border-t border-white/10">
-          <div className="mb-6 text-left">
-            <h1 className={`text-3xl font-heading font-black transition-colors duration-500 ${isDark ? 'text-white' : 'text-slate-900'}`}>Security <span className="text-flexigo-teal">Deposit</span></h1>
-            <p className={`text-xs ml-1 font-black uppercase tracking-[0.2em] transition-colors duration-500 ${isDark ? 'text-gray-500' : 'text-slate-600'}`}>Mandatory one-time deposit required.</p>
-          </div>
-          <GlassCard className="p-6 border-flexigo-teal/30 bg-flexigo-teal/[0.03] relative overflow-hidden shadow-2xl">
-            <div className="flex justify-between items-center relative z-10">
-              <div><h4 className={`text-xl font-heading font-black transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>Security Deposit</h4><p className="text-[10px] font-black uppercase tracking-widest text-flexigo-teal mt-1">One-time & Refundable</p></div>
-              <div className="text-right"><span className={`text-2xl font-black transition-colors ${isDark ? 'text-white' : 'text-slate-900'}`}>₹{systemSettings.securityDepositAmount}</span></div>
-            </div>
-          </GlassCard>
-          <div className="space-y-4">
-            <p className={`text-[8px] font-black uppercase tracking-[0.3em] ${isDark ? 'text-white/40' : 'text-slate-950 font-black opacity-80'}`}>Select Payment Method</p>
-            <div className="space-y-3">
-              {paymentMethods.map((method) => (
-                <div key={method.id} onClick={() => setDepositMethod(method.id)} className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${depositMethod === method.id ? 'border-flexigo-teal bg-flexigo-teal/5 shadow-[0_0_20px_rgba(57,255,20,0.1)]' : (isDark ? 'border-white/5 bg-white/[0.02] hover:border-white/10' : 'border-slate-300 bg-white hover:border-slate-300')}`}>
-                  <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${depositMethod === method.id ? 'bg-flexigo-teal text-white shadow-neon-sm' : (isDark ? 'bg-white/10 text-gray-500' : 'bg-slate-100 text-slate-500')}`}>{method.icon}</div>
-                    <div><p className={`text-[10px] font-black uppercase tracking-widest ${isDark ? (depositMethod === method.id ? 'text-white' : 'text-gray-400') : (depositMethod === method.id ? 'text-flexigo-teal' : 'text-slate-950')}`}>{method.label}</p><p className={`text-[8px] font-black italic ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>{method.sub}</p></div>
-                  </div>
-                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${depositMethod === method.id ? 'border-flexigo-teal bg-flexigo-teal shadow-[0_0_8px_#39FF1444]' : (isDark ? 'border-white/10' : 'border-slate-300')}`}>{depositMethod === method.id && <div className="w-1.5 h-1.5 rounded-full bg-white" />}</div>
-                </div>
-              ))}
-            </div>
-            <div className="pt-4">
-              <NeonButton variant="solid" size="full" onClick={() => {
-                if (!selectedPlan) {
-                  alert("Please select a Subscription Plan first!");
-                  return;
-                }
-                setIsPayingDeposit(true);
-              }}>Pay Security Deposit & Save Plan</NeonButton>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Adhoc Payment Section (Always Visible) */}
       <div className="mt-8">
@@ -490,21 +483,7 @@ export default function SubscriptionPlans() {
         </GlassCard>
       </div>
 
-      <div className="mt-12 space-y-4">
-        {user?.depositPaid !== false && (
-          <NeonButton
-            variant="solid"
-            size="full"
-            disabled={!selectedPlan}
-            onClick={handleUpdatePlan}
-          >
-            Confirm Plan Upgrade
-          </NeonButton>
-        )}
-        <p className={`text-center text-[9px] uppercase font-black tracking-[0.2em] transition-colors ${isDark ? 'text-gray-600' : 'text-slate-700'}`}>
-          Next billing on {activePlan ? 'the next cycle' : 'Immediately'}
-        </p>
-      </div>
+
 
       <AnimatePresence>
         {isPaying && (
