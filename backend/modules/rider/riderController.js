@@ -688,7 +688,7 @@ export const getRiderPlans = async (req, res) => {
   try {
     const plans = await SubscriptionPlan.find({ target: 'Rider', status: 'active' }).sort({ price: 1 });
     const formattedPlans = plans.map(plan => ({
-      id: plan._id, label: plan.name, price: plan.price,
+      id: plan._id, label: plan.name, price: plan.price, deposit: plan.deposit,
       duration: plan.type === 'Daily' ? '1 Day' : plan.type === 'Weekly' ? '7 Days' : '30 Days',
       durationMs: plan.type === 'Daily' ? 86400000 : plan.type === 'Weekly' ? 604800000 : 2592000000,
       perks: plan.features.length > 0 ? plan.features : ['Unlimited rides', 'Battery swaps', '24/7 Support'],
