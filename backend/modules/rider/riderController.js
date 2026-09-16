@@ -1278,8 +1278,15 @@ export const payDepositViaWallet = async (req, res) => {
 
     if (rider.depositPaid) return res.status(400).json({ success: false, message: 'Deposit already paid' });
 
-    let settings = await SystemSetting.findOne();
-    const DEPOSIT_AMOUNT = settings?.securityDepositAmount || 2800;
+    let DEPOSIT_AMOUNT = 2800;
+    if (planId) {
+      const plan = await SubscriptionPlan.findById(planId);
+      if (plan && plan.deposit) DEPOSIT_AMOUNT = plan.deposit;
+      else { let settings = await SystemSetting.findOne(); DEPOSIT_AMOUNT = settings?.securityDepositAmount || 2800; }
+    } else {
+      let settings = await SystemSetting.findOne();
+      DEPOSIT_AMOUNT = settings?.securityDepositAmount || 2800;
+    }
     let isFranchisePaid = false;
 
     if (rider.franchise) {
@@ -1338,9 +1345,16 @@ export const payDepositViaWallet = async (req, res) => {
 
 export const createDepositOrder = async (req, res) => {
   try {
-    const { phone } = req.body;
-    let settings = await SystemSetting.findOne();
-    const DEPOSIT_AMOUNT = settings?.securityDepositAmount || 2800;
+    const { phone, planId } = req.body;
+    let DEPOSIT_AMOUNT = 2800;
+    if (planId) {
+      const plan = await SubscriptionPlan.findById(planId);
+      if (plan && plan.deposit) DEPOSIT_AMOUNT = plan.deposit;
+      else { let settings = await SystemSetting.findOne(); DEPOSIT_AMOUNT = settings?.securityDepositAmount || 2800; }
+    } else {
+      let settings = await SystemSetting.findOne();
+      DEPOSIT_AMOUNT = settings?.securityDepositAmount || 2800;
+    }
 
     const rider = await Rider.findOne({ phone });
     const amountToPay = DEPOSIT_AMOUNT;
@@ -1360,8 +1374,15 @@ export const verifyDepositPayment = async (req, res) => {
     if (expectedSignature === razorpay_signature) {
       const rider = await Rider.findOne({ phone });
       if (rider && !rider.depositPaid) {
-        let settings = await SystemSetting.findOne();
-        const DEPOSIT_AMOUNT = settings?.securityDepositAmount || 2800;
+        let DEPOSIT_AMOUNT = 2800;
+        if (planId) {
+          const plan = await SubscriptionPlan.findById(planId);
+          if (plan && plan.deposit) DEPOSIT_AMOUNT = plan.deposit;
+          else { let settings = await SystemSetting.findOne(); DEPOSIT_AMOUNT = settings?.securityDepositAmount || 2800; }
+        } else {
+          let settings = await SystemSetting.findOne();
+          DEPOSIT_AMOUNT = settings?.securityDepositAmount || 2800;
+        }
 
         rider.depositPaid = true;
         if (planId) {
@@ -1393,8 +1414,15 @@ export const requestDepositQR = async (req, res) => {
     const rider = await Rider.findOne({ phone });
     if (!rider) return res.status(404).json({ success: false, message: 'Rider not found' });
 
-    let settings = await SystemSetting.findOne();
-    const DEPOSIT_AMOUNT = settings?.securityDepositAmount || 2800;
+    let DEPOSIT_AMOUNT = 2800;
+    if (planId) {
+      const plan = await SubscriptionPlan.findById(planId);
+      if (plan && plan.deposit) DEPOSIT_AMOUNT = plan.deposit;
+      else { let settings = await SystemSetting.findOne(); DEPOSIT_AMOUNT = settings?.securityDepositAmount || 2800; }
+    } else {
+      let settings = await SystemSetting.findOne();
+      DEPOSIT_AMOUNT = settings?.securityDepositAmount || 2800;
+    }
 
     const transaction = await Transaction.create({
       riderId: rider._id,

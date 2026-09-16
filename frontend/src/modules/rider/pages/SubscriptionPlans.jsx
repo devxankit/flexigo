@@ -214,7 +214,7 @@ export default function SubscriptionPlans() {
     if (depositMethod === 'WALLET') return handleDepositWallet();
     if (depositMethod === 'UPI_QR') { setShowDepositQRCode(true); return; }
     try {
-      const orderRes = await api.post('/rider/payments/deposit/create-order', { phone: user.phone });
+      const orderRes = await api.post('/rider/payments/deposit/create-order', { phone: user.phone, planId: selectedPlan?.id });
 
       if (orderRes.data.amountPayable === 0) {
         return handleDepositWallet();
