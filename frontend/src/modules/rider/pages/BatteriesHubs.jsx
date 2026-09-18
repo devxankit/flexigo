@@ -28,6 +28,11 @@ const locations = [
     id: 5,
     name: 'Narhe',
     address: 'SATYAMLABS COMPUTER SERVICES (PUNE, MH), Ground, B-17, Plot No. 132, Shivam Corner, Sinhgad Road, Dhayari, Pune, Maharashtra 411041'
+  },
+  {
+    id: 6,
+    name: 'Mahalunge',
+    address: 'Shop No. 4, BatteryPool, near VP Washing Centre, Mahalunge–Nande Road, near Godrej Hillside 1, Mahalunge, Pune – 411045'
   }
 ];
 
