@@ -13,6 +13,7 @@ import franchiseRoutes from './modules/franchise/franchiseRoutes.js';
 import fleetRoutes from './modules/fleet/vehicleRoutes.js';
 import staffRoutes from './modules/staff/staffRoutes.js';
 import adminRoutes from './modules/admin/adminRoutes.js';
+import webhookRoutes from './modules/webhook/webhookRoutes.js';
 import { seedDefaultAdmin } from './shared/utils/seedAdmin.js';
 import { seedWebsiteData } from './modules/admin/websiteSeedController.js';
 import { startPaymentDueCron } from './shared/utils/paymentDueCron.js';
@@ -107,6 +108,7 @@ app.use('/api/v1/franchise', franchiseRoutes);
 app.use('/api/v1/fleet', fleetRoutes);
 app.use('/api/v1/staff', staffRoutes);
 app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/webhook', webhookRoutes);
 
 // App Version Check — used by rider & franchise apps for force update
 import AppVersion from './modules/admin/appVersionModel.js';

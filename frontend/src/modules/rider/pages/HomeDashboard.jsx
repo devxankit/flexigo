@@ -1224,7 +1224,7 @@ export default function HomeDashboard() {
                   <ChevronRight size={14} strokeWidth={3} />
                 </div>
               </div>
-            </GlassCard>  
+            </GlassCard>
           </div>
         </div>
       </BottomSheet>

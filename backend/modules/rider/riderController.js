@@ -728,7 +728,12 @@ export const createPaymentOrder = async (req, res) => {
     }
 
     const instance = new Razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET });
-    const order = await instance.orders.create({ amount: amountToPay * 100, currency: 'INR', receipt: `receipt_${Date.now()}` });
+    const order = await instance.orders.create({ 
+      amount: amountToPay * 100, 
+      currency: 'INR', 
+      receipt: `receipt_${Date.now()}`,
+      notes: { type: 'plan_upgrade', phone, planId: planId.toString() }
+    });
     res.status(200).json({ success: true, order, walletApplied: plan.price - amountToPay, amountPayable: amountToPay });
   } catch (error) { res.status(500).json({ success: false, message: error.message }); }
 };
@@ -791,7 +796,8 @@ export const createAddOffOrder = async (req, res) => {
     const order = await instance.orders.create({
       amount: Math.round(Number(amount) * 100),
       currency: 'INR',
-      receipt: `receipt_${Date.now()}`
+      receipt: `receipt_${Date.now()}`,
+      notes: { type: 'add_off', phone: req.body.phone || 'unknown' }
     });
 
     res.status(200).json({ success: true, order });
