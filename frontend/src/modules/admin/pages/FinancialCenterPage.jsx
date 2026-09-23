@@ -93,9 +93,6 @@ export default function FinancialCenterPage() {
          {/* Financial KPIs */}
          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <AdminStatCard title="Total Rev" value={`₹${(networkStats.grossRevenue || 0).toLocaleString()}`} icon={TrendingUp} color="emerald" subtitle="Gross Delta" />
-            <AdminStatCard title="Settled" value={financeStats.settled} icon={ArrowDownLeft} color="blue" subtitle="Hub Pipeline" />
-            <AdminStatCard title="Liability" value={financeStats.liability} icon={Activity} color="amber" subtitle="Pending Sync" />
-            <AdminStatCard title="Unit Yield" value={financeStats.unitYield} icon={Layers} color="emerald" subtitle="/ Asset Avg" />
          </div>
 
          <div className="bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-2xl p-5 shadow-sm border-t-4 border-t-emerald-600">
