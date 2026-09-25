@@ -521,7 +521,8 @@ export const getKycRecords = async (req, res) => {
           walletBalance: r.walletBalance || 0,
           adminAssignedStartDate: r.adminAssignedStartDate || null,
           isBlocked: r.isBlocked || false,
-          franchise: franchiseId
+          franchise: franchiseId,
+          onboardedPlatform: r.onboardedPlatform || ''
         };
       }),
       ...franchises.map(f => {
@@ -565,7 +566,7 @@ export const getKycRecords = async (req, res) => {
 
 export const updateKycStatus = async (req, res) => {
   try {
-    const { status, name, phone, referenceName, referenceNumber, referenceName2, referenceNumber2, kycDetails, adminAssignedStartDate, franchise } = req.body;
+    const { status, name, phone, referenceName, referenceNumber, referenceName2, referenceNumber2, kycDetails, adminAssignedStartDate, franchise, onboardedPlatform } = req.body;
     const id = req.params.id;
 
     const updateFields = {};
@@ -577,6 +578,7 @@ export const updateKycStatus = async (req, res) => {
     if (phone !== undefined) updateFields.phone = phone;
     if (adminAssignedStartDate !== undefined) updateFields.adminAssignedStartDate = adminAssignedStartDate;
     if (franchise !== undefined) updateFields.franchise = franchise || null;
+    if (onboardedPlatform !== undefined) updateFields.onboardedPlatform = onboardedPlatform;
 
     // Extract dynamic reference fields (checking flat fields first, then falling back to nested)
     const refName = referenceName !== undefined ? referenceName : kycDetails?.referenceName;
@@ -3013,7 +3015,6 @@ export const updateSettings = async (req, res) => {
 
 export const getRidersList = async (req, res) => {
   try {
-    const Franchise = (await import('../franchise/franchiseModel.js')).default;
     const riders = await Rider.find({}, 'name phone franchise status walletBalance').lean();
     const franchises = await Franchise.find({}, 'ownerName hubName phone walletBalance').lean();
 

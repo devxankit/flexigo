@@ -91,6 +91,11 @@ const RiderSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Franchise',
   },
+  onboardedPlatform: {
+    type: String,
+    enum: ['Zepto', 'Zomato', 'Blinkit', 'Amazon', 'Instamart', 'Flipkart', 'Porter', 'Licious', ''],
+    default: '',
+  },
   fcmToken: {
     type: String,
     default: null

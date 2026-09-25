@@ -472,6 +472,26 @@ export default function KycOnboardingPage() {
                                      >
                                         <Trash2 size={12} />
                                      </button>
+                                     {record.role?.toLowerCase() === 'rider' && (
+                                        <select
+                                           value={record.onboardedPlatform || ''}
+                                           onChange={async (e) => {
+                                              await updateKycStatus(record._id || record.id, { onboardedPlatform: e.target.value });
+                                              fetchKycRecords();
+                                           }}
+                                           className="ml-2 px-2.5 py-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-xs font-semibold text-[var(--text-primary)] outline-none focus:border-emerald-500/50 cursor-pointer w-[110px] sm:w-[130px] transition-all"
+                                        >
+                                           <option value="">Platform</option>
+                                           <option value="Zepto">Zepto</option>
+                                           <option value="Zomato">Zomato</option>
+                                           <option value="Blinkit">Blinkit</option>
+                                           <option value="Amazon">Amazon</option>
+                                           <option value="Instamart">Instamart</option>
+                                           <option value="Flipkart">Flipkart</option>
+                                           <option value="Porter">Porter</option>
+                                           <option value="Licious">Licious</option>
+                                        </select>
+                                     )}
                                  </div>
                               </td>
                            </motion.tr>
