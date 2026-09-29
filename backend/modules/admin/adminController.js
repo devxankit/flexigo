@@ -3090,7 +3090,7 @@ export const verifyAdminFundsPayment = async (req, res) => {
     const expectedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET).update(body.toString()).digest('hex');
 
     if (expectedSignature === razorpay_signature) {
-      const admin = await Admin.findById(req.user._id || req.user.id);
+      const admin = await Admin.findById(req.admin._id || req.admin.id);
       if (!admin) return res.status(404).json({ success: false, message: 'Admin not found' });
 
       admin.walletBalance = (admin.walletBalance || 0) + Number(amount);
@@ -3125,7 +3125,7 @@ export const processWalletRefund = async (req, res) => {
     if (!amount || amount <= 0) throw new Error('Invalid amount');
     if (!riderId) throw new Error('Rider ID is required');
 
-    const admin = await Admin.findById(req.user._id || req.user.id).session(session);
+    const admin = await Admin.findById(req.admin._id || req.admin.id).session(session);
     if (!admin) throw new Error('Admin not found');
 
     if ((admin.walletBalance || 0) < amount) {

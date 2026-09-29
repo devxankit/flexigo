@@ -136,15 +136,15 @@ export default function KycOnboardingPage() {
    };
 
    const handleExport = () => {
-      const headers = ['Record ID', 'Identity', 'Phone', 'Vehicle No', 'Persona', 'Liveness Check', 'Start Date', 'Registry Date', 'Status'];
+      const headers = ['Record ID', 'Identity', 'Phone', 'Platform', 'Vehicle No', 'Personal', 'Start Date', 'Registry Date', 'Status'];
 
       const rows = filteredRecords.map(r => [
          r.id || r._id || '',
          r.name || '',
          r.phone || '',
-         r.vehiclePlate || '',
+         r.onboardedPlatform || '',
+         r.vehiclePlate || 'N/A',
          r.role || '',
-         r.details?.ekycVerified ? 'LIVE_MATCH_OK' : 'UNVERIFIED',
          r.adminAssignedStartDate ? r.adminAssignedStartDate.split('T')[0] : '',
          r.date ? new Date(r.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : '',
          r.status || ''
@@ -236,7 +236,7 @@ export default function KycOnboardingPage() {
                <table className="w-full">
                   <thead>
                      <tr className="border-b border-[var(--border-subtle)] bg-[var(--bg-tertiary)]/5">
-                        {['Identity', 'Vehicle No', 'Persona', 'Start Date', 'Registry Date', 'Status', 'Actions'].map((header) => (
+                        {['Identity', 'Platform', 'Vehicle No', 'Personal', 'Start Date', 'Registry Date', 'Status', 'Actions'].map((header) => (
                            <th key={header} className="text-left py-3 px-2 text-xs font-semibold text-[var(--text-secondary)] whitespace-nowrap">{header}</th>
                         ))}
                      </tr>
@@ -271,6 +271,31 @@ export default function KycOnboardingPage() {
                                     )}
                                  </div>
                               </td>
+                              {/* Platform Column */}
+                              <td className="py-2 px-2" onClick={(e) => e.stopPropagation()}>
+                                 {record.role?.toLowerCase() === 'rider' ? (
+                                    <select
+                                       value={record.onboardedPlatform || ''}
+                                       onChange={async (e) => {
+                                          await updateKycStatus(record._id || record.id, { onboardedPlatform: e.target.value });
+                                          fetchKycRecords();
+                                       }}
+                                       className="px-2 py-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-[10px] font-semibold text-[var(--text-primary)] outline-none focus:border-emerald-500/50 cursor-pointer w-[110px] transition-all"
+                                    >
+                                       <option value="">Platform</option>
+                                       <option value="Zepto">Zepto</option>
+                                       <option value="Zomato">Zomato</option>
+                                       <option value="Blinkit">Blinkit</option>
+                                       <option value="Amazon">Amazon</option>
+                                       <option value="Instamart">Instamart</option>
+                                       <option value="Flipkart">Flipkart</option>
+                                       <option value="Porter">Porter</option>
+                                       <option value="Licious">Licious</option>
+                                    </select>
+                                 ) : (
+                                    <span className="text-[10px] text-[var(--text-tertiary)] italic">—</span>
+                                 )}
+                              </td>
                               <td className="py-2 px-2">
                                  <div className="text-[11px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
                                     {record.vehiclePlate || ''}
@@ -300,9 +325,9 @@ export default function KycOnboardingPage() {
                                     {record.role?.toLowerCase() === 'franchise' && (() => {
                                        const franchiseRiders = kycRecords.filter(r => r.role?.toLowerCase() === 'rider' && r.franchise && r.franchise.toString() === (record._id || record.id).toString());
                                        if (franchiseRiders.length === 0) return null;
-                                       
+
                                        const selectedRiderId = selectedFranchiseRiders[record._id || record.id] || franchiseRiders[0]?._id || franchiseRiders[0]?.id;
-                                       
+
                                        return (
                                           <select
                                              value={selectedRiderId}
@@ -321,10 +346,10 @@ export default function KycOnboardingPage() {
                                  {record.role?.toLowerCase() === 'franchise' ? (() => {
                                     const franchiseRiders = kycRecords.filter(r => r.role?.toLowerCase() === 'rider' && r.franchise && r.franchise.toString() === (record._id || record.id).toString());
                                     if (franchiseRiders.length === 0) return <span className="text-[10px] text-[var(--text-tertiary)] italic">No Riders</span>;
-                                    
+
                                     const selectedRiderId = selectedFranchiseRiders[record._id || record.id] || franchiseRiders[0]?._id || franchiseRiders[0]?.id;
                                     const selectedRider = franchiseRiders.find(r => (r._id || r.id) === selectedRiderId);
-                                    
+
                                     return selectedRider ? (
                                        <input
                                           type="date"
@@ -352,8 +377,8 @@ export default function KycOnboardingPage() {
                               <td className="py-2 px-2">
                                  <div className={`inline-flex px-1.5 py-0.5 rounded  font-medium   border  ${record.status === 'approved' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/10' :
                                     record.status === 'pending' ? 'bg-blue-500/10 text-blue-500 border-blue-500/10' :
-                                    record.status === 'inactive' ? 'bg-gray-500/10 text-gray-500 border-gray-500/10' :
-                                       'bg-rose-500/10 text-rose-500 border-rose-500/10'
+                                       record.status === 'inactive' ? 'bg-gray-500/10 text-gray-500 border-gray-500/10' :
+                                          'bg-rose-500/10 text-rose-500 border-rose-500/10'
                                     }`}>
                                     {record.status}
                                  </div>
@@ -463,35 +488,16 @@ export default function KycOnboardingPage() {
                                           <Zap size={12} fill="currentColor" />
                                        </button>
                                     )}
-                                     <button
-                                        onClick={() => {
-                                           setDeleteConfirm({ isOpen: true, id: record._id || record.id, name: record.name });
-                                        }}
-                                        className="p-1.5 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
-                                        title="Delete KYC Record"
-                                     >
-                                        <Trash2 size={12} />
-                                     </button>
-                                     {record.role?.toLowerCase() === 'rider' && (
-                                        <select
-                                           value={record.onboardedPlatform || ''}
-                                           onChange={async (e) => {
-                                              await updateKycStatus(record._id || record.id, { onboardedPlatform: e.target.value });
-                                              fetchKycRecords();
-                                           }}
-                                           className="ml-2 px-2.5 py-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-lg text-xs font-semibold text-[var(--text-primary)] outline-none focus:border-emerald-500/50 cursor-pointer w-[110px] sm:w-[130px] transition-all"
-                                        >
-                                           <option value="">Platform</option>
-                                           <option value="Zepto">Zepto</option>
-                                           <option value="Zomato">Zomato</option>
-                                           <option value="Blinkit">Blinkit</option>
-                                           <option value="Amazon">Amazon</option>
-                                           <option value="Instamart">Instamart</option>
-                                           <option value="Flipkart">Flipkart</option>
-                                           <option value="Porter">Porter</option>
-                                           <option value="Licious">Licious</option>
-                                        </select>
-                                     )}
+                                    <button
+                                       onClick={() => {
+                                          setDeleteConfirm({ isOpen: true, id: record._id || record.id, name: record.name });
+                                       }}
+                                       className="p-1.5 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
+                                       title="Delete KYC Record"
+                                    >
+                                       <Trash2 size={12} />
+                                    </button>
+
                                  </div>
                               </td>
                            </motion.tr>
@@ -619,7 +625,7 @@ export default function KycOnboardingPage() {
                                  {selectedRecord.role?.toLowerCase() === 'rider' && (
                                     <div className="flex items-center gap-1.5 ml-2">
                                        <span className="text-[9px] text-[var(--text-tertiary)] uppercase tracking-widest font-black">Franchise:</span>
-                                       <select 
+                                       <select
                                           value={selectedRecord.franchise || ''}
                                           onChange={async (e) => {
                                              const newFranchise = e.target.value;
@@ -635,7 +641,7 @@ export default function KycOnboardingPage() {
                                                 <option key={f._id || f.id} value={f._id || f.id}>
                                                    {f.name || f.phone}
                                                 </option>
-                                          ))}
+                                             ))}
                                        </select>
                                     </div>
                                  )}
@@ -1088,14 +1094,13 @@ export default function KycOnboardingPage() {
 
                         <button
                            type="submit"
-                           className={`w-full py-3 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 ${
-                              (() => {
-                                 const riderRecord = kycRecords.find(r => r.phone === assignmentData.riderPhone);
-                                 return riderRecord?.vehicleId || (riderRecord?.vehiclePlate && riderRecord.vehiclePlate !== 'N/A')
-                                    ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-950/20'
-                                    : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-950/20';
-                              })()
-                           }`}
+                           className={`w-full py-3 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 ${(() => {
+                              const riderRecord = kycRecords.find(r => r.phone === assignmentData.riderPhone);
+                              return riderRecord?.vehicleId || (riderRecord?.vehiclePlate && riderRecord.vehiclePlate !== 'N/A')
+                                 ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-950/20'
+                                 : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-950/20';
+                           })()
+                              }`}
                         >
                            <Zap size={14} fill="white" /> {
                               (() => {
