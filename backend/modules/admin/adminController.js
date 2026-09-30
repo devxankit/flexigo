@@ -3043,7 +3043,7 @@ export const getRidersList = async (req, res) => {
 
 export const getAdminWalletDashboard = async (req, res) => {
   try {
-    const admin = await Admin.findById(req.user._id || req.user.id);
+    const admin = await Admin.findById(req.admin._id || req.admin.id);
     if (!admin) return res.status(404).json({ success: false, message: 'Admin not found' });
 
     const transactions = await AdminTransaction.find()
