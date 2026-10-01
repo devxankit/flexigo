@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Search, CreditCard, User, IndianRupee, FileText, CheckCircle2, Wallet, History, Plus } from 'lucide-react';
+import { Search, CreditCard, User, IndianRupee, FileText, CheckCircle2, Wallet, History, Plus, Image as ImageIcon, X, Phone } from 'lucide-react';
 import api from '../../../lib/axios';
 
 export default function RiderRefundPage() {
@@ -12,6 +12,21 @@ export default function RiderRefundPage() {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [processing, setProcessing] = useState(false);
+  const [upiId, setUpiId] = useState('');
+  const [phone, setPhone] = useState('');
+  const [barcodeImage, setBarcodeImage] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setBarcodeImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   // Admin Wallet State
   const [adminWallet, setAdminWallet] = useState(0);
@@ -110,7 +125,10 @@ export default function RiderRefundPage() {
       const res = await api.post('/admin/refund/process-wallet-refund', {
         amount: Number(amount),
         riderId: selectedRider.id,
-        description
+        description,
+        upiId,
+        phone,
+        barcodeUrl: barcodeImage
       });
 
       if (res.data?.success) {
@@ -118,6 +136,10 @@ export default function RiderRefundPage() {
         setSelectedRider(null);
         setAmount('');
         setDescription('');
+        setUpiId('');
+        setPhone('');
+        setBarcodeImage(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
         fetchRiders(); // Refresh list to get updated balance
         fetchDashboard(); // Refresh admin wallet
       } else {
@@ -248,6 +270,73 @@ export default function RiderRefundPage() {
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="ENTER AMOUNT..."
                     className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl pl-11 pr-4 py-3 text-lg font-black text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:border-emerald-500 transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* Barcode Upload */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Upload Barcode (QR Code)</label>
+                <div className="relative flex items-center gap-4">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    ref={fileInputRef}
+                    className="hidden"
+                    id="barcode-upload"
+                  />
+                  <label
+                    htmlFor="barcode-upload"
+                    className="flex-1 bg-[var(--bg-tertiary)] border border-dashed border-[var(--border-subtle)] hover:border-emerald-500 rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer transition-colors"
+                  >
+                    <ImageIcon size={24} className="text-[var(--text-tertiary)] mb-2" />
+                    <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">Click to Upload Image</span>
+                  </label>
+                  {barcodeImage && (
+                    <div className="relative w-24 h-24 rounded-xl overflow-hidden border border-emerald-500/30">
+                      <img src={barcodeImage} alt="Barcode Preview" className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => { setBarcodeImage(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow-md"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* UPI ID */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">UPI ID</label>
+                <div className="relative">
+                  <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" size={16} />
+                  <input
+                    type="text"
+                    value={upiId}
+                    onChange={(e) => setUpiId(e.target.value)}
+                    placeholder="e.g. 9999999999@upi"
+                    className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl pl-11 pr-4 py-3 text-sm font-bold text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:border-emerald-500 transition-colors"
+                  />
+                </div>
+              </div>
+
+              {/* Phone Number */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest ml-1">Phone Number (Optional)</label>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" size={16} />
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '');
+                      if (val.length <= 10) setPhone(val);
+                    }}
+                    maxLength={10}
+                    placeholder="e.g. 9876543210"
+                    className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-xl pl-11 pr-4 py-3 text-sm font-bold text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:border-emerald-500 transition-colors"
                   />
                 </div>
               </div>
