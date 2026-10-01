@@ -3120,7 +3120,7 @@ export const processWalletRefund = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const { amount, riderId, description } = req.body;
+    const { amount, riderId, description, upiId, phone, barcodeUrl } = req.body;
 
     if (!amount || amount <= 0) throw new Error('Invalid amount');
     if (!riderId) throw new Error('Rider ID is required');
@@ -3141,6 +3141,12 @@ export const processWalletRefund = async (req, res) => {
     }
     if (!target) throw new Error('Target not found');
 
+    let uploadedBarcodeUrl = barcodeUrl;
+    if (barcodeUrl && barcodeUrl.startsWith('data:image')) {
+      const { saveImageLocal } = await import('../../shared/utils/localUpload.js');
+      uploadedBarcodeUrl = saveImageLocal(req, barcodeUrl, 'refund-barcode', riderId);
+    }
+
     // Deduct from Admin
     admin.walletBalance -= Number(amount);
     await admin.save({ session });
@@ -3159,7 +3165,10 @@ export const processWalletRefund = async (req, res) => {
       targetFranchise: targetType === 'Franchise' ? target._id : null,
       targetType: targetType,
       transactionId: `REF-${Date.now()}`,
-      closingBalance: admin.walletBalance
+      closingBalance: admin.walletBalance,
+      upiId: upiId || null,
+      phone: phone || null,
+      barcodeUrl: uploadedBarcodeUrl || null
     }], { session });
 
     if (targetType === 'Rider') {
@@ -3355,7 +3364,7 @@ export const processAdhocPayment = async (req, res) => {
 
     if (!amount || amount <= 0) throw new Error('Invalid amount');
 
-    const admin = await Admin.findById(req.user._id || req.user.id).session(session);
+    const admin = await Admin.findById(req.admin._id || req.admin.id).session(session);
     if (!admin) throw new Error('Admin not found');
 
     if ((admin.walletBalance || 0) < amount) {
