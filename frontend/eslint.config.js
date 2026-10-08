@@ -26,4 +26,4 @@ export default defineConfig([
       'no-unused-vars': ['warn', { varsIgnorePattern: '^[A-Z_]|motion' }],
     },
   },
-])
+]);
