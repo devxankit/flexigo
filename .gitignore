@@ -4,3 +4,6 @@ temp_interactive_push.bat
 
 frontend/.env
 backend/.env
+
+backend/config/*firebase*.json
+backend/config/firebase-key.json
